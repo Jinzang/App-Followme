@@ -117,7 +117,7 @@ sub parse_blocks {
 sub parse_page {
     my ($page) = @_;
     
-    my $blocks = [];
+    my $blocks = {};
     my $block_handler = sub {
         my ($blockname, $blocktext) = @_;
         if (exists $blocks->{$blockname}) {
