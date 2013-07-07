@@ -8,6 +8,10 @@ use Digest::MD5;
 
 our $VERSION = "0.01";
 
+require Exporter;
+our @ISA = qw(Exporter);
+our @EXPORT = qw(followme);
+
 use constant CHECKSUM_FILE => 'followme.md5';
 use constant DEFAULT_EXTENSION => 'html';
 
