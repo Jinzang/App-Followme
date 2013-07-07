@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 6;
+use Test::More tests => 10;
 
 #----------------------------------------------------------------------
 # Load package
@@ -22,7 +22,7 @@ mkdir $test_dir;
 chdir $test_dir;
 
 #----------------------------------------------------------------------
-# Test parsing
+# Test parse_blocks
 
 do {
     my $blocks = {};
@@ -113,3 +113,68 @@ do {
     is($@, "Unmatched <!-- end second -->\n",
        'Begin does not match end'); # test 6
 };
+
+#----------------------------------------------------------------------
+# Test parse_page
+
+do {
+    my @page = (
+                "Top line",
+                "<!-- begin first -->",
+                "First block",
+                "<!-- end first -->",
+                "Middle line",
+                "<!-- begin second -->",
+                "Second block",
+                "<!-- end second -->",
+                "Last line",
+               );
+
+    my $page = join("\n", @page) . "\n";
+    my $blocks = App::Followme::parse_page($page);
+
+    my $ok_blocks = {
+        first => "\nFirst block\n",
+        second => "\nSecond block\n",
+    };
+
+    is_deeply($blocks, $ok_blocks, 'Parse blocks'); # test 7
+
+    my $bad_page = $page;
+    $bad_page =~ s/second/first/g;
+    $blocks = eval {App::Followme::parse_page($bad_page)};
+    
+    is($@, "Duplicate block name first\n", 'Duplicate block names'); # test 8
+};
+
+#----------------------------------------------------------------------
+# Test checksum_template
+
+do {
+    my @page = (
+                "Top line",
+                "<!-- begin first -->",
+                "First block",
+                "<!-- end first -->",
+                "Middle line",
+                "<!-- begin second -->",
+                "Second block",
+                "<!-- end second -->",
+                "Last line",
+               );
+
+    my $page_one = join("\n", @page) . "\n";
+    my $checksum_one = App::Followme::checksum_template($page_one);
+
+    my $page_two = $page_one;
+    $page_two =~ s/block/mock/g;
+    my $checksum_two = App::Followme::checksum_template($page_two);
+    is($checksum_one, $checksum_two, 'Checksum same template'); # test 9    
+
+    my $page_three = $page_one;
+    $page_three =~ s/line/part/g;
+    my $checksum_three = App::Followme::checksum_template($page_three);
+    isnt($checksum_one, $checksum_three,
+         'Checksum different template'); # test 10   
+};
+
