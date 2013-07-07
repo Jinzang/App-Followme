@@ -84,13 +84,13 @@ sub parse_blocks {
     
     foreach my $token (@tokens) {
         if ($token =~ /^<!--\s*begin\s+(\S+)/) {
-            die "Improperly nested block $token" if $blockname;
+            die "Improperly nested block $token\n" if $blockname;
                 
             $blockname = $1;
             $template_handler->($token);
             
         } elsif ($token =~ /^<!--\s*end\s+(\S+)/) {
-            die "Unmatched $token"
+            die "Unmatched $token\n"
                 if $blockname eq '' || $blockname ne $1;
                 
             $block_handler->($blockname, $blocktext);
@@ -107,7 +107,7 @@ sub parse_blocks {
         }
     }
  
-    die "Unmatched block <!-- begin $blockname -->" if $blockname;
+    die "Unmatched block <!-- begin $blockname -->\n" if $blockname;
     return;
 }
 
@@ -121,7 +121,7 @@ sub parse_page {
     my $block_handler = sub {
         my ($blockname, $blocktext) = @_;
         if (exists $blocks->{$blockname}) {
-            die "Duplicate block name $blockname";
+            die "Duplicate block name $blockname\n";
         }
         $blocks->{$blockname} = $blocktext;
         return;

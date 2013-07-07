@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 2;
+use Test::More tests => 6;
 
 #----------------------------------------------------------------------
 # Load package
@@ -72,4 +72,44 @@ do {
 
     is_deeply($blocks, $ok_blocks, 'Parse blocks'); # test 1
     is_deeply($template, $ok_template, 'Parse template'); # test 2
+    
+    $blocks = {};
+    $template = [];
+    my @bad_page = @page;
+    pop(@bad_page); pop(@bad_page);
+    $page =join("\n", @bad_page) . "\n";
+
+    eval {
+        App::Followme::parse_blocks($page, $block_handler, $template_handler);
+    };
+    is($@, "Unmatched block <!-- begin second -->\n", 'Missing end'); # test 3
+
+    @bad_page = @page;
+    shift(@bad_page); shift(@bad_page);
+    $page =join("\n", @bad_page) . "\n";
+
+    eval {
+        App::Followme::parse_blocks($page, $block_handler, $template_handler);
+    };
+    is($@, "Unmatched <!-- end first -->\n", 'Missing begin'); # test 4
+
+    @bad_page = @page;
+    splice(@bad_page, 3, 1);
+    $page =join("\n", @bad_page) . "\n";
+
+    eval {
+        App::Followme::parse_blocks($page, $block_handler, $template_handler);
+    };
+    is($@, "Improperly nested block <!-- begin second -->\n",
+       'Begin inside of begin'); # test 5
+
+    @bad_page = @page;
+    splice(@bad_page, 3, 3);
+    $page =join("\n", @bad_page) . "\n";
+
+    eval {
+        App::Followme::parse_blocks($page, $block_handler, $template_handler);
+    };
+    is($@, "Unmatched <!-- end second -->\n",
+       'Begin does not match end'); # test 6
 };
