@@ -268,7 +268,7 @@ App::Followme - A template-less html templating system
 =head1 DESCRIPTION
 
 Followme is an html template processsor where every file is the template. It
-takes the mose recently changed html file in the current directory as the
+takes the most recently changed html file in the current directory as the
 template and modifies the other html files in the directory to match it. Every
 file has blocks of code surrounded by comments that look like
 
