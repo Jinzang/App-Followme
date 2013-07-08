@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 10;
+use Test::More tests => 12;
 
 #----------------------------------------------------------------------
 # Load package
@@ -176,5 +176,43 @@ do {
     my $checksum_three = App::Followme::checksum_template($page_three);
     isnt($checksum_one, $checksum_three,
          'Checksum different template'); # test 10   
+};
+
+#----------------------------------------------------------------------
+# Test update_page
+
+do {
+    my @template = (
+                "Top line",
+                "<!-- begin first -->",
+                "First block",
+                "<!-- end first -->",
+                "Middle line",
+                "<!-- begin second -->",
+                "Second block",
+                "<!-- end second -->",
+                "Last line",
+               );
+
+    my $template = join("\n", @template) . "\n";
+
+    my $page = $template;
+    $page =~ s/line/portion/g;
+    $page =~ s/block/section/g;
+    
+    my $output = App::Followme::update_page($template, $page);
+    my @output = split(/\n/, $output);
+    
+    my @output_ok = @template;
+    $output_ok[2] =~ s/block/section/;
+    $output_ok[6] =~ s/block/section/;
+
+    is_deeply(\@output, \@output_ok, 'Update page'); # test 11
+
+    my $bad_page = $page;
+    $bad_page =~ s/second/third/g;
+
+    $output = eval{App::Followme::update_page($template, $bad_page)};
+    is($@, "Unused blocks third\n", 'Update page bad block'); # test 12
 };
 
