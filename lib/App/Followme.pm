@@ -6,7 +6,7 @@ use warnings;
 use IO::File;
 use Digest::MD5;
 
-our $VERSION = "0.01";
+our $VERSION = "0.10";
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -19,20 +19,12 @@ use constant DEFAULT_EXTENSION => 'html';
 # Update a website based on changes to a file
 
 sub followme {
-    my ($template_name) = @_;
-    
-    my $ext;
-    if (defined $template_name) {
-        my $base;
-        ($base, $ext) = split(/\./, $template_name);
-    } else {
-        $ext = DEFAULT_EXTENSION;
-    }
-    
+    my ($ext) = @_;
+    $ext = DEFAULT_EXTENSION unless defined $ext;
+
     my @filenames = sort_by_date(glob("*.$ext"));
-    unshift(@filenames, $template_name) if defined $template_name;
-    
     update_site(@filenames);
+
     return;
 }
 
@@ -181,6 +173,7 @@ sub update_page {
         my ($blockname, $blocktext) = @_;
         if (exists $blocks->{$blockname}) {
             push(@$output, $blocks->{$blockname});
+            delete $blocks->{$blockname};
         } else {
             push(@$output, $blocktext);
         }
@@ -193,7 +186,13 @@ sub update_page {
         return;
     };
 
-    parse_blocks($template, $block_handler, $template_handler);    
+    parse_blocks($template, $block_handler, $template_handler);
+
+    if (%$blocks) {
+        my $names = join(' ', sort keys %$blocks);
+        die "Unused blocks $names\n";
+    }
+    
     return join('', @$output);
 }
 
@@ -208,9 +207,7 @@ sub update_site {
     
     return unless changed_template($template);
     
-    foreach my $filename (@filenames) {
-        next if $filename eq $template_name;
-        
+    foreach my $filename (@filenames) {        
         my $page = read_page($filename);
         if (! defined $page) {
             warn "Couldn't read $filename";
@@ -240,7 +237,7 @@ sub update_site {
 }
 
 #----------------------------------------------------------------------
-# Read a file into a string
+# Write the page back to the file
 
 sub write_page {
     my ($filename, $page) = @_;
@@ -261,32 +258,30 @@ __END__
 
 =head1 NAME
 
-App::Followme - A template-less html templating script
+App::Followme - A template-less html templating system
 
 =head1 SYNOPSIS
 
     use App::Followme;
-    followme();
+    followme('htm');
 
 =head1 DESCRIPTION
 
-Followme is an html template processor. It produces a new html file
-from a template and an old html file. The purpose if this script is to
-keep html files in synch with a template. One changes the template and
-then runs this script to propogate the changes in the template to the
-other html files.
-
-Followme works by combining text from a template and an input page to
-build the ouput page. Both files have blocks of code surrounded by
-comments that look like
+Followme is an html template processsor where every file is the template. It
+takes the mose recently changed html file in the current directory as the
+template and modifies the other html files in the directory to match it. Every
+file has blocks of code surrounded by comments that look like
 
     <!-- begin name-->
     <!-- end name -->
 
-The output file is the template file with all the named blocks
-replaced by the corresponding block in the input file. The effect is
-that all code outside the named blocks are updated.
+The new page is the template file with all the named blocks replaced by the
+corresponding block in the old page. The effect is that all the code outside 
+the named blocks are updated to be the same across all the html pages.
 
+This module exports one function, followme. It takes one or no arguments. If
+an argument is given, it is the extension used on all the html files. If no
+argument is given, the extension is taken to be html.
 
 =head1 LICENSE
 
