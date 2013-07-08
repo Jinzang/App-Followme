@@ -1,5 +1,5 @@
 {
-   "abstract" : "It's new $module",
+   "abstract" : "A template-less html templating system",
    "author" : [
       "Bernie Simon <bernie.simon@gmail.com>"
    ],
@@ -52,5 +52,15 @@
       }
    },
    "release_status" : "unstable",
-   "version" : "0.01"
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/Jinzang/App-Followme/issues"
+      },
+      "homepage" : "https://github.com/Jinzang/App-Followme",
+      "repository" : {
+         "url" : "https://github.com/Jinzang/App-Followme.git",
+         "web" : "https://github.com/Jinzang/App-Followme"
+      }
+   },
+   "version" : "0.10"
 }
