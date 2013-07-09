@@ -82,7 +82,7 @@ do {
     eval {
         App::Followme::parse_blocks($page, $block_handler, $template_handler);
     };
-    is($@, "Unmatched block <!-- begin second -->\n", 'Missing end'); # test 3
+    is($@, "Unmatched block (<!-- begin second -->)\n", 'Missing end'); # test 3
 
     @bad_page = @page;
     shift(@bad_page); shift(@bad_page);
@@ -91,7 +91,7 @@ do {
     eval {
         App::Followme::parse_blocks($page, $block_handler, $template_handler);
     };
-    is($@, "Unmatched <!-- end first -->\n", 'Missing begin'); # test 4
+    is($@, "Unmatched (<!-- end first -->)\n", 'Missing begin'); # test 4
 
     @bad_page = @page;
     splice(@bad_page, 3, 1);
@@ -100,7 +100,7 @@ do {
     eval {
         App::Followme::parse_blocks($page, $block_handler, $template_handler);
     };
-    is($@, "Improperly nested block <!-- begin second -->\n",
+    is($@, "Improperly nested block (<!-- begin second -->)\n",
        'Begin inside of begin'); # test 5
 
     @bad_page = @page;
@@ -110,7 +110,7 @@ do {
     eval {
         App::Followme::parse_blocks($page, $block_handler, $template_handler);
     };
-    is($@, "Unmatched <!-- end second -->\n",
+    is($@, "Unmatched (<!-- end second -->)\n",
        'Begin does not match end'); # test 6
 };
 
@@ -144,7 +144,7 @@ do {
     $bad_page =~ s/second/first/g;
     $blocks = eval {App::Followme::parse_page($bad_page)};
     
-    is($@, "Duplicate block name first\n", 'Duplicate block names'); # test 8
+    is($@, "Duplicate block name (first)\n", 'Duplicate block names'); # test 8
 };
 
 #----------------------------------------------------------------------
@@ -213,6 +213,6 @@ do {
     $bad_page =~ s/second/third/g;
 
     $output = eval{App::Followme::update_page($template, $bad_page)};
-    is($@, "Unused blocks third\n", 'Update page bad block'); # test 12
+    is($@, "Unused blocks (third)\n", 'Update page bad block'); # test 12
 };
 
