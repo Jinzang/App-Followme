@@ -71,7 +71,6 @@ sub parse_blocks {
     my ($page, $block_handler, $template_handler) = @_;
     
     my $blockname = '';
-    my $blocktext = '';
     my @tokens = split(/(<!--\s*(?:begin|end).*?-->)/, $page);
     
     foreach my $token (@tokens) {
@@ -85,14 +84,12 @@ sub parse_blocks {
             die "Unmatched $token\n"
                 if $blockname eq '' || $blockname ne $1;
                 
-            $block_handler->($blockname, $blocktext);
-            $template_handler->($token);
             $blockname = '';
-            $blocktext = '';
-             
+            $template_handler->($token);
+
         } else {
             if ($blockname) {
-                $blocktext = $token;
+                $block_handler->($blockname, $token);
             } else {
                 $template_handler->($token);
             }            
@@ -150,8 +147,9 @@ sub sort_by_date {
     my @filenames = @_;
 
     my @augmented;
-    foreach (@filenames) {
-        push(@augmented, [-M, $_]);
+    foreach my $filename (@filenames) {
+        my @stats = stat($filename);
+        push(@augmented, [$stats[9], $filename]);
     }
 
     @augmented = sort {$a->[0] <=> $b->[0]} @augmented;
