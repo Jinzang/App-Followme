@@ -6,21 +6,22 @@ use warnings;
 use IO::File;
 use Digest::MD5;
 
-our $VERSION = "0.10";
+our $VERSION = "0.11";
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(followme);
+our @EXPORT_OK = qw(followme configure_followme);
 
-use constant CHECKSUM_FILE => 'followme.md5';
-use constant DEFAULT_EXTENSION => 'html';
+our %configuration = (checksum_file => 'followme.md5',
+                      default_extension => 'html',
+                     );
 
 #----------------------------------------------------------------------
 # Update a website based on changes to a file
 
 sub followme {
     my ($ext) = @_;
-    $ext = DEFAULT_EXTENSION unless defined $ext;
+    $ext = $configuration{default_extension} unless defined $ext;
 
     my @filenames = sort_by_date(glob("*.$ext"));
     update_site(@filenames);
@@ -35,11 +36,13 @@ sub changed_template {
     my ($template) = @_;
     
     my $new_checksum = checksum_template($template);
-    my $old_checksum = read_page(CHECKSUM_FILE) || '';
+    my $old_checksum = read_page($configuration{checksum_file}) || '';
     chomp $old_checksum;
-    
-    write_page(CHECKSUM_FILE, "$new_checksum\n");
-    return $new_checksum ne $old_checksum;
+
+    my $changed = $new_checksum ne $old_checksum;
+    write_page($configuration{checksum_file}, "$new_checksum\n") if $changed;
+
+    return $changed;
 }
 
 #----------------------------------------------------------------------
@@ -62,6 +65,17 @@ sub checksum_template {
 
     parse_blocks($template, $block_handler, $template_handler);    
     return $md5->hexdigest;
+}
+
+#----------------------------------------------------------------------
+
+sub configure_followme {
+    my ($name, $value) = @_;
+    
+    die "Bad configuration field ($name)" unless exists $configuration{$name};
+    
+    $configuration{$name} = $value if defined $value;
+    return $configuration{$name};
 }
 
 #----------------------------------------------------------------------
