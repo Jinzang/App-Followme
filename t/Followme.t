@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 12;
+use Test::More tests => 16;
 
 #----------------------------------------------------------------------
 # Load package
@@ -216,3 +216,34 @@ do {
     is($@, "Unused blocks (third)\n", 'Update page bad block'); # test 12
 };
 
+#----------------------------------------------------------------------
+# Test read, write and sort pages
+
+do {
+   my $code = <<'EOQ';
+<html>
+<head>
+<meta name="robots" content="archive">
+<!-- begin meta -->
+<title>%%</title>
+<!-- end meta -->
+</head>
+<body>
+<!-- begin content -->
+<h1>%%</h1>
+<!-- end content -->
+</body>
+</html>
+EOQ
+
+    foreach my $count (qw(one two three four)) {
+        my $output = $code;
+        $output =~ s/%%/Page $count/g;
+        
+        my $filename = "$count.html";
+        App::Followme::write_page($filename, $output);
+        
+        my $input = App::Followme::read_page($filename);
+        is($input, $output, "Read and write page $count"); # tests 13-16
+    }
+};
