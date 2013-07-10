@@ -12,6 +12,8 @@ nytprof/
 
 cover_db/
 
+test/
+
 *.bak
 *.old
 *~
