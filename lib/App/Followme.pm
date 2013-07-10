@@ -72,7 +72,7 @@ sub checksum_template {
 sub configure_followme {
     my ($name, $value) = @_;
     
-    die "Bad configuration field ($name)" unless exists $configuration{$name};
+    die "Bad configuration field ($name)\n" unless exists $configuration{$name};
     
     $configuration{$name} = $value if defined $value;
     return $configuration{$name};
