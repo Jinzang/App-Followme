@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 18;
+use Test::More tests => 24;
 
 #----------------------------------------------------------------------
 # Load package
@@ -263,3 +263,24 @@ do {
         "Bad configuration field"); # test 18
     
 };
+
+#----------------------------------------------------------------------
+# Test update_site
+do {
+    my $template = 'one.html';
+    my $page = App::Followme::read_page($template);
+    $page =~ s/archive/noarchive/;
+    $page =~ s/Page/Folio/g;
+
+    App::Followme::write_page($template, $page);
+    my @filenames = qw(two.html three.html four.html);
+    
+    App::Followme::update_site($template, @filenames);
+    
+    foreach my $filename (@filenames) {       
+        my $input = App::Followme::read_page($filename);
+        ok($input =~ /noarchive/, 'Update site changed template'); # test 19-23
+        ok($input =~ /Page/, "Update site kept contents"); # test 20-24
+    }
+};
+
