@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 24;
+use Test::More tests => 27;
 
 #----------------------------------------------------------------------
 # Load package
@@ -236,7 +236,8 @@ do {
 </html>
 EOQ
 
-    foreach my $count (qw(one two three four)) {
+    foreach my $count (qw(four three two one)) {
+        sleep(1);
         my $output = $code;
         $output =~ s/%%/Page $count/g;
         
@@ -265,22 +266,49 @@ do {
 };
 
 #----------------------------------------------------------------------
-# Test update_site
+# Test visitors
+
 do {
-    my $template = 'one.html';
+    my ($dir_visitor, $file_visitor) = App::Followme::visitors('.', 'html');
+    
+    my $dir = $dir_visitor->();
+    is($dir, '.', 'Dirrctory visitor'); # test 19
+    
+    $dir = $dir_visitor->();
+    is($dir, undef, 'Dirrctory visitor done'); # test 20
+    
+    my @filenames;
+    while (my $filename = $file_visitor->()) {
+        push(@filenames, $filename);
+    }
+    
+    is_deeply(\@filenames,
+              [qw(./one.html ./two.html ./three.html ./four.html)],
+              'File visitor'); # test 21
+};
+
+#----------------------------------------------------------------------
+# Test most_recent_files and followme
+
+do {
+    my @filenames = App::Followme::most_recent_files('.', 3);
+    my $template = shift(@filenames);
+
+    is($template, './one.html', 'Most recent file'); # test 22
+    is_deeply(\@filenames, [qw(./two.html ./three.html)],
+              'other most recent files'); # test 23
+    
     my $page = App::Followme::read_page($template);
+
     $page =~ s/archive/noarchive/;
     $page =~ s/Page/Folio/g;
-
     App::Followme::write_page($template, $page);
-    my @filenames = qw(two.html three.html four.html);
-    
-    App::Followme::update_site($template, @filenames);
+    App::Followme::followme();
     
     foreach my $filename (@filenames) {       
         my $input = App::Followme::read_page($filename);
-        ok($input =~ /noarchive/, 'Update site changed template'); # test 19-23
-        ok($input =~ /Page/, "Update site kept contents"); # test 20-24
+        ok($input =~ /noarchive/, 'Followme changed template'); # tests 24,25
+        ok($input =~ /Page/, "Followme kept contents"); # tests 26,27
     }
 };
 
