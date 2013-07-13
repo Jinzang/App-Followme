@@ -75,7 +75,7 @@ sub followme {
     
     my $template;
     my $ext = $configuration{default_extension};
-    my ($visit_dirs, $visit_files) = visitors($dir, $ext);
+    my ($visit_dirs, $visit_files, $most_recent) = visitors($dir, $ext);
     
     while (defined $visit_dirs->()) {
         while (defined (my $filename = $visit_files->())) {        
@@ -116,27 +116,6 @@ sub followme {
     return;
 }
 
-#----------------------------------------------------------------------
-# Return a list of files most recently modified
-
-sub most_recent_files {
-    my ($dir, $n) = @_;
-    
-    my $ext = $configuration{default_extension};
-    my ($visit_dirs, $visit_files) = visitors($dir, $ext);
-
-    my @recent;
-    $visit_dirs->();
-
-    foreach my $i (1 .. $n) {
-        my $filename = $visit_files->();
-        last unless $filename;
-        
-        push(@recent, $filename);
-    }
-
-    return @recent;
-}
 
 #----------------------------------------------------------------------
 # Break page into template and blocks
@@ -215,24 +194,6 @@ sub read_page {
 }
 
 #----------------------------------------------------------------------
-# Sort a list of files by modification date
-
-sub sort_by_date {
-    my @filenames = @_;
-
-    my @augmented;
-    foreach my $filename (@filenames) {
-        my @stats = stat($filename);
-        push(@augmented, [$stats[9], $filename]);
-    }
-
-    @augmented = sort {$b->[0] <=> $a->[0]} @augmented;
-    @filenames =  map {$_->[1]} @augmented;
-
-    return @filenames;    
-}
-
-#----------------------------------------------------------------------
 # Parse template and page and combine them
 
 sub update_page {
@@ -276,41 +237,64 @@ sub visitors {
 
     my @dirlist;
     my @filelist;
-    push(@dirlist, $top_dir);
+    my @stats = stat($top_dir);
+    push(@dirlist, [$stats[9], $top_dir]);
 
     my $visit_dirs = sub {
-        my $dir = shift(@dirlist);
-        return unless defined $dir;
+        my $node = shift(@dirlist);
+        return unless defined $node;
 
+        my $dir = $node->[1];
         my $dd = IO::Dir->new($dir) or die "Couldn't open $dir: $!\n";
 
         # Find matching files and directories
         while (defined (my $file = $dd->read())) {
             my $path = "$dir/$file";
+            @stats = stat($path);
             
             if (-d $path) {
                 next if $file    =~ /^\./;
-                push(@dirlist, $path);
+                push(@dirlist, [$stats[9], $path]);
                 
             } else {
                 next unless $file =~ /^[^\.]+\.$ext$/;
-                push(@filelist, $path);
+                push(@filelist, [$stats[9], $path]);
             }
         }
 
         $dd->close;
 
-        @dirlist = sort_by_date(@dirlist);
-        @filelist = sort_by_date(@filelist);
+        @dirlist = sort {$b->[0] <=> $a->[0]} @dirlist;
+        @filelist = sort {$b->[0] <=> $a->[0]} @filelist;
 
         return $dir;
     };
     
     my $visit_files = sub {
-        return shift(@filelist);
+        my $node = shift(@filelist);
+        if (defined $node) {
+            return $node->[1];
+        } else {
+            return;
+        }
     };
     
-    return $visit_dirs, $visit_files;
+    my $most_recent_files = sub {
+        my ($limit) = @_;        
+        while (@dirlist) {
+            last if @filelist >= $limit &&
+                    $filelist[$limit-1]->[0] > $dirlist[0]->[0];
+            $visit_dirs->();
+        }
+        my @files;
+        foreach my $i (0 .. $limit-1) {
+            my $node = shift(@filelist);
+            push(@files, $node->[1]);
+        }
+        return @files;
+    };
+        
+    return ($visit_dirs, $visit_files, $most_recent_files);
 }
 
 #----------------------------------------------------------------------
