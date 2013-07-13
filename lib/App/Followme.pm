@@ -3,31 +3,19 @@ use 5.008005;
 use strict;
 use warnings;
 
+use IO::Dir;
 use IO::File;
 use Digest::MD5;
 
-our $VERSION = "0.11";
+our $VERSION = "0.20";
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(followme configure_followme);
+our @EXPORT_OK = qw(configure_followme followme);
 
 our %configuration = (checksum_file => 'followme.md5',
                       default_extension => 'html',
                      );
-
-#----------------------------------------------------------------------
-# Update a website based on changes to a file
-
-sub followme {
-    my ($ext) = @_;
-    $ext = $configuration{default_extension} unless defined $ext;
-
-    my @filenames = sort_by_date(glob("*.$ext"));
-    update_site(@filenames);
-
-    return;
-}
 
 #----------------------------------------------------------------------
 # Detrmine if template has changes
@@ -76,6 +64,78 @@ sub configure_followme {
     
     $configuration{$name} = $value if defined $value;
     return $configuration{$name};
+}
+
+#----------------------------------------------------------------------
+# Update a website based on changes to a file
+
+sub followme {
+    my ($dir) = @_;
+    $dir = '.' unless defined $dir;
+    
+    my $template;
+    my $ext = $configuration{default_extension};
+    my ($visit_dirs, $visit_files) = visitors($dir, $ext);
+    
+    while (defined $visit_dirs->()) {
+        while (defined (my $filename = $visit_files->())) {        
+    
+            if (defined $template) {
+                my $page = read_page($filename);
+                if (! defined $page) {
+                    warn "Couldn't read $filename";
+                    next;
+                }
+                
+                if (! unlink($filename)) {
+                    warn "Can't remove old $filename";
+                    next;
+                }
+        
+                my $new_page = eval {update_page($template, $page)};
+            
+                if ($@) {
+                    warn "$filename: $@";
+                    undef $new_page;
+                }
+        
+                if (defined $new_page) {
+                    write_page($filename, $new_page);
+                } else {
+                    write_page($filename, $page);
+                }
+
+            } else {
+                $template = read_page($filename);
+                die "Couldn't read $filename" unless defined $template;    
+                return unless changed_template($template);                
+            }
+        }
+    }
+    
+    return;
+}
+
+#----------------------------------------------------------------------
+# Return a list of files most recently modified
+
+sub most_recent_files {
+    my ($dir, $n) = @_;
+    
+    my $ext = $configuration{default_extension};
+    my ($visit_dirs, $visit_files) = visitors($dir, $ext);
+
+    my @recent;
+    $visit_dirs->();
+
+    foreach my $i (1 .. $n) {
+        my $filename = $visit_files->();
+        last unless $filename;
+        
+        push(@recent, $filename);
+    }
+
+    return @recent;
 }
 
 #----------------------------------------------------------------------
@@ -166,7 +226,7 @@ sub sort_by_date {
         push(@augmented, [$stats[9], $filename]);
     }
 
-    @augmented = sort {$a->[0] <=> $b->[0]} @augmented;
+    @augmented = sort {$b->[0] <=> $a->[0]} @augmented;
     @filenames =  map {$_->[1]} @augmented;
 
     return @filenames;    
@@ -209,43 +269,48 @@ sub update_page {
 }
 
 #----------------------------------------------------------------------
-# Update a list of pages to match a changed template
+# Return a closure that returns each file name
 
-sub update_site {
-    my ($template_name, @filenames) = @_;
-    
-    my $template = read_page($template_name);
-    die "Couldn't read $template_name" unless defined $template;
-    
-    return unless changed_template($template);
-    
-    foreach my $filename (@filenames) {        
-        my $page = read_page($filename);
-        if (! defined $page) {
-            warn "Couldn't read $filename";
-            next;
-        }
-        
-        if (! unlink($filename)) {
-            warn "Can't remove old $filename";
-            next;
+sub visitors {
+    my ($top_dir, $ext) = @_;
+
+    my @dirlist;
+    my @filelist;
+    push(@dirlist, $top_dir);
+
+    my $visit_dirs = sub {
+        my $dir = shift(@dirlist);
+        return unless defined $dir;
+
+        my $dd = IO::Dir->new($dir) or die "Couldn't open $dir: $!\n";
+
+        # Find matching files and directories
+        while (defined (my $file = $dd->read())) {
+            my $path = "$dir/$file";
+            
+            if (-d $path) {
+                next if $file    =~ /^\./;
+                push(@dirlist, $path);
+                
+            } else {
+                next unless $file =~ /^[^\.]+\.$ext$/;
+                push(@filelist, $path);
+            }
         }
 
-        my $new_page = eval {update_page($template, $page)};
-    
-        if ($@) {
-            warn "$filename: $@";
-            undef $new_page;
-        }
+        $dd->close;
 
-        if (defined $new_page) {
-            write_page($filename, $new_page);
-        } else {
-            write_page($filename, $page);
-        }
-    }
+        @dirlist = sort_by_date(@dirlist);
+        @filelist = sort_by_date(@filelist);
+
+        return $dir;
+    };
     
-    return;
+    my $visit_files = sub {
+        return shift(@filelist);
+    };
+    
+    return $visit_dirs, $visit_files;
 }
 
 #----------------------------------------------------------------------
@@ -274,8 +339,8 @@ App::Followme - A template-less html templating system
 
 =head1 SYNOPSIS
 
-    use App::Followme;
-    followme('htm');
+    use App::Followme qw(followme);
+    followme();
 
 =head1 DESCRIPTION
 
