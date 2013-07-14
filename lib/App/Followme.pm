@@ -67,52 +67,13 @@ sub configure_followme {
 }
 
 #----------------------------------------------------------------------
-# Update a website based on changes to a file
+# Update a website based on changes to a file's template
 
 sub followme {
     my ($dir) = @_;
     $dir = '.' unless defined $dir;
     
-    my $template;
-    my $ext = $configuration{default_extension};
-    my ($visit_dirs, $visit_files, $most_recent) = visitors($dir, $ext);
-    
-    while (defined $visit_dirs->()) {
-        while (defined (my $filename = $visit_files->())) {        
-    
-            if (defined $template) {
-                my $page = read_page($filename);
-                if (! defined $page) {
-                    warn "Couldn't read $filename";
-                    next;
-                }
-                
-                if (! unlink($filename)) {
-                    warn "Can't remove old $filename";
-                    next;
-                }
-        
-                my $new_page = eval {update_page($template, $page)};
-            
-                if ($@) {
-                    warn "$filename: $@";
-                    undef $new_page;
-                }
-        
-                if (defined $new_page) {
-                    write_page($filename, $new_page);
-                } else {
-                    write_page($filename, $page);
-                }
-
-            } else {
-                $template = read_page($filename);
-                die "Couldn't read $filename" unless defined $template;    
-                return unless changed_template($template);                
-            }
-        }
-    }
-    
+    update_site($dir);
     return;
 }
 
@@ -227,6 +188,55 @@ sub update_page {
     }
     
     return join('', @$output);
+}
+
+#----------------------------------------------------------------------
+# Update a website based on changes to a file's template
+
+sub update_site {
+    my ($dir) = @_;
+   
+    my $template;
+    my $ext = $configuration{default_extension};
+    my ($visit_dirs, $visit_files, $most_recent) = visitors($dir, $ext);
+    
+    while (defined $visit_dirs->()) {
+        while (defined (my $filename = $visit_files->())) {        
+    
+            if (defined $template) {
+                my $page = read_page($filename);
+                if (! defined $page) {
+                    warn "Couldn't read $filename";
+                    next;
+                }
+                
+                if (! unlink($filename)) {
+                    warn "Can't remove old $filename";
+                    next;
+                }
+        
+                my $new_page = eval {update_page($template, $page)};
+            
+                if ($@) {
+                    warn "$filename: $@";
+                    undef $new_page;
+                }
+        
+                if (defined $new_page) {
+                    write_page($filename, $new_page);
+                } else {
+                    write_page($filename, $page);
+                }
+
+            } else {
+                $template = read_page($filename);
+                die "Couldn't read $filename" unless defined $template;    
+                return unless changed_template($template);                
+            }
+        }
+    }
+    
+    return;
 }
 
 #----------------------------------------------------------------------

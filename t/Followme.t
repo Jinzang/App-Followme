@@ -288,7 +288,7 @@ do {
 };
 
 #----------------------------------------------------------------------
-# Test most_recent_files and followme
+# Test most_recent_files and update_site
 
 do {
     my ($visit_dirs, $visit_files, $most_recent_files) =
@@ -306,7 +306,7 @@ do {
     $page =~ s/archive/noarchive/;
     $page =~ s/Page/Folio/g;
     App::Followme::write_page($template, $page);
-    App::Followme::followme();
+    App::Followme::update_site('.');
     
     foreach my $filename (@filenames) {       
         my $input = App::Followme::read_page($filename);
