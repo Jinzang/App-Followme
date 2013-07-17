@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 27;
+use Test::More tests => 33;
 
 #----------------------------------------------------------------------
 # Load package
@@ -313,5 +313,40 @@ do {
         ok($input =~ /noarchive/, 'Followme changed template'); # tests 24,25
         ok($input =~ /Page/, "Followme kept contents"); # tests 26,27
     }
+};
+
+#----------------------------------------------------------------------
+# Test builders
+
+do {
+
+    my $text_name = './watch/this-is-only-a-test.txt';
+    my $page_name = App::Followme::build_page_name($text_name);
+    my $page_name_ok = './watch/this-is-only-a-test.html';
+    is($page_name, $page_name_ok, 'Build page'); # test 28
+    
+    my $title = App::Followme::build_title($text_name);
+    my $title_ok = 'This Is Only A Test';
+    is($title, $title_ok, 'Build title'); # test 29
+
+    my $url = App::Followme::build_url('.', $text_name);
+    my $url_ok = 'watch/this-is-only-a-test.html';
+    is($url, $url_ok, 'Build file url'); # test 30
+
+    $url = App::Followme::build_url('.', 'subdir');
+    is($url, 'subdir/index.html', 'Build directory url'); #test 31
+       
+    my $time = 1374019907;
+    my $data = App::Followme::build_date($time);
+    my $data_ok = {day => 16, month => 'Jul', monthnum => '07', 
+                   weekday => 'Tue', hour24 => 20, hour => '08',
+                   minute => 11, second => 47, year => 2013,
+                   ampm => 'pm'};
+    is_deeply($data, $data_ok, 'Build date'); # test 32
+    
+    $data = App::Followme::get_data_for_file('.', './two.html');
+    my @keys = sort keys %$data;
+    my @keys_ok = sort(keys(%$data_ok), 'title', 'url');
+    is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 33
 };
 

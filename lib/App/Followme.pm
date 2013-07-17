@@ -6,16 +6,124 @@ use warnings;
 use IO::Dir;
 use IO::File;
 use Digest::MD5;
+use File::Spec::Functions qw(splitpath catpath abs2rel rel2abs);
 
-our $VERSION = "0.20";
+our $VERSION = "0.30";
 
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(configure_followme followme);
 
-our %configuration = (checksum_file => 'followme.md5',
-                      default_extension => 'html',
-                     );
+our %config = (
+               checksum_file => 'followme.md5',
+               html_extension => 'html',
+               text_extension => 'txt',
+               page_conversion => \&add_tags,
+              );
+
+use constant MONTHS => [qw(January February March April May June July
+			   August September October November December)];
+
+#----------------------------------------------------------------------
+# Add paragraph tags to a text file
+
+sub add_tags {
+    my ($filename) = @_;
+
+    my $page = read_page($filename);
+    my @paragraphs = split(/(\n{2,})/, $page);
+
+    my $pre;
+    $page = '';
+    foreach my $paragraph (@paragraphs) {
+        $pre = $paragraph =~ /<pre/i;            
+        $pre = $pre && $paragraph !~ /<\/pre/i;
+
+        if (! $pre && $paragraph =~ /\S/) {
+          $paragraph = "<p>$paragraph</p>"
+                unless $paragraph =~ /^\s*</ && $paragraph =~ />\s*$/;
+        }
+
+        $page .= $paragraph;
+    }
+    
+    return $page;
+}
+
+#----------------------------------------------------------------------
+# Build date fields from time, based on Blosxom 3
+
+sub build_date {
+    my ($time) = @_;
+    
+    my $num = '01';
+    my $months = MONTHS;
+    my %month2num = map {substr($_, 0, 3) => $num ++} @$months;
+
+    my $ctime = localtime($time);
+    my @names = qw(weekday month day hour24 minute second year);
+    my @values = split(/\W+/, $ctime);
+
+    my $data = {};
+    while (@names) {
+        my $name = shift @names;
+        my $value = shift @values;
+        $data->{$name} = $value;
+    }
+
+    $data->{day} = sprintf("%02d", $data->{day});
+    $data->{monthnum} = $month2num{$data->{month}};
+
+    my $hr = $data->{hour24};
+    if ($hr < 12) {
+        $data->{ampm} = 'am';
+    } else {
+        $data->{ampm} = 'pm';
+        $hr -= 12;
+    }
+
+    $hr = 12 if $hr == 0;
+    $data->{hour} = sprintf("%02d", $hr);
+
+    return $data;
+}
+
+#----------------------------------------------------------------------
+# Convert text file name to html file name
+
+sub build_page_name {
+    my ($filename) = @_;
+
+    $filename =~ s/\.$config{text_extension}$/\.$config{html_extension}/;
+    return $filename;
+}
+
+#----------------------------------------------------------------------
+# Get the title from the filename root
+
+sub build_title {
+    my ($filename) = @_;
+    
+    my ($volume, $dir, $basename) = splitpath($filename);
+    my ($root, $ext) = split(/\./, $basename);
+
+    my @words = map {ucfirst $_} split(/\-/, $root);
+    return join(' ', @words);
+}
+
+#----------------------------------------------------------------------
+# Get the url for a file from its name
+
+sub build_url {
+    my ($top_dir, $filename) = @_;
+    
+    if ($filename !~ /\./) {
+        my $file = "index.$config{html_extension}";
+        $filename = catpath('', $filename, $file);
+    }
+    
+    return abs2rel(build_page_name($filename), $top_dir);
+}
 
 #----------------------------------------------------------------------
 # Detrmine if template has changes
@@ -24,11 +132,11 @@ sub changed_template {
     my ($template) = @_;
     
     my $new_checksum = checksum_template($template);
-    my $old_checksum = read_page($configuration{checksum_file}) || '';
+    my $old_checksum = read_page($config{checksum_file}) || '';
     chomp $old_checksum;
 
     my $changed = $new_checksum ne $old_checksum;
-    write_page($configuration{checksum_file}, "$new_checksum\n") if $changed;
+    write_page($config{checksum_file}, "$new_checksum\n") if $changed;
 
     return $changed;
 }
@@ -56,27 +164,192 @@ sub checksum_template {
 }
 
 #----------------------------------------------------------------------
+# Compile the template into a subroutine
+
+sub compile_template {
+    my ($template) = @_;
+
+    my $code = <<'EOQ';
+sub {
+my ($data) = @_;
+my $text = '';
+EOQ
+
+    my @tokens = split(/(<!--\s*(?:loop|endloop).*?-->)/, $template);
+    
+    foreach my $token (@tokens) {
+        if ($token =~ /^<!--\s*loop/) {
+            $code .= 'foreach my $data (@{$data->{loop}})' . "\n";
+
+        } elsif ($token =~ /^<!--\s*endloop/) {
+            $code .= "}\n";
+
+        } else {
+            $token =~ s/\$(\w+)/\$data->{$1}/g;
+            $code .= "\$text .= <<\"EOQ\";\n";
+            $code .= "${token}EOQ\n";
+        }
+    }
+    
+    $code .= <<'EOQ';
+return $text;
+}
+EOQ
+
+    my $sub = eval ($code);
+    die $@ unless $sub;
+    return $sub;
+}
+
+#----------------------------------------------------------------------
+# Set or get configuration
 
 sub configure_followme {
     my ($name, $value) = @_;
     
-    die "Bad configuration field ($name)\n" unless exists $configuration{$name};
+    die "Bad configuration field ($name)\n" unless exists $config{$name};
     
-    $configuration{$name} = $value if defined $value;
-    return $configuration{$name};
+    $config{$name} = $value if defined $value;
+    return $config{$name};
+}
+
+#----------------------------------------------------------------------
+# Convert a text file to html
+
+sub convert_a_file {
+    my ($top_dir, $filename) = @_;
+
+    my $converter = $config{page_conversion};
+    my $data = get_data_for_file($top_dir, $filename);
+    $data->{body} = $converter->($filename);
+    
+    my $template = find_template($top_dir, $filename);
+    my $sub = compile_template($template);
+    my $page = $sub->($data);
+ 
+    my $page_name = build_page_name($filename);
+    write_page($page_name, $page);
+
+    unlink($filename);
+    return;    
+}
+
+#----------------------------------------------------------------------
+# Convert all text files under a directory
+
+sub convert_text_files {
+    my ($top_dir) = @_;
+   
+    my $ext = $config{text_extension};
+    my ($visit_dirs, $visit_files, $most_recent) = visitors($top_dir, $ext);
+    
+    my @converted_files;
+    while (defined (my $dir = $visit_dirs->())) {
+        my $converted =  0;
+        while (defined (my $filename = $visit_files->())) {
+            eval {convert_a_file($top_dir, $filename)};
+
+            if ($@) {
+                warn "$filename: $@";
+            } else {
+                push(@converted_files, $filename);
+            }
+        }
+    }
+    
+    return \@converted_files;
+}
+
+#----------------------------------------------------------------------
+# Find the template file for a filename
+
+sub find_template {
+    my ($top_dir, $filename) = @_;   
+
+    $filename = abs2rel($filename, $top_dir);
+    my @path = splitdir($filename);
+
+    my $basename = pop(@path);
+    my ($root, $ext) = split(/\./, $basename);
+
+    while (@path) {
+        my $template = catdir(@path, "${root}_template.$ext");
+        return $template if -e $template;
+        
+        $template = catdir(@path, "template.$ext");
+        return $template if -e $template;
+
+        pop(@path);
+    }
+
+    die "Couldn't find template for $filename\n";
 }
 
 #----------------------------------------------------------------------
 # Update a website based on changes to a file's template
 
 sub followme {
-    my ($dir) = @_;
-    $dir = '.' unless defined $dir;
+    my ($top_dir) = @_;
+    $top_dir = '.' unless defined $top_dir;
     
-    update_site($dir);
+    update_site($top_dir);
+    my $converted_files = convert_text_files($top_dir);
+    create_indexes($converted_files); # TODO
+
     return;
 }
 
+#----------------------------------------------------------------------
+# Get the data used to construct a page
+
+sub get_data_for_file {
+    my ($top_dir, $filename) = @_;
+    
+    my @stats = stat($filename);
+    my $data = build_date($stats[9]);
+
+    $data->{title} = build_title($filename);
+    $data->{url} = build_url($top_dir, $filename);
+    
+    return $data;
+}
+
+#----------------------------------------------------------------------
+# Retrieve the data associated with a file
+
+sub index_data {
+    my ($index_dir) = @_;
+    
+    my $dd = IO::Dir->new($index_dir) or die "Couldn't open $index_dir: $!\n";
+
+    my @dir_data;
+    my @file_data;
+    while (defined (my $file = $dd->read())) {
+        my $path = catpath('', $index_dir, $file);
+        
+        if (-d $path) {
+            next if $file =~ /^\./;
+
+        } else {
+            my ($root, $ext) = split(/\./, $file);
+            next unless $ext eq $config{html_extension};
+            next if $root =~ /template$/;
+        }
+        
+        my $data = get_data_for_file($path);
+
+        if (-d $path) {
+            push(@dir_data, $data);
+        } else {
+            push(@file_data, $data);
+        }
+    }
+    
+    close($dd);
+    
+    my @loop = (@dir_data, @file_data);
+    return \@loop;
+}
 
 #----------------------------------------------------------------------
 # Break page into template and blocks
@@ -197,7 +470,7 @@ sub update_site {
     my ($dir) = @_;
    
     my $template;
-    my $ext = $configuration{default_extension};
+    my $ext = $config{html_extension};
     my ($visit_dirs, $visit_files, $most_recent) = visitors($dir, $ext);
     
     while (defined $visit_dirs->()) {
@@ -259,7 +532,7 @@ sub visitors {
 
         # Find matching files and directories
         while (defined (my $file = $dd->read())) {
-            my $path = "$dir/$file";
+            my $path = catpath('', $dir, $file);
             @stats = stat($path);
             
             if (-d $path) {
@@ -329,7 +602,7 @@ __END__
 
 =head1 NAME
 
-App::Followme - A template-less html templating system
+App::Followme - Create a simple static website
 
 =head1 SYNOPSIS
 
