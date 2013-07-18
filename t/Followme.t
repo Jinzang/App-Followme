@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 33;
+use Test::More tests => 34;
 
 #----------------------------------------------------------------------
 # Load package
@@ -243,9 +243,9 @@ EOQ
         
         my $filename = "$count.html";
         App::Followme::write_page($filename, $output);
-        
+
         my $input = App::Followme::read_page($filename);
-        is($input, $output, "Read and write page $count"); # tests 13-16
+        is($input, $output, "Read and write page $count"); #tests 13-16
     }
 };
 
@@ -269,7 +269,7 @@ do {
 # Test visitors
 
 do {
-    my ($dir_visitor, $file_visitor) = App::Followme::visitors('.', 'html');
+    my ($dir_visitor, $file_visitor) = App::Followme::visitors('html');
     
     my $dir = $dir_visitor->();
     is($dir, '.', 'Dirrctory visitor'); # test 19
@@ -283,7 +283,7 @@ do {
     }
     
     is_deeply(\@filenames,
-              [qw(./one.html ./two.html ./three.html ./four.html)],
+              [qw(one.html two.html three.html four.html)],
               'File visitor'); # test 21
 };
 
@@ -292,13 +292,13 @@ do {
 
 do {
     my ($visit_dirs, $visit_files, $most_recent_files) =
-        App::Followme::visitors('.', 'html');
+        App::Followme::visitors('html');
         
     my @filenames = $most_recent_files->(3);
     my $template = shift(@filenames);
 
-    is($template, './one.html', 'Most recent file'); # test 22
-    is_deeply(\@filenames, [qw(./two.html ./three.html)],
+    is($template, 'one.html', 'Most recent file'); # test 22
+    is_deeply(\@filenames, [qw(two.html three.html)],
               'other most recent files'); # test 23
     
     my $page = App::Followme::read_page($template);
@@ -320,21 +320,26 @@ do {
 
 do {
 
-    my $text_name = './watch/this-is-only-a-test.txt';
+    my $text_name = 'watch/this-is-only-a-test.txt';
     my $page_name = App::Followme::build_page_name($text_name);
-    my $page_name_ok = './watch/this-is-only-a-test.html';
+    my $page_name_ok = 'watch/this-is-only-a-test.html';
     is($page_name, $page_name_ok, 'Build page'); # test 28
     
     my $title = App::Followme::build_title($text_name);
     my $title_ok = 'This Is Only A Test';
-    is($title, $title_ok, 'Build title'); # test 29
+    is($title, $title_ok, 'Build file title'); # test 29
 
-    my $url = App::Followme::build_url('.', $text_name);
+    my $index_name = 'watch/index.html';
+    $title = App::Followme::build_title($index_name);
+    $title_ok = 'Watch';
+    is($title, $title_ok, 'Build directory title'); # test 30
+    
+    my $url = App::Followme::build_url($text_name);
     my $url_ok = 'watch/this-is-only-a-test.html';
-    is($url, $url_ok, 'Build file url'); # test 30
+    is($url, $url_ok, 'Build file url'); # test 31
 
-    $url = App::Followme::build_url('.', 'subdir');
-    is($url, 'subdir/index.html', 'Build directory url'); #test 31
+    $url = App::Followme::build_url('watch');
+    is($url, 'watch/index.html', 'Build directory url'); #test 32
        
     my $time = 1374019907;
     my $data = App::Followme::build_date($time);
@@ -342,11 +347,61 @@ do {
                    weekday => 'Tue', hour24 => 20, hour => '08',
                    minute => 11, second => 47, year => 2013,
                    ampm => 'pm'};
-    is_deeply($data, $data_ok, 'Build date'); # test 32
+    is_deeply($data, $data_ok, 'Build date'); # test 33
     
-    $data = App::Followme::get_data_for_file('.', './two.html');
+    $data = App::Followme::get_data_for_file('two.html');
     my @keys = sort keys %$data;
     my @keys_ok = sort(keys(%$data_ok), 'title', 'url');
-    is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 33
+    is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 34
 };
 
+#----------------------------------------------------------------------
+# Test converters
+
+do {
+   my $text = <<'EOQ';
+Page %%
+
+This is a paragraph.
+EOQ
+
+   my $template = <<'EOQ';
+<html>
+<head>
+<meta name="robots" content="archive">
+<!-- begin meta -->
+<title>$title</title>
+<!-- end meta -->
+</head>
+<body>
+<!-- begin content -->
+<h1>$title</h1>
+
+$body
+<!-- end content -->
+</body>
+</html>
+EOQ
+
+    foreach my $count (qw(four three two one)) {
+        my $output = $text;
+        $output =~ s/%%/$count/g;
+        
+        my $filename = "$count.txt";
+        App::Followme::write_page($filename, $output);
+    }
+
+    foreach my $root (qw(template one_template)) {
+        my $filename = "$root.html";
+        App::Followme::write_page($filename, $template);
+    }
+
+    my $template_file = App::Followme::find_template('one.html');
+    my $template_file_ok ='one_template.html';
+    is($template_file, $template_file_ok, 'Find specific templae'); # test 35
+
+    $template_file = App::Followme::find_template('two.html');
+    $template_file_ok ='template.html';
+    is($template_file, $template_file_ok, 'Generic templae'); # test 36
+
+};
