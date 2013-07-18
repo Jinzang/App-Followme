@@ -6,7 +6,6 @@ use warnings;
 use IO::Dir;
 use IO::File;
 use Digest::MD5;
-use File::Spec::Functions qw(splitpath catpath abs2rel rel2abs);
 
 our $VERSION = "0.30";
 
@@ -16,6 +15,8 @@ our @EXPORT_OK = qw(configure_followme followme);
 
 our %config = (
                checksum_file => 'followme.md5',
+               index_root => 'index',
+               top_title => 'home',
                html_extension => 'html',
                text_extension => 'txt',
                page_conversion => \&add_tags,
@@ -94,8 +95,12 @@ sub build_date {
 sub build_page_name {
     my ($filename) = @_;
 
-    $filename =~ s/\.$config{text_extension}$/\.$config{html_extension}/;
-    return $filename;
+    my @dirs = split(/\//, $filename);
+    my $basename = pop(@dirs);
+    my ($root, $ext) = split(/\./, $basename);
+
+    my $page_name = join('.', $root, $config{html_extension});
+    return join('/', @dirs, $page_name);
 }
 
 #----------------------------------------------------------------------
@@ -104,9 +109,14 @@ sub build_page_name {
 sub build_title {
     my ($filename) = @_;
     
-    my ($volume, $dir, $basename) = splitpath($filename);
+    my @dirs = split(/\//, $filename);
+    my $basename = pop(@dirs);
     my ($root, $ext) = split(/\./, $basename);
 
+    if ($root eq $config{index_root}) {
+        $root = pop(@dirs) || $config{top_title};
+    }
+    
     my @words = map {ucfirst $_} split(/\-/, $root);
     return join(' ', @words);
 }
@@ -115,14 +125,20 @@ sub build_title {
 # Get the url for a file from its name
 
 sub build_url {
-    my ($top_dir, $filename) = @_;
+    my ($filename) = @_;
     
-    if ($filename !~ /\./) {
-        my $file = "index.$config{html_extension}";
-        $filename = catpath('', $filename, $file);
+    my @dirs = split(/\//, $filename);
+    my $basename = pop(@dirs);
+
+    my $page_name;
+    if ($basename !~ /\./) {
+        push(@dirs, $basename);
+        $page_name = join('.', $config{index_root}, $config{html_extension});
+    } else {
+        $page_name = build_page_name($basename);
     }
     
-    return abs2rel(build_page_name($filename), $top_dir);
+    return join('/', @dirs, $page_name);
 }
 
 #----------------------------------------------------------------------
@@ -217,13 +233,13 @@ sub configure_followme {
 # Convert a text file to html
 
 sub convert_a_file {
-    my ($top_dir, $filename) = @_;
+    my ($filename) = @_;
 
     my $converter = $config{page_conversion};
-    my $data = get_data_for_file($top_dir, $filename);
+    my $data = get_data_for_file($filename);
     $data->{body} = $converter->($filename);
     
-    my $template = find_template($top_dir, $filename);
+    my $template = find_template($filename);
     my $sub = compile_template($template);
     my $page = $sub->($data);
  
@@ -238,16 +254,14 @@ sub convert_a_file {
 # Convert all text files under a directory
 
 sub convert_text_files {
-    my ($top_dir) = @_;
-   
     my $ext = $config{text_extension};
-    my ($visit_dirs, $visit_files, $most_recent) = visitors($top_dir, $ext);
+    my ($visit_dirs, $visit_files, $most_recent) = visitors($ext);
     
     my @converted_files;
     while (defined (my $dir = $visit_dirs->())) {
         my $converted =  0;
         while (defined (my $filename = $visit_files->())) {
-            eval {convert_a_file($top_dir, $filename)};
+            eval {convert_a_file($filename)};
 
             if ($@) {
                 warn "$filename: $@";
@@ -264,22 +278,22 @@ sub convert_text_files {
 # Find the template file for a filename
 
 sub find_template {
-    my ($top_dir, $filename) = @_;   
+    my ($filename) = @_;   
 
-    $filename = abs2rel($filename, $top_dir);
-    my @path = splitdir($filename);
-
-    my $basename = pop(@path);
+    my @dirs = split(/\//, $filename);
+    my $basename = pop(@dirs);
     my ($root, $ext) = split(/\./, $basename);
+    $ext = $config{html_extension};
 
-    while (@path) {
-        my $template = catdir(@path, "${root}_template.$ext");
+    for (;;) {
+        my $template = join('/', @dirs, "${root}_template.$ext");
         return $template if -e $template;
         
-        $template = catdir(@path, "template.$ext");
+        $template = join('/', @dirs, "template.$ext");
         return $template if -e $template;
 
-        pop(@path);
+        last unless @dirs;
+        pop(@dirs);
     }
 
     die "Couldn't find template for $filename\n";
@@ -290,10 +304,10 @@ sub find_template {
 
 sub followme {
     my ($top_dir) = @_;
-    $top_dir = '.' unless defined $top_dir;
+    chdir($top_dir) if defined $top_dir;
     
-    update_site($top_dir);
-    my $converted_files = convert_text_files($top_dir);
+    update_site();
+    my $converted_files = convert_text_files();
     create_indexes($converted_files); # TODO
 
     return;
@@ -303,13 +317,13 @@ sub followme {
 # Get the data used to construct a page
 
 sub get_data_for_file {
-    my ($top_dir, $filename) = @_;
+    my ($filename) = @_;
     
     my @stats = stat($filename);
     my $data = build_date($stats[9]);
 
     $data->{title} = build_title($filename);
-    $data->{url} = build_url($top_dir, $filename);
+    $data->{url} = build_url($filename);
     
     return $data;
 }
@@ -466,12 +480,10 @@ sub update_page {
 #----------------------------------------------------------------------
 # Update a website based on changes to a file's template
 
-sub update_site {
-    my ($dir) = @_;
-   
+sub update_site {   
     my $template;
     my $ext = $config{html_extension};
-    my ($visit_dirs, $visit_files, $most_recent) = visitors($dir, $ext);
+    my ($visit_dirs, $visit_files, $most_recent) = visitors($ext);
     
     while (defined $visit_dirs->()) {
         while (defined (my $filename = $visit_files->())) {        
@@ -516,12 +528,12 @@ sub update_site {
 # Return a closure that returns each file name
 
 sub visitors {
-    my ($top_dir, $ext) = @_;
+    my ($ext) = @_;
 
     my @dirlist;
     my @filelist;
-    my @stats = stat($top_dir);
-    push(@dirlist, [$stats[9], $top_dir]);
+    my @stats = stat('.');
+    push(@dirlist, [$stats[9], '.']);
 
     my $visit_dirs = sub {
         my $node = shift(@dirlist);
@@ -532,7 +544,7 @@ sub visitors {
 
         # Find matching files and directories
         while (defined (my $file = $dd->read())) {
-            my $path = catpath('', $dir, $file);
+            my $path = $dir eq '.' ? $file : "$dir/$file";
             @stats = stat($path);
             
             if (-d $path) {
