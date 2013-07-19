@@ -16,10 +16,13 @@ our @EXPORT_OK = qw(configure_followme followme);
 our %config = (
                checksum_file => 'followme.md5',
                index_root => 'index',
-               top_title => 'home',
                html_extension => 'html',
                text_extension => 'txt',
-               page_conversion => \&add_tags,
+               archive_index_length => 5,
+               archive_index => 'blog',
+               archive_directory => 'archive',
+               body_tag => 'content',
+               page_converter => \&add_tags,
               );
 
 use constant MONTHS => [qw(January February March April May June July
@@ -133,6 +136,7 @@ sub build_url {
     if ($basename !~ /\./) {
         push(@dirs, $basename);
         $page_name = join('.', $config{index_root}, $config{html_extension});
+
     } else {
         $page_name = build_page_name($basename);
     }
@@ -235,7 +239,7 @@ sub configure_followme {
 sub convert_a_file {
     my ($filename) = @_;
 
-    my $converter = $config{page_conversion};
+    my $converter = $config{page_converter};
     my $data = get_data_for_file($filename);
 
     my $text = read_page($filename);
@@ -249,7 +253,6 @@ sub convert_a_file {
     my $page_name = build_page_name($filename);
     write_page($page_name, $page);
 
-    unlink($filename);
     return;    
 }
 
@@ -258,7 +261,7 @@ sub convert_a_file {
 
 sub convert_text_files {
     my $ext = $config{text_extension};
-    my ($visit_dirs, $visit_files, $most_recent) = visitors($ext);
+    my ($visit_dirs, $visit_files) = visitors($ext);
     
     my @converted_files;
     while (defined ($visit_dirs->())) {
@@ -269,11 +272,66 @@ sub convert_text_files {
                 warn "$filename: $@";
             } else {
                 push(@converted_files, $filename);
+                unlink($filename);
             }
         }
     }
     
     return \@converted_files;
+}
+
+#----------------------------------------------------------------------
+# Create an index filr
+
+sub create_an_index {
+    my ($index_file) = @_;
+
+    my $data = index_data($index_file);
+    my $template = find_template($index_file);
+    my $sub = compile_template($template);
+    my $page = $sub->($data);
+ 
+    write_page($index_file, $page);
+    return;
+}
+
+#----------------------------------------------------------------------
+# Create the index of most recent additions to the archive
+
+sub create_archive_index {
+    my ($archive_index) = @_;
+
+    my $archive_dir = $config{archive_directory};
+    my $data = recent_archive_data($archive_index, $archive_dir);
+    my $template = find_template($archive_index);
+    my $sub = compile_template($template);
+    my $page = $sub->($data);
+ 
+    write_page($archive_index, $page);
+    return;
+}
+
+#----------------------------------------------------------------------
+# Create index pages for archived files
+
+sub create_indexes {
+    my ($converted_files) = @_;
+
+    my @index_files = get_indexes($converted_files);
+    return unless @index_files;
+    
+    foreach my $index_file (@index_files) {
+        eval {create_an_index($index_file)};
+        warn "$index_file: $@" if $@;
+    }
+
+    my $archive_index =
+        join('.', $config{archive_root}, $config{html_extension});
+
+    eval {create_archive_index($archive_index)};
+    warn "$archive_index: $@" if $@;
+    
+    return;
 }
 
 #----------------------------------------------------------------------
@@ -310,7 +368,7 @@ sub followme {
     
     update_site();
     my $converted_files = convert_text_files();
-    create_indexes($converted_files); # TODO
+    create_indexes($converted_files);
 
     return;
 }
@@ -320,10 +378,16 @@ sub followme {
 
 sub get_data_for_file {
     my ($filename) = @_;
-    
-    my @stats = stat($filename);
-    my $data = build_date($stats[9]);
 
+    my $data;    
+    if (-e $filename) {
+        my @stats = stat($filename);
+        $data = build_date($stats[9]);
+
+    } else {
+        $data = {};
+    }
+    
     $data->{title} = build_title($filename);
     $data->{url} = build_url($filename);
     
@@ -331,40 +395,111 @@ sub get_data_for_file {
 }
 
 #----------------------------------------------------------------------
-# Retrieve the data associated with a file
+# Get a list of index files for the converted files
 
-sub index_data {
-    my ($index_dir) = @_;
+sub get_indexes {
+    my ($converted_files) = @_;
+
+    my %index_files;
+    my $index_name = join('.', $config{index_root}, $config{html_extension});
     
-    my $dd = IO::Dir->new($index_dir) or die "Couldn't open $index_dir: $!\n";
-
-    my @dir_data;
-    my @file_data;
-    while (defined (my $file = $dd->read())) {
-        my $path = catpath('', $index_dir, $file);
+    foreach my $filename (@$converted_files) {
+        my ($top_dir, @dirs) = split(/\//, $filename);
+        next unless $top_dir eq $config{archive_directory};
         
-        if (-d $path) {
-            next if $file =~ /^\./;
-
-        } else {
-            my ($root, $ext) = split(/\./, $file);
-            next unless $ext eq $config{html_extension};
-            next if $root =~ /template$/;
-        }
-        
-        my $data = get_data_for_file($path);
-
-        if (-d $path) {
-            push(@dir_data, $data);
-        } else {
-            push(@file_data, $data);
+        while (@dirs) {
+            pop(@dirs);
+            my $file = join('/', $top_dir, @dirs, $index_name);
+            $index_files{$file} = 1;
         }
     }
     
-    close($dd);
+    my @index_files = keys %index_files;
+    @index_files = sort_by_depth(@index_files) if @index_files;
     
+    return @index_files;
+}
+
+#----------------------------------------------------------------------
+# Retrieve the data associated with a file
+
+sub index_data {
+    my ($index_file) = @_;
+        
+    my @dirs = split(/\//, $index_file);
+    my $basename = pop(@dirs);
+    
+    my $index_dir = join('/', @dirs);
+    my $data = get_data_for_file($index_dir);
+
+    my $ext = $config{html_extension};
+    my ($visit_dirs, $visit_files) = visitors($ext, $index_dir);
+
+    my @dir_data;
+    my @file_data;
+    $visit_dirs->();
+
+    while (defined (my $file = $visit_files->())) {
+        my ($root, $ext) = split(/\./, $file);
+        
+        next if $root eq $config{index_root};
+        next if $root =~ /template$/;
+        
+        my $path = "$index_dir/$file";
+        my $loop_data = get_data_for_file($path);
+
+        if (-d $path) {
+            push(@dir_data, $loop_data);
+        } else {
+            push(@file_data, $loop_data);
+        }
+    }
+       
     my @loop = (@dir_data, @file_data);
-    return \@loop;
+    $data->{loop} = \@loop;
+
+    return $data;
+}
+
+#----------------------------------------------------------------------
+# Get the most recently changed files
+
+sub most_recent_files {
+    my ($limit, $top_dir) = @_;
+    
+    my $ext = $config{html_extension};
+    my ($visit_dirs, $visit_files) = visitors($ext, $top_dir);
+    
+    my @augmented_files;
+    while (defined (my $dir = $visit_dirs->())) {
+        while (defined (my $filename = $visit_files->())) {
+            my @dirs = split(/\//, $filename);
+            my $basename = pop(@dirs);
+            
+            my ($root, $ext) = split(/\./, $basename);
+            next if $root eq $config{index_root};
+            
+            my @stats = stat($filename);
+            
+            if (@augmented_files < $limit) {
+                push(@augmented_files, [$stats[9], $filename]);
+                @augmented_files = sort {$a->[0] <=> $b->[0]} @augmented_files;
+
+            } else {
+                # The modification date is compared and sorted on
+                if ($stats[9] > $augmented_files[0]->[0]) {
+                    push(@augmented_files, [$stats[9], $filename]);
+                    @augmented_files = sort {$a->[0] <=> $b->[0]} @augmented_files;
+                    shift(@augmented_files);
+                }
+            }
+        }
+    }
+    
+
+    @augmented_files = sort {$a->[0] <=> $b->[0]} @augmented_files;
+    my @recent_files = map {$_->[1]} @augmented_files;
+    return reverse @recent_files;
 }
 
 #----------------------------------------------------------------------
@@ -428,6 +563,31 @@ sub parse_page {
 }
 
 #----------------------------------------------------------------------
+# Get the data to put in the archive index
+
+sub recent_archive_data {
+    my ($archive_index, $archive_dir) = @_;
+
+    my @loop;
+    my $limit = $config{archive_index_length};
+    my $data = get_data_for_file($archive_index);
+    my @filenames = most_recent_files($limit, $archive_dir);
+
+    foreach my $filename (@filenames) {
+        my $loopdata = get_data_for_file($filename);
+
+        my $page = read_page($filename);
+        my $blocks = parse_page($page);
+        $loopdata->{body} = $blocks->{$config{body_tag}};
+
+        push(@loop, $loopdata);
+    }
+
+    $data->{loop} = \@loop;
+    return $data;
+}
+
+#----------------------------------------------------------------------
 # Read a file into a string
 
 sub read_page {
@@ -441,6 +601,25 @@ sub read_page {
     close($fd);
     
     return $page;
+}
+
+#----------------------------------------------------------------------
+# Sort a list of files so the deepest files are first
+
+sub sort_by_depth {
+    my (@index_files) = @_;
+
+    my @augmented_files;
+    foreach my $filename (@index_files) {
+        # tr returns a count of the number of characters translated
+        my $depth = $filename =~ tr(/)(/);
+        push(@augmented_files, [$depth, $filename]);
+    }
+
+    @augmented_files = sort {$b->[0] <=> $a->[0]} @augmented_files;
+    @index_files = map {$_->[1]} @index_files;
+    
+    return @index_files;
 }
 
 #----------------------------------------------------------------------
@@ -485,7 +664,7 @@ sub update_page {
 sub update_site {   
     my $template;
     my $ext = $config{html_extension};
-    my ($visit_dirs, $visit_files, $most_recent) = visitors($ext);
+    my ($visit_dirs, $visit_files) = visitors($ext);
     
     while (defined $visit_dirs->()) {
         while (defined (my $filename = $visit_files->())) {        
@@ -530,12 +709,15 @@ sub update_site {
 # Return a closure that returns each file name
 
 sub visitors {
-    my ($ext) = @_;
-
+    my ($ext, $top_dir) = @_;
+    $top_dir = '.' unless defined $top_dir;
+    
     my @dirlist;
     my @filelist;
-    my @stats = stat('.');
-    push(@dirlist, [$stats[9], '.']);
+    
+    # Store the modification date with the file
+    my @stats = stat($top_dir);
+    push(@dirlist, [$stats[9], $top_dir]);
 
     my $visit_dirs = sub {
         my $node = shift(@dirlist);
@@ -575,23 +757,8 @@ sub visitors {
             return;
         }
     };
-    
-    my $most_recent_files = sub {
-        my ($limit) = @_;        
-        while (@dirlist) {
-            last if @filelist >= $limit &&
-                    $filelist[$limit-1]->[0] > $dirlist[0]->[0];
-            $visit_dirs->();
-        }
-        my @files;
-        foreach my $i (0 .. $limit-1) {
-            my $node = shift(@filelist);
-            push(@files, $node->[1]);
-        }
-        return @files;
-    };
-        
-    return ($visit_dirs, $visit_files, $most_recent_files);
+            
+    return ($visit_dirs, $visit_files);
 }
 
 #----------------------------------------------------------------------
