@@ -29,13 +29,12 @@ use constant MONTHS => [qw(January February March April May June July
 # Add paragraph tags to a text file
 
 sub add_tags {
-    my ($filename) = @_;
+    my ($text) = @_;
 
-    my $page = read_page($filename);
-    my @paragraphs = split(/(\n{2,})/, $page);
+    my @paragraphs = split(/(\n{2,})/, $text);
 
     my $pre;
-    $page = '';
+    my $page = '';
     foreach my $paragraph (@paragraphs) {
         $pre = $paragraph =~ /<pre/i;            
 
@@ -238,8 +237,11 @@ sub convert_a_file {
 
     my $converter = $config{page_conversion};
     my $data = get_data_for_file($filename);
-    $data->{body} = $converter->($filename);
-    
+
+    my $text = read_page($filename);
+    die "Couldn't read $filename" unless defined $text;
+    $data->{body} = $converter->($text);
+
     my $template = find_template($filename);
     my $sub = compile_template($template);
     my $page = $sub->($data);

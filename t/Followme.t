@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 39;
+use Test::More tests => 42;
 
 #----------------------------------------------------------------------
 # Load package
@@ -408,7 +408,8 @@ EOQ
     $template_file_ok ='template.html';
     is($template_file, $template_file_ok, 'Generic templae'); # test 36
 
-    my $tagged_text = App::Followme::add_tags('three.txt');
+    my $page = App::Followme::read_page('three.txt');
+    my $tagged_text = App::Followme::add_tags($page);
     my $tagged_text_ok = $text;
     
     $tagged_text_ok =~ s/Page %%/<p>Page three<\/p>/;
@@ -418,8 +419,19 @@ EOQ
     
     my $data = {title =>'Three', body => $tagged_text};
     my $sub = App::Followme::compile_template('template.html');
-    my $page = $sub->($data);
+    $page = $sub->($data);
 
     ok($page =~ /<h1>Three<\/h1>/, 'Apply template to title'); # test 38
-    ok($page =~ /<p>This is a paragraph<\/p>/, 'Apply template to body') # test 39
+    ok($page =~ /<p>This is a paragraph<\/p>/, 'Apply template to body'); # test 39
+    
+    App::Followme::convert_a_file('four.txt');
+    $page = App::Followme::read_page('four.html');
+    ok($page =~ /<h1>Four<\/h1>/, 'Convert a file'); # test 40
+
+    App::Followme::convert_text_files();
+    $page = App::Followme::read_page('one.html');
+    ok($page =~ /<h1>One<\/h1>/, 'Convert text files one'); # test 41
+    $page = App::Followme::read_page('two.html');
+    ok($page =~ /<h1>Two<\/h1>/, 'Convert text files two'); # test 42
+    
 };
