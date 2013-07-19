@@ -291,10 +291,7 @@ do {
 # Test most_recent_files and update_site
 
 do {
-    my ($visit_dirs, $visit_files, $most_recent_files) =
-        App::Followme::visitors('html');
-        
-    my @filenames = $most_recent_files->(3);
+    my @filenames = App::Followme::most_recent_files(3);
     my $template = shift(@filenames);
 
     is($template, 'one.html', 'Most recent file'); # test 22
