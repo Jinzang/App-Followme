@@ -38,13 +38,13 @@ sub add_tags {
     $page = '';
     foreach my $paragraph (@paragraphs) {
         $pre = $paragraph =~ /<pre/i;            
-        $pre = $pre && $paragraph !~ /<\/pre/i;
 
         if (! $pre && $paragraph =~ /\S/) {
           $paragraph = "<p>$paragraph</p>"
                 unless $paragraph =~ /^\s*</ && $paragraph =~ />\s*$/;
         }
 
+        $pre = $pre && $paragraph !~ /<\/pre/i;
         $page .= $paragraph;
     }
     
@@ -183,8 +183,9 @@ sub checksum_template {
 # Compile the template into a subroutine
 
 sub compile_template {
-    my ($template) = @_;
-
+    my ($filename) = @_;
+    my $template = read_page($filename);
+    
     my $code = <<'EOQ';
 sub {
 my ($data) = @_;
@@ -258,8 +259,7 @@ sub convert_text_files {
     my ($visit_dirs, $visit_files, $most_recent) = visitors($ext);
     
     my @converted_files;
-    while (defined (my $dir = $visit_dirs->())) {
-        my $converted =  0;
+    while (defined ($visit_dirs->())) {
         while (defined (my $filename = $visit_files->())) {
             eval {convert_a_file($filename)};
 

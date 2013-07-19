@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 34;
+use Test::More tests => 39;
 
 #----------------------------------------------------------------------
 # Load package
@@ -362,7 +362,11 @@ do {
    my $text = <<'EOQ';
 Page %%
 
-This is a paragraph.
+This is a paragraph
+
+<pre>
+This is preformatted text.
+</pre>
 EOQ
 
    my $template = <<'EOQ';
@@ -404,4 +408,18 @@ EOQ
     $template_file_ok ='template.html';
     is($template_file, $template_file_ok, 'Generic templae'); # test 36
 
+    my $tagged_text = App::Followme::add_tags('three.txt');
+    my $tagged_text_ok = $text;
+    
+    $tagged_text_ok =~ s/Page %%/<p>Page three<\/p>/;
+    $tagged_text_ok =~s/This is a paragraph/<p>This is a paragraph<\/p>/;
+    
+    is($tagged_text, $tagged_text_ok, 'Add tags'); # test 37
+    
+    my $data = {title =>'Three', body => $tagged_text};
+    my $sub = App::Followme::compile_template('template.html');
+    my $page = $sub->($data);
+
+    ok($page =~ /<h1>Three<\/h1>/, 'Apply template to title'); # test 38
+    ok($page =~ /<p>This is a paragraph<\/p>/, 'Apply template to body') # test 39
 };
