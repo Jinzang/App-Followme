@@ -621,6 +621,28 @@ sub sort_by_depth {
 }
 
 #----------------------------------------------------------------------
+# Sort a list of files alphabetically, except for the index file
+
+sub sort_by_name {
+    my (@files) = @_;
+    
+    my @sorted_files;
+    my @unsorted_files;
+    my $index_name = join('.', $config{index_root}, $config{html_extension});
+
+    foreach my $file (@files) {
+        if ($file =~ /\/$index_name$/) {
+            push(@sorted_files, $file);
+        } else {
+            push(@unsorted_files, $file)
+        }
+    }
+    
+    push(@sorted_files, sort @unsorted_files);
+    return @sorted_files;
+}
+
+#----------------------------------------------------------------------
 # Parse template and page and combine them
 
 sub update_page {
@@ -664,6 +686,12 @@ sub update_site {
     my $ext = $config{html_extension};
     my ($visit_dirs, $visit_files) = visitors($ext);
     
+    my $template_file = "template.$config{html_extension}";
+    $template = read_page($template_file);
+
+    die "Couldn't read $template_file" unless defined $template;    
+    return unless changed_template($template);                
+
     while (defined $visit_dirs->()) {
         while (defined (my $filename = $visit_files->())) {        
     
@@ -693,9 +721,6 @@ sub update_site {
                 }
 
             } else {
-                $template = read_page($filename);
-                die "Couldn't read $filename" unless defined $template;    
-                return unless changed_template($template);                
             }
         }
     }
@@ -714,46 +739,38 @@ sub visitors {
     my @filelist;
     
     # Store the modification date with the file
-    my @stats = stat($top_dir);
-    push(@dirlist, [$stats[9], $top_dir]);
+    push(@dirlist, $top_dir);
 
     my $visit_dirs = sub {
-        my $node = shift(@dirlist);
-        return unless defined $node;
+        my $dir = shift(@dirlist);
+        return unless defined $dir;
 
-        my $dir = $node->[1];
         my $dd = IO::Dir->new($dir) or die "Couldn't open $dir: $!\n";
 
         # Find matching files and directories
         while (defined (my $file = $dd->read())) {
             my $path = $dir eq '.' ? $file : "$dir/$file";
-            @stats = stat($path);
             
             if (-d $path) {
                 next if $file    =~ /^\./;
-                push(@dirlist, [$stats[9], $path]);
+                push(@dirlist, $path);
                 
             } else {
                 next unless $file =~ /^[^\.]+\.$ext$/;
-                push(@filelist, [$stats[9], $path]);
+                push(@filelist, $path);
             }
         }
 
         $dd->close;
 
-        @dirlist = sort {$b->[0] <=> $a->[0]} @dirlist;
-        @filelist = sort {$b->[0] <=> $a->[0]} @filelist;
+        @dirlist = sort(@dirlist);
+        @filelist = sort_by_name(@filelist);
 
         return $dir;
     };
     
     my $visit_files = sub {
-        my $node = shift(@filelist);
-        if (defined $node) {
-            return $node->[1];
-        } else {
-            return;
-        }
+        return shift(@filelist);
     };
             
     return ($visit_dirs, $visit_files);
@@ -777,11 +794,11 @@ sub write_page {
 1;
 __END__
 
-=encoding utf-8
+=encoding utf-8T
 
 =head1 NAME
 
-App::Followme - Create a simple static website
+App::Followme - Simple static website maintainance
 
 =head1 SYNOPSIS
 
@@ -790,13 +807,26 @@ App::Followme - Create a simple static website
 
 =head1 DESCRIPTION
 
-Followme is an html template processsor where every file is the template. It
-takes the most recently changed html file in the current directory as the
-template and modifies the other html files in the directory to match it. Every
-file has blocks of code surrounded by comments that look like
+This application does three things. First, it updates the constant partions of
+each web page when the template is changed. Second, it converts text files into
+html using the template. Third, it creates indexes for files when they are
+placed in a special directory, the archive directory. This simplifies keeping
+a blog on a static site.
+
+Each html page has sections that are different from other pages and other
+sections that are the same. The sections that differer are enclosed in html
+comments that look like
 
     <!-- begin name-->
     <!-- end name -->
+
+that indicate where the section begins and ends. When the main template
+is changed, sections of the page outside the comments are changed to match
+the main template. This includes the other templates. The main template is
+template.html and is placed in the root directory of the site.
+
+If there are any text files when the , they are converted into html files
+by substituting the content and other variables into a template.
 
 The new page is the template file with all the named blocks replaced by the
 corresponding block in the old page. The effect is that all the code outside 
