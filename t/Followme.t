@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 50;
+use Test::More tests => 54;
 
 #----------------------------------------------------------------------
 # Load package
@@ -469,7 +469,7 @@ do {
 </html>
 EOQ
 
-   my $template = <<'EOQ';
+   my $index_template = <<'EOQ';
 <html>
 <head>
 <meta name="robots" content="noarchive,follow">
@@ -491,7 +491,37 @@ EOQ
 </html>
 EOQ
 
-    App::Followme::write_page('archive/index_template.html', $template);
+   my $archive_template = <<'EOQ';
+<html>
+<head>
+<meta name="robots" content="noarchive,follow">
+<!-- begin meta -->
+<title>$title</title>
+<!-- end meta -->
+</head>
+<body>
+<!-- begin content -->
+<h1>$title</h1>
+
+<!-- loop -->
+$body
+<p>$month $day $year<a href="$url">Permalink</a></p>
+<!-- endloop -->
+<!-- end content -->
+</body>
+</html>
+EOQ
+
+my $body_ok = <<'EOQ';
+
+<h1>Post three</h1>
+
+<p>All about three.</p>
+EOQ
+
+    App::Followme::write_page('archive/index_template.html', $index_template);
+    App::Followme::write_page('blog_template.html', $archive_template);
+
     foreach my $count (qw(four three two one)) {
         sleep(1);
         my $output = $page;
@@ -513,4 +543,13 @@ EOQ
     ok($page =~ /<title>Archive<\/title>/, 'Write index title'); # test 49
     ok($page =~ /<li><a href="archive\/two.html">Two<\/a><\/li>/,
        'Write index link'); #test 50
+    
+    $data = App::Followme::recent_archive_data('blog.html', 'archive');
+    is($data->{url}, 'blog.html', 'Archive index url'); # test 51
+    is($data->{loop}[2]{body}, $body_ok, "Archive index body"); #test 52
+
+    App::Followme::create_archive_index('blog.html');
+    $page = App::Followme::read_page('blog.html');
+    ok($page =~ /All about two/, 'Archive index content'); # test 53
+    ok($page =~ /<a href="archive\/one.html">/, 'Archive index length'); # test 54
 };

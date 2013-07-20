@@ -477,6 +477,7 @@ sub most_recent_files {
             
             my ($root, $ext) = split(/\./, $basename);
             next if $root eq $config{index_root};
+            next if $root =~ /template$/;
             
             my @stats = stat($filename);
             
@@ -560,6 +561,22 @@ sub parse_page {
 }
 
 #----------------------------------------------------------------------
+# Read a file into a string
+
+sub read_page {
+    my ($filename) = @_;
+
+    local $/;
+    my $fd = IO::File->new($filename, 'r');
+    return unless $fd;
+    
+    my $page = <$fd>;
+    close($fd);
+    
+    return $page;
+}
+
+#----------------------------------------------------------------------
 # Get the data to put in the archive index
 
 sub recent_archive_data {
@@ -582,22 +599,6 @@ sub recent_archive_data {
 
     $data->{loop} = \@loop;
     return $data;
-}
-
-#----------------------------------------------------------------------
-# Read a file into a string
-
-sub read_page {
-    my ($filename) = @_;
-
-    local $/;
-    my $fd = IO::File->new($filename, 'r');
-    return unless $fd;
-    
-    my $page = <$fd>;
-    close($fd);
-    
-    return $page;
 }
 
 #----------------------------------------------------------------------
