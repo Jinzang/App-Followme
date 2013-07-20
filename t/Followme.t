@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 42;
+use Test::More tests => 50;
 
 #----------------------------------------------------------------------
 # Load package
@@ -430,5 +430,87 @@ EOQ
     ok($page =~ /<h1>One<\/h1>/, 'Convert text files one'); # test 41
     $page = App::Followme::read_page('two.html');
     ok($page =~ /<h1>Two<\/h1>/, 'Convert text files two'); # test 42
+};
+
+#----------------------------------------------------------------------
+# Create indexes
+
+do {
+    my @indexes = qw(one.html a/two.html a/b/three.html a/b/c/four.html);
+    my @indexes_ok = reverse @indexes;
+    @indexes = App::Followme::sort_by_depth(@indexes);
+    is_deeply(\@indexes, \@indexes_ok, 'Sort by depth'); # test 43
     
+    my @converted_files = qw(archive/cars/chevrolet.html archive/cars/edsel.html
+                             archive/planes/cessna.html);
+                             
+    @indexes = App::Followme::get_indexes(\@converted_files);
+    @indexes_ok = qw(archive/cars/index.html archive/planes/index.html
+                     archive/index.html);
+    is_deeply(\@indexes, \@indexes_ok, 'Get indexes'); # test 44
+    
+    mkdir('archive');
+
+   my $page = <<'EOQ';
+<html>
+<head>
+<meta name="robots" content="archive">
+<!-- begin meta -->
+<title>Post %%</title>
+<!-- end meta -->
+</head>
+<body>
+<!-- begin content -->
+<h1>Post %%</h1>
+
+<p>All about %%.</p>
+<!-- end content -->
+</body>
+</html>
+EOQ
+
+   my $template = <<'EOQ';
+<html>
+<head>
+<meta name="robots" content="noarchive,follow">
+<!-- begin meta -->
+<title>$title</title>
+<!-- end meta -->
+</head>
+<body>
+<!-- begin content -->
+<h1>$title</h1>
+
+<ul>
+<!-- loop -->
+<li><a href="$url">$title</a></li>
+<!-- endloop -->
+</ul>
+<!-- end content -->
+</body>
+</html>
+EOQ
+
+    App::Followme::write_page('archive/index_template.html', $template);
+    foreach my $count (qw(four three two one)) {
+        sleep(1);
+        my $output = $page;
+        $output =~ s/%%/$count/g;
+        
+        my $filename = "archive/$count.html";
+        App::Followme::write_page($filename, $output);
+    }
+
+    my $data = App::Followme::index_data('archive/index.html');
+    is($data->{title}, 'Archive', 'Index title'); # test 45
+    is($data->{url}, 'archive/index.html', 'Index url'); # test 46
+    is($data->{loop}[0]{title}, 'One', 'Index first page title'); # test 47
+    is($data->{loop}[3]{title}, 'Four', 'Index last page title'); # test 48
+    
+    App::Followme::create_an_index('archive/index.html');
+    $page = App::Followme::read_page('archive/index.html');
+    
+    ok($page =~ /<title>Archive<\/title>/, 'Write index title'); # test 49
+    ok($page =~ /<li><a href="archive\/two.html">Two<\/a><\/li>/,
+       'Write index link'); #test 50
 };

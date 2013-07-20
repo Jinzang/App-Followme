@@ -199,7 +199,7 @@ EOQ
     
     foreach my $token (@tokens) {
         if ($token =~ /^<!--\s*loop/) {
-            $code .= 'foreach my $data (@{$data->{loop}})' . "\n";
+            $code .= 'foreach my $data (@{$data->{loop}}) {' . "\n";
 
         } elsif ($token =~ /^<!--\s*endloop/) {
             $code .= "}\n";
@@ -445,10 +445,9 @@ sub index_data {
         next if $root eq $config{index_root};
         next if $root =~ /template$/;
         
-        my $path = "$index_dir/$file";
-        my $loop_data = get_data_for_file($path);
+        my $loop_data = get_data_for_file($file);
 
-        if (-d $path) {
+        if (-d $file) {
             push(@dir_data, $loop_data);
         } else {
             push(@file_data, $loop_data);
@@ -496,8 +495,6 @@ sub most_recent_files {
         }
     }
     
-
-    @augmented_files = sort {$a->[0] <=> $b->[0]} @augmented_files;
     my @recent_files = map {$_->[1]} @augmented_files;
     return reverse @recent_files;
 }
@@ -617,7 +614,7 @@ sub sort_by_depth {
     }
 
     @augmented_files = sort {$b->[0] <=> $a->[0]} @augmented_files;
-    @index_files = map {$_->[1]} @index_files;
+    @index_files = map {$_->[1]} @augmented_files;
     
     return @index_files;
 }
