@@ -326,7 +326,7 @@ sub create_indexes {
     }
 
     my $archive_index =
-        join('.', $config{archive_root}, $config{html_extension});
+        join('.', $config{archive_index}, $config{html_extension});
 
     eval {create_archive_index($archive_index)};
     warn "$archive_index: $@" if $@;

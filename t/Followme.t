@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 54;
+use Test::More tests => 56;
 
 #----------------------------------------------------------------------
 # Load package
@@ -522,6 +522,7 @@ EOQ
     App::Followme::write_page('archive/index_template.html', $index_template);
     App::Followme::write_page('blog_template.html', $archive_template);
 
+    my @archived_files;
     foreach my $count (qw(four three two one)) {
         sleep(1);
         my $output = $page;
@@ -529,6 +530,7 @@ EOQ
         
         my $filename = "archive/$count.html";
         App::Followme::write_page($filename, $output);
+        push(@archived_files, $filename);
     }
 
     my $data = App::Followme::index_data('archive/index.html');
@@ -552,4 +554,9 @@ EOQ
     $page = App::Followme::read_page('blog.html');
     ok($page =~ /All about two/, 'Archive index content'); # test 53
     ok($page =~ /<a href="archive\/one.html">/, 'Archive index length'); # test 54
+    
+    unlink('blog.html', 'archive/index.html');
+    App::Followme::create_indexes(\@archived_files);
+    ok(-e 'archive/index.html', 'Create archive index'); # test 55
+    ok(-e 'blog.html', 'Create blog index'); # test 56
 };
