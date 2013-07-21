@@ -15,11 +15,9 @@ our @EXPORT_OK = qw(configure_followme followme);
 
 our %config = (
                checksum_file => 'followme.md5',
-               index_root => 'index',
-               html_extension => 'html',
                text_extension => 'txt',
                archive_index_length => 5,
-               archive_index => 'blog',
+               archive_index => 'blog.html',
                archive_directory => 'archive',
                body_tag => 'content',
                page_converter => \&add_tags,
@@ -101,7 +99,7 @@ sub build_page_name {
     my $basename = pop(@dirs);
     my ($root, $ext) = split(/\./, $basename);
 
-    my $page_name = join('.', $root, $config{html_extension});
+    my $page_name = "$root.html";
     return join('/', @dirs, $page_name);
 }
 
@@ -115,7 +113,7 @@ sub build_title {
     my $basename = pop(@dirs);
     my ($root, $ext) = split(/\./, $basename);
 
-    if ($root eq $config{index_root}) {
+    if ($root eq 'index') {
         $root = pop(@dirs) || $config{top_title};
     }
     
@@ -135,7 +133,7 @@ sub build_url {
     my $page_name;
     if ($basename !~ /\./) {
         push(@dirs, $basename);
-        $page_name = join('.', $config{index_root}, $config{html_extension});
+        $page_name = 'index.html';
 
     } else {
         $page_name = build_page_name($basename);
@@ -326,11 +324,8 @@ sub create_indexes {
         warn "$index_file: $@" if $@;
     }
 
-    my $archive_index =
-        join('.', $config{archive_index}, $config{html_extension});
-
-    eval {create_archive_index($archive_index)};
-    warn "$archive_index: $@" if $@;
+    eval {create_archive_index($config{archive_index})};
+    warn "$config{archive_index}: $@" if $@;
     
     return;
 }
@@ -344,7 +339,7 @@ sub find_template {
     my @dirs = split(/\//, $filename);
     my $basename = pop(@dirs);
     my ($root, $ext) = split(/\./, $basename);
-    $ext = $config{html_extension};
+    $ext = 'html';
 
     for (;;) {
         my $template = join('/', @dirs, "${root}_template.$ext");
@@ -402,15 +397,13 @@ sub get_indexes {
     my ($converted_files) = @_;
 
     my %index_files;
-    my $index_name = join('.', $config{index_root}, $config{html_extension});
-    
     foreach my $filename (@$converted_files) {
         my ($top_dir, @dirs) = split(/\//, $filename);
         next unless $top_dir eq $config{archive_directory};
         
         while (@dirs) {
             pop(@dirs);
-            my $file = join('/', $top_dir, @dirs, $index_name);
+            my $file = join('/', $top_dir, @dirs, 'index.html');
             $index_files{$file} = 1;
         }
     }
@@ -433,8 +426,7 @@ sub index_data {
     my $index_dir = join('/', @dirs);
     my $data = get_data_for_file($index_dir);
 
-    my $ext = $config{html_extension};
-    my ($visit_dirs, $visit_files) = visitors($ext, $index_dir);
+    my ($visit_dirs, $visit_files) = visitors('html', $index_dir);
 
     my @dir_data;
     my @file_data;
@@ -443,7 +435,7 @@ sub index_data {
     while (defined (my $file = $visit_files->())) {
         my ($root, $ext) = split(/\./, $file);
         
-        next if $root eq $config{index_root};
+        next if $root eq 'index';
         next if $root =~ /template$/;
         
         my $loop_data = get_data_for_file($file);
@@ -467,8 +459,7 @@ sub index_data {
 sub most_recent_files {
     my ($limit, $top_dir) = @_;
     
-    my $ext = $config{html_extension};
-    my ($visit_dirs, $visit_files) = visitors($ext, $top_dir);
+    my ($visit_dirs, $visit_files) = visitors('html', $top_dir);
     
     my @augmented_files;
     while (defined (my $dir = $visit_dirs->())) {
@@ -477,11 +468,11 @@ sub most_recent_files {
             my $basename = pop(@dirs);
             
             my ($root, $ext) = split(/\./, $basename);
-            next if $root eq $config{index_root};
+            next if $root eq 'index';
             next if $root =~ /template$/;
             
             my @stats = stat($filename);
-            
+
             if (@augmented_files < $limit) {
                 push(@augmented_files, [$stats[9], $filename]);
                 @augmented_files = sort {$a->[0] <=> $b->[0]} @augmented_files;
@@ -629,10 +620,9 @@ sub sort_by_name {
     
     my @sorted_files;
     my @unsorted_files;
-    my $index_name = join('.', $config{index_root}, $config{html_extension});
 
     foreach my $file (@files) {
-        if ($file =~ /\/$index_name$/) {
+        if ($file =~ /\/index\.html$/) {
             push(@sorted_files, $file);
         } else {
             push(@unsorted_files, $file)
@@ -684,10 +674,9 @@ sub update_page {
 
 sub update_site {   
     my $template;
-    my $ext = $config{html_extension};
-    my ($visit_dirs, $visit_files) = visitors($ext);
+    my ($visit_dirs, $visit_files) = visitors('html');
     
-    my $template_file = "template.$config{html_extension}";
+    my $template_file = "template.html";
     $template = read_page($template_file);
 
     die "Couldn't read $template_file" unless defined $template;    
