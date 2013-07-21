@@ -207,7 +207,8 @@ EOQ
         } else {
             $token =~ s/\$(\w+)/\$data->{$1}/g;
             $code .= "\$text .= <<\"EOQ\";\n";
-            $code .= "${token}EOQ\n";
+            $code .= "${token}\nEOQ\n";
+            $code .= "chomp \$text;\n";
         }
     }
     
