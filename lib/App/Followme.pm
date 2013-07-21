@@ -457,12 +457,15 @@ sub index_data {
 # Get the most recently changed files
 
 sub most_recent_files {
-    my ($limit, $top_dir) = @_;
+    my ($limit, $top_dir, $except) = @_;
+    $except = '' unless defined $except;
     
     my ($visit_dirs, $visit_files) = visitors('html', $top_dir);
     
-    my @augmented_files;
+    my @dated_files;
     while (defined (my $dir = $visit_dirs->())) {
+        next if $dir eq $except;
+        
         while (defined (my $filename = $visit_files->())) {
             my @dirs = split(/\//, $filename);
             my $basename = pop(@dirs);
@@ -473,23 +476,24 @@ sub most_recent_files {
             
             my @stats = stat($filename);
 
-            if (@augmented_files < $limit) {
-                push(@augmented_files, [$stats[9], $filename]);
-                @augmented_files = sort {$a->[0] <=> $b->[0]} @augmented_files;
+            if (@dated_files < $limit) {
+                push(@dated_files, [$stats[9], $filename]);
+                @dated_files = sort {$a->[0] <=> $b->[0]} @dated_files;
 
             } else {
                 # The modification date is compared and sorted on
-                if ($stats[9] > $augmented_files[0]->[0]) {
-                    push(@augmented_files, [$stats[9], $filename]);
-                    @augmented_files = sort {$a->[0] <=> $b->[0]} @augmented_files;
-                    shift(@augmented_files);
+                if ($stats[9] > $dated_files[0]->[0]) {
+                    push(@dated_files, [$stats[9], $filename]);
+                    @dated_files = sort {$a->[0] <=> $b->[0]} @dated_files;
+                    shift(@dated_files);
                 }
             }
         }
     }
     
-    my @recent_files = map {$_->[1]} @augmented_files;
-    return reverse @recent_files;
+    my @recent_files = map {$_->[1]} @dated_files;
+    @recent_files = reverse(@recent_files) if @recent_files > 1;
+    return @recent_files;
 }
 
 #----------------------------------------------------------------------
@@ -676,7 +680,7 @@ sub update_site {
     my $template;
     my ($visit_dirs, $visit_files) = visitors('html');
     
-    my $template_file = "template.html";
+    my ($template_file) = most_recent_files(1, '.', $config{archive_directory});
     $template = read_page($template_file);
 
     die "Couldn't read $template_file" unless defined $template;    
@@ -684,33 +688,30 @@ sub update_site {
 
     while (defined $visit_dirs->()) {
         while (defined (my $filename = $visit_files->())) {        
-    
-            if (defined $template) {
-                my $page = read_page($filename);
-                if (! defined $page) {
-                    warn "Couldn't read $filename";
-                    next;
-                }
-                
-                if (! unlink($filename)) {
-                    warn "Can't remove old $filename";
-                    next;
-                }
-        
-                my $new_page = eval {update_page($template, $page)};
-            
-                if ($@) {
-                    warn "$filename: $@";
-                    undef $new_page;
-                }
-        
-                if (defined $new_page) {
-                    write_page($filename, $new_page);
-                } else {
-                    write_page($filename, $page);
-                }
+            next if $filename eq $template;
 
+            my $page = read_page($filename);
+            if (! defined $page) {
+                warn "Couldn't read $filename";
+                next;
+            }
+            
+            if (! unlink($filename)) {
+                warn "Can't remove old $filename";
+                next;
+            }
+    
+            my $new_page = eval {update_page($template, $page)};
+        
+            if ($@) {
+                warn "$filename: $@";
+                undef $new_page;
+            }
+    
+            if (defined $new_page) {
+                write_page($filename, $new_page);
             } else {
+                write_page($filename, $page);
             }
         }
     }

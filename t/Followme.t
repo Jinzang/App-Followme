@@ -300,7 +300,7 @@ do {
     my $page = App::Followme::read_page('one.html');
     $page =~ s/archive/noarchive/;
     $page =~ s/Page/Folio/g;
-    App::Followme::write_page('template.html', $page);
+    App::Followme::write_page('one.html', $page);
     App::Followme::update_site();
     
     foreach my $filename (@filenames) {       
