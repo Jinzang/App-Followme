@@ -1,6 +1,8 @@
 #!/usr/bin/perl
 
 use lib '../lib';
+
+use IO::File;
 use App::Followme qw(configure_followme followme);
 
 my $dir = shift @ARGV;
@@ -13,7 +15,7 @@ followme($dir);
 sub configuration_file {
     my ($dir) = @_;
     
-    my @path = split($0);
+    my @path = split(/\//, $0);
     my $basename = pop(@path);
     $basename =~ s/[^\.]*$/cfg/;
     
@@ -32,10 +34,12 @@ sub load_module {
     my @path = split(/::/, $subroutine);
     pop(@path);
     
-    my $pkg = join('::', @path);
-    eval "require $pkg" or die "Subroutine not found: $subroutine\n";
-
-    return eval "\&$subroutine";
+    if (@path) {
+        my $pkg = join('::', @path);
+        eval "require $pkg" or die "Subroutine not found: $subroutine\n";
+    }
+    
+    return \&$subroutine;
 }
 
 #----------------------------------------------------------------------
@@ -46,7 +50,7 @@ sub read_configuration {
     $dir = '.' unless defined $dir;
     
     my $filename = configuration_file($dir);
-    my $fd = IO::File($filename, 'r');
+    my $fd = IO::File->new($filename, 'r');
     return unless $fd;
 
     while (<$fd>) {
@@ -59,6 +63,7 @@ sub read_configuration {
             $value = load_module($value) if $name eq 'page_converter';
             
             configure_followme($name, $value) if $value;
+        }
     }
 
     close($fd);
