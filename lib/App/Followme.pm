@@ -7,7 +7,7 @@ use IO::Dir;
 use IO::File;
 use Digest::MD5;
 
-our $VERSION = "0.30";
+our $VERSION = "0.40";
 
 require Exporter;
 our @ISA = qw(Exporter);
