@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 57;
+use Test::More tests => 55;
 
 #----------------------------------------------------------------------
 # Load package
@@ -296,17 +296,18 @@ do {
 
     is_deeply(\@filenames, [qw(one.html two.html three.html)],
               'other most recent files'); # test 22
-    
-    my $page = App::Followme::read_page('one.html');
+
+    my $template = shift(@filenames);    
+    my $page = App::Followme::read_page($template);
     $page =~ s/archive/noarchive/;
     $page =~ s/Page/Folio/g;
-    App::Followme::write_page('one.html', $page);
+    App::Followme::write_page($template, $page);
     App::Followme::update_site();
     
     foreach my $filename (@filenames) {       
         my $input = App::Followme::read_page($filename);
-        ok($input =~ /noarchive/, 'Followme changed template'); # tests 23,25,27
-        ok($input =~ /Page/, "Followme kept contents"); # tests 24,26,28
+        ok($input =~ /noarchive/, 'Followme changed template'); # tests 23,25
+        ok($input =~ /Page/, "Followme kept contents"); # tests 24,26
     }
 };
 
@@ -318,23 +319,23 @@ do {
     my $text_name = 'watch/this-is-only-a-test.txt';
     my $page_name = App::Followme::build_page_name($text_name);
     my $page_name_ok = 'watch/this-is-only-a-test.html';
-    is($page_name, $page_name_ok, 'Build page'); # test 29
+    is($page_name, $page_name_ok, 'Build page'); # test 27
     
     my $title = App::Followme::build_title($text_name);
     my $title_ok = 'This Is Only A Test';
-    is($title, $title_ok, 'Build file title'); # test 30
+    is($title, $title_ok, 'Build file title'); # test 28
 
     my $index_name = 'watch/index.html';
     $title = App::Followme::build_title($index_name);
     $title_ok = 'Watch';
-    is($title, $title_ok, 'Build directory title'); # test 31
+    is($title, $title_ok, 'Build directory title'); # test 29
     
     my $url = App::Followme::build_url($text_name);
     my $url_ok = 'watch/this-is-only-a-test.html';
-    is($url, $url_ok, 'Build file url'); # test 32
+    is($url, $url_ok, 'Build file url'); # test 30
 
     $url = App::Followme::build_url('watch');
-    is($url, 'watch/index.html', 'Build directory url'); #test 33
+    is($url, 'watch/index.html', 'Build directory url'); #test 31
        
     my $time = 1374019907;
     my $data = App::Followme::build_date($time);
@@ -342,12 +343,12 @@ do {
                    weekday => 'Tue', hour24 => 20, hour => '08',
                    minute => 11, second => 47, year => 2013,
                    ampm => 'pm'};
-    is_deeply($data, $data_ok, 'Build date'); # test 34
+    is_deeply($data, $data_ok, 'Build date'); # test 32
     
     $data = App::Followme::get_data_for_file('two.html');
     my @keys = sort keys %$data;
     my @keys_ok = sort(keys(%$data_ok), 'title', 'url');
-    is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 35
+    is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 33
 };
 
 #----------------------------------------------------------------------
@@ -397,11 +398,11 @@ EOQ
 
     my $template_file = App::Followme::find_template('one.html');
     my $template_file_ok ='one_template.html';
-    is($template_file, $template_file_ok, 'Find specific templae'); # test 36
+    is($template_file, $template_file_ok, 'Find specific templae'); # test 34
 
     $template_file = App::Followme::find_template('two.html');
     $template_file_ok ='template.html';
-    is($template_file, $template_file_ok, 'Generic templae'); # test 37
+    is($template_file, $template_file_ok, 'Generic templae'); # test 35
 
     my $page = App::Followme::read_page('three.txt');
     my $tagged_text = App::Followme::add_tags($page);
@@ -410,24 +411,24 @@ EOQ
     $tagged_text_ok =~ s/Page %%/<p>Page three<\/p>/;
     $tagged_text_ok =~s/This is a paragraph/<p>This is a paragraph<\/p>/;
     
-    is($tagged_text, $tagged_text_ok, 'Add tags'); # test 38
+    is($tagged_text, $tagged_text_ok, 'Add tags'); # test 36
     
     my $data = {title =>'Three', body => $tagged_text};
     my $sub = App::Followme::compile_template('template.html');
     $page = $sub->($data);
 
-    ok($page =~ /<h1>Three<\/h1>/, 'Apply template to title'); # test 39
-    ok($page =~ /<p>This is a paragraph<\/p>/, 'Apply template to body'); # test 40
+    ok($page =~ /<h1>Three<\/h1>/, 'Apply template to title'); # test 37
+    ok($page =~ /<p>This is a paragraph<\/p>/, 'Apply template to body'); # test 38
     
     App::Followme::convert_a_file('four.txt');
     $page = App::Followme::read_page('four.html');
-    ok($page =~ /<h1>Four<\/h1>/, 'Convert a file'); # test 41
+    ok($page =~ /<h1>Four<\/h1>/, 'Convert a file'); # test 39
 
     App::Followme::convert_text_files();
     $page = App::Followme::read_page('one.html');
-    ok($page =~ /<h1>One<\/h1>/, 'Convert text files one'); # test 42
+    ok($page =~ /<h1>One<\/h1>/, 'Convert text files one'); # test 40
     $page = App::Followme::read_page('two.html');
-    ok($page =~ /<h1>Two<\/h1>/, 'Convert text files two'); # test 43
+    ok($page =~ /<h1>Two<\/h1>/, 'Convert text files two'); # test 41
 };
 
 #----------------------------------------------------------------------
@@ -437,7 +438,7 @@ do {
     my @indexes = qw(one.html a/two.html a/b/three.html a/b/c/four.html);
     my @indexes_ok = reverse @indexes;
     @indexes = App::Followme::sort_by_depth(@indexes);
-    is_deeply(\@indexes, \@indexes_ok, 'Sort by depth'); # test 44
+    is_deeply(\@indexes, \@indexes_ok, 'Sort by depth'); # test 42
     
     my @converted_files = qw(archive/cars/chevrolet.html archive/cars/edsel.html
                              archive/planes/cessna.html);
@@ -445,7 +446,7 @@ do {
     @indexes = App::Followme::get_indexes(\@converted_files);
     @indexes_ok = qw(archive/cars/index.html archive/planes/index.html
                      archive/index.html);
-    is_deeply(\@indexes, \@indexes_ok, 'Get indexes'); # test 45
+    is_deeply(\@indexes, \@indexes_ok, 'Get indexes'); # test 43
     
     mkdir('archive');
 
@@ -532,29 +533,29 @@ EOQ
     }
 
     my $data = App::Followme::index_data('archive/index.html');
-    is($data->{title}, 'Archive', 'Index title'); # test 46
-    is($data->{url}, 'archive/index.html', 'Index url'); # test 47
-    is($data->{loop}[0]{title}, 'Four', 'Index first page title'); # test 48
-    is($data->{loop}[3]{title}, 'Two', 'Index last page title'); # test 49
+    is($data->{title}, 'Archive', 'Index title'); # test 44
+    is($data->{url}, 'archive/index.html', 'Index url'); # test 45
+    is($data->{loop}[0]{title}, 'Four', 'Index first page title'); # test 46
+    is($data->{loop}[3]{title}, 'Two', 'Index last page title'); # test 47
     
     App::Followme::create_an_index('archive/index.html');
     $page = App::Followme::read_page('archive/index.html');
     
-    ok($page =~ /<title>Archive<\/title>/, 'Write index title'); # test 50
+    ok($page =~ /<title>Archive<\/title>/, 'Write index title'); # test 48
     ok($page =~ /<li><a href="archive\/two.html">Two<\/a><\/li>/,
-       'Write index link'); #test 51
+       'Write index link'); #test 49
     
     $data = App::Followme::recent_archive_data('blog.html', 'archive');
-    is($data->{url}, 'blog.html', 'Archive index url'); # test 52
-    is($data->{loop}[2]{body}, $body_ok, "Archive index body"); #test 53
+    is($data->{url}, 'blog.html', 'Archive index url'); # test 50
+    is($data->{loop}[2]{body}, $body_ok, "Archive index body"); #test 51
 
     App::Followme::create_archive_index('blog.html');
     $page = App::Followme::read_page('blog.html');
-    ok($page =~ /All about two/, 'Archive index content'); # test 54
-    ok($page =~ /<a href="archive\/one.html">/, 'Archive index length'); # test 55
+    ok($page =~ /All about two/, 'Archive index content'); # test 52
+    ok($page =~ /<a href="archive\/one.html">/, 'Archive index length'); # test 53
     
     unlink('blog.html', 'archive/index.html');
     App::Followme::create_indexes(\@archived_files);
-    ok(-e 'archive/index.html', 'Create archive index'); # test 56
-    ok(-e 'blog.html', 'Create blog index'); # test 57
+    ok(-e 'archive/index.html', 'Create archive index'); # test 54
+    ok(-e 'blog.html', 'Create blog index'); # test 55
 };

@@ -339,13 +339,12 @@ sub find_template {
     my @dirs = split(/\//, $filename);
     my $basename = pop(@dirs);
     my ($root, $ext) = split(/\./, $basename);
-    $ext = 'html';
 
     for (;;) {
-        my $template = join('/', @dirs, "${root}_template.$ext");
+        my $template = join('/', @dirs, "${root}_template.html");
         return $template if -e $template;
         
-        $template = join('/', @dirs, "template.$ext");
+        $template = join('/', @dirs, 'template.html');
         return $template if -e $template;
 
         last unless @dirs;
@@ -415,6 +414,30 @@ sub get_indexes {
 }
 
 #----------------------------------------------------------------------
+# Add filename and its modification date to heap, restore heap-ness
+
+sub heap_up {
+    my ($heap, $limit, $filename) = @_;
+
+    my @stats = stat($filename);
+    if (@$heap < $limit || $stats[9] > $heap->[0][0]) {
+        my $i = @$heap;
+        push(@$heap, [$stats[9], $filename]);
+
+        while ($i > 0) {
+            my $j = int(($i + 1)/ 2) - 1;
+            last if $heap->[$i][0] >= $heap->[$j][0];
+
+            ($heap->[$i], $heap->[$j]) = ($heap->[$j], $heap->[$i]);
+            $i = $j;
+        }
+    }
+
+    shift(@$heap) if @$heap > $limit;
+    return;
+}
+
+#----------------------------------------------------------------------
 # Retrieve the data associated with a file
 
 sub index_data {
@@ -458,14 +481,11 @@ sub index_data {
 
 sub most_recent_files {
     my ($limit, $top_dir, $except) = @_;
-    $except = '' unless defined $except;
     
-    my ($visit_dirs, $visit_files) = visitors('html', $top_dir);
+    my ($visit_dirs, $visit_files) = visitors('html', $top_dir, $except);
     
-    my @dated_files;
+    my $heap = [];
     while (defined (my $dir = $visit_dirs->())) {
-        next if $dir eq $except;
-        
         while (defined (my $filename = $visit_files->())) {
             my @dirs = split(/\//, $filename);
             my $basename = pop(@dirs);
@@ -473,27 +493,12 @@ sub most_recent_files {
             my ($root, $ext) = split(/\./, $basename);
             next if $root eq 'index';
             next if $root =~ /template$/;
-            
-            my @stats = stat($filename);
 
-            if (@dated_files < $limit) {
-                push(@dated_files, [$stats[9], $filename]);
-                @dated_files = sort {$a->[0] <=> $b->[0]} @dated_files;
-
-            } else {
-                # The modification date is compared and sorted on
-                if ($stats[9] > $dated_files[0]->[0]) {
-                    push(@dated_files, [$stats[9], $filename]);
-                    @dated_files = sort {$a->[0] <=> $b->[0]} @dated_files;
-                    shift(@dated_files);
-                }
-            }
+            heap_up($heap, $limit, $filename);
         }
     }
     
-    my @recent_files = map {$_->[1]} @dated_files;
-    @recent_files = reverse(@recent_files) if @recent_files > 1;
-    return @recent_files;
+    return map {$_->[1]} sort {$b->[0] <=> $a->[0]} @$heap;
 }
 
 #----------------------------------------------------------------------
@@ -723,8 +728,9 @@ sub update_site {
 # Return a closure that returns each file name
 
 sub visitors {
-    my ($ext, $top_dir) = @_;
+    my ($ext, $top_dir, $except) = @_;
     $top_dir = '.' unless defined $top_dir;
+    $except = '' unless defined $except;
     
     my @dirlist;
     my @filelist;
@@ -741,6 +747,7 @@ sub visitors {
         # Find matching files and directories
         while (defined (my $file = $dd->read())) {
             my $path = $dir eq '.' ? $file : "$dir/$file";
+            next if $path eq $except;
             
             if (-d $path) {
                 next if $file    =~ /^\./;
