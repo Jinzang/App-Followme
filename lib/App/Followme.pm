@@ -414,30 +414,6 @@ sub get_indexes {
 }
 
 #----------------------------------------------------------------------
-# Add filename and its modification date to heap, restore heap-ness
-
-sub heap_up {
-    my ($heap, $limit, $filename) = @_;
-
-    my @stats = stat($filename);
-    if (@$heap < $limit || $stats[9] > $heap->[0][0]) {
-        my $i = @$heap;
-        push(@$heap, [$stats[9], $filename]);
-
-        while ($i > 0) {
-            my $j = int(($i + 1)/ 2) - 1;
-            last if $heap->[$i][0] >= $heap->[$j][0];
-
-            ($heap->[$i], $heap->[$j]) = ($heap->[$j], $heap->[$i]);
-            $i = $j;
-        }
-    }
-
-    shift(@$heap) if @$heap > $limit;
-    return;
-}
-
-#----------------------------------------------------------------------
 # Retrieve the data associated with a file
 
 sub index_data {
@@ -477,14 +453,14 @@ sub index_data {
 }
 
 #----------------------------------------------------------------------
-# Get the most recently changed files
+# Get the more recently changed files
 
-sub most_recent_files {
+sub more_recent_files {
     my ($limit, $top_dir, $except) = @_;
     
     my ($visit_dirs, $visit_files) = visitors('html', $top_dir, $except);
     
-    my $heap = [];
+    my @dated_files;
     while (defined (my $dir = $visit_dirs->())) {
         while (defined (my $filename = $visit_files->())) {
             my @dirs = split(/\//, $filename);
@@ -494,11 +470,41 @@ sub most_recent_files {
             next if $root eq 'index';
             next if $root =~ /template$/;
 
-            heap_up($heap, $limit, $filename);
+            my @stats = stat($filename);
+            if (@dated_files < $limit || $stats[9] > $dated_files[0]->[0]) {
+                shift(@dated_files) if @dated_files >= $limit;
+                push(@dated_files, [$stats[9], $filename]);
+                @dated_files = sort {$a->[0] <=> $b->[0]} @dated_files;
+            }
         }
     }
     
-    return map {$_->[1]} sort {$b->[0] <=> $a->[0]} @$heap;
+    my @recent_files = map {$_->[1]} @dated_files;
+    @recent_files = reverse @recent_files if @recent_files > 1;
+    return @recent_files;
+}
+
+#----------------------------------------------------------------------
+# Get the most recently changed file outside of the archive
+
+sub most_recently_changed {
+    my ($top_dir) = @_;
+    
+    my ($visit_dirs, $visit_files) =
+            visitors('html', $top_dir, $config{archive_directory});
+    
+    my ($most_recent_file, $most_recent_date);
+    while (defined (my $dir = $visit_dirs->())) {
+        while (defined (my $filename = $visit_files->())) {
+            my @stats = stat($filename);
+            if (! defined $most_recent_file || $stats[9] > $most_recent_date) {
+                $most_recent_file = $filename;
+                $most_recent_date = $stats[9];
+            }
+        }
+    }
+    
+    return $most_recent_file;
 }
 
 #----------------------------------------------------------------------
@@ -586,7 +592,7 @@ sub recent_archive_data {
     my @loop;
     my $limit = $config{archive_index_length};
     my $data = get_data_for_file($archive_index);
-    my @filenames = most_recent_files($limit, $archive_dir);
+    my @filenames = more_recent_files($limit, $archive_dir);
 
     foreach my $filename (@filenames) {
         my $loopdata = get_data_for_file($filename);
@@ -685,7 +691,7 @@ sub update_site {
     my $template;
     my ($visit_dirs, $visit_files) = visitors('html');
     
-    my ($template_file) = most_recent_files(1, '.', $config{archive_directory});
+    my $template_file = most_recently_changed('.');
     $template = read_page($template_file);
 
     die "Couldn't read $template_file" unless defined $template;    
