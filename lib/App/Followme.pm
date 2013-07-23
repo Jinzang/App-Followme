@@ -514,16 +514,16 @@ sub parse_blocks {
     my ($page, $block_handler, $template_handler) = @_;
     
     my $blockname = '';
-    my @tokens = split(/(<!--\s*(?:begin|end).*?-->)/, $page);
+    my @tokens = split(/(<!--\s*(?:begin|end)\s+\w+\s*-->)/, $page);
     
     foreach my $token (@tokens) {
-        if ($token =~ /^<!--\s*begin\s+(\S+)/) {
+        if ($token =~ /^<!--\s*begin\s+(\w+)/) {
             die "Improperly nested block ($token)\n" if $blockname;
                 
             $blockname = $1;
             $template_handler->($token);
             
-        } elsif ($token =~ /^<!--\s*end\s+(\S+)/) {
+        } elsif ($token =~ /^<!--\s*end\s+(\w+)/) {
             die "Unmatched ($token)\n"
                 if $blockname eq '' || $blockname ne $1;
                 
@@ -699,7 +699,7 @@ sub update_site {
 
     while (defined $visit_dirs->()) {
         while (defined (my $filename = $visit_files->())) {        
-            next if $filename eq $template;
+            next if $filename eq $template_file;
 
             my $page = read_page($filename);
             if (! defined $page) {
