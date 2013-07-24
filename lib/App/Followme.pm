@@ -811,30 +811,61 @@ App::Followme - Simple static website maintainance
 
 =head1 DESCRIPTION
 
-This application does three things. First, it updates the constant partions of
-each web page when the template is changed. Second, it converts text files into
-html using the template. Third, it creates indexes for files when they are
-placed in a special directory, the archive directory. This simplifies keeping
-a blog on a static site.
+Followme does three things. First, it updates the constant partions of each web
+page when it is changed on any page. Second, it converts text files into html
+using a template. Third, it creates indexes for files when they are placed in a
+special directory, the archive directory. This simplifies keeping a blog on a
+static site. Each of these three actions are explained in turn.
 
 Each html page has sections that are different from other pages and other
-sections that are the same. The sections that differer are enclosed in html
+sections that are the same. The sections that differ are enclosed in html
 comments that look like
 
     <!-- begin name-->
     <!-- end name -->
 
-that indicate where the section begins and ends. When the main template
-is changed, sections of the page outside the comments are changed to match
-the main template. This includes the other templates. The main template is
-template.html and is placed in the root directory of the site.
+and indicate where the section begins and ends. When a page is changed, followme
+checks the text outside of these comments. If that text has changed. the other
+pages on the site are also changed to match the page that has changed. Each page
+updated by substituting all its named blocks into corresponding block in the
+changed page. The effect is that all the text outside the named blocks are
+updated to be the same across all the html pages.
 
-If there are any text files when the , they are converted into html files
-by substituting the content and other variables into a template.
+If there are any text files in the directory, they are converted into html files
+by substituting the content into a template. After the conversion the original
+file is deleted. Along with the content, other variables are calculated from the
+file name and modification date. Variables in the template look like Perl
+variables, a dollar sign followed by word characters. The variables that are
+calculated for a text file are:
 
-The new page is the template file with all the named blocks replaced by the
-corresponding block in the old page. The effect is that all the code outside 
-the named blocks are updated to be the same across all the html pages.
+=over 4
+
+=item body
+
+All the content of the text file. The content is passed through a subroutine
+before being stored in this variable. The subroutine takes one input, the
+content stored as a string, and returns it as a string containing html. The
+default subroutine, add_tags in this module, only surrounds paragraphs with
+p tags, where paragraphs are separated by a blank line. You can supply a
+different subroutine by changing the value of the configuration variable
+page_converter.
+
+=item title
+
+The title of the page is derived from the file name by removing the filename
+extension, replacing the dashes with spaces, and capitalizing the first
+character of each word.
+
+=item url
+
+The relative url of the resulting html page. 
+
+=item time fields
+
+The variables calculated from the modifcation time are: weekday, month,
+monthnum, day, year, hour24, hour, ampm, minute, and second.
+
+=back
 
 This module exports one function, followme. It takes one or no arguments. If
 an argument is given, it is the extension used on all the html files. If no
