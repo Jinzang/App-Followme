@@ -867,9 +867,78 @@ monthnum, day, year, hour24, hour, ampm, minute, and second.
 
 =back
 
-This module exports one function, followme. It takes one or no arguments. If
-an argument is given, it is the extension used on all the html files. If no
-argument is given, the extension is taken to be html.
+The template for the text file is selected by first looking for a file in
+the same directory starting with the same name as the file, e.g.,
+index_template.html for index.html. If not found, then a file named
+template.html in the same directory is used. If neither is found, the same
+search is done in the directory above the file, up to the top directory of
+the site.
+
+As a final step, followme builds indexes for each directory in the archive
+directory. Each directory gets an index containing links to all the files and
+directories contained in it. And one index is created from all the most
+recently changed files in the archive directory. This index thus serves as a
+weblog. Both kinds of index are built using a template. The variables are
+the same as mentioned above, except that the body variable is set to the
+contents of the content comment. Loop comments that look like
+
+    <!-- loop -->
+    <!-- endloop -->
+
+indicate the section of the template that is repeated for each file contained
+in the index. 
+
+=head1 CONFIGURATION
+
+Followme is called with the function followme, which takes one or no argument.
+
+    followme($directory);
+    
+The argument is the name of the top directory of the site. If no argument is
+called, the current directory is taken as the top directory. Before calling
+this function, it can be configured by aclling the function configure_followme.
+
+    configure_followme($name, $value);
+
+The first argument is the name and the second the value of the configuration
+parameter. All parameters have scalar values except for page-converter, whose
+value is a reference to a function. The congiuration parameters all have default
+values, which are listed below with each parameter.
+
+=over 4
+
+=item checksum_file (followme.md5)
+
+The name of the file containing the checksum of the constant parts of an html
+page. It's used to see if the file has changed.
+
+=item text_extension (txt)
+
+The extension of files that are converted to html.
+
+=item archive_index_length (5)
+
+The number of recent files to include in the weblog index.
+
+=item archive_index (blog.html)
+
+The filename of the weblog index.
+
+=item archive_directory (archive)
+
+The name of the directory containing the weblog entries.
+
+=item body_tag (content)
+
+The comment name surrounding the weblog entry content.
+
+=item page_converter (add_tags)
+
+A reference to a function use to convert text to html. The function should
+take one argument, a string containing the text to be converted and return one
+value, the converted text.
+
+=back
 
 =head1 LICENSE
 
