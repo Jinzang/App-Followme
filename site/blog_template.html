@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <style>
-@media screen and (min-width:600px) {
+\@media screen and (min-width:600px) {
     #container {
         position: relative;
         max-width: 1000px;
@@ -23,9 +23,14 @@
         width: 80%;
     }
 }
-@media screen and (max-width:599px) {
+\@media screen and (max-width:599px) {
     #menu li {
         display: inline;
+    }
+}
+\@media print {
+    #header, #menu {
+        display: none;
     }
 }
 #header h1 {
