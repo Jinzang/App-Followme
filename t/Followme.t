@@ -291,13 +291,12 @@ do {
 # Test more_recent_files and update_site
 
 do {
-
     my @filenames = App::Followme::more_recent_files(3);
     is_deeply(\@filenames, [qw(one.html two.html three.html)],
               'other most recent files'); # test 22
 
     my $template = App::Followme::most_recently_changed('.');
-    is ($template, 'one.html'); # test 23
+    is ($template, 'one.html', 'Most recently changed'); # test 23
     
     my $page = App::Followme::read_page($template);
     $page =~ s/archive/noarchive/;
@@ -372,14 +371,14 @@ EOQ
 <head>
 <meta name="robots" content="archive">
 <!-- begin meta -->
-<title>$title</title>
+<title>{{title}}</title>
 <!-- end meta -->
 </head>
 <body>
 <!-- begin content -->
-<h1>$title</h1>
+<h1>{{title}}</h1>
 
-$body
+{{body}}
 <!-- end content -->
 </body>
 </html>
@@ -475,7 +474,7 @@ EOQ
 <head>
 <meta name="robots" content="noarchive,follow">
 <!-- begin meta -->
-<title>$title</title>
+<title>{{title}}</title>
 <!-- end meta -->
 </head>
 <body>
@@ -484,7 +483,7 @@ EOQ
 
 <ul>
 <!-- loop -->
-<li><a href="$url">$title</a></li>
+<li><a href="{{url}}">{{title}}</a></li>
 <!-- endloop -->
 </ul>
 <!-- end content -->
@@ -497,16 +496,16 @@ EOQ
 <head>
 <meta name="robots" content="noarchive,follow">
 <!-- begin meta -->
-<title>$title</title>
+<title>{{title}}</title>
 <!-- end meta -->
 </head>
 <body>
 <!-- begin content -->
-<h1>$title</h1>
+<h1>{{title}}</h1>
 
 <!-- loop -->
-$body
-<p>$month $day $year<a href="$url">Permalink</a></p>
+{{body}}
+<p>{{month}} {{day}} {{year}}<a href="{{url}}">Permalink</a></p>
 <!-- endloop -->
 <!-- end content -->
 </body>

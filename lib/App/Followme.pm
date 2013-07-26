@@ -7,7 +7,7 @@ use IO::Dir;
 use IO::File;
 use Digest::MD5;
 
-our $VERSION = "0.40";
+our $VERSION = "0.70";
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -20,6 +20,7 @@ our %config = (
                archive_index => 'blog.html',
                archive_directory => 'archive',
                body_tag => 'content',
+               variable => '{{*}}',
                page_converter => \&add_tags,
               );
 
@@ -185,11 +186,16 @@ sub checksum_template {
 
 sub compile_template {
     my ($filename) = @_;
+
     my $template = read_page($filename);
+    my ($left, $right) = split(/\*/, $config{variable});
+    $left = quotemeta($left);
+    $right = quotemeta($right);
     
     my $code = <<'EOQ';
 sub {
 my ($data) = @_;
+my $block;
 my $text = '';
 EOQ
 
@@ -203,10 +209,11 @@ EOQ
             $code .= "}\n";
 
         } else {
-            $token =~ s/\$(\w+)/\$data->{$1}/g;
-            $code .= "\$text .= <<\"EOQ\";\n";
+            $code .= "\$block = <<'EOQ';\n";
             $code .= "${token}\nEOQ\n";
-            $code .= "chomp \$text;\n";
+            $code .= "chomp \$block;\n";
+            $code .= "\$block =~ s/$left(\\w+)$right/\$data->{\$1}/g;\n";
+            $code .= "\$text .= \$block;\n";
         }
     }
     
@@ -834,8 +841,12 @@ updated to be the same across all the html pages.
 If there are any text files in the directory, they are converted into html files
 by substituting the content into a template. After the conversion the original
 file is deleted. Along with the content, other variables are calculated from the
-file name and modification date. Variables in the template look like Perl
-variables, a dollar sign followed by word characters. The variables that are
+file name and modification date. Variables in the template are surrounded by
+double braces, so that a link would look like:
+
+    <li><a href="{{url}}">{{title}}</a></li>
+
+The string which indicate  a variable is configurable. The variables that are
 calculated for a text file are:
 
 =over 4
@@ -931,6 +942,11 @@ The name of the directory containing the weblog entries.
 =item body_tag (content)
 
 The comment name surrounding the weblog entry content.
+
+=item variable ({{*}})
+
+The string which indicates a variable in a template. The variable name replaces
+the star in the pattern.
 
 =item page_converter (add_tags)
 
