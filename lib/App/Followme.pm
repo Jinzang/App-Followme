@@ -195,8 +195,7 @@ sub compile_template {
     my $code = <<'EOQ';
 sub {
 my ($data) = @_;
-my $block;
-my $text = '';
+my ($block, @blocks);
 EOQ
 
     my @tokens = split(/(<!--\s*(?:loop|endloop).*?-->)/, $template);
@@ -213,12 +212,12 @@ EOQ
             $code .= "${token}\nEOQ\n";
             $code .= "chomp \$block;\n";
             $code .= "\$block =~ s/$left(\\w+)$right/\$data->{\$1}/g;\n";
-            $code .= "\$text .= \$block;\n";
+            $code .= "push(\@blocks,\$block);\n";
         }
     }
     
     $code .= <<'EOQ';
-return $text;
+return join('', @blocks);
 }
 EOQ
 
@@ -437,7 +436,6 @@ sub index_data {
     my @dir_data;
     my @file_data;
     $visit_dirs->();
-
     while (defined (my $file = $visit_files->())) {
         my ($root, $ext) = split(/\./, $file);
         
