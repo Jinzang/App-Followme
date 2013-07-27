@@ -441,7 +441,7 @@ EOQ
 # Create indexes
 
 do {
-    my @indexes = qw(one.html a/two.html a/b/three.html a/b/c/four.html);
+    my @indexes = qw(a/b/c/four.html a/b/three.html a/two.html one.html);
     my @indexes_ok = reverse @indexes;
     @indexes = App::Followme::sort_by_depth(@indexes);
     is_deeply(\@indexes, \@indexes_ok, 'Sort by depth'); # test 43
@@ -450,7 +450,7 @@ do {
                              archive/planes/cessna.html);
                              
     @indexes = App::Followme::get_indexes(\@converted_files);
-    @indexes_ok = qw(archive/cars/index.html archive/planes/index.html
+    @indexes_ok = qw(archive/planes/index.html archive/cars/index.html 
                      archive/index.html);
     is_deeply(\@indexes, \@indexes_ok, 'Get indexes'); # test 44
     

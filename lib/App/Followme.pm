@@ -415,7 +415,9 @@ sub get_indexes {
     }
     
     my @index_files = keys %index_files;
-    @index_files = sort_by_depth(@index_files) if @index_files;
+    if (@index_files > 1) {
+        @index_files = reverse sort_by_depth(@index_files);
+    }
     
     return @index_files;
 }
@@ -456,7 +458,10 @@ sub index_data {
     my @filenames;
     my $top_level = get_level($index_file);
     while (defined (my $filename = &$visitor)) {
-        my ($root, $ext) = split(/\./, $filename);
+        my @dirs = split(/\//, $filename);
+        my $basename = pop(@dirs);
+        my ($root, $ext) = split(/\./, $basename);
+
         next if $root =~ /template$/;
 
         if (get_level($filename) == $top_level) {
@@ -465,6 +470,8 @@ sub index_data {
             push(@filenames, $filename) if $root eq 'index';
         }
     }
+
+    @filenames = sort_by_depth(@filenames);
     
     my @loop_data;
     foreach my $filename (@filenames) {
@@ -637,7 +644,7 @@ sub sort_by_depth {
         push(@augmented_files, [get_level($filename), $filename]);
     }
 
-    @augmented_files = sort {$b->[0] <=> $a->[0] ||
+    @augmented_files = sort {$a->[0] <=> $b->[0] ||
                              $a->[1] cmp $b->[1]   } @augmented_files;
     
     return map {$_->[1]} @augmented_files;
