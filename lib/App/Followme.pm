@@ -118,6 +118,7 @@ sub build_title {
         $root = pop(@dirs) || $config{top_title};
     }
     
+    $root =~ s/^\d+//;
     my @words = map {ucfirst $_} split(/\-/, $root);
     return join(' ', @words);
 }
@@ -265,20 +266,20 @@ sub convert_a_file {
 # Convert all text files under a directory
 
 sub convert_text_files {
+    my ($top_dir) = @_;
+    
     my $ext = $config{text_extension};
-    my ($visit_dirs, $visit_files) = visitors($ext);
+    my $visitor = visitor_function($ext, $top_dir);
     
     my @converted_files;
-    while (defined ($visit_dirs->())) {
-        while (defined (my $filename = $visit_files->())) {
-            eval {convert_a_file($filename)};
+    while (defined (my $filename = &$visitor)) {
+        eval {convert_a_file($filename)};
 
-            if ($@) {
-                warn "$filename: $@";
-            } else {
-                push(@converted_files, $filename);
-                unlink($filename);
-            }
+        if ($@) {
+            warn "$filename: $@";
+        } else {
+            push(@converted_files, $filename);
+            unlink($filename);
         }
     }
     
@@ -367,8 +368,8 @@ sub followme {
     my ($top_dir) = @_;
     chdir($top_dir) if defined $top_dir;
     
-    update_site();
-    my $converted_files = convert_text_files();
+    update_site('.');
+    my $converted_files = convert_text_files('.');
     create_indexes($converted_files);
 
     return;
@@ -420,6 +421,25 @@ sub get_indexes {
 }
 
 #----------------------------------------------------------------------
+# Return the level of a filename (top = 0)
+
+sub get_level {
+    my ($filename) = @_;
+
+    my $level;
+    if ($filename eq '.'){
+        $level = 0;
+
+    } else {
+        # tr returns a count of the number of characters replaced
+        $level = $filename =~ tr(/)(/);
+        $level ++;
+    }
+
+    return $level;  
+}
+
+#----------------------------------------------------------------------
 # Retrieve the data associated with a file
 
 sub index_data {
@@ -431,29 +451,27 @@ sub index_data {
     my $index_dir = join('/', @dirs);
     my $data = get_data_for_file($index_dir);
 
-    my ($visit_dirs, $visit_files) = visitors('html', $index_dir);
+    my $visitor = visitor_function('html', $index_dir, 2);
 
-    my @dir_data;
-    my @file_data;
-    $visit_dirs->();
-    while (defined (my $file = $visit_files->())) {
-        my ($root, $ext) = split(/\./, $file);
-        
-        next if $root eq 'index';
+    my @filenames;
+    my $top_level = get_level($index_file);
+    while (defined (my $filename = &$visitor)) {
+        my ($root, $ext) = split(/\./, $filename);
         next if $root =~ /template$/;
-        
-        my $loop_data = get_data_for_file($file);
 
-        if (-d $file) {
-            push(@dir_data, $loop_data);
+        if (get_level($filename) == $top_level) {
+            push(@filenames, $filename) unless $root eq 'index';
         } else {
-            push(@file_data, $loop_data);
+            push(@filenames, $filename) if $root eq 'index';
         }
     }
+    
+    my @loop_data;
+    foreach my $filename (@filenames) {
+        push(@loop_data, get_data_for_file($filename));
+    }
        
-    my @loop = (@dir_data, @file_data);
-    $data->{loop} = \@loop;
-
+    $data->{loop} = \@loop_data;
     return $data;
 }
 
@@ -461,26 +479,24 @@ sub index_data {
 # Get the more recently changed files
 
 sub more_recent_files {
-    my ($limit, $top_dir, $except) = @_;
+    my ($limit, $top_dir) = @_;
     
-    my ($visit_dirs, $visit_files) = visitors('html', $top_dir, $except);
+    my $visitor = visitor_function('html', $top_dir);
     
     my @dated_files;
-    while (defined (my $dir = $visit_dirs->())) {
-        while (defined (my $filename = $visit_files->())) {
-            my @dirs = split(/\//, $filename);
-            my $basename = pop(@dirs);
-            
-            my ($root, $ext) = split(/\./, $basename);
-            next if $root eq 'index';
-            next if $root =~ /template$/;
+    while (defined (my $filename = &$visitor)) {
+        my @dirs = split(/\//, $filename);
+        my $basename = pop(@dirs);
+        
+        my ($root, $ext) = split(/\./, $basename);
+        next if $root eq 'index';
+        next if $root =~ /template$/;
 
-            my @stats = stat($filename);
-            if (@dated_files < $limit || $stats[9] > $dated_files[0]->[0]) {
-                shift(@dated_files) if @dated_files >= $limit;
-                push(@dated_files, [$stats[9], $filename]);
-                @dated_files = sort {$a->[0] <=> $b->[0]} @dated_files;
-            }
+        my @stats = stat($filename);
+        if (@dated_files < $limit || $stats[9] > $dated_files[0]->[0]) {
+            shift(@dated_files) if @dated_files >= $limit;
+            push(@dated_files, [$stats[9], $filename]);
+            @dated_files = sort {$a->[0] <=> $b->[0]} @dated_files;
         }
     }
     
@@ -495,17 +511,14 @@ sub more_recent_files {
 sub most_recently_changed {
     my ($top_dir) = @_;
     
-    my ($visit_dirs, $visit_files) =
-            visitors('html', $top_dir, $config{archive_directory});
-    
     my ($most_recent_file, $most_recent_date);
-    while (defined (my $dir = $visit_dirs->())) {
-        while (defined (my $filename = $visit_files->())) {
-            my @stats = stat($filename);
-            if (! defined $most_recent_file || $stats[9] > $most_recent_date) {
-                $most_recent_file = $filename;
-                $most_recent_date = $stats[9];
-            }
+    my $visitor = visitor_function('html', $top_dir);
+    
+    while (defined (my $filename = &$visitor)) {
+        my @stats = stat($filename);
+        if (! defined $most_recent_file || $stats[9] > $most_recent_date) {
+            $most_recent_file = $filename;
+            $most_recent_date = $stats[9];
         }
     }
     
@@ -621,15 +634,13 @@ sub sort_by_depth {
 
     my @augmented_files;
     foreach my $filename (@index_files) {
-        # tr returns a count of the number of characters translated
-        my $depth = $filename =~ tr(/)(/);
-        push(@augmented_files, [$depth, $filename]);
+        push(@augmented_files, [get_level($filename), $filename]);
     }
 
-    @augmented_files = sort {$b->[0] <=> $a->[0]} @augmented_files;
-    @index_files = map {$_->[1]} @augmented_files;
+    @augmented_files = sort {$b->[0] <=> $a->[0] ||
+                             $a->[1] cmp $b->[1]   } @augmented_files;
     
-    return @index_files;
+    return map {$_->[1]} @augmented_files;
 }
 
 #----------------------------------------------------------------------
@@ -693,42 +704,40 @@ sub update_page {
 # Update a website based on changes to a file's template
 
 sub update_site {   
-    my $template;
-    my ($visit_dirs, $visit_files) = visitors('html');
-    
-    my $template_file = most_recently_changed('.');
-    $template = read_page($template_file);
+    my ($top_dir) = @_;
+ 
+    my $template_file = most_recently_changed($top_dir);
+    my $template = read_page($template_file);
 
     die "Couldn't read $template_file" unless defined $template;    
     return unless changed_template($template);                
 
-    while (defined $visit_dirs->()) {
-        while (defined (my $filename = $visit_files->())) {        
-            next if $filename eq $template_file;
+    my $visitor = visitor_function('html', $top_dir);
+    while (defined (my $filename = &$visitor)) {        
+        next if $filename eq $template_file;
 
-            my $page = read_page($filename);
-            if (! defined $page) {
-                warn "Couldn't read $filename";
-                next;
-            }
-            
-            if (! unlink($filename)) {
-                warn "Can't remove old $filename";
-                next;
-            }
-    
-            my $new_page = eval {update_page($template, $page)};
+        my $page = read_page($filename);
+        if (! defined $page) {
+            warn "Couldn't read $filename";
+            next;
+        }
         
-            if ($@) {
-                warn "$filename: $@";
-                undef $new_page;
-            }
+        if (! unlink($filename)) {
+            warn "Can't remove old $filename";
+            next;
+        }
+
+        my $new_page = eval {update_page($template, $page)};
     
-            if (defined $new_page) {
-                write_page($filename, $new_page);
-            } else {
-                write_page($filename, $page);
-            }
+        if ($@) {
+            warn "$filename: $@";
+            undef $new_page;
+        }
+
+        if (defined $new_page) {
+            write_page($filename, $new_page);
+        } else {
+            write_page($filename, $page);
         }
     }
     
@@ -738,52 +747,51 @@ sub update_site {
 #----------------------------------------------------------------------
 # Return a closure that returns each file name
 
-sub visitors {
-    my ($ext, $top_dir, $except) = @_;
-    $top_dir = '.' unless defined $top_dir;
-    $except = '' unless defined $except;
+sub visitor_function {
+    my ($ext, $top_dir, $levels) = @_;
+    $levels = 999 unless defined $levels;
     
     my @dirlist;
     my @filelist;
     
     # Store the modification date with the file
     push(@dirlist, $top_dir);
+    my $top_level = get_level($top_dir);
 
-    my $visit_dirs = sub {
-        my $dir = shift(@dirlist);
-        return unless defined $dir;
-
-        my $dd = IO::Dir->new($dir) or die "Couldn't open $dir: $!\n";
-
-        # Find matching files and directories
-        while (defined (my $file = $dd->read())) {
-            my $path = $dir eq '.' ? $file : "$dir/$file";
-            next if $path eq $except;
-            
-            if (-d $path) {
-                next if $file    =~ /^\./;
-                push(@dirlist, $path);
+    return sub {
+        for (;;) {
+            my $file = shift(@filelist);
+            return $file if defined $file;
+        
+            my $dir = shift(@dirlist);
+            return unless defined $dir;
+    
+            if ((get_level($dir) - $top_level) < $levels) {           
+                my $dd = IO::Dir->new($dir) or die "Couldn't open $dir: $!\n";
+        
+                # Find matching files and directories
+                while (defined (my $file = $dd->read())) {
+                    my $path = $dir eq '.' ? $file : "$dir/$file";
+                    
+                    if (-d $path) {
+                        next if $file    =~ /^\./;
+                        push(@dirlist, $path);
+                        
+                    } else {
+                        next unless $file =~ /^[^\.]+\.$ext$/;
+                        push(@filelist, $path);
+                    }
+                }
                 
-            } else {
-                next unless $file =~ /^[^\.]+\.$ext$/;
-                push(@filelist, $path);
+        
+                $dd->close;
+    
+                @dirlist = sort(@dirlist);
+                @filelist = sort_by_name(@filelist);
             }
         }
-
-        $dd->close;
-
-        @dirlist = sort(@dirlist);
-        @filelist = sort_by_name(@filelist);
-
-        return $dir;
     };
-    
-    my $visit_files = sub {
-        return shift(@filelist);
-    };
-            
-    return ($visit_dirs, $visit_files);
-}
+ }
 
 #----------------------------------------------------------------------
 # Write the page back to the file
