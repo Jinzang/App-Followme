@@ -817,11 +817,11 @@ sub write_page {
 1;
 __END__
 
-=encoding utf-8T
+=encoding utf-8
 
 =head1 NAME
 
-App::Followme - Simple static website maintainance
+App::Followme - Simple static web site maintenance
 
 =head1 SYNOPSIS
 
@@ -830,7 +830,7 @@ App::Followme - Simple static website maintainance
 
 =head1 DESCRIPTION
 
-Followme does three things. First, it updates the constant partions of each web
+Followme does three things. First, it updates the constant portions of each web
 page when it is changed on any page. Second, it converts text files into html
 using a template. Third, it creates indexes for files when they are placed in a
 special directory, the archive directory. This simplifies keeping a blog on a
@@ -885,7 +885,7 @@ The relative url of the resulting html page.
 
 =item time fields
 
-The variables calculated from the modifcation time are: weekday, month,
+The variables calculated from the modification time are: weekday, month,
 monthnum, day, year, hour24, hour, ampm, minute, and second.
 
 =back
