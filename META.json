@@ -1,5 +1,5 @@
 {
-   "abstract" : "A template-less html templating system",
+   "abstract" : "Simple static website maintainance",
    "author" : [
       "Bernie Simon <bernie.simon@gmail.com>"
    ],
@@ -62,5 +62,5 @@
          "web" : "https://github.com/Jinzang/App-Followme"
       }
    },
-   "version" : "0.10"
+   "version" : "0.70"
 }
