@@ -287,7 +287,7 @@ sub convert_text_files {
 }
 
 #----------------------------------------------------------------------
-# Create an index filr
+# Create an index file
 
 sub create_an_index {
     my ($index_file) = @_;
@@ -442,7 +442,7 @@ sub get_level {
 }
 
 #----------------------------------------------------------------------
-# Retrieve the data associated with a file
+# Retrieve the data needed to build an index
 
 sub index_data {
     my ($index_file) = @_;
@@ -513,7 +513,7 @@ sub more_recent_files {
 }
 
 #----------------------------------------------------------------------
-# Get the most recently changed file outside of the archive
+# Get the most recently changed file
 
 sub most_recently_changed {
     my ($top_dir) = @_;
@@ -789,8 +789,7 @@ sub visitor_function {
                         push(@filelist, $path);
                     }
                 }
-                
-        
+
                 $dd->close;
     
                 @dirlist = sort(@dirlist);
@@ -859,7 +858,7 @@ double braces, so that a link would look like:
 
     <li><a href="{{url}}">{{title}}</a></li>
 
-The string which indicate  a variable is configurable. The variables that are
+The string which indicates a variable is configurable. The variables that are
 calculated for a text file are:
 
 =over 4
@@ -877,8 +876,8 @@ page_converter.
 =item title
 
 The title of the page is derived from the file name by removing the filename
-extension, replacing the dashes with spaces, and capitalizing the first
-character of each word.
+extension, removing any leading digits,replacing dashes with spaces, and
+capitalizing the first character of each word.
 
 =item url
 
@@ -904,7 +903,7 @@ directories contained in it. And one index is created from all the most
 recently changed files in the archive directory. This index thus serves as a
 weblog. Both kinds of index are built using a template. The variables are
 the same as mentioned above, except that the body variable is set to the
-contents of the content comment. Loop comments that look like
+block inside the content comment. Loop comments that look like
 
     <!-- loop -->
     <!-- endloop -->
@@ -920,13 +919,13 @@ Followme is called with the function followme, which takes one or no argument.
     
 The argument is the name of the top directory of the site. If no argument is
 called, the current directory is taken as the top directory. Before calling
-this function, it can be configured by aclling the function configure_followme.
+this function, it can be configured by calling the function configure_followme.
 
     configure_followme($name, $value);
 
 The first argument is the name and the second the value of the configuration
 parameter. All parameters have scalar values except for page-converter, whose
-value is a reference to a function. The congiuration parameters all have default
+value is a reference to a function. The configuration parameters all have default
 values, which are listed below with each parameter.
 
 =over 4
