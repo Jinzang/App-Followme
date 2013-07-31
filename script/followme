@@ -1,13 +1,24 @@
 #!/usr/bin/perl
 
+use strict;
 use lib '../lib';
 
 use IO::File;
+use Getopt::Long;
 use App::Followme qw(configure_followme followme);
+use App::FollowmeSite qw(copy_site);
+
+my $initialize;
+GetOptions(init => \$initialize);
 
 my $dir = shift @ARGV;
 read_configuration($dir);
-followme($dir);
+
+if ($initialize) {
+    copy_site($dir);
+} else {
+    followme($dir);
+}
 
 #----------------------------------------------------------------------
 # Construct configuration file name
