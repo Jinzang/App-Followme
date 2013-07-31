@@ -1,5 +1,5 @@
 {
-   "abstract" : "Simple static website maintainance",
+   "abstract" : "Simple static web site maintenance",
    "author" : [
       "Bernie Simon <bernie.simon@gmail.com>"
    ],
@@ -62,5 +62,5 @@
          "web" : "https://github.com/Jinzang/App-Followme"
       }
    },
-   "version" : "0.70"
+   "version" : "0.71"
 }

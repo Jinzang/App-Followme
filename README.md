@@ -1,6 +1,6 @@
 # NAME
 
-App::Followme - Simple static website maintainance
+App::Followme - Simple static web site maintenance
 
 # SYNOPSIS
 
@@ -9,7 +9,7 @@ App::Followme - Simple static website maintainance
 
 # DESCRIPTION
 
-Followme does three things. First, it updates the constant partions of each web
+Followme does three things. First, it updates the constant portions of each web
 page when it is changed on any page. Second, it converts text files into html
 using a template. Third, it creates indexes for files when they are placed in a
 special directory, the archive directory. This simplifies keeping a blog on a
@@ -62,7 +62,7 @@ calculated for a text file are:
 
 - time fields
 
-    The variables calculated from the modifcation time are: weekday, month,
+    The variables calculated from the modification time are: weekday, month,
     monthnum, day, year, hour24, hour, ampm, minute, and second.
 
 The template for the text file is selected by first looking for a file in
