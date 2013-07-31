@@ -7,7 +7,7 @@ use IO::Dir;
 use IO::File;
 use Digest::MD5;
 
-our $VERSION = "0.70";
+our $VERSION = "0.71";
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -359,6 +359,19 @@ sub find_template {
     }
 
     die "Couldn't find template for $filename\n";
+}
+
+#----------------------------------------------------------------------
+# Find the initial website
+
+sub find_site {
+    my $pkg = 'App/Followme.pm';
+    foreach my $dir (@INC) {
+        my $file = "$dir/$pkg";
+        print "$file\n" if -e $file;
+    }
+
+    return;
 }
 
 #----------------------------------------------------------------------

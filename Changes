@@ -1,6 +1,8 @@
-Revision history for Perl extension App-Followme
+Revision history for Perl extension App::Followme
 
-{{$NEXT}}
-
+0.71 2013-07-31
+    - added init option to script
+    
+0.70 2013-07-28 
     - original version
 
