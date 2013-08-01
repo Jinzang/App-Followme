@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 56;
+use Test::More tests => 62;
 
 #----------------------------------------------------------------------
 # Load package
@@ -565,3 +565,57 @@ EOQ
     ok(-e 'archive/index.html', 'Create archive index'); # test 55
     ok(-e 'blog.html', 'Create blog index'); # test 56
 };
+
+#----------------------------------------------------------------------
+# Test site initialization
+
+do {
+    App::Followme::configure_followme('archive_directory', 'foobar');
+    my $file = '{{archive_directory}}/index_template.html';
+    $file = App::Followme::rename_template($file);
+    my $file_ok = 'foobar/index_template.html';
+    is($file, $file_ok, 'Rename index template'); # test 57
+    
+    App::Followme::configure_followme('archive_index', 'news.html');
+    $file = '{{archive_index}}_template.html';
+    $file = App::Followme::rename_template($file);
+    $file_ok = 'news_template.html';
+    is($file, $file_ok, 'Rename blog template'); # test 58
+    
+    my $text = <<'EOQ';
+<html>
+<head>
+<meta name="robots" content="noarchive,follow">
+<!-- begin meta -->
+<title>{{title}}</title>
+<!-- end meta -->
+</head>
+<body>
+<!-- begin content -->
+<h1>{{title}}</h1>
+
+<!-- loop -->
+{{body}}
+<p>{{month}} {{day}} {{year}}<a href="{{url}}">Permalink</a></p>
+<!-- endloop -->
+<!-- end content -->
+</body>
+</html>
+EOQ
+
+    App::Followme::configure_followme('body_tag', 'article');
+    App::Followme::configure_followme('variable', '$(*)');
+
+    $text = App::Followme::modify_template($text);
+    ok(index($text, 'begin article') > 0, 'Modify begin tag'); # test 59
+    ok(index($text, 'end article') > 0, 'Modify end tag'); # test 60
+
+    ok(index($text, '$(day)') > 0, 'Modify day variable'); # test 61
+    ok(index($text, '$(url)') > 0, 'Modify url tag'); # test 62
+    
+    App::Followme::configure_followme('archive_directory', 'archive');
+    App::Followme::configure_followme('archive_index', 'blog.html');
+
+    App::Followme::configure_followme('body_tag', 'content');
+    App::Followme::configure_followme('variable', '{{*}}');
+}

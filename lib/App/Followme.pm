@@ -3,15 +3,18 @@ use 5.008005;
 use strict;
 use warnings;
 
+use lib '..';
+
 use IO::Dir;
 use IO::File;
 use Digest::MD5;
+use App::FollowmeSite qw(copy_file next_file);
 
 our $VERSION = "0.71";
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(configure_followme followme);
+our @EXPORT_OK = qw(configure_followme followme initialize_site);
 
 our %config = (
                checksum_file => 'followme.md5',
@@ -496,6 +499,44 @@ sub index_data {
 }
 
 #----------------------------------------------------------------------
+# Initialize website by creating templates
+
+sub initialize_site {
+    my ($top_dir) = @_;
+    
+    while (my ($file, $text) = next_file()) {
+        eval {
+            $file = rename_template($file);
+            $text = modify_template($text);
+            copy_file($file, $text, $top_dir);
+        };
+        
+        warn "$file: $@" if $@;
+    }
+
+    return;
+}
+
+#----------------------------------------------------------------------
+# Modify template to match non-default configuration
+
+sub modify_template {
+    my ($text) = @_;
+    
+    if ($config{body_tag} ne 'content') {
+        $text =~ s/<!--\s*begin\s+content\s*-->/<!-- begin $config{body_tag} -->/;
+        $text =~ s/<!--\s*end\s+content\s*-->/<!-- end $config{body_tag} -->/;
+    }
+
+    if ($config{variable} ne '{{*}}') {
+        my ($left, $right) = split(/\*/, $config{variable});
+        $text =~ s/{{(\w+)}}/$left$1$right/g;
+    }
+
+    return $text;
+}
+
+#----------------------------------------------------------------------
 # Get the more recently changed files
 
 sub more_recent_files {
@@ -644,6 +685,21 @@ sub recent_archive_data {
 
     $data->{loop} = \@loop;
     return $data;
+}
+
+#----------------------------------------------------------------------
+# Rename a template to match the configuration
+
+sub rename_template {
+    my ($file) = @_;
+
+    while ($file =~/{{(\w+)}}/) {
+        my $parameter = $config{$1};
+        my ($root, $ext) = split(/\./, $parameter);
+        $file =~ s/{{\w+}}/$root/;
+    }
+
+    return $file;
 }
 
 #----------------------------------------------------------------------

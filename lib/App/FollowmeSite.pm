@@ -10,7 +10,7 @@ our $modeline;
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(copy_site);
+our @EXPORT_OK = qw(copy_file next_file);
 
 #----------------------------------------------------------------------
 # Create a copy of the input file
@@ -39,20 +39,6 @@ sub copy_file {
     print $out $text;
         
     close($out);
-    return;
-}
-
-#----------------------------------------------------------------------
-# Copy website
-
-sub copy_site {
-    my ($directory) = @_;
-    
-    while (my ($file, $text) = next_file()) {
-        eval {copy_file($file, $text, $directory)};
-        warn "$file: $@" if $@;
-    }
-
     return;
 }
 
@@ -108,7 +94,7 @@ __DATA__
 </body>
 </html>
 
-#--%X--%X blog_template.html
+#--%X--%X {{archive_index}}_template.html
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
@@ -132,7 +118,7 @@ __DATA__
 </body>
 </html>
 
-#--%X--%X archive/index_template.html
+#--%X--%X {{archive_directory}}/index_template.html
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
