@@ -31,8 +31,8 @@ do {
         push(@texts, $text);
     }
     
-    my @files_ok = qw(template.html blog_template.html
-                      archive/index_template.html);
+    my @files_ok = qw(template.html {{archive_index}}_template.html
+                      {{archive_directory}}/index_template.html);
 
     is_deeply(\@files, \@files_ok, "Next file name"); # test 1
     

@@ -1,5 +1,8 @@
 Revision history for Perl extension App::Followme
 
+0.72 2013-08-o1
+    - update initial templates based on configuration
+    
 0.71 2013-07-31
     - added init option to script
     

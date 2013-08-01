@@ -7,10 +7,10 @@ use lib '..';
 
 use IO::Dir;
 use IO::File;
-use Digest::MD5;
+use Digest::MD5 qw(md5_hex);
 use App::FollowmeSite qw(copy_file next_file);
 
-our $VERSION = "0.71";
+our $VERSION = "0.72";
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -530,8 +530,6 @@ sub modify_template {
 
     if ($config{variable} ne '{{*}}') {
         my ($left, $right) = split(/\*/, $config{variable});
-        $left = quotemeta($left);
-        $right = quotemeta($right);
         $text =~ s/{{(\w+)}}/$left$1$right/g;
     }
 
