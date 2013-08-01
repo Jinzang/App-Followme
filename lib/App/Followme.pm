@@ -530,6 +530,8 @@ sub modify_template {
 
     if ($config{variable} ne '{{*}}') {
         my ($left, $right) = split(/\*/, $config{variable});
+        $left = quotemeta($left);
+        $right = quotemeta($right);
         $text =~ s/{{(\w+)}}/$left$1$right/g;
     }
 
