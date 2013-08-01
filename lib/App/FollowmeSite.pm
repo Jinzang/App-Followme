@@ -30,15 +30,16 @@ sub copy_file {
         if (! -d $path) {
             mkdir ($path) or die "Couldn't create $path: $!\n";
         }
-    }    
-    $path .= "/$base";
+    }
     
-    my $out = IO::File->new($path, 'w') or die "Can't write $path";
+    $path .= "/$base";
+    return if -e $path;    
 
+    my $out = IO::File->new($path, 'w') or die "Can't write $path";
     chomp $text;
-    print $out $text;
-        
+    print $out $text;        
     close($out);
+    
     return;
 }
 
