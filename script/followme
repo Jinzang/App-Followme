@@ -7,14 +7,17 @@ use IO::File;
 use Getopt::Long;
 use App::Followme qw(configure_followme followme initialize_site);
 
-my $initialize;
-GetOptions(init => \$initialize);
+my ($initialize, $help);
+GetOptions(init => \$initialize,
+           help => \$help);
 
 my $dir = shift @ARGV;
 read_configuration($dir);
 
 if ($initialize) {
     initialize_site($dir);
+} elsif ($help) {
+    show_help();
 } else {
     followme($dir);
 }
@@ -78,4 +81,26 @@ sub read_configuration {
 
     close($fd);
     return;
+}
+
+#----------------------------------------------------------------------
+# Print the help file
+
+sub show_help {
+    print <<'EOQ';
+Usage: followme [directory]
+
+Update a static website after changes. Constant portions of each page are
+updated to match, text files are converted to html, and indexes are created
+for new files in the archive.
+
+The script is run on the directory passed as its argument. If no argument is
+given, it is run on the current directory.
+
+Options:
+
+--help  print this help
+--init  Copy default templates to directory
+
+EOQ
 }
