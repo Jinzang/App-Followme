@@ -140,6 +140,14 @@ values, which are listed below with each parameter.
     take one argument, a string containing the text to be converted and return one
     value, the converted text.
 
+- variable\_setter (set\_variables)
+
+    A reference to a function that sets the variables that will be substituted
+    into the templates, with the exception of body, which is set by page\_converter.
+    The function takes one argument, the name of the file the variables are
+    generated from, and returns a reference to a hash containing the variables and
+    their values.
+
 # LICENSE
 
 Copyright (C) Bernie Simon.

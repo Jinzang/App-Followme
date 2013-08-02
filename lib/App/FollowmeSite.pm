@@ -5,7 +5,7 @@ use warnings;
 
 use IO::File;
 
-our $VERSION = "0.71";
+our $VERSION = "0.73";
 our $modeline;
 
 require Exporter;

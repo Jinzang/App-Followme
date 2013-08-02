@@ -351,7 +351,7 @@ do {
                    ampm => 'pm'};
     is_deeply($data, $data_ok, 'Build date'); # test 33
     
-    $data = App::Followme::get_data_for_file('two.html');
+    $data = App::Followme::set_variables('two.html');
     my @keys = sort keys %$data;
     my @keys_ok = sort(keys(%$data_ok), 'title', 'url');
     is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 34

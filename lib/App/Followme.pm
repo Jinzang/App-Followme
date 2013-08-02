@@ -10,7 +10,7 @@ use IO::File;
 use Digest::MD5 qw(md5_hex);
 use App::FollowmeSite qw(copy_file next_file);
 
-our $VERSION = "0.72";
+our $VERSION = "0.73";
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -25,6 +25,7 @@ our %config = (
                body_tag => 'content',
                variable => '{{*}}',
                page_converter => \&add_tags,
+               variable_setter => \&set_variables,
               );
 
 use constant MONTHS => [qw(January February March April May June July
@@ -249,7 +250,8 @@ sub convert_a_file {
     my ($filename) = @_;
 
     my $converter = $config{page_converter};
-    my $data = get_data_for_file($filename);
+    my $setter = $config{variable_setter};
+    my $data = $setter->($filename);
 
     my $text = read_page($filename);
     die "Couldn't read $filename" unless defined $text;
@@ -392,27 +394,6 @@ sub followme {
 }
 
 #----------------------------------------------------------------------
-# Get the data used to construct a page
-
-sub get_data_for_file {
-    my ($filename) = @_;
-
-    my $data;    
-    if (-e $filename) {
-        my @stats = stat($filename);
-        $data = build_date($stats[9]);
-
-    } else {
-        $data = {};
-    }
-    
-    $data->{title} = build_title($filename);
-    $data->{url} = build_url($filename);
-    
-    return $data;
-}
-
-#----------------------------------------------------------------------
 # Get a list of index files for the converted files
 
 sub get_indexes {
@@ -467,7 +448,8 @@ sub index_data {
     my $basename = pop(@dirs);
     
     my $index_dir = join('/', @dirs);
-    my $data = get_data_for_file($index_dir);
+    my $setter = $config{variable_setter};
+    my $data = $setter->($index_dir);
 
     my $visitor = visitor_function('html', $index_dir, 2);
 
@@ -491,9 +473,9 @@ sub index_data {
     
     my @loop_data;
     foreach my $filename (@filenames) {
-        push(@loop_data, get_data_for_file($filename));
+        push(@loop_data, $setter->($filename)); 
     }
-       
+
     $data->{loop} = \@loop_data;
     return $data;
 }
@@ -670,16 +652,17 @@ sub recent_archive_data {
 
     my @loop;
     my $limit = $config{archive_index_length};
-    my $data = get_data_for_file($archive_index);
+    my $setter = $config{variable_setter};
+    my $data = $setter->($archive_index);
+
     my @filenames = more_recent_files($limit, $archive_dir);
 
     foreach my $filename (@filenames) {
-        my $loopdata = get_data_for_file($filename);
-
+        my $loopdata = $setter->($filename);
         my $page = read_page($filename);
         my $blocks = parse_page($page);
-        $loopdata->{body} = $blocks->{$config{body_tag}};
 
+        $loopdata->{body} = $blocks->{$config{body_tag}};
         push(@loop, $loopdata);
     }
 
@@ -700,6 +683,27 @@ sub rename_template {
     }
 
     return $file;
+}
+
+#----------------------------------------------------------------------
+# Set the variables used to construct a page
+
+sub set_variables {
+    my ($filename) = @_;
+
+    my $data;    
+    if (-e $filename) {
+        my @stats = stat($filename);
+        $data = build_date($stats[9]);
+
+    } else {
+        $data = {};
+    }
+    
+    $data->{title} = build_title($filename);
+    $data->{url} = build_url($filename);
+    
+    return $data;
 }
 
 #----------------------------------------------------------------------
@@ -1034,6 +1038,14 @@ the star in the pattern.
 A reference to a function use to convert text to html. The function should
 take one argument, a string containing the text to be converted and return one
 value, the converted text.
+
+=item variable_setter (set_variables)
+
+A reference to a function that sets the variables that will be substituted
+into the templates, with the exception of body, which is set by page_converter.
+The function takes one argument, the name of the file the variables are
+generated from, and returns a reference to a hash containing the variables and
+their values.
 
 =back
 

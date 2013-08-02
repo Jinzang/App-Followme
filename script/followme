@@ -73,7 +73,9 @@ sub read_configuration {
         if (length $line) {
             die "Bad configuration: $line\n" unless $line =~ /=/;
             my ($name, $value) = split(/\s*=\s*/, $line, 2);
-            $value = load_module($value) if $name eq 'page_converter';
+
+            $value = load_module($value) if $name eq 'page_converter'
+                                         || $name eq 'variable_setter';
             
             configure_followme($name, $value) if $value;
         }
