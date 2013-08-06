@@ -5,22 +5,14 @@ use lib '../lib';
 
 use IO::File;
 use Getopt::Long;
-use App::Followme qw(configure_followme followme initialize_site);
+use App::Followme qw(configure_followme followme);
 
-my ($initialize, $help);
-GetOptions(init => \$initialize,
-           help => \$help);
-
+set_options();
 my $dir = shift @ARGV;
-read_configuration($dir);
 
-if ($initialize) {
-    initialize_site($dir);
-} elsif ($help) {
-    show_help();
-} else {
-    followme($dir);
-}
+read_configuration($dir);
+followme($dir);
+
 
 #----------------------------------------------------------------------
 # Construct configuration file name
@@ -86,6 +78,25 @@ sub read_configuration {
 }
 
 #----------------------------------------------------------------------
+# Set configuration options from command line flags
+
+sub set_options {
+
+    my ($reindex, $initialize, $help);
+    GetOptions(
+               reindex => \$reindex,
+               init => \$initialize,
+               help => \$help
+              );
+
+    configure_followme('reindex_option', $reindex);    
+    configure_followme('initialize_option', $initialize);
+
+    show_help() if $help;
+    return;
+}
+
+#----------------------------------------------------------------------
 # Print the help file
 
 sub show_help {
@@ -101,8 +112,10 @@ given, it is run on the current directory.
 
 Options:
 
---help  print this help
---init  Copy default templates to directory
+--help    print this help
+--init    copy default templates to directory
+--reindex recreate all index files in archive
 
 EOQ
+    exit;
 }

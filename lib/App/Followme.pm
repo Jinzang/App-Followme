@@ -10,13 +10,15 @@ use IO::File;
 use Digest::MD5 qw(md5_hex);
 use App::FollowmeSite qw(copy_file next_file);
 
-our $VERSION = "0.73";
+our $VERSION = "0.74";
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(configure_followme followme initialize_site);
+our @EXPORT_OK = qw(configure_followme followme);
 
 our %config = (
+               reindex_option => 0,
+               initialize_option => 0,
                checksum_file => 'followme.md5',
                text_extension => 'txt',
                archive_index_length => 5,
@@ -54,6 +56,32 @@ sub add_tags {
     }
     
     return $page;
+}
+
+#----------------------------------------------------------------------
+# Get all index files under the archive directory
+
+sub all_indexes {    
+    my %index_files;
+    my $visitor = visitor_function('html', $config{archive_directory});
+
+    while (defined (my $filename = &$visitor)) {
+        my @dirs = split(/\//, $filename);
+        pop(@dirs);
+        
+        while (@dirs) {
+            my $file = join('/', @dirs, 'index.html');
+            $index_files{$file} = 1;
+            pop(@dirs);
+        }
+    }
+    
+    my @index_files = keys %index_files;
+    if (@index_files > 1) {
+        @index_files = reverse sort_by_depth(@index_files);
+    }
+    
+    return @index_files;
 }
 
 #----------------------------------------------------------------------
@@ -326,10 +354,7 @@ sub create_archive_index {
 # Create index pages for archived files
 
 sub create_indexes {
-    my ($converted_files) = @_;
-
-    my @index_files = get_indexes($converted_files);
-    return unless @index_files;
+    my @index_files = @_;
     
     foreach my $index_file (@index_files) {
         eval {create_an_index($index_file)};
@@ -386,10 +411,23 @@ sub followme {
     my ($top_dir) = @_;
     chdir($top_dir) if defined $top_dir;
     
-    update_site('.');
-    my $converted_files = convert_text_files('.');
-    create_indexes($converted_files);
+    if ($config{initialize_option}) {
+        initialize_site($top_dir);
 
+    } else {
+        my @index_files;
+        update_site('.');
+        my $converted_files = convert_text_files('.');
+
+        if ($config{reindex_option}) {
+            @index_files = all_indexes();
+        } else {
+            @index_files = get_indexes($converted_files);
+        }
+
+        create_indexes(@index_files) if @index_files;           
+    }
+    
     return;
 }
 

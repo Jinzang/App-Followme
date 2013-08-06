@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 62;
+use Test::More tests => 63;
 
 #----------------------------------------------------------------------
 # Load package
@@ -561,9 +561,14 @@ EOQ
     ok($page =~ /<a href="archive\/one.html">/, 'Archive index length'); # test 54
     
     unlink('blog.html', 'archive/index.html');
-    App::Followme::create_indexes(\@archived_files);
-    ok(-e 'archive/index.html', 'Create archive index'); # test 55
-    ok(-e 'blog.html', 'Create blog index'); # test 56
+    
+    my @index_files = App::Followme::get_indexes(\@archived_files);
+    my @all_indexes = App::Followme::all_indexes();
+    is_deeply(\@all_indexes, \@index_files, 'All indexes'); # test 55
+    
+    App::Followme::create_indexes(@index_files);
+    ok(-e 'archive/index.html', 'Create archive index'); # test 56
+    ok(-e 'blog.html', 'Create blog index'); # test 57
 };
 
 #----------------------------------------------------------------------
@@ -574,13 +579,13 @@ do {
     my $file = '{{archive_directory}}/index_template.html';
     $file = App::Followme::rename_template($file);
     my $file_ok = 'foobar/index_template.html';
-    is($file, $file_ok, 'Rename index template'); # test 57
+    is($file, $file_ok, 'Rename index template'); # test 58
     
     App::Followme::configure_followme('archive_index', 'news.html');
     $file = '{{archive_index}}_template.html';
     $file = App::Followme::rename_template($file);
     $file_ok = 'news_template.html';
-    is($file, $file_ok, 'Rename blog template'); # test 58
+    is($file, $file_ok, 'Rename blog template'); # test 59
     
     my $text = <<'EOQ';
 <html>
@@ -607,11 +612,11 @@ EOQ
     App::Followme::configure_followme('variable', '$(*)');
 
     $text = App::Followme::modify_template($text);
-    ok(index($text, 'begin article') > 0, 'Modify begin tag'); # test 59
-    ok(index($text, 'end article') > 0, 'Modify end tag'); # test 60
+    ok(index($text, 'begin article') > 0, 'Modify begin tag'); # test 60
+    ok(index($text, 'end article') > 0, 'Modify end tag'); # test 61
 
-    ok(index($text, '$(day)') > 0, 'Modify day variable'); # test 61
-    ok(index($text, '$(url)') > 0, 'Modify url tag'); # test 62
+    ok(index($text, '$(day)') > 0, 'Modify day variable'); # test 62
+    ok(index($text, '$(url)') > 0, 'Modify url tag'); # test 63
     
     App::Followme::configure_followme('archive_directory', 'archive');
     App::Followme::configure_followme('archive_index', 'blog.html');
