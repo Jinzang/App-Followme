@@ -1,9 +1,12 @@
 Revision history for Perl extension App::Followme
 
+0.75 2013-08-09
+    - added per folder blocks
+ 
 0.74 2013-08-06
     - added reindex option
  
- 0.73 2013-08-02
+0.73 2013-08-02
     - make variable setter configurable
     
 0.72 2013-08-01

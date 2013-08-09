@@ -16,6 +16,9 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(configure_followme followme);
 
+use constant FILE => 0;
+use constant FOLDER => 1;
+
 our %config = (
                reindex_option => 0,
                initialize_option => 0,
@@ -177,31 +180,16 @@ sub build_url {
 }
 
 #----------------------------------------------------------------------
-# Detrmine if template has changes
-
-sub changed_template {
-    my ($template) = @_;
-    
-    my $new_checksum = checksum_template($template);
-    my $old_checksum = read_page($config{checksum_file}) || '';
-    chomp $old_checksum;
-
-    my $changed = $new_checksum ne $old_checksum;
-    write_page($config{checksum_file}, "$new_checksum\n") if $changed;
-
-    return $changed;
-}
-
-#----------------------------------------------------------------------
 # Compute checksum for template
 
 sub checksum_template {
-    my ($template) = @_;    
+    my ($template, $template_locality) = @_;    
 
     my $md5 = Digest::MD5->new;
 
     my $block_handler = sub {
-        return;
+        my ($blockname, $locality, $blocktext) = @_;
+        $md5->add($blocktext) if $locality > $template_locality;
     };
     
     my $template_handler = sub {
@@ -587,51 +575,34 @@ sub more_recent_files {
 }
 
 #----------------------------------------------------------------------
-# Get the most recently changed file
-
-sub most_recently_changed {
-    my ($top_dir) = @_;
-    
-    my ($most_recent_file, $most_recent_date);
-    my $visitor = visitor_function('html', $top_dir);
-    
-    while (defined (my $filename = &$visitor)) {
-        my @stats = stat($filename);
-        if (! defined $most_recent_file || $stats[9] > $most_recent_date) {
-            $most_recent_file = $filename;
-            $most_recent_date = $stats[9];
-        }
-    }
-    
-    return $most_recent_file;
-}
-
-#----------------------------------------------------------------------
 # Break page into template and blocks
 
 sub parse_blocks {
     my ($page, $block_handler, $template_handler) = @_;
     
+    my $locality = '';
     my $blockname = '';
-    my @tokens = split(/(<!--\s*(?:begin|end)\s+\w+\s*-->)/, $page);
+    my @tokens = split(/(<!--\s*(?:begin|end)\s+.*?-->)/, $page);
     
     foreach my $token (@tokens) {
-        if ($token =~ /^<!--\s*begin\s+(\w+)/) {
+        if ($token =~ /^<!--\s*begin\s+(.*?)-->/) {
             die "Improperly nested block ($token)\n" if $blockname;
                 
-            $blockname = $1;
+            ($blockname, $locality) = parse_blockname($1);
             $template_handler->($token);
             
-        } elsif ($token =~ /^<!--\s*end\s+(\w+)/) {
+        } elsif ($token =~ /^<!--\s*end\s+(.*?)-->/) {
+            my ($endname) = parse_blockname($1);
             die "Unmatched ($token)\n"
-                if $blockname eq '' || $blockname ne $1;
+                if $blockname eq '' || $blockname ne $endname;
                 
+            $locality = '';
             $blockname = '';
             $template_handler->($token);
 
         } else {
             if ($blockname) {
-                $block_handler->($blockname, $token);
+                $block_handler->($blockname, $locality, $token);
             } else {
                 $template_handler->($token);
             }            
@@ -643,6 +614,28 @@ sub parse_blocks {
 }
 
 #----------------------------------------------------------------------
+# Parse fields out of block tag
+
+sub parse_blockname {
+    my ($str) = @_;
+    
+    my %locality = (file => FILE, folder => FOLDER);
+    my ($blockname, $per, $value) = split(/\s+/, $str);
+    
+    my $locality;
+    if ($per) {
+        die "Syntax error in block ($str)"
+            unless $per eq 'per' && exists $locality{$value};
+        $locality = $locality{$value};
+        
+    } else {
+        $locality = FILE;
+    }
+    
+    return ($blockname, $locality);
+}
+
+#----------------------------------------------------------------------
 # Extract named blocks from a page
 
 sub parse_page {
@@ -650,7 +643,7 @@ sub parse_page {
     
     my $blocks = {};
     my $block_handler = sub {
-        my ($blockname, $blocktext) = @_;
+        my ($blockname, $locality, $blocktext) = @_;
         if (exists $blocks->{$blockname}) {
             die "Duplicate block name ($blockname)\n";
         }
@@ -724,6 +717,34 @@ sub rename_template {
 }
 
 #----------------------------------------------------------------------
+# Check if filename is the same as old filename
+
+sub same_directory {
+    my ($filename, $old_filename) = @_;
+    
+    if (defined $old_filename) { 
+        my @path = split(/\//, $filename);
+        pop(@path);
+        
+        my @old_path = split(/\//, $old_filename);
+        pop(@old_path);
+    
+        while (@path && @old_path) {
+            my $path = pop(@path);
+            my $old_path = pop(@old_path);
+            return unless $path eq $old_path;
+        }
+        
+        return if @path || @old_path;
+
+    } else {
+        return;
+    }
+    
+    return 1;
+}
+
+#----------------------------------------------------------------------
 # Set the variables used to construct a page
 
 sub set_variables {
@@ -742,6 +763,24 @@ sub set_variables {
     $data->{url} = build_url($filename);
     
     return $data;
+}
+
+#----------------------------------------------------------------------
+# Sort a list of files so the least recently modified file is first
+
+sub sort_by_date {
+    my (@filenames) = @_;
+
+    my @augmented_files;
+    foreach my $filename (@filenames) {
+        my @stats = stat($filename);
+        push(@augmented_files, [$stats[9], $filename]);
+    }
+
+    @augmented_files = sort {$a->[0] <=> $b->[0] ||
+                             $a->[1] cmp $b->[1]   } @augmented_files;
+    
+    return map {$_->[1]} @augmented_files;
 }
 
 #----------------------------------------------------------------------
@@ -786,15 +825,19 @@ sub sort_by_name {
 # Parse template and page and combine them
 
 sub update_page {
-    my ($template, $page) = @_;
+    my ($template, $page, $template_locality) = @_;
 
     my $output = [];
     my $blocks = parse_page($page);
     
     my $block_handler = sub {
-        my ($blockname, $blocktext) = @_;
+        my ($blockname, $locality, $blocktext) = @_;
         if (exists $blocks->{$blockname}) {
-            push(@$output, $blocks->{$blockname});
+            if ($locality <= $template_locality) {
+                push(@$output, $blocks->{$blockname});
+            } else {
+                push(@$output, $blocktext);          
+            }
             delete $blocks->{$blockname};
         } else {
             push(@$output, $blocktext);
@@ -823,16 +866,14 @@ sub update_page {
 
 sub update_site {   
     my ($top_dir) = @_;
- 
-    my $template_file = most_recently_changed($top_dir);
-    my $template = read_page($template_file);
 
-    die "Couldn't read $template_file" unless defined $template;    
-    return unless changed_template($template);                
-
+    my $template;
+    my $old_filename;
     my $visitor = visitor_function('html', $top_dir);
+
     while (defined (my $filename = &$visitor)) {        
-        next if $filename eq $template_file;
+        my $template_locality = same_directory($filename, $old_filename) ?
+                                FILE : FOLDER;
 
         my $page = read_page($filename);
         if (! defined $page) {
@@ -845,18 +886,29 @@ sub update_site {
             next;
         }
 
-        my $new_page = eval {update_page($template, $page)};
-    
-        if ($@) {
-            warn "$filename: $@";
-            undef $new_page;
-        }
+        if (! defined $template) {
+            $template = $page;
 
-        if (defined $new_page) {
-            write_page($filename, $new_page);
         } else {
-            write_page($filename, $page);
+            my $new_page;
+            eval {
+                $new_page = update_page($template, $page, $template_locality);
+                $template = $page if $template_locality == FOLDER;
+            };
+
+            if ($@) {
+                warn "$filename: $@";
+                undef $new_page;
+            }
+    
+            if (defined $new_page) {
+                write_page($filename, $new_page);
+            } else {
+                write_page($filename, $page);
+            }
         }
+        
+        $old_filename = $filename;
     }
     
     return;
@@ -904,7 +956,7 @@ sub visitor_function {
                 $dd->close;
     
                 @dirlist = sort(@dirlist);
-                @filelist = sort_by_name(@filelist);
+                @filelist = reverse sort_by_date(@filelist);
             }
         }
     };
