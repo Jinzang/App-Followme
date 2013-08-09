@@ -163,17 +163,17 @@ do {
                 "Last line",
                );
 
-    my $locality = 1;
+    my $locality = 0;
     my $page_one = join("\n", @page) . "\n";
     my $checksum_one = App::Followme::checksum_template($page_one, $locality);
 
     my $page_two = $page_one;
-    $page_two =~ s/block/mock/g;
+    $page_two =~ s/Second/2nd/g;
     my $checksum_two = App::Followme::checksum_template($page_two, $locality);
     is($checksum_one, $checksum_two, 'Checksum same template'); # test 9    
 
     my $page_three = $page_one;
-    $page_three =~ s/line/part/g;
+    $page_three =~ s/First/1st/g;
     my $checksum_three = App::Followme::checksum_template($page_three, $locality);
     isnt($checksum_one, $checksum_three,
          'Checksum different template'); # test 10   
@@ -201,12 +201,11 @@ do {
     $page =~ s/line/portion/g;
     $page =~ s/block/section/g;
     
-    my $locality = 1;
+    my $locality = 0;
     my $output = App::Followme::update_page($template, $page, $locality);
     my @output = split(/\n/, $output);
     
     my @output_ok = @template;
-    $output_ok[2] =~ s/block/section/;
     $output_ok[6] =~ s/block/section/;
 
     is_deeply(\@output, \@output_ok, 'Update page'); # test 11
