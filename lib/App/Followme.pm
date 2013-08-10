@@ -1015,6 +1015,15 @@ updated by substituting all its named blocks into corresponding block in the
 changed page. The effect is that all the text outside the named blocks are
 updated to be the same across all the html pages.
 
+Block text will be sysnchronized over all files in the folder if the begin
+comment has "per folder" after the name. For example:
+
+    <!-- begin name per folder -->
+    <!-- end name -->
+
+Text in "per folder" blocks can be used for navigation or other sections of the
+page that are constant, but not constant across the entire site.
+
 If there are any text files in the directory, they are converted into html files
 by substituting the content into a template. After the conversion the original
 file is deleted. Along with the content, other variables are calculated from the
