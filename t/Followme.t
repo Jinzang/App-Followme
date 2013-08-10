@@ -254,11 +254,11 @@ EOQ
 # Test configuration
 
 do {
-    my $set_file = 'test.md5';
-    App::Followme::configure_followme('checksum_file', $set_file);
-    my $get_file = App::Followme::configure_followme('checksum_file');
+    my $length = 10;
+    App::Followme::configure_followme('archive_index_length', $length);
+    my $new_length = App::Followme::configure_followme('archive_index_length');
     
-    is($get_file, $set_file, "Set and get configuration"); # test 17
+    is($new_length, $length, "Set and get configuration"); # test 17
 
     eval{App::Followme::configure_followme('meaning_of_everything', 42)};
     is ($@, "Bad configuration field (meaning_of_everything)\n",

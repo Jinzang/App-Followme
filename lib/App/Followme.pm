@@ -22,7 +22,6 @@ use constant FOLDER => 1;
 our %config = (
                reindex_option => 0,
                initialize_option => 0,
-               checksum_file => 'followme.md5',
                text_extension => 'txt',
                archive_index_length => 5,
                archive_index => 'blog.html',
@@ -177,6 +176,18 @@ sub build_url {
     }
     
     return join('/', @dirs, $page_name);
+}
+
+#----------------------------------------------------------------------
+# Determine if page matches template or needs to be updated
+
+sub changed_template {
+    my ($template, $page, $template_locality) = @_;
+    
+    my $template_checksum = checksum_template($template, $template_locality);
+    my $page_checksum = checksum_template($page, $template_locality);
+
+    return $template_checksum ne $page_checksum;
 }
 
 #----------------------------------------------------------------------
@@ -580,7 +591,7 @@ sub more_recent_files {
 sub parse_blocks {
     my ($page, $block_handler, $template_handler) = @_;
     
-    my $locality = '';
+    my $locality;
     my $blockname = '';
     my @tokens = split(/(<!--\s*(?:begin|end)\s+.*?-->)/, $page);
     
@@ -596,7 +607,6 @@ sub parse_blocks {
             die "Unmatched ($token)\n"
                 if $blockname eq '' || $blockname ne $endname;
                 
-            $locality = '';
             $blockname = '';
             $template_handler->($token);
 
@@ -750,15 +760,15 @@ sub same_directory {
 sub set_variables {
     my ($filename) = @_;
 
-    my $data;    
+    my $time;
     if (-e $filename) {
         my @stats = stat($filename);
-        $data = build_date($stats[9]);
-
+        $time = $stats[9];
     } else {
-        $data = {};
+        $time = time();
     }
     
+    my $data = build_date($time);
     $data->{title} = build_title($filename);
     $data->{url} = build_url($filename);
     
@@ -867,48 +877,71 @@ sub update_page {
 sub update_site {   
     my ($top_dir) = @_;
 
+    my $skip;
     my $template;
     my $old_filename;
     my $visitor = visitor_function('html', $top_dir);
 
     while (defined (my $filename = &$visitor)) {        
+        # Compare two filenames to see if we have changed directories
+
         my $template_locality = same_directory($filename, $old_filename) ?
                                 FILE : FOLDER;
+        $old_filename = $filename;
 
-        my $page = read_page($filename);
-        if (! defined $page) {
-            warn "Couldn't read $filename";
-            next;
-        }
+        if ($template_locality == FOLDER) {
+            # The most recently modified file in each folder is the template
+            # But it must first be updated from the template in the folder
+            # above it, if there is one
+
+            undef $skip;
+            my $page = read_page($filename);
+            die "Couldn't read $filename" unless defined $page;
+
+            if (defined $template) {
+                if (changed_template($template, $page, $template_locality)) {
+                    unlink($filename) || die "Can't remove old $filename";
+
+                    $page =
+                    eval {update_page($template, $page, $template_locality)};
         
-        if (! unlink($filename)) {
-            warn "Can't remove old $filename";
-            next;
-        }
+                    write_page($filename, $page);
+                    die "$filename: $@" if $@;
+                }
+            }
 
-        if (! defined $template) {
             $template = $page;
 
-        } else {
-            my $new_page;
-            eval {
-                $new_page = update_page($template, $page, $template_locality);
-                $template = $page if $template_locality == FOLDER;
-            };
+        } elsif (! $skip) {
+            # Compare the two most recently updated files in each directory
+            # to see if they must be updated using the most recent as a template
 
-            if ($@) {
-                warn "$filename: $@";
-                undef $new_page;
+            my $page = read_page($filename);
+            if (! defined $page) {
+                warn "Couldn't read $filename";
+                next;
             }
+
+            if (changed_template($template, $page, $template_locality)) {
+                $skip = 0;
+                if (! unlink($filename)) {
+                    warn "Can't remove old $filename";
+                    next;
+                }
+
+                $page =
+                eval {update_page($template, $page, $template_locality)};
     
-            if (defined $new_page) {
-                write_page($filename, $new_page);
-            } else {
                 write_page($filename, $page);
+                if ($@) {
+                    warn "$filename: $@";
+                    next;
+                }
+
+            } else {
+                $skip = 1 if ! defined $skip;
             }
         }
-        
-        $old_filename = $filename;
     }
     
     return;
@@ -1092,11 +1125,6 @@ value is a reference to a function. The configuration parameters all have defaul
 values, which are listed below with each parameter.
 
 =over 4
-
-=item checksum_file (followme.md5)
-
-The name of the file containing the checksum of the constant parts of an html
-page. It's used to see if the file has changed.
 
 =item text_extension (txt)
 
