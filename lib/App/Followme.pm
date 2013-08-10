@@ -179,18 +179,6 @@ sub build_url {
 }
 
 #----------------------------------------------------------------------
-# Determine if page matches template or needs to be updated
-
-sub changed_template {
-    my ($template, $page, $template_locality) = @_;
-    
-    my $template_checksum = checksum_template($template, $template_locality);
-    my $page_checksum = checksum_template($page, $template_locality);
-
-    return $template_checksum ne $page_checksum;
-}
-
-#----------------------------------------------------------------------
 # Compute checksum for template
 
 sub checksum_template {
@@ -832,6 +820,18 @@ sub sort_by_name {
 }
 
 #----------------------------------------------------------------------
+# Determine if page matches template or needs to be updated
+
+sub unchanged_template {
+    my ($template, $page, $template_locality) = @_;
+    
+    my $template_checksum = checksum_template($template, $template_locality);
+    my $page_checksum = checksum_template($page, $template_locality);
+
+    return ($template_checksum eq $page_checksum) ? 1 : 0;
+}
+
+#----------------------------------------------------------------------
 # Parse template and page and combine them
 
 sub update_page {
@@ -889,59 +889,28 @@ sub update_site {
                                 FILE : FOLDER;
         $old_filename = $filename;
 
-        if ($template_locality == FOLDER) {
-            # The most recently modified file in each folder is the template
-            # But it must first be updated from the template in the folder
-            # above it, if there is one
+        undef $skip if $template_locality != FILE;
+        next if $skip;
 
-            undef $skip;
-            my $page = read_page($filename);
-            die "Couldn't read $filename" unless defined $page;
+        my $page = read_page($filename);
+        die "Couldn't read $filename" unless defined $page;
 
-            if (defined $template) {
-                if (changed_template($template, $page, $template_locality)) {
-                    unlink($filename) || die "Can't remove old $filename";
+        if (defined $template) {
+            $skip = unchanged_template($template, $page, $template_locality)
+                    if ! defined $skip && $template_locality == FILE;
 
-                    $page =
-                    eval {update_page($template, $page, $template_locality)};
-        
-                    write_page($filename, $page);
-                    die "$filename: $@" if $@;
-                }
-            }
-
-            $template = $page;
-
-        } elsif (! $skip) {
-            # Compare the two most recently updated files in each directory
-            # to see if they must be updated using the most recent as a template
-
-            my $page = read_page($filename);
-            if (! defined $page) {
-                warn "Couldn't read $filename";
-                next;
-            }
-
-            if (changed_template($template, $page, $template_locality)) {
-                $skip = 0;
-                if (! unlink($filename)) {
-                    warn "Can't remove old $filename";
-                    next;
-                }
+            if (! $skip) {
+                unlink($filename) || die "Can't remove old $filename";
 
                 $page =
                 eval {update_page($template, $page, $template_locality)};
     
                 write_page($filename, $page);
-                if ($@) {
-                    warn "$filename: $@";
-                    next;
-                }
-
-            } else {
-                $skip = 1 if ! defined $skip;
+                die "$filename: $@" if $@;
             }
         }
+
+        $template = $page if $template_locality != FILE;
     }
     
     return;
