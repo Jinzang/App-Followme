@@ -82,14 +82,16 @@ sub read_configuration {
 
 sub set_options {
 
-    my ($reindex, $initialize, $help);
+    my ($reindex, $noop, $initialize, $help);
     GetOptions(
-               reindex => \$reindex,
-               init => \$initialize,
-               help => \$help
+               'reindex|r' => \$reindex,
+               'noop|n' => \$noop,
+               'init|i' => \$initialize,
+               'help|h' => \$help
               );
 
     configure_followme('reindex_option', $reindex);    
+    configure_followme('noop_option', $noop);
     configure_followme('initialize_option', $initialize);
 
     show_help() if $help;
@@ -112,9 +114,10 @@ given, it is run on the current directory.
 
 Options:
 
---help    print this help
---init    copy default templates to directory
---reindex recreate all index files in archive
+-h --help    print this help
+-i --init    copy default templates to directory
+-n --noop    print files to be changed without changing them
+-r --reindex recreate all index files in archive
 
 EOQ
     exit;

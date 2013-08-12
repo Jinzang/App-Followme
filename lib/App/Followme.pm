@@ -10,7 +10,7 @@ use IO::File;
 use Digest::MD5 qw(md5_hex);
 use App::FollowmeSite qw(copy_file next_file);
 
-our $VERSION = "0.74";
+our $VERSION = "0.76";
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -21,6 +21,7 @@ use constant FOLDER => 1;
 
 our %config = (
                reindex_option => 0,
+               noop_option => 0,
                initialize_option => 0,
                text_extension => 'txt',
                archive_index_length => 5,
@@ -293,13 +294,17 @@ sub convert_text_files {
     
     my @converted_files;
     while (defined (my $filename = &$visitor)) {
-        eval {convert_a_file($filename)};
-
-        if ($@) {
-            warn "$filename: $@";
+        if ($config{noop_option}) {
+            print "$filename\n";
         } else {
-            push(@converted_files, $filename);
-            unlink($filename);
+            eval {convert_a_file($filename)};
+    
+            if ($@) {
+                warn "$filename: $@";
+            } else {
+                push(@converted_files, $filename);
+                unlink($filename);
+            }
         }
     }
     
@@ -344,12 +349,20 @@ sub create_indexes {
     my @index_files = @_;
     
     foreach my $index_file (@index_files) {
-        eval {create_an_index($index_file)};
-        warn "$index_file: $@" if $@;
+        if ($config{noop_option}) {
+            print "$index_file\n";
+        } else {
+            eval {create_an_index($index_file)};
+            warn "$index_file: $@" if $@;
+        }
     }
 
-    eval {create_archive_index($config{archive_index})};
-    warn "$config{archive_index}: $@" if $@;
+    if ($config{noop_option}) {
+        print "$config{archive_index}\n";
+    } else {
+        eval {create_archive_index($config{archive_index})};
+        warn "$config{archive_index}: $@" if $@;
+    }
     
     return;
 }
@@ -900,13 +913,23 @@ sub update_site {
                     if ! defined $skip && $template_locality == FILE;
 
             if (! $skip) {
-                unlink($filename) || die "Can't remove old $filename";
-
-                $page =
-                eval {update_page($template, $page, $template_locality)};
+                if ($config{noop_option}) {
+                    print "$filename\n";
+                } else {
+                    unlink($filename) || die "Can't remove old $filename";
     
-                write_page($filename, $page);
-                die "$filename: $@" if $@;
+                    my $new_page =
+                    eval {update_page($template, $page, $template_locality)};
+        
+                    my $error = $@;
+                    if ($error) {
+                        write_page($filename, $page);
+                    } else {
+                        write_page($filename, $new_page);
+                    }
+
+                    die "$filename: $error" if $error;
+                }
             }
         }
 
