@@ -29,6 +29,15 @@ updated by substituting all its named blocks into corresponding block in the
 changed page. The effect is that all the text outside the named blocks are
 updated to be the same across all the html pages.
 
+Block text will be synchronized over all files in the folder if the begin
+comment has "per folder" after the name. For example:
+
+    <!-- begin name per folder -->
+    <!-- end name -->
+
+Text in "per folder" blocks can be used for navigation or other sections of the
+page that are constant, but not constant across the entire site.
+
 If there are any text files in the directory, they are converted into html files
 by substituting the content into a template. After the conversion the original
 file is deleted. Along with the content, other variables are calculated from the
@@ -62,8 +71,8 @@ calculated for a text file are:
 
 - time fields
 
-    The variables calculated from the modification time are: weekday, month,
-    monthnum, day, year, hour24, hour, ampm, minute, and second.
+    The variables calculated from the modification time are: `weekday, month,`
+    `monthnum, day, year, hour24, hour, ampm, minute,` and `second.`
 
 The template for the text file is selected by first looking for a file in
 the same directory starting with the same name as the file, e.g.,
@@ -104,43 +113,38 @@ parameter. All parameters have scalar values except for page-converter, whose
 value is a reference to a function. The configuration parameters all have default
 values, which are listed below with each parameter.
 
-- checksum\_file (followme.md5)
-
-    The name of the file containing the checksum of the constant parts of an html
-    page. It's used to see if the file has changed.
-
-- text\_extension (txt)
+- text\_extension (`txt`)
 
     The extension of files that are converted to html.
 
-- archive\_index\_length (5)
+- archive\_index\_length (`5`)
 
     The number of recent files to include in the weblog index.
 
-- archive\_index (blog.html)
+- archive\_index (`blog.html`)
 
     The filename of the weblog index.
 
-- archive\_directory (archive)
+- archive\_directory (`archive`)
 
     The name of the directory containing the weblog entries.
 
-- body\_tag (content)
+- body\_tag (`content`)
 
     The comment name surrounding the weblog entry content.
 
-- variable ({{\*}})
+- variable (`{{*}}`)
 
     The string which indicates a variable in a template. The variable name replaces
     the star in the pattern.
 
-- page\_converter (add\_tags)
+- page\_converter (`add_tags`)
 
     A reference to a function use to convert text to html. The function should
     take one argument, a string containing the text to be converted and return one
     value, the converted text.
 
-- variable\_setter (set\_variables)
+- variable\_setter (`set_variables`)
 
     A reference to a function that sets the variables that will be substituted
     into the templates, with the exception of body, which is set by page\_converter.

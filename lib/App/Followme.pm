@@ -1038,7 +1038,7 @@ updated by substituting all its named blocks into corresponding block in the
 changed page. The effect is that all the text outside the named blocks are
 updated to be the same across all the html pages.
 
-Block text will be sysnchronized over all files in the folder if the begin
+Block text will be synchronized over all files in the folder if the begin
 comment has "per folder" after the name. For example:
 
     <!-- begin name per folder -->
@@ -1082,8 +1082,8 @@ The relative url of the resulting html page.
 
 =item time fields
 
-The variables calculated from the modification time are: weekday, month,
-monthnum, day, year, hour24, hour, ampm, minute, and second.
+The variables calculated from the modification time are: C<weekday, month,>
+C<monthnum, day, year, hour24, hour, ampm, minute,> and C<second.>
 
 =back
 
@@ -1127,38 +1127,38 @@ values, which are listed below with each parameter.
 
 =over 4
 
-=item text_extension (txt)
+=item text_extension (C<txt>)
 
 The extension of files that are converted to html.
 
-=item archive_index_length (5)
+=item archive_index_length (C<5>)
 
 The number of recent files to include in the weblog index.
 
-=item archive_index (blog.html)
+=item archive_index (C<blog.html>)
 
 The filename of the weblog index.
 
-=item archive_directory (archive)
+=item archive_directory (C<archive>)
 
 The name of the directory containing the weblog entries.
 
-=item body_tag (content)
+=item body_tag (C<content>)
 
 The comment name surrounding the weblog entry content.
 
-=item variable ({{*}})
+=item variable (C<{{*}}>)
 
 The string which indicates a variable in a template. The variable name replaces
 the star in the pattern.
 
-=item page_converter (add_tags)
+=item page_converter (C<add_tags>)
 
 A reference to a function use to convert text to html. The function should
 take one argument, a string containing the text to be converted and return one
 value, the converted text.
 
-=item variable_setter (set_variables)
+=item variable_setter (C<set_variables>)
 
 A reference to a function that sets the variables that will be substituted
 into the templates, with the exception of body, which is set by page_converter.
