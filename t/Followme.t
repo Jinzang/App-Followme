@@ -3,20 +3,21 @@ use strict;
 
 use IO::File;
 use Test::More tests => 70;
+use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
 #----------------------------------------------------------------------
 # Load package
 
-my @path = split(/\//, $0);
+my @path = splitdir(rel2abs($0));
+pop(@path);
 pop(@path);
 
-my $bin = join('/', @path);
-my $lib = "$bin/../lib";
+my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
 require App::Followme;
 
-my $test_dir = "$bin/../test";
+my $test_dir = catdir(@path, 'test');
 system("/bin/rm -rf $test_dir");
 mkdir $test_dir;
 mkdir "$test_dir/sub";

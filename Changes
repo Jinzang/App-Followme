@@ -1,8 +1,11 @@
 Revision history for Perl extension App::Followme
 
-0.76 2013-08-11
+{{$NEXT}}
+
+0.76 2013-08-14
     - added noop flag
- 
+    - made tests os independent
+
 0.75 2013-08-09
     - added per folder blocks
  
