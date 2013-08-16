@@ -1,26 +1,4 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
-
-0.76 2013-08-14
-    - added noop flag
-    - made tests os independent
-
-0.75 2013-08-09
-    - added per folder blocks
- 
-0.74 2013-08-06
-    - added reindex option
- 
-0.73 2013-08-02
-    - make variable setter configurable
-    
-0.72 2013-08-01
-    - update initial templates based on configuration
-    
-0.71 2013-07-31
-    - added init option to script
-    
-0.70 2013-07-28 
-    - original version
-
+    - feature complete release
