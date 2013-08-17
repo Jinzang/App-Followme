@@ -1,7 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
-
+    - Changed begin/end comments to section/endsection
+    
 0.77 2013-08-17T15:19:16Z
     - fixed time zone depndent test
     - added new blocks to templates

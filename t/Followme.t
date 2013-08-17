@@ -43,13 +43,13 @@ do {
     
     my @page = (
                 "Top line",
-                "<!-- begin first per folder -->",
+                "<!-- section first per folder -->",
                 "First block",
-                "<!-- end first -->",
+                "<!-- endsection first -->",
                 "Middle line",
-                "<!-- begin second -->",
+                "<!-- section second -->",
                 "Second block",
-                "<!-- end second -->",
+                "<!-- endsection second -->",
                 "Last line",
                );
 
@@ -64,11 +64,11 @@ do {
 
     my $ok_template = [
                         "Top line\n",
-                        "<!-- begin first per folder -->",
-                        "<!-- end first -->",
+                        "<!-- section first per folder -->",
+                        "<!-- endsection first -->",
                         "\nMiddle line\n",
-                        "<!-- begin second -->",
-                        "<!-- end second -->",
+                        "<!-- section second -->",
+                        "<!-- endsection second -->",
                         "\nLast line\n",
                            ];
 
@@ -84,7 +84,7 @@ do {
     eval {
         App::Followme::parse_blocks($page, $block_handler, $template_handler);
     };
-    is($@, "Unmatched block (<!-- begin second -->)\n", 'Missing end'); # test 3
+    is($@, "Unmatched block (<!-- section second -->)\n", 'Missing end'); # test 3
 
     @bad_page = @page;
     shift(@bad_page); shift(@bad_page);
@@ -93,7 +93,7 @@ do {
     eval {
         App::Followme::parse_blocks($page, $block_handler, $template_handler);
     };
-    is($@, "Unmatched (<!-- end first -->)\n", 'Missing begin'); # test 4
+    is($@, "Unmatched (<!-- endsection first -->)\n", 'Missing begin'); # test 4
 
     @bad_page = @page;
     splice(@bad_page, 3, 1);
@@ -102,7 +102,7 @@ do {
     eval {
         App::Followme::parse_blocks($page, $block_handler, $template_handler);
     };
-    is($@, "Improperly nested block (<!-- begin second -->)\n",
+    is($@, "Improperly nested block (<!-- section second -->)\n",
        'Begin inside of begin'); # test 5
 
     @bad_page = @page;
@@ -112,7 +112,7 @@ do {
     eval {
         App::Followme::parse_blocks($page, $block_handler, $template_handler);
     };
-    is($@, "Unmatched (<!-- end second -->)\n",
+    is($@, "Unmatched (<!-- endsection second -->)\n",
        'Begin does not match end'); # test 6
 };
 
@@ -122,13 +122,13 @@ do {
 do {
     my @page = (
                 "Top line",
-                "<!-- begin first per folder -->",
+                "<!-- section first per folder -->",
                 "First block",
-                "<!-- end first -->",
+                "<!-- endsection first -->",
                 "Middle line",
-                "<!-- begin second -->",
+                "<!-- section second -->",
                 "Second block",
-                "<!-- end second -->",
+                "<!-- endsection second -->",
                 "Last line",
                );
 
@@ -155,13 +155,13 @@ do {
 do {
     my @page = (
                 "Top line",
-                "<!-- begin first per folder -->",
+                "<!-- section first per folder -->",
                 "First block",
-                "<!-- end first -->",
+                "<!-- endsection first -->",
                 "Middle line",
-                "<!-- begin second -->",
+                "<!-- section second -->",
                 "Second block",
-                "<!-- end second -->",
+                "<!-- endsection second -->",
                 "Last line",
                );
 
@@ -187,13 +187,13 @@ do {
 do {
     my @template = (
                 "Top line",
-                "<!-- begin first per folder -->",
+                "<!-- section first per folder -->",
                 "First block",
-                "<!-- end first -->",
+                "<!-- endsection first -->",
                 "Middle line",
-                "<!-- begin second -->",
+                "<!-- section second -->",
                 "Second block",
-                "<!-- end second -->",
+                "<!-- endsection second -->",
                 "Last line",
                );
 
@@ -227,17 +227,17 @@ do {
 <html>
 <head>
 <meta name="robots" content="archive">
-<!-- begin meta -->
+<!-- section meta -->
 <title>%%</title>
-<!-- end meta -->
+<!-- endsection meta -->
 </head>
 <body>
-<!-- begin content -->
+<!-- section content -->
 <h1>%%</h1>
-<!-- end content -->
-<!-- begin navigation per folder -->
+<!-- endsection content -->
+<!-- section navigation per folder -->
 <p><a href="">&&</a></p>
-<!-- end navigation -->
+<!-- endsection navigation -->
 </body>
 </html>
 EOQ
@@ -399,16 +399,16 @@ EOQ
 <html>
 <head>
 <meta name="robots" content="archive">
-<!-- begin meta -->
+<!-- section meta -->
 <title>{{title}}</title>
-<!-- end meta -->
+<!-- endsection meta -->
 </head>
 <body>
-<!-- begin content -->
+<!-- section content -->
 <h1>{{title}}</h1>
 
 {{body}}
-<!-- end content -->
+<!-- endsection content -->
 </body>
 </html>
 EOQ
@@ -484,16 +484,16 @@ do {
 <html>
 <head>
 <meta name="robots" content="archive">
-<!-- begin meta -->
+<!-- section meta -->
 <title>Post %%</title>
-<!-- end meta -->
+<!-- endsection meta -->
 </head>
 <body>
-<!-- begin content -->
+<!-- section content -->
 <h1>Post %%</h1>
 
 <p>All about %%.</p>
-<!-- end content -->
+<!-- endsection content -->
 </body>
 </html>
 EOQ
@@ -502,12 +502,12 @@ EOQ
 <html>
 <head>
 <meta name="robots" content="noarchive,follow">
-<!-- begin meta -->
+<!-- section meta -->
 <title>{{title}}</title>
-<!-- end meta -->
+<!-- endsection meta -->
 </head>
 <body>
-<!-- begin content -->
+<!-- section content -->
 <h1>$title</h1>
 
 <ul>
@@ -515,7 +515,7 @@ EOQ
 <li><a href="{{url}}">{{title}}</a></li>
 <!-- endloop -->
 </ul>
-<!-- end content -->
+<!-- endsection content -->
 </body>
 </html>
 EOQ
@@ -524,19 +524,19 @@ EOQ
 <html>
 <head>
 <meta name="robots" content="noarchive,follow">
-<!-- begin meta -->
+<!-- section meta -->
 <title>{{title}}</title>
-<!-- end meta -->
+<!-- endsection meta -->
 </head>
 <body>
-<!-- begin content -->
+<!-- section content -->
 <h1>{{title}}</h1>
 
 <!-- loop -->
 {{body}}
 <p>{{month}} {{day}} {{year}}<a href="{{url}}">Permalink</a></p>
 <!-- endloop -->
-<!-- end content -->
+<!-- endsection content -->
 </body>
 </html>
 EOQ
@@ -615,19 +615,19 @@ do {
 <html>
 <head>
 <meta name="robots" content="noarchive,follow">
-<!-- begin meta -->
+<!-- section meta -->
 <title>{{title}}</title>
-<!-- end meta -->
+<!-- endsection meta -->
 </head>
 <body>
-<!-- begin content -->
+<!-- section content -->
 <h1>{{title}}</h1>
 
 <!-- loop -->
 {{body}}
 <p>{{month}} {{day}} {{year}}<a href="{{url}}">Permalink</a></p>
 <!-- endloop -->
-<!-- end content -->
+<!-- endsection content -->
 </body>
 </html>
 EOQ
@@ -636,8 +636,8 @@ EOQ
     App::Followme::configure_followme('variable', '$(*)');
 
     $text = App::Followme::modify_template($text);
-    ok(index($text, 'begin article') > 0, 'Modify begin tag'); # test 67
-    ok(index($text, 'end article') > 0, 'Modify end tag'); # test 68
+    ok(index($text, 'section article') > 0, 'Modify begin tag'); # test 67
+    ok(index($text, 'endsection article') > 0, 'Modify end tag'); # test 68
 
     ok(index($text, '$(day)') > 0, 'Modify day variable'); # test 69
     ok(index($text, '$(url)') > 0, 'Modify url tag'); # test 70

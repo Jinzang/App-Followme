@@ -10,7 +10,7 @@ use IO::File;
 use Digest::MD5 qw(md5_hex);
 use App::FollowmeSite qw(copy_file next_file);
 
-our $VERSION = "0.77";
+our $VERSION = "0.78";
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -544,8 +544,8 @@ sub modify_template {
     my ($text) = @_;
     
     if ($config{body_tag} ne 'content') {
-        $text =~ s/<!--\s*begin\s+content\s*-->/<!-- begin $config{body_tag} -->/;
-        $text =~ s/<!--\s*end\s+content\s*-->/<!-- end $config{body_tag} -->/;
+        $text =~ s/<!--\s*section\s+content\s*-->/<!-- section $config{body_tag} -->/;
+        $text =~ s/<!--\s*endsection\s+content\s*-->/<!-- endsection $config{body_tag} -->/;
     }
 
     if ($config{variable} ne '{{*}}') {
@@ -594,16 +594,16 @@ sub parse_blocks {
     
     my $locality;
     my $blockname = '';
-    my @tokens = split(/(<!--\s*(?:begin|end)\s+.*?-->)/, $page);
+    my @tokens = split(/(<!--\s*(?:section|endsection)\s+.*?-->)/, $page);
     
     foreach my $token (@tokens) {
-        if ($token =~ /^<!--\s*begin\s+(.*?)-->/) {
+        if ($token =~ /^<!--\s*section\s+(.*?)-->/) {
             die "Improperly nested block ($token)\n" if $blockname;
                 
             ($blockname, $locality) = parse_blockname($1);
             $template_handler->($token);
             
-        } elsif ($token =~ /^<!--\s*end\s+(.*?)-->/) {
+        } elsif ($token =~ /^<!--\s*endsection\s+(.*?)-->/) {
             my ($endname) = parse_blockname($1);
             die "Unmatched ($token)\n"
                 if $blockname eq '' || $blockname ne $endname;
@@ -620,7 +620,7 @@ sub parse_blocks {
         }
     }
  
-    die "Unmatched block (<!-- begin $blockname -->)\n" if $blockname;
+    die "Unmatched block (<!-- section $blockname -->)\n" if $blockname;
     return;
 }
 
@@ -1028,8 +1028,8 @@ Each html page has sections that are different from other pages and other
 sections that are the same. The sections that differ are enclosed in html
 comments that look like
 
-    <!-- begin name-->
-    <!-- end name -->
+    <!-- section name-->
+    <!-- endsection name -->
 
 and indicate where the section begins and ends. When a page is changed, followme
 checks the text outside of these comments. If that text has changed. the other
@@ -1041,8 +1041,8 @@ updated to be the same across all the html pages.
 Block text will be synchronized over all files in the folder if the begin
 comment has "per folder" after the name. For example:
 
-    <!-- begin name per folder -->
-    <!-- end name -->
+    <!-- section name per folder -->
+    <!-- endsection name -->
 
 Text in "per folder" blocks can be used for navigation or other sections of the
 page that are constant, but not constant across the entire site.

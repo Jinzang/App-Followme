@@ -5,7 +5,7 @@ use warnings;
 
 use IO::File;
 
-our $VERSION = "0.77";
+our $VERSION = "0.78";
 our $modeline;
 
 require Exporter;
@@ -77,26 +77,26 @@ __DATA__
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<!-- begin meta -->
+<!-- section meta -->
 <title>{{title}}</title>
-<!-- end meta -->
+<!-- endsection meta -->
 </head>
 <body>
 <div id="header">
 <h1>Site Title</h1>
 </div>
 <div id="content">
-<!-- begin content -->
+<!-- section content -->
 <h2>{{title}}</h2>
 
 {{body}}    
-<!-- end content-->
+<!-- endsection content-->
 </div>
 <div id="sidebar">
-<!-- begin navigation per folder -->
-<!-- end navigation -->
-<!-- begin sidebar -->
-<!-- end sidebar -->
+<!-- section navigation per folder -->
+<!-- endsection navigation -->
+<!-- section sidebar -->
+<!-- endsection sidebar -->
 </div>
 </body>
 </html>
@@ -106,27 +106,27 @@ __DATA__
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<!-- begin meta -->
+<!-- section meta -->
 <title>{{title}}</title>
-<!-- end meta -->
+<!-- endsection meta -->
 </head>
 <body>
 <div id="header">
 <h1>Site Title</h1>
 </div>
 <div id="content">
-<!-- begin content -->
+<!-- section content -->
 <!-- loop -->
 {{body}}
 <p><a href="{{url}}">Written on {{month}} {{day}}, {{year}}</a></p>
 <!-- endloop -->
-<!-- end content-->
+<!-- endsection content-->
 </div>
 <div id="sidebar">
-<!-- begin navigation per folder -->
-<!-- end navigation -->
-<!-- begin sidebar -->
-<!-- end sidebar -->
+<!-- section navigation per folder -->
+<!-- endsection navigation -->
+<!-- section sidebar -->
+<!-- endsection sidebar -->
 </div>
 </body>
 </html>
@@ -135,29 +135,29 @@ __DATA__
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<!-- begin meta -->
+<!-- section meta -->
 <title>{{title}}</title>
-<!-- end meta -->
+<!-- endsection meta -->
 </head>
 <body>
 <div id="header">
 <h1>Site Title</h1>
 </div>
 <div id="content">
-<!-- begin content -->
+<!-- section content -->
 <h2>{{title}}</h2>
 
 <ul>
 <!-- loop --><li><a href="{{url}}">{{title}}</a></li>
 <!-- endloop -->
 </ul>
-<!-- end content-->
+<!-- endsection content-->
 </div>
 <div id="sidebar">
-<!-- begin navigation per folder -->
-<!-- end navigation -->
-<!-- begin sidebar -->
-<!-- end sidebar -->
+<!-- section navigation per folder -->
+<!-- endsection navigation -->
+<!-- section sidebar -->
+<!-- endsection sidebar -->
 </div>
 </body>
 </html>
