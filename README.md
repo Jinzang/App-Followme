@@ -19,8 +19,8 @@ Each html page has sections that are different from other pages and other
 sections that are the same. The sections that differ are enclosed in html
 comments that look like
 
-    <!-- begin name-->
-    <!-- end name -->
+    <!-- section name-->
+    <!-- endsection name -->
 
 and indicate where the section begins and ends. When a page is changed, followme
 checks the text outside of these comments. If that text has changed. the other
@@ -32,8 +32,8 @@ updated to be the same across all the html pages.
 Block text will be synchronized over all files in the folder if the begin
 comment has "per folder" after the name. For example:
 
-    <!-- begin name per folder -->
-    <!-- end name -->
+    <!-- section name per folder -->
+    <!-- endsection name -->
 
 Text in "per folder" blocks can be used for navigation or other sections of the
 page that are constant, but not constant across the entire site.
