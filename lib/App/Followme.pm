@@ -1115,15 +1115,15 @@ Followme is called with the function followme, which takes one or no argument.
     followme($directory);
     
 The argument is the name of the top directory of the site. If no argument is
-called, the current directory is taken as the top directory. Before calling
+passed, the current directory is taken as the top directory. Before calling
 this function, it can be configured by calling the function configure_followme.
 
     configure_followme($name, $value);
 
 The first argument is the name and the second the value of the configuration
-parameter. All parameters have scalar values except for page-converter, whose
-value is a reference to a function. The configuration parameters all have default
-values, which are listed below with each parameter.
+parameter. All parameters have scalar values except for page-converter and
+variable_setter, whose values are references to a function. The configuration
+parameters all have default values, which are listed below with each parameter.
 
 =over 4
 
