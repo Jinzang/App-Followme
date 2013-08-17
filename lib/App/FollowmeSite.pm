@@ -5,7 +5,7 @@ use warnings;
 
 use IO::File;
 
-our $VERSION = "0.76";
+our $VERSION = "0.77";
 our $modeline;
 
 require Exporter;
@@ -92,6 +92,12 @@ __DATA__
 {{body}}    
 <!-- end content-->
 </div>
+<div id="sidebar">
+<!-- begin navigation per folder -->
+<!-- end navigation -->
+<!-- begin sidebar -->
+<!-- end sidebar -->
+</div>
 </body>
 </html>
 
@@ -115,6 +121,12 @@ __DATA__
 <p><a href="{{url}}">Written on {{month}} {{day}}, {{year}}</a></p>
 <!-- endloop -->
 <!-- end content-->
+</div>
+<div id="sidebar">
+<!-- begin navigation per folder -->
+<!-- end navigation -->
+<!-- begin sidebar -->
+<!-- end sidebar -->
 </div>
 </body>
 </html>
@@ -140,6 +152,12 @@ __DATA__
 <!-- endloop -->
 </ul>
 <!-- end content-->
+</div>
+<div id="sidebar">
+<!-- begin navigation per folder -->
+<!-- end navigation -->
+<!-- begin sidebar -->
+<!-- end sidebar -->
 </div>
 </body>
 </html>
