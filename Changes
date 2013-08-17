@@ -1,6 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+    - fixed time zone depndent test
+    - added new blocks to templates
 
 0.76 2013-08-16T22:23:24Z
     - feature complete release
