@@ -1,6 +1,9 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+    - Removed compile test
+
+0.78 2013-08-17T20:28:34Z
     - Changed begin/end comments to section/endsection
     
 0.77 2013-08-17T15:19:16Z
