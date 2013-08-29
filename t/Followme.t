@@ -553,7 +553,7 @@ EOQ
 
     my @archived_files;
     foreach my $count (qw(four three two one)) {
-        sleep(1);
+        sleep(2);
         my $output = $page;
         $output =~ s/%%/$count/g;
         

@@ -1,7 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
-
+    - Increased sleep times between creating files for tests
+    
 0.79 2013-08-26T22:16:58Z
     - Removed compile test
 

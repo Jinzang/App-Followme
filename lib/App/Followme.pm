@@ -10,7 +10,7 @@ use IO::File;
 use Digest::MD5 qw(md5_hex);
 use App::FollowmeSite qw(copy_file next_file);
 
-our $VERSION = "0.79";
+our $VERSION = "0.80";
 
 require Exporter;
 our @ISA = qw(Exporter);
