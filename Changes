@@ -1,7 +1,7 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
-
+    - Do not delete leading digits from title if title is all digits
 0.80 2013-08-29T22:50:14Z
     - Increased sleep times between creating files for tests
     

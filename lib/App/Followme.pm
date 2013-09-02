@@ -10,7 +10,7 @@ use IO::File;
 use Digest::MD5 qw(md5_hex);
 use App::FollowmeSite qw(copy_file next_file);
 
-our $VERSION = "0.80";
+our $VERSION = "0.81";
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -153,7 +153,7 @@ sub build_title {
         $root = pop(@dirs) || $config{top_title};
     }
     
-    $root =~ s/^\d+//;
+    $root =~ s/^\d+// unless $root =~ /^\d+$/;
     my @words = map {ucfirst $_} split(/\-/, $root);
     return join(' ', @words);
 }
