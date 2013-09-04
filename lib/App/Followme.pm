@@ -8,6 +8,7 @@ use lib '..';
 use IO::Dir;
 use IO::File;
 use Digest::MD5 qw(md5_hex);
+use File::Spec::Functions qw(abs2rel rel2abs);
 use App::FollowmeSite qw(copy_file next_file);
 
 our $VERSION = "0.81";
@@ -23,6 +24,7 @@ our %config = (
                reindex_option => 0,
                noop_option => 0,
                initialize_option => 0,
+               absolute_url => 0,
                text_extension => 'txt',
                archive_index_length => 5,
                archive_index => 'blog.html',
@@ -65,9 +67,12 @@ sub add_tags {
 # Get all index files under the archive directory
 
 sub all_indexes {    
-    my %index_files;
-    my $visitor = visitor_function('html', $config{archive_directory});
+    my ($top_dir) = @_;
+    
+    my $archive_directory = abs2rel($config{archive_directory}, $top_dir);
+    my $visitor = visitor_function('html', $archive_directory);
 
+    my %index_files;
     while (defined (my $filename = &$visitor)) {
         my @dirs = split(/\//, $filename);
         pop(@dirs);
@@ -267,8 +272,14 @@ sub convert_a_file {
 
     my $converter = $config{page_converter};
     my $setter = $config{variable_setter};
-    my $data = $setter->($filename);
+    
+    my @dirs = split(/\//, $filename);
+    my $basename = pop(@dirs);
+    my $dir = join('/', @dirs);
 
+    my $data = $setter->($filename);
+    $data->{url} = make_relative($data->{url}, $dir);
+    
     my $text = read_page($filename);
     die "Couldn't read $filename" unless defined $text;
     $data->{body} = $converter->($text);
@@ -420,7 +431,7 @@ sub followme {
         my $converted_files = convert_text_files('.');
 
         if ($config{reindex_option}) {
-            @index_files = all_indexes();
+            @index_files = all_indexes($top_dir);
         } else {
             @index_files = get_indexes($converted_files);
         }
@@ -488,6 +499,7 @@ sub index_data {
     my $index_dir = join('/', @dirs);
     my $setter = $config{variable_setter};
     my $data = $setter->($index_dir);
+    $data->{url} = make_relative($data->{url}, $index_dir);
 
     my $visitor = visitor_function('html', $index_dir, 2);
 
@@ -511,7 +523,9 @@ sub index_data {
     
     my @loop_data;
     foreach my $filename (@filenames) {
-        push(@loop_data, $setter->($filename)); 
+        my $data = $setter->($filename);
+        $data->{url} = make_relative($data->{url}, $index_dir);
+        push(@loop_data, $data); 
     }
 
     $data->{loop} = \@loop_data;
@@ -535,6 +549,21 @@ sub initialize_site {
     }
 
     return;
+}
+
+#----------------------------------------------------------------------
+# Make a url relative to a directory unless the absolute flag is set
+
+sub make_relative {
+    my ($url, $dir) = @_;
+    
+    if ($config{absolute_url}) {
+        $url = "/$url";
+    } else {
+        $url = abs2rel(rel2abs($url), rel2abs($dir));
+    }
+    
+    return $url;
 }
 
 #----------------------------------------------------------------------
@@ -699,8 +728,14 @@ sub recent_archive_data {
 
     my @filenames = more_recent_files($limit, $archive_dir);
 
+    my @dirs = split(/\//, $archive_index);
+    my $basename = pop @dirs;
+    my $index_dir = join('/', @dirs);
+    
     foreach my $filename (@filenames) {
         my $loopdata = $setter->($filename);
+        $loopdata->{url} = make_relative($loopdata->{url}, $index_dir);
+        
         my $page = read_page($filename);
         my $blocks = parse_page($page);
 
@@ -1126,6 +1161,11 @@ variable_setter, whose values are references to a function. The configuration
 parameters all have default values, which are listed below with each parameter.
 
 =over 4
+
+=item absolute_url (C<0>)
+
+If Perl-true, urls on generated index pages are absolute (start with a slash.)
+If not, they are relative to the index page.
 
 =item text_extension (C<txt>)
 

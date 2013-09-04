@@ -564,7 +564,7 @@ EOQ
 
     my $data = App::Followme::index_data('archive/index.html');
     is($data->{title}, 'Archive', 'Index title'); # test 52
-    is($data->{url}, 'archive/index.html', 'Index url'); # test 53
+    is($data->{url}, 'index.html', 'Index url'); # test 53
     is($data->{loop}[0]{title}, 'Four', 'Index first page title'); # test 54
     is($data->{loop}[3]{title}, 'Two', 'Index last page title'); # test 55
     
@@ -572,7 +572,7 @@ EOQ
     $page = App::Followme::read_page('archive/index.html');
     
     ok($page =~ /<title>Archive<\/title>/, 'Write index title'); # test 56
-    ok($page =~ /<li><a href="archive\/two.html">Two<\/a><\/li>/,
+    ok($page =~ /<li><a href="two.html">Two<\/a><\/li>/,
        'Write index link'); #test 57
     
     $data = App::Followme::recent_archive_data('blog.html', 'archive');
