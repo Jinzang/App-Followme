@@ -113,6 +113,12 @@ parameter. All parameters have scalar values except for page-converter and
 variable\_setter, whose values are references to a function. The configuration
 parameters all have default values, which are listed below with each parameter.
 
+- absolute\_url (`0`)
+
+    If Perl-true, urls on generated index pages are absolute (start with a slash.)
+    If not, they are relative to the index page. Typically, you want absolute urls
+    if you have a base tag in your template and relative otherwise.
+
 - text\_extension (`txt`)
 
     The extension of files that are converted to html.

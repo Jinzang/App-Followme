@@ -1166,7 +1166,8 @@ parameters all have default values, which are listed below with each parameter.
 =item absolute_url (C<0>)
 
 If Perl-true, urls on generated index pages are absolute (start with a slash.)
-If not, they are relative to the index page.
+If not, they are relative to the index page. Typically, you want absolute urls
+if you have a base tag in your template and relative otherwise.
 
 =item text_extension (C<txt>)
 
