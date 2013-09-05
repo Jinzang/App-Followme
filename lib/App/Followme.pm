@@ -11,7 +11,7 @@ use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel rel2abs);
 use App::FollowmeSite qw(copy_file next_file);
 
-our $VERSION = "0.81";
+our $VERSION = "0.82";
 
 require Exporter;
 our @ISA = qw(Exporter);
