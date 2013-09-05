@@ -556,6 +556,7 @@ sub initialize_site {
 
 sub make_relative {
     my ($url, $dir) = @_;
+    $dir = '' unless defined $dir;
     
     if ($config{absolute_url}) {
         $url = "/$url";
