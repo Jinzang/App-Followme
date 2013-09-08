@@ -278,7 +278,7 @@ do {
 # Get the level of a filename
 
 do {
-    my $level = App::Followme::get_level('.');
+    my $level = App::Followme::get_level();
     is($level, 0, 'Level of root directory'); # test 23
     
     $level = App::Followme::get_level('archive/topic/post.html');
@@ -309,7 +309,7 @@ do {
 # Test file visitor
 
 do {
-    my $visitor = App::Followme::visitor_function('html', '.');
+    my $visitor = App::Followme::visitor_function('html');
     
     my @filenames;
     while (my $filename = &$visitor) {
@@ -326,7 +326,7 @@ do {
 # Test more_recent_files and update_site
 
 do {
-    my @filenames = App::Followme::more_recent_files(3, '.');
+    my @filenames = App::Followme::more_recent_files(3);
     is_deeply(\@filenames, [qw(one.html two.html three.html)],
               'other most recent files'); # test 30
 
@@ -336,7 +336,7 @@ do {
     $page =~ s/Page/Folio/g;
     $page =~ s/link/anchor/g;
     App::Followme::write_page($template, $page);
-    App::Followme::update_site('.');
+    App::Followme::update_site();
 
     foreach my $filename (@filenames) {       
         my $input = App::Followme::read_page($filename);
@@ -397,7 +397,7 @@ do {
     
     my $data = App::Followme::set_variables('two.html');
     my @keys = sort keys %$data;
-    my @keys_ok = sort(@date_ok, 'title', 'url');
+    my @keys_ok = sort(@date_ok, 'title');
     is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 45
 };
 
@@ -474,7 +474,7 @@ EOQ
     $page = App::Followme::read_page('four.html');
     ok($page =~ /<h1>Four<\/h1>/, 'Convert a file'); # test 51
 
-    App::Followme::convert_text_files('.');
+    App::Followme::convert_text_files();
     $page = App::Followme::read_page('one.html');
     ok($page =~ /<h1>One<\/h1>/, 'Convert text files one'); # test 52
     $page = App::Followme::read_page('two.html');

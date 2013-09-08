@@ -5,13 +5,14 @@ use warnings;
 
 use lib '..';
 
+use Cwd;
 use IO::Dir;
 use IO::File;
 use Digest::MD5 qw(md5_hex);
-use File::Spec::Functions qw(abs2rel rel2abs);
+use File::Spec::Functions qw(abs2rel splitdir catfile);
 use App::FollowmeSite qw(copy_file next_file);
 
-our $VERSION = "0.82";
+our $VERSION = "0.83";
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -74,11 +75,11 @@ sub all_indexes {
 
     my %index_files;
     while (defined (my $filename = &$visitor)) {
-        my @dirs = split(/\//, $filename);
+        my @dirs = splitdir($filename);
         pop(@dirs);
         
         while (@dirs) {
-            my $file = join('/', @dirs, 'index.html');
+            my $file = catfile(@dirs, 'index.html');
             $index_files{$file} = 1;
             pop(@dirs);
         }
@@ -136,12 +137,10 @@ sub build_date {
 sub build_page_name {
     my ($filename) = @_;
 
-    my @dirs = split(/\//, $filename);
-    my $basename = pop(@dirs);
-    my ($root, $ext) = split(/\./, $basename);
-
+    my ($dir, $root, $ext) = parse_filename($filename);
     my $page_name = "$root.html";
-    return join('/', @dirs, $page_name);
+
+    return $dir ? catfile($dir, $page_name) : $page_name;
 }
 
 #----------------------------------------------------------------------
@@ -150,12 +149,11 @@ sub build_page_name {
 sub build_title {
     my ($filename) = @_;
     
-    my @dirs = split(/\//, $filename);
-    my $basename = pop(@dirs);
-    my ($root, $ext) = split(/\./, $basename);
+    my ($dir, $root, $ext) = parse_filename($filename);
 
     if ($root eq 'index') {
-        $root = pop(@dirs) || $config{top_title};
+        my @dirs = splitdir($dir);
+        $root = pop(@dirs) || '';
     }
     
     $root =~ s/^\d+// unless $root =~ /^\d+$/;
@@ -167,9 +165,9 @@ sub build_title {
 # Get the url for a file from its name
 
 sub build_url {
-    my ($filename) = @_;
-    
-    my @dirs = split(/\//, $filename);
+    my ($filename, $base_dir) = @_;
+
+    my @dirs = splitdir($filename);
     my $basename = pop(@dirs);
 
     my $page_name;
@@ -181,7 +179,8 @@ sub build_url {
         $page_name = build_page_name($basename);
     }
     
-    return join('/', @dirs, $page_name);
+    my $url = join('/', @dirs, $page_name);
+    return make_relative($url, $base_dir);
 }
 
 #----------------------------------------------------------------------
@@ -272,13 +271,11 @@ sub convert_a_file {
 
     my $converter = $config{page_converter};
     my $setter = $config{variable_setter};
-    
-    my @dirs = split(/\//, $filename);
-    my $basename = pop(@dirs);
-    my $dir = join('/', @dirs);
+
+    my ($dir, $root, $ext) = parse_filename($filename);
 
     my $data = $setter->($filename);
-    $data->{url} = make_relative($data->{url}, $dir);
+    $data->{url} = build_url($filename, $dir);
     
     my $text = read_page($filename);
     die "Couldn't read $filename" unless defined $text;
@@ -384,15 +381,14 @@ sub create_indexes {
 sub find_template {
     my ($filename) = @_;   
 
-    my @dirs = split(/\//, $filename);
-    my $basename = pop(@dirs);
-    my ($root, $ext) = split(/\./, $basename);
-
+    my ($dir, $root, $ext) = parse_filename($filename);
+    my @dirs = splitdir($dir);
+    
     for (;;) {
-        my $template = join('/', @dirs, "${root}_template.html");
+        my $template = catfile(@dirs, "${root}_template.html");
         return $template if -e $template;
         
-        $template = join('/', @dirs, 'template.html');
+        $template = catfile(@dirs, 'template.html');
         return $template if -e $template;
 
         last unless @dirs;
@@ -426,10 +422,10 @@ sub followme {
         initialize_site($top_dir);
 
     } else {
-        my @index_files;
-        update_site('.');
-        my $converted_files = convert_text_files('.');
+        update_site();
+        my $converted_files = convert_text_files();
 
+        my @index_files;
         if ($config{reindex_option}) {
             @index_files = all_indexes($top_dir);
         } else {
@@ -450,12 +446,12 @@ sub get_indexes {
 
     my %index_files;
     foreach my $filename (@$converted_files) {
-        my ($top_dir, @dirs) = split(/\//, $filename);
+        my ($top_dir, @dirs) = splitdir($filename);
         next unless $top_dir eq $config{archive_directory};
         
         while (@dirs) {
             pop(@dirs);
-            my $file = join('/', $top_dir, @dirs, 'index.html');
+            my $file = catfile($top_dir, @dirs, 'index.html');
             $index_files{$file} = 1;
         }
     }
@@ -475,13 +471,13 @@ sub get_level {
     my ($filename) = @_;
 
     my $level;
-    if ($filename eq '.'){
-        $level = 0;
-
-    } else {
+    if (defined $filename){
         # tr returns a count of the number of characters replaced
         $level = $filename =~ tr(/)(/);
         $level ++;
+
+    } else {
+        $level = 0;
     }
 
     return $level;  
@@ -493,23 +489,18 @@ sub get_level {
 sub index_data {
     my ($index_file) = @_;
         
-    my @dirs = split(/\//, $index_file);
-    my $basename = pop(@dirs);
-    
-    my $index_dir = join('/', @dirs);
+    my ($index_dir, $root, $ext) = parse_filename($index_file);
+
     my $setter = $config{variable_setter};
     my $data = $setter->($index_dir);
-    $data->{url} = make_relative($data->{url}, $index_dir);
+    $data->{url} = build_url($index_file, $index_dir);
 
     my $visitor = visitor_function('html', $index_dir, 2);
 
     my @filenames;
     my $top_level = get_level($index_file);
     while (defined (my $filename = &$visitor)) {
-        my @dirs = split(/\//, $filename);
-        my $basename = pop(@dirs);
-        my ($root, $ext) = split(/\./, $basename);
-
+        my ($dir, $root, $ext) = parse_filename($filename);
         next if $root =~ /template$/;
 
         if (get_level($filename) == $top_level) {
@@ -524,7 +515,7 @@ sub index_data {
     my @loop_data;
     foreach my $filename (@filenames) {
         my $data = $setter->($filename);
-        $data->{url} = make_relative($data->{url}, $index_dir);
+        $data->{url} = build_url($filename, $index_dir);
         push(@loop_data, $data); 
     }
 
@@ -555,13 +546,22 @@ sub initialize_site {
 # Make a url relative to a directory unless the absolute flag is set
 
 sub make_relative {
-    my ($url, $dir) = @_;
-    $dir = '' unless defined $dir;
+    my ($url, $base_dir) = @_;
+    $base_dir = '' unless defined $base_dir;
     
     if ($config{absolute_url}) {
         $url = "/$url";
+        
     } else {
-        $url = abs2rel(rel2abs($url), rel2abs($dir));
+        my @urls = split('/', $url);
+        my @dirs = splitdir($base_dir);
+
+        while (@urls && @dirs && $urls[0] eq $dirs[0]) {
+            shift(@urls);
+            shift(@dirs);
+        }
+       
+        $url = join('/', @urls);
     }
     
     return $url;
@@ -596,10 +596,8 @@ sub more_recent_files {
     
     my @dated_files;
     while (defined (my $filename = &$visitor)) {
-        my @dirs = split(/\//, $filename);
-        my $basename = pop(@dirs);
-        
-        my ($root, $ext) = split(/\./, $basename);
+        my ($dir, $root, $ext) = parse_filename($filename);
+
         next if $root eq 'index';
         next if $root =~ /template$/;
 
@@ -701,6 +699,20 @@ sub parse_page {
 }
 
 #----------------------------------------------------------------------
+# Parse filename into directory, root, and extension
+
+sub parse_filename {
+    my ($filename) = @_;
+
+    my @dirs = splitdir($filename);
+    my $basename = pop(@dirs);
+    my ($root, $ext) = split(/\./, $basename);
+    my $dir = @dirs ? catfile(@dirs) : '';
+    
+    return ($dir, $root, $ext);
+}
+
+#----------------------------------------------------------------------
 # Read a file into a string
 
 sub read_page {
@@ -727,15 +739,14 @@ sub recent_archive_data {
     my $setter = $config{variable_setter};
     my $data = $setter->($archive_index);
 
-    my @filenames = more_recent_files($limit, $archive_dir);
+    my ($index_dir, $root, $ext) = parse_filename($archive_index);
+    $data->{url} = build_url($archive_index, $index_dir);
 
-    my @dirs = split(/\//, $archive_index);
-    my $basename = pop @dirs;
-    my $index_dir = join('/', @dirs);
-    
+    my @filenames = more_recent_files($limit, $archive_dir);
+   
     foreach my $filename (@filenames) {
         my $loopdata = $setter->($filename);
-        $loopdata->{url} = make_relative($loopdata->{url}, $index_dir);
+        $loopdata->{url} = build_url($filename, $index_dir);
         
         my $page = read_page($filename);
         my $blocks = parse_page($page);
@@ -770,10 +781,10 @@ sub same_directory {
     my ($filename, $old_filename) = @_;
     
     if (defined $old_filename) { 
-        my @path = split(/\//, $filename);
+        my @path = splitdir($filename);
         pop(@path);
         
-        my @old_path = split(/\//, $old_filename);
+        my @old_path = splitdir($old_filename);
         pop(@old_path);
     
         while (@path && @old_path) {
@@ -807,8 +818,7 @@ sub set_variables {
     
     my $data = build_date($time);
     $data->{title} = build_title($filename);
-    $data->{url} = build_url($filename);
-    
+   
     return $data;
 }
 
@@ -994,15 +1004,18 @@ sub visitor_function {
             my $file = shift(@filelist);
             return $file if defined $file;
         
+            return unless @dirlist;
             my $dir = shift(@dirlist);
-            return unless defined $dir;
     
             if ((get_level($dir) - $top_level) < $levels) {           
-                my $dd = IO::Dir->new($dir) or die "Couldn't open $dir: $!\n";
+                my $dd = defined $dir ? IO::Dir->new($dir)
+                                      : IO::Dir->new(getcwd());
+
+                die "Couldn't open $dir: $!\n" unless $dd;
         
                 # Find matching files and directories
                 while (defined (my $file = $dd->read())) {
-                    my $path = $dir eq '.' ? $file : "$dir/$file";
+                    my $path = $dir ? catfile($dir, $file) : $file;
                     
                     if (-d $path) {
                         next if $file    =~ /^\./;
