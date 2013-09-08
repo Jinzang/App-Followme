@@ -985,7 +985,7 @@ sub update_site {
 }
 
 #----------------------------------------------------------------------
-# Return a closure that returns each file name
+# Return a closure that returns each file name with a specific extension
 
 sub visitor_function {
     my ($ext, $top_dir, $levels) = @_;
@@ -994,7 +994,6 @@ sub visitor_function {
     my @dirlist;
     my @filelist;
     
-    # Store the modification date with the file
     push(@dirlist, $top_dir);
     my $top_level = get_level($top_dir);
 
