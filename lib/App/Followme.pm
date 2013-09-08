@@ -12,7 +12,7 @@ use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel splitdir catfile);
 use App::FollowmeSite qw(copy_file next_file);
 
-our $VERSION = "0.83";
+our $VERSION = "0.84";
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -68,9 +68,7 @@ sub add_tags {
 # Get all index files under the archive directory
 
 sub all_indexes {    
-    my ($top_dir) = @_;
-    
-    my $archive_directory = abs2rel($config{archive_directory}, $top_dir);
+    my $archive_directory = abs2rel($config{archive_directory});
     my $visitor = visitor_function('html', $archive_directory);
 
     my %index_files;
@@ -427,7 +425,7 @@ sub followme {
 
         my @index_files;
         if ($config{reindex_option}) {
-            @index_files = all_indexes($top_dir);
+            @index_files = all_indexes();
         } else {
             @index_files = get_indexes($converted_files);
         }
@@ -443,11 +441,12 @@ sub followme {
 
 sub get_indexes {
     my ($converted_files) = @_;
+    my $archive_directory = abs2rel($config{archive_directory});
 
     my %index_files;
     foreach my $filename (@$converted_files) {
         my ($top_dir, @dirs) = splitdir($filename);
-        next unless $top_dir eq $config{archive_directory};
+        next unless $top_dir eq $archive_directory;
         
         while (@dirs) {
             pop(@dirs);
