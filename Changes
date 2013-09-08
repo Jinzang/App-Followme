@@ -1,6 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+
+0.83 2013-09-08T00:15:00Z
     - OS independent filename handling
     
 0.82 2013-09-05T22:16:59Z
