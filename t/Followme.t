@@ -316,10 +316,15 @@ do {
         push(@filenames, $filename);
     }
     
-    is_deeply(\@filenames,
-              [qw(one.html two.html three.html four.html
-               sub/one.html sub/two.html sub/three.html sub/four.html)],
-              'File visitor'); # test 29
+    my @ok_filenames = qw(one.html two.html three.html four.html
+                          sub/one.html sub/two.html sub/three.html
+                          sub/four.html);
+    for (@ok_filenames) {
+        my @dirs = split('/', $_);
+        $_ = catfile(@dirs);
+    }
+    
+    is_deeply(\@filenames, \@ok_filenames, 'File visitor'); # test 29
 };
 
 #----------------------------------------------------------------------
@@ -347,8 +352,7 @@ do {
         } else {
             ok($input =~ /anchor/, 'Followme per folder block'); # test 36
         }
-    }
-    
+    }    
 };
 
 #----------------------------------------------------------------------
@@ -367,16 +371,16 @@ do {
 
 do {
 
-    my $text_name = 'watch/this-is-only-a-test.txt';
+    my $text_name = catfile('watch','this-is-only-a-test.txt');
     my $page_name = App::Followme::build_page_name($text_name);
-    my $page_name_ok = 'watch/this-is-only-a-test.html';
+    my $page_name_ok = catfile('watch','this-is-only-a-test.html');
     is($page_name, $page_name_ok, 'Build page'); # test 39
     
     my $title = App::Followme::build_title($text_name);
     my $title_ok = 'This Is Only A Test';
     is($title, $title_ok, 'Build file title'); # test 40
 
-    my $index_name = 'watch/index.html';
+    my $index_name = catfile('watch','index.html');
     $title = App::Followme::build_title($index_name);
     $title_ok = 'Watch';
     is($title, $title_ok, 'Build directory title'); # test 41
@@ -496,6 +500,12 @@ do {
     @indexes = App::Followme::get_indexes(\@converted_files);
     @indexes_ok = qw(archive/planes/index.html archive/cars/index.html 
                      archive/index.html);
+
+    foreach (@indexes_ok) {
+        my @dirs = split('/', $_);
+        $_ = catfile(@dirs);
+    }
+
     is_deeply(\@indexes, \@indexes_ok, 'Get indexes'); # test 55
     
     mkdir('archive');
@@ -577,12 +587,12 @@ EOQ
         my $output = $page;
         $output =~ s/%%/$count/g;
         
-        my $filename = "archive/$count.html";
+        my $filename = catfile('archive',"$count.html");
         App::Followme::write_page($filename, $output);
         push(@archived_files, $filename);
     }
 
-    my $data = App::Followme::index_data('archive/index.html');
+    my $data = App::Followme::index_data(catfile('archive','index.html'));
     is($data->{title}, 'Archive', 'Index title'); # test 56
     is($data->{url}, 'index.html', 'Index url'); # test 57
     is($data->{loop}[0]{title}, 'Four', 'Index first page title'); # test 58
@@ -604,7 +614,7 @@ EOQ
     ok($page =~ /All about two/, 'Archive index content'); # test 64
     ok($page =~ /<a href="archive\/one.html">/, 'Archive index length'); # test 65
     
-    unlink('blog.html', 'archive/index.html');
+    unlink('blog.html', catfile('archive','index.html'));
     
     my @index_files = App::Followme::get_indexes(\@archived_files);
     my @all_indexes = App::Followme::all_indexes();
