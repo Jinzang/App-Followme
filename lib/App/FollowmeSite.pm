@@ -4,8 +4,9 @@ use strict;
 use warnings;
 
 use IO::File;
+use File::Spec::Functions qw(splitdir catfile);
 
-our $VERSION = "0.85";
+our $VERSION = "0.86";
 our $modeline;
 
 require Exporter;
@@ -66,6 +67,9 @@ sub next_file {
             $text .= $_;
         }
     }
+    
+    my @dirs = split('/', $file);
+    $file = catfile(@dirs);
     
     return ($file, $text);
 }

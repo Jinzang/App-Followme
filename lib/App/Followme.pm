@@ -12,7 +12,7 @@ use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel splitdir catfile);
 use App::FollowmeSite qw(copy_file next_file);
 
-our $VERSION = "0.85";
+our $VERSION = "0.86";
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -471,10 +471,7 @@ sub get_level {
 
     my $level;
     if (defined $filename){
-        # tr returns a count of the number of characters replaced
-        $level = $filename =~ tr(/)(/);
-        $level ++;
-
+        $level = scalar splitdir($filename);
     } else {
         $level = 0;
     }
