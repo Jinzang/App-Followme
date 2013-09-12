@@ -2,6 +2,9 @@ Revision history for Perl extension App::Followme
 
 {{$NEXT}}
 
+0.86 2013-09-12T23:53:41Z
+    - Fixed code assuming directory separator is slash
+    
 0.85 2013-09-10T23:30:29Z
     - Better OS Independent tests
 
