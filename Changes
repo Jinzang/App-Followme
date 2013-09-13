@@ -2,6 +2,9 @@ Revision history for Perl extension App::Followme
 
 {{$NEXT}}
 
+0.87 2013-09-13T23:54:08Z
+    - Set modification date of existing file back to previous valye
+
 0.86 2013-09-12T23:53:41Z
     - Fixed code assuming directory separator is slash
     
