@@ -1,6 +1,7 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+    - Moved modification date reset into update_site, where it needs to be
 
 0.87 2013-09-13T23:54:08Z
     - Set modification date of existing file back to previous valye

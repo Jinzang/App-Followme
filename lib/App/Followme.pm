@@ -12,7 +12,7 @@ use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel splitdir catfile);
 use App::FollowmeSite qw(copy_file next_file);
 
-our $VERSION = "0.87";
+our $VERSION = "0.88";
 
 require Exporter;
 our @ISA = qw(Exporter);
