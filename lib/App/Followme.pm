@@ -960,20 +960,12 @@ sub update_site {
                 } else {
                     my @stats = stat($filename);
                     my $modtime = $stats[9];
-                    unlink($filename) || die "Can't remove old $filename";
     
                     my $new_page =
-                    eval {update_page($template, $page, $template_locality)};
+                        update_page($template, $page, $template_locality);
         
-                    my $error = $@;
-                    if ($error) {
-                        write_page($filename, $page);
-                    } else {
-                        write_page($filename, $new_page);
-                    }
-
+                    write_page($filename, $new_page);
                     utime($modtime, $modtime, $filename);
-                    die "$filename: $error" if $error;
                 }
             }
         }
