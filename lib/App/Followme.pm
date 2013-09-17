@@ -883,7 +883,14 @@ sub unchanged_template {
     my $template_checksum = checksum_template($template, $template_locality);
     my $page_checksum = checksum_template($page, $template_locality);
 
-    return ($template_checksum eq $page_checksum) ? 1 : 0;
+    my $unchanged;
+    if ($template_checksum eq $page_checksum) {
+        $unchanged = 1;
+    } else {
+        $unchanged = 0;
+    }
+    
+    return $unchanged;
 }
 
 #----------------------------------------------------------------------
@@ -936,7 +943,7 @@ sub update_site {
     my $template;
     my $old_filename;
     my $visitor = visitor_function('html', $top_dir);
-
+    
     while (defined (my $filename = &$visitor)) {        
         # Compare two filenames to see if we have changed directories
 
@@ -966,11 +973,14 @@ sub update_site {
         
                     write_page($filename, $new_page);
                     utime($modtime, $modtime, $filename);
+
+                    $template = $new_page if $template_locality != FILE;
                 }
             }
-        }
 
-        $template = $page if $template_locality != FILE;
+        } else {
+            $template = $page;
+        }
     }
     
     return;
