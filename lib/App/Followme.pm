@@ -655,12 +655,12 @@ sub parse_blockname {
     my ($str) = @_;
     
     my %locality = (file => FILE, folder => FOLDER);
-    my ($blockname, $per, $value) = split(/\s+/, $str);
+    my ($blockname, $in, $value) = split(/\s+/, $str);
     
     my $locality;
-    if ($per) {
+    if ($in) {
         die "Syntax error in block ($str)"
-            unless $per eq 'per' && exists $locality{$value};
+            unless $in eq 'in' && exists $locality{$value};
         $locality = $locality{$value};
         
     } else {
@@ -1088,12 +1088,12 @@ changed page. The effect is that all the text outside the named blocks are
 updated to be the same across all the html pages.
 
 Block text will be synchronized over all files in the folder if the begin
-comment has "per folder" after the name. For example:
+comment has "in folder" after the name. For example:
 
-    <!-- section name per folder -->
+    <!-- section name in folder -->
     <!-- endsection name -->
 
-Text in "per folder" blocks can be used for navigation or other sections of the
+Text in "in folder" blocks can be used for navigation or other sections of the
 page that are constant, but not constant across the entire site.
 
 If there are any text files in the directory, they are converted into html files

@@ -29,7 +29,7 @@ chdir $test_dir;
 do {
     my $blocks = {};
     my $block_handler = sub {
-        my ($blockname, $per, $blocktext) = @_;
+        my ($blockname, $in, $blocktext) = @_;
         $blocks->{$blockname} = $blocktext;
         return;
     };
@@ -43,7 +43,7 @@ do {
     
     my @page = (
                 "Top line",
-                "<!-- section first per folder -->",
+                "<!-- section first in folder -->",
                 "First block",
                 "<!-- endsection first -->",
                 "Middle line",
@@ -64,7 +64,7 @@ do {
 
     my $ok_template = [
                         "Top line\n",
-                        "<!-- section first per folder -->",
+                        "<!-- section first in folder -->",
                         "<!-- endsection first -->",
                         "\nMiddle line\n",
                         "<!-- section second -->",
@@ -122,7 +122,7 @@ do {
 do {
     my @page = (
                 "Top line",
-                "<!-- section first per folder -->",
+                "<!-- section first in folder -->",
                 "First block",
                 "<!-- endsection first -->",
                 "Middle line",
@@ -155,7 +155,7 @@ do {
 do {
     my @page = (
                 "Top line",
-                "<!-- section first per folder -->",
+                "<!-- section first in folder -->",
                 "First block",
                 "<!-- endsection first -->",
                 "Middle line",
@@ -187,7 +187,7 @@ do {
 do {
     my @template = (
                 "Top line",
-                "<!-- section first per folder -->",
+                "<!-- section first in folder -->",
                 "First block",
                 "<!-- endsection first -->",
                 "Middle line",
@@ -235,7 +235,7 @@ do {
 <!-- section content -->
 <h1>%%</h1>
 <!-- endsection content -->
-<!-- section navigation per folder -->
+<!-- section navigation in folder -->
 <p><a href="">&&</a></p>
 <!-- endsection navigation -->
 </body>
@@ -348,9 +348,9 @@ do {
         ok($input =~ /noarchive/, 'Followme changed template'); # tests 31,34
         ok($input =~ /Page/, "Followme kept contents"); # tests 32,35
         if ($filename =~ /^sub/) {
-            ok($input =~ /link/, 'Followme per folder block'); # test 33
+            ok($input =~ /link/, 'Followme in folder block'); # test 33
         } else {
-            ok($input =~ /anchor/, 'Followme per folder block'); # test 36
+            ok($input =~ /anchor/, 'Followme in folder block'); # test 36
         }
     }    
 };

@@ -97,7 +97,7 @@ __DATA__
 <!-- endsection content-->
 </div>
 <div id="sidebar">
-<!-- section navigation per folder -->
+<!-- section navigation in folder -->
 <!-- endsection navigation -->
 <!-- section sidebar -->
 <!-- endsection sidebar -->
@@ -127,7 +127,7 @@ __DATA__
 <!-- endsection content-->
 </div>
 <div id="sidebar">
-<!-- section navigation per folder -->
+<!-- section navigation in folder -->
 <!-- endsection navigation -->
 <!-- section sidebar -->
 <!-- endsection sidebar -->
@@ -158,7 +158,7 @@ __DATA__
 <!-- endsection content-->
 </div>
 <div id="sidebar">
-<!-- section navigation per folder -->
+<!-- section navigation in folder -->
 <!-- endsection navigation -->
 <!-- section sidebar -->
 <!-- endsection sidebar -->
