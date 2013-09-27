@@ -42,6 +42,7 @@ sub run {
     return 1 unless $filename;
     
     my $count = 0;
+    my $decorated = 1;
     my $template = $self->make_template($filename);
     my $template_path = $self->get_template_path($filename);
 
@@ -49,7 +50,8 @@ sub run {
         my $page = $self->read_page($filename);
         die "Couldn't read $filename" unless defined $page;
 
-        my $skip = $self->unchanged_template($template, $page, $template_path);
+        my $skip = $self->unchanged_template($template, $page,
+                                             $decorated, $template_path);
 
         if ($skip) {
             last unless $self->{options}{all};
@@ -61,8 +63,8 @@ sub run {
                 print "$filename\n";
 
             } else {
-                my $new_page =
-                    $self->update_page($template, $page, $template_path);
+                my $new_page = $self->update_page($template, $page,
+                                                  $decorated, $template_path);
                 $self->write_page($filename, $new_page);
             }
         }
@@ -75,7 +77,7 @@ sub run {
 # Compute checksum for template
 
 sub checksum_template {
-    my ($self, $template, $template_path) = @_;    
+    my ($self, $template, $decorated, $template_path) = @_;    
 
     my $md5 = Digest::MD5->new;
 
@@ -90,7 +92,9 @@ sub checksum_template {
         return;
     };
 
-    $self->parse_blocks($template, $block_handler, $template_handler);    
+    $self->parse_blocks($template, $decorated, $block_handler,
+                        $template_handler);
+
     return $md5->hexdigest;
 }
 
@@ -167,44 +171,6 @@ sub make_template {
 }
 
 #----------------------------------------------------------------------
-# Break page into template and blocks
-
-sub parse_blocks {
-    my ($self, $page, $block_handler, $template_handler) = @_;
-    
-    my $locality;
-    my $blockname = '';
-    my @tokens = split(/(<!--\s*(?:section|endsection)\s+.*?-->)/, $page);
-    
-    foreach my $token (@tokens) {
-        if ($token =~ /^<!--\s*section\s+(.*?)-->/) {
-            die "Improperly nested block ($token)\n" if $blockname;
-                
-            ($blockname, $locality) = $self->parse_blockname($1);
-            $template_handler->($token);
-            
-        } elsif ($token =~ /^<!--\s*endsection\s+(.*?)-->/) {
-            my ($endname) = $self->parse_blockname($1);
-            die "Unmatched ($token)\n"
-                if $blockname eq '' || $blockname ne $endname;
-                
-            $blockname = '';
-            $template_handler->($token);
-
-        } else {
-            if ($blockname) {
-                $block_handler->($blockname, $locality, $token);
-            } else {
-                $template_handler->($token);
-            }            
-        }
-    }
- 
-    die "Unmatched block (<!-- section $blockname -->)\n" if $blockname;
-    return;
-}
-
-#----------------------------------------------------------------------
 # Parse fields out of block tag
 
 sub parse_blockname {
@@ -223,10 +189,75 @@ sub parse_blockname {
 }
 
 #----------------------------------------------------------------------
+# Break page into template and blocks
+
+sub parse_blocks {
+    my ($self, $page, $decorated, $block_handler, $template_handler) = @_;
+    
+    my $locality;
+    my $block = '';
+    my $blockname = '';
+    my @tokens = split(/(<!--\s*(?:section|endsection)\s+.*?-->)/, $page);
+    
+    foreach my $token (@tokens) {
+        if ($token =~ /^<!--\s*section\s+(.*?)-->/) {
+            die "Improperly nested block ($token)\n" if $blockname;
+                
+            ($blockname, $locality) = $self->parse_blockname($1);
+            if ($decorated) {
+                $block .= $token
+            } else {
+                $template_handler->($token);
+            }
+            
+        } elsif ($token =~ /^<!--\s*endsection\s+(.*?)-->/) {
+            my ($endname) = $self->parse_blockname($1);
+            die "Unmatched ($token)\n"
+                if $blockname eq '' || $blockname ne $endname;
+                
+            if ($decorated) {
+                $block .= $token;
+                $block_handler->($blockname, $locality, $block);
+            } else {
+                $block_handler->($blockname, $locality, $block);
+                $template_handler->($token);
+            }
+
+            $block = '';
+            $blockname = '';
+
+        } else {
+            if ($blockname) {
+                $block .= $token;
+            } else {
+                $template_handler->($token);
+            }            
+        }
+    }
+ 
+    die "Unmatched block (<!-- section $blockname -->)\n" if $blockname;
+    return;
+}
+
+#----------------------------------------------------------------------
+# Parse filename into directory, root, and extension
+
+sub parse_filename {
+    my ($self, $filename) = @_;
+
+    my @dirs = splitdir($filename);
+    my $basename = pop(@dirs);
+    my ($root, $ext) = split(/\./, $basename);
+    my $dir = @dirs ? catfile(@dirs) : '';
+    
+    return ($dir, $root, $ext);
+}
+
+#----------------------------------------------------------------------
 # Extract named blocks from a page
 
 sub parse_page {
-    my ($self, $page) = @_;
+    my ($self, $page, $decorated) = @_;
     
     my $blocks = {};
     my $block_handler = sub {
@@ -242,22 +273,8 @@ sub parse_page {
         return;
     };
 
-    $self->parse_blocks($page, $block_handler, $template_handler);    
+    $self->parse_blocks($page, $decorated, $block_handler, $template_handler);    
     return $blocks;
-}
-
-#----------------------------------------------------------------------
-# Parse filename into directory, root, and extension
-
-sub parse_filename {
-    my ($self, $filename) = @_;
-
-    my @dirs = splitdir($filename);
-    my $basename = pop(@dirs);
-    my ($root, $ext) = split(/\./, $basename);
-    my $dir = @dirs ? catfile(@dirs) : '';
-    
-    return ($dir, $root, $ext);
 }
 
 #----------------------------------------------------------------------
@@ -298,10 +315,14 @@ sub sort_by_date {
 # Determine if page matches template or needs to be updated
 
 sub unchanged_template {
-    my ($self, $template, $page, $template_path) = @_;
+    my ($self, $template, $page, $decorated, $template_path) = @_;
     
-    my $template_checksum = $self->checksum_template($template, $template_path);
-    my $page_checksum = $self->checksum_template($page, $template_path);
+    my $template_checksum = $self->checksum_template($template,
+                                                     $decorated,
+                                                     $template_path);
+    my $page_checksum = $self->checksum_template($page,
+                                                 $decorated,
+                                                 $template_path);
 
     my $unchanged;
     if ($template_checksum eq $page_checksum) {
@@ -317,10 +338,10 @@ sub unchanged_template {
 # Parse template and page and combine them
 
 sub update_page {
-    my ($self, $template, $page, $template_path) = @_;
+    my ($self, $template, $page, $decorated, $template_path) = @_;
 
     my $output = [];
-    my $blocks = $self->parse_page($page);
+    my $blocks = $self->parse_page($page, $decorated);
     
     my $block_handler = sub {
         my ($blockname, $locality, $blocktext) = @_;
@@ -343,7 +364,8 @@ sub update_page {
         return;
     };
 
-    $self->parse_blocks($template, $block_handler, $template_handler);
+    $self->parse_blocks($template, $decorated,
+                        $block_handler, $template_handler);
 
     if (%$blocks) {
         my $names = join(' ', sort keys %$blocks);

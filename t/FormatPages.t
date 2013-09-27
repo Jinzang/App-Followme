@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 25;
+use Test::More tests => 41;
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
 #----------------------------------------------------------------------
@@ -55,8 +55,9 @@ do {
 
     my $page = join("\n", @page) . "\n";
     
+    my $decorated = 0;
     my $up = App::Followme::FormatPages->new({});
-    $up->parse_blocks($page, $block_handler, $template_handler);
+    $up->parse_blocks($page, $decorated, $block_handler, $template_handler);
 
     my $ok_blocks = {
         first => "\nFirst block\n",
@@ -83,7 +84,7 @@ do {
     $page =join("\n", @bad_page) . "\n";
 
     eval {
-        $up->parse_blocks($page, $block_handler, $template_handler);
+        $up->parse_blocks($page, $decorated, $block_handler, $template_handler);
     };
     is($@, "Unmatched block (<!-- section second -->)\n", 'Missing end'); # test 3
 
@@ -92,7 +93,7 @@ do {
     $page =join("\n", @bad_page) . "\n";
 
     eval {
-        $up->parse_blocks($page, $block_handler, $template_handler);
+        $up->parse_blocks($page, $decorated, $block_handler, $template_handler);
     };
     is($@, "Unmatched (<!-- endsection first -->)\n", 'Missing begin'); # test 4
 
@@ -101,7 +102,7 @@ do {
     $page =join("\n", @bad_page) . "\n";
 
     eval {
-        $up->parse_blocks($page, $block_handler, $template_handler);
+        $up->parse_blocks($page, $decorated, $block_handler, $template_handler);
     };
     is($@, "Improperly nested block (<!-- section second -->)\n",
        'Begin inside of begin'); # test 5
@@ -111,7 +112,7 @@ do {
     $page =join("\n", @bad_page) . "\n";
 
     eval {
-        $up->parse_blocks($page, $block_handler, $template_handler);
+        $up->parse_blocks($page, $decorated, $block_handler, $template_handler);
     };
     is($@, "Unmatched (<!-- endsection second -->)\n",
        'Begin does not match end'); # test 6
@@ -133,9 +134,10 @@ do {
                 "Last line",
                );
 
+    my $decorated = 0;
     my $page = join("\n", @page) . "\n";
     my $up = App::Followme::FormatPages->new({});
-    my $blocks = $up->parse_page($page);
+    my $blocks = $up->parse_page($page, $decorated);
 
     my $ok_blocks = {
         first => "\nFirst block\n",
@@ -146,7 +148,7 @@ do {
 
     my $bad_page = $page;
     $bad_page =~ s/second/first/g;
-    $blocks = eval {$up->parse_page($bad_page)};
+    $blocks = eval {$up->parse_page($bad_page, $decorated)};
     
     is($@, "Duplicate block name (first)\n", 'Duplicate block names'); # test 8
 };
@@ -169,18 +171,22 @@ do {
 
     my $up = App::Followme::FormatPages->new({});
 
+    my $decorated = 0;
     my $template_path = {folder => 1};
     my $page_one = join("\n", @page) . "\n";
-    my $checksum_one = $up->checksum_template($page_one, $template_path);
+    my $checksum_one = $up->checksum_template($page_one, $decorated,
+                                              $template_path);
 
     my $page_two = $page_one;
     $page_two =~ s/Second/2nd/g;
-    my $checksum_two = $up->checksum_template($page_two, $template_path);
+    my $checksum_two = $up->checksum_template($page_two, $decorated,
+                                              $template_path);
     is($checksum_one, $checksum_two, 'Checksum same template'); # test 9    
 
     my $page_three = $page_one;
     $page_three =~ s/First/1st/g;
-    my $checksum_three = $up->checksum_template($page_three, $template_path);
+    my $checksum_three = $up->checksum_template($page_three, $decorated,
+                                                $template_path);
     isnt($checksum_one, $checksum_three,
          'Checksum different template'); # test 10   
 };
@@ -203,13 +209,15 @@ do {
 
     my $template = join("\n", @template) . "\n";
 
+    my $decorated = 0;
     my $page = $template;
     $page =~ s/line/portion/g;
     $page =~ s/block/section/g;
     
     my $up = App::Followme::FormatPages->new({});
     my $template_path = {folder => 1};
-    my $output = $up->update_page($template, $page, $template_path);
+    my $output = $up->update_page($template, $page,
+                                  $decorated, $template_path);
     my @output = split(/\n/, $output);
     
     my @output_ok = @template;
@@ -220,7 +228,8 @@ do {
     my $bad_page = $page;
     $bad_page =~ s/second/third/g;
 
-    $output = eval{$up->update_page($template, $bad_page, $template_path)};
+    $output = eval{$up->update_page($template, $bad_page,
+                                    $decorated, $template_path)};
     is($@, "Unused blocks (third)\n", 'Update page bad block'); # test 12
 };
 
@@ -233,14 +242,19 @@ do {
 <head>
 <meta name="robots" content="archive">
 <!-- section meta -->
-<title>%%</title>
+<title>Page %%</title>
 <!-- endsection meta -->
 </head>
 <body>
 <!-- section content -->
-<h1>%%</h1>
+<h1>Page %%</h1>
 <!-- endsection content -->
-<p><a href="">&&</a></p>
+<ul>
+<li><a href="">&& link</a></li>
+<!-- section nav -->
+<li><a href="">link %%</a></li>
+<!-- endsection nav -->
+</ul>
 </body>
 </html>
 EOQ
@@ -251,8 +265,11 @@ EOQ
         foreach my $count (qw(four three two one)) {
             sleep(1);
             my $output = $code;
-            $output =~ s/%%/Page $count/g;
-            $output =~ s/&&/$dir link/g;
+            my $dir_name = $dir ? $dir : 'top';
+            
+            $output =~ s/%%/$count/g;
+            $output =~ s/&&/$dir_name/g;
+            $output =~ s/section nav/section nav in $dir/ if $dir;
 
             my $filename = $dir ? "$dir/$count.html" : "$count.html";
             $up->write_page($filename, $output);
@@ -262,6 +279,7 @@ EOQ
         }
     }
 };
+
 #----------------------------------------------------------------------
 # Test make template
 
@@ -275,12 +293,49 @@ do {
     is_deeply($template_path, {sub => 1}, 'Get template path'); # test 21
     
     my $template_file = $up->find_template();
-    is($template_file, "$test_dir/one.html", 'Find template'); # test 22
+    is($template_file, catfile($test_dir, 'one.html'),
+       'Find template'); # test 22
 
     my $template = $up->make_template('two.html');
     ok($template =~ /Page two/, "Make template top level"); # test 23
     
     $template = $up->make_template('three.html');
     ok($template =~ /Page three/, "Make template body"); # test 24
-    ok($template !~ /sub link/, "Make template link"); # test 25
+    ok($template =~ /top link/, "Make template link"); # test 25
 };
+
+#----------------------------------------------------------------------
+# Test run
+
+do {
+    my $up = App::Followme::FormatPages->new({base_dir => $test_dir,
+                                              options => {all => 1}});
+    chdir ($test_dir);
+    $up->run();
+
+    foreach my $dir (('sub', '')) {
+        foreach my $count (qw(two one)) {
+            my $filename = $dir ? catfile($dir, "$count.html") : "$count.html";
+            my $input = $up->read_page($filename);
+
+            ok($input =~ /Page $count/,
+               "Format block in $dir/$count"); # test 26, 30
+            
+            ok($input =~ /top link/,
+               "Format template $dir/$count"); # test 27, 31
+
+            if ($dir) {
+                ok($input =~ /section nav in sub --/,
+                   "Format section tag in $count"); # test 32
+                ok($input =~ /$count link/,
+                   "Format folder block $count"); # test 33
+                
+            } else {
+                ok($input =~ /section nav --/, 
+                   "Format section tag in $dir/$count"); # test 28
+                ok($input =~ /one link/, 
+                   "Format section tag in $dir/$count"); # test 29
+            }
+        }
+    }
+}
