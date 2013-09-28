@@ -145,6 +145,7 @@ sub make_template {
     my ($self, $filename) = @_;
     
     my $template;
+    my $decorated = 1;
     my $template_file = $self->find_template();
     
     if (defined $template_file) {
@@ -152,14 +153,16 @@ sub make_template {
         $template = $self->read_page($template_file);
         my $template_path = $self->get_template_path($template_file);
 
-        if ($self->unchanged_template($template, $page, $template_path)) {
+        if ($self->unchanged_template($template, $page,
+                                      $decorated, $template_path)) {
             $template = $page;
 
         } elsif ($self->{options}{noop}) {
                 print "$filename\n";
 
          } else {
-            $template = $self->update_page($template, $page, $template_path);
+            $template = $self->update_page($template, $page,
+                                           $decorated, $template_path);
             $self->write_page($filename, $template);
         }
         
