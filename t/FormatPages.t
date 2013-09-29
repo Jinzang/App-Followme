@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 42;
+use Test::More tests => 34;
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
 #----------------------------------------------------------------------
@@ -16,6 +16,7 @@ my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
 require App::Followme::FormatPages;
+require App::Followme::PageIO;
 
 my $test_dir = catdir(@path, 'test');
 system("/bin/rm -rf $test_dir");
@@ -282,10 +283,7 @@ EOQ
             $output =~ s/section nav/section nav in $dir/ if $dir;
 
             my $filename = $dir ? "$dir/$count.html" : "$count.html";
-            $up->write_page($filename, $output);
-    
-            my $input = $up->read_page($filename);
-            is($input, $output, "Read and write page $filename"); #tests 14-21
+            App::Followme::PageIO::write_page($filename, $output);
         }
     }
 };
@@ -327,7 +325,7 @@ do {
 
         foreach my $count (qw(two one)) {
             my $filename = "$count.html";
-            my $input = $up->read_page($filename);
+            my $input = App::Followme::PageIO::read_page($filename);
 
             ok($input =~ /Page $count/,
                "Format block in $dir/$count"); # test 27, 31, 35, 39

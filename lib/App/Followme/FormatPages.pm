@@ -4,10 +4,10 @@ use strict;
 use warnings;
 
 use Cwd;
-use IO::Dir;
-use IO::File;
 use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile updir);
+
+use App::Followme::PageIO qw(read_page write_page);
 
 our $VERSION = "0.90";
 
@@ -47,7 +47,7 @@ sub run {
     my $template_path = $self->get_template_path($filename);
 
     foreach $filename (@filenames) {        
-        my $page = $self->read_page($filename);
+        my $page = read_page($filename);
         die "Couldn't read $filename" unless defined $page;
 
         my $skip = $self->unchanged_template($template, $page,
@@ -65,7 +65,8 @@ sub run {
             } else {
                 my $new_page = $self->update_page($template, $page,
                                                   $decorated, $template_path);
-                $self->write_page($filename, $new_page);
+
+                $self->write_page_same_date($filename, $new_page);
             }
         }
     }
@@ -149,8 +150,8 @@ sub make_template {
     my $template_file = $self->find_template();
     
     if (defined $template_file) {
-        my $page = $self->read_page($filename);
-        $template = $self->read_page($template_file);
+        my $page = read_page($filename);
+        $template = read_page($template_file);
         my $template_path = $self->get_template_path($template_file);
 
         if ($self->unchanged_template($template, $page,
@@ -163,11 +164,11 @@ sub make_template {
          } else {
             $template = $self->update_page($template, $page,
                                            $decorated, $template_path);
-            $self->write_page($filename, $template);
+            $self->write_page_same_date($filename, $template);
         }
         
     } else {
-        $template = $self->read_page($filename);
+        $template = read_page($filename);
     }
     
     return $template;
@@ -281,22 +282,6 @@ sub parse_page {
 }
 
 #----------------------------------------------------------------------
-# Read a file into a string
-
-sub read_page {
-    my ($self, $filename) = @_;
-
-    local $/;
-    my $fd = IO::File->new($filename, 'r');
-    return unless $fd;
-    
-    my $page = <$fd>;
-    close($fd);
-    
-    return $page;
-}
-
-#----------------------------------------------------------------------
 # Sort a list of files so the least recently modified file is first
 
 sub sort_by_date {
@@ -379,9 +364,9 @@ sub update_page {
 }
 
 #----------------------------------------------------------------------
-# Write the page back to the file
+# Set modification date for file when writing
 
-sub write_page {
+sub write_page_same_date {
     my ($self, $filename, $page) = @_;
 
     my $modtime;
@@ -390,13 +375,9 @@ sub write_page {
         $modtime = $stats[9];
     }
 
-    my $fd = IO::File->new($filename, 'w');
-    die "Couldn't write $filename" unless $fd;
-    
-    print $fd $page;
-    close($fd);
-        
+    write_page($filename, $page);
     utime($modtime, $modtime, $filename) if defined $modtime;
+    
     return;
 }
 
