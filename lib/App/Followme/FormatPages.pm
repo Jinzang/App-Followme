@@ -7,6 +7,7 @@ use Cwd;
 use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile updir);
 
+use App::Followme::SortPages qw(sort_by_date);
 use App::Followme::PageIO qw(read_page write_page);
 
 our $VERSION = "0.90";
@@ -37,7 +38,7 @@ sub parameters {
 sub run {
     my ($self) = @_;
 
-    my @filenames = $self->sort_by_date(glob('*.html'));
+    my @filenames = sort_by_date(glob('*.html'));
     my $filename = pop(@filenames);
     return 1 unless $filename;
     
@@ -113,7 +114,7 @@ sub find_template {
         $directory = updir();
         chdir($directory);
         
-        my @files = $self->sort_by_date(glob('*.html'));
+        my @files = sort_by_date(glob('*.html'));
         if (@files) {
             $filename = rel2abs(pop(@files));
             last;
@@ -265,24 +266,6 @@ sub parse_page {
 
     $self->parse_blocks($page, $decorated, $block_handler, $template_handler);    
     return $blocks;
-}
-
-#----------------------------------------------------------------------
-# Sort a list of files so the least recently modified file is first
-
-sub sort_by_date {
-    my ($self, @filenames) = @_;
-
-    my @augmented_files;
-    foreach my $filename (@filenames) {
-        my @stats = stat($filename);
-        push(@augmented_files, [$stats[9], $filename]);
-    }
-
-    @augmented_files = sort {$a->[0] <=> $b->[0] ||
-                             $a->[1] cmp $b->[1]   } @augmented_files;
-    
-    return map {$_->[1]} @augmented_files;
 }
 
 #----------------------------------------------------------------------
