@@ -244,20 +244,6 @@ sub parse_blocks {
 }
 
 #----------------------------------------------------------------------
-# Parse filename into directory, root, and extension
-
-sub parse_filename {
-    my ($self, $filename) = @_;
-
-    my @dirs = splitdir($filename);
-    my $basename = pop(@dirs);
-    my ($root, $ext) = split(/\./, $basename);
-    my $dir = @dirs ? catfile(@dirs) : '';
-    
-    return ($dir, $root, $ext);
-}
-
-#----------------------------------------------------------------------
 # Extract named blocks from a page
 
 sub parse_page {
