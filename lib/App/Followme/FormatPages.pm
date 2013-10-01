@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Cwd;
-use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile updir);
 
 use App::Followme::SortPages qw(sort_by_date);
@@ -30,6 +29,8 @@ sub parameters {
     my ($pkg) = @_;
     
     return (
+            options => {},
+            web_extension => 'html',
            );
 }
 
@@ -39,24 +40,29 @@ sub parameters {
 sub run {
     my ($self) = @_;
 
-    my @filenames = sort_by_date(glob('*.html'));
-    my $filename = pop(@filenames);
-    return 1 unless $filename;
+    my $pattern = "*.$self->{web_extension}";
+    my @filenames = reverse sort_by_date(glob($pattern));
+    return 1 unless @filenames;
+    
+    my $template_file = $self->find_template();
+    $template_file = shift(@filenames) unless defined $template_file;
+
+    my $template_path = $self->get_template_path($template_file);
+    my $template = read_page($template_file);
     
     my $count = 0;
+    my $first = 1;
     my $decorated = 1;
-    my $template = $self->make_template($filename);
-    my $template_path = $self->get_template_path($filename);
 
-    foreach $filename (@filenames) {        
+    foreach my $filename (@filenames) {        
         my $page = read_page($filename);
         die "Couldn't read $filename" unless defined $page;
 
-        my $skip = unchanged_template($template, $page,
-                                      $decorated, $template_path);
+        my $skip = unchanged_template($template, $page, $decorated, 
+                                      $template_path);
 
         if ($skip) {
-            last unless $self->{options}{all};
+            last unless $first || $self->{options}{all}; 
 
         } else {
             $count ++;
@@ -65,11 +71,17 @@ sub run {
                 print "$filename\n";
 
             } else {
-                my $new_page = update_page($template, $page,
-                                           $decorated, $template_path);
+                $page = update_page($template, $page, $decorated,
+                                    $template_path);
 
-                $self->write_page_same_date($filename, $new_page);
+                $self->write_page_same_date($filename, $page);
             }
+        }
+
+        if ($first) {
+            $first = 0;
+            $template = $page;
+            $template_path = $self->get_template_path($filename);
         }
     }
     
@@ -85,12 +97,13 @@ sub find_template {
     my $filename;
     my $directory = getcwd();
     my $current_directory = $directory;
+    my $pattern = "*.$self->{web_extension}";
     
     while ($directory ne $self->{base_dir}) {
         $directory = updir();
         chdir($directory);
         
-        my @files = sort_by_date(glob('*.html'));
+        my @files = sort_by_date(glob($pattern));
         if (@files) {
             $filename = rel2abs(pop(@files));
             last;
@@ -114,41 +127,6 @@ sub get_template_path {
     
     my %template_path = map {$_ => 1} @path;
     return \%template_path;    
-}
-
-#----------------------------------------------------------------------
-# Create the template by joining a file with one in the directory above it
-
-sub make_template {
-    my ($self, $filename) = @_;
-    
-    my $template;
-    my $decorated = 1;
-    my $template_file = $self->find_template();
-    
-    if (defined $template_file) {
-        my $page = read_page($filename);
-        $template = read_page($template_file);
-        my $template_path = $self->get_template_path($template_file);
-
-        if (unchanged_template($template, $page,
-                               $decorated, $template_path)) {
-            $template = $page;
-
-        } elsif ($self->{options}{noop}) {
-                print "$filename\n";
-
-         } else {
-            $template = update_page($template, $page,
-                                    $decorated, $template_path);
-            $self->write_page_same_date($filename, $template);
-        }
-        
-    } else {
-        $template = read_page($filename);
-    }
-    
-    return $template;
 }
 
 #----------------------------------------------------------------------
@@ -186,35 +164,34 @@ App::Followme::FormatPages - Simple static web site maintenance
     
 =head1 DESCRIPTION
 
-App::Followme::FormatPages  updates the constant
-portions of each web page when a change is made on any page. 
-Each html page has sections that are different from other pages and other
-sections that are the same. The sections that differ are enclosed in html
-comments that look like
+App::Followme::FormatPages updates the web pages in a folder to match the most
+recently modified page. Each web page has sections that are different from other
+pages and other sections that are the same. The sections that differ are
+enclosed in html comments that look like
 
     <!-- section name-->
     <!-- endsection name -->
 
-and indicate where the section begins and ends. When a page is changed, followme
-checks the text outside of these comments. If that text has changed. the other
-pages on the site are also changed to match the page that has changed. Each page
-updated by substituting all its named blocks into corresponding block in the
-changed page. The effect is that all the text outside the named blocks are
-updated to be the same across all the html pages.
-
-Block text will be synchronized over all files in the folder if the begin
-comment has "in folder" after the name. For example:
-
-    <!-- section name in folder -->
-    <!-- endsection name -->
-
-Text in "in folder" blocks can be used for navigation or other sections of the
-page that are constant, but not constant across the entire site.
+and indicate where the section begins and ends. When a page is changed, this
+module checks the text outside of these comments. If that text has changed. the
+other pages on the site are also changed to match the page that has changed.
+Each page updated by substituting all its named blocks into corresponding block
+in the changed page. The effect is that all the text outside the named blocks
+are updated to be the same across all the web pages.
 
 =head1 CONFIGURATION
 
+The following parameters are used from the configuration:
 
 =over 4
+
+=item options
+
+A hash holding the command line option flags
+
+=item web_extension
+
+The extension uesd by web pages. The default value is html
 
 =back
 

@@ -69,7 +69,7 @@ EOQ
 };
 
 #----------------------------------------------------------------------
-# Test make template
+# Test get template path and find template
 
 do {
     my $bottom = "$test_dir/sub";
@@ -83,13 +83,6 @@ do {
     my $template_file = $up->find_template();
     is($template_file, catfile($test_dir, 'one.html'),
        'Find template'); # test 2
-
-    my $template = $up->make_template('two.html');
-    ok($template =~ /Page two/, "Make template top level"); # test 3
-    
-    $template = $up->make_template('three.html');
-    ok($template =~ /Page three/, "Make template body"); # test 4
-    ok($template =~ /top link/, "Make template link"); # test 5
 };
 
 #----------------------------------------------------------------------
@@ -108,22 +101,22 @@ do {
             my $input = App::Followme::PageIO::read_page($filename);
 
             ok($input =~ /Page $count/,
-               "Format block in $dir/$count"); # test 6, 10, 14, 18
+               "Format block in $dir/$count"); # test 3, 7, 11, 15
             
             ok($input =~ /top link/,
-               "Format template $dir/$count"); # test 7, 11, 15, 19
+               "Format template $dir/$count"); # test 4, 8, 12 16
 
             if ($dir) {
                 ok($input =~ /section nav in sub --/,
-                   "Format section tag in $dir/$count"); # test 16, 20
+                   "Format section tag in $dir/$count"); # test 13, 17
                 ok($input =~ /link one/,
-                   "Format folder block $dir/$count"); # test 17, 21
+                   "Format folder block $dir/$count"); # test 14, 18
                 
             } else {
                 ok($input =~ /section nav --/, 
-                   "Format section tag in $dir/$count"); # test 8, 12
+                   "Format section tag in $dir/$count"); # test 5, 9
                 ok($input =~ /link $count/, 
-                   "Format folder block in $dir/$count"); # test 9, 13
+                   "Format folder block in $dir/$count"); # test 6, 12
             }
         }
     }
