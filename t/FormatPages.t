@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 21;
+use Test::More tests => 18;
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
 #----------------------------------------------------------------------
@@ -17,12 +17,17 @@ unshift(@INC, $lib);
 
 require App::Followme::FormatPages;
 require App::Followme::PageIO;
+require App::Followme::PageTemplate;
 
 my $test_dir = catdir(@path, 'test');
 system("/bin/rm -rf $test_dir");
 mkdir $test_dir;
 mkdir "$test_dir/sub";
 chdir $test_dir;
+
+my $configuration = {base_dir => $test_dir,
+                     web_extension => 'html',
+                     options => {quick => 0}};
 
 #----------------------------------------------------------------------
 # Write test pages
@@ -69,28 +74,29 @@ EOQ
 };
 
 #----------------------------------------------------------------------
-# Test get template path and find template
+# Test get prototype path and find prototype
 
 do {
     my $bottom = "$test_dir/sub";
     chdir($bottom);
 
-    my $up = App::Followme::FormatPages->new({base_dir => $test_dir});
-    my $template_path = $up->get_template_path('one.html');
+    my $up = App::Followme::FormatPages->new($configuration);
+    my $prototype_path = $up->get_prototype_path('one.html');
     
-    is_deeply($template_path, {sub => 1}, 'Get template path'); # test 1
+    is_deeply($prototype_path, {sub => 1}, 'Get prototype path'); # test 1
     
-    my $template_file = $up->find_template();
-    is($template_file, catfile($test_dir, 'one.html'),
-       'Find template'); # test 2
+    my $prototype_file =
+        App::Followme::PageTemplate::find_prototype($test_dir, 'html', 1);
+        
+    is($prototype_file, catfile($test_dir, 'one.html'),
+       'Find prototype'); # test 2
 };
 
 #----------------------------------------------------------------------
 # Test run
 
 do {
-    my $up = App::Followme::FormatPages->new({base_dir => $test_dir,
-                                              options => {all => 1}});
+    my $up = App::Followme::FormatPages->new($configuration);
     foreach my $dir (('', 'sub')) {
         my $path = $dir ? catfile($test_dir, $dir) : $test_dir;
         chdir ($path);
@@ -104,7 +110,7 @@ do {
                "Format block in $dir/$count"); # test 3, 7, 11, 15
             
             ok($input =~ /top link/,
-               "Format template $dir/$count"); # test 4, 8, 12 16
+               "Format prototype $dir/$count"); # test 4, 8, 12 16
 
             if ($dir) {
                 ok($input =~ /section nav in sub --/,

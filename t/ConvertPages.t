@@ -15,8 +15,7 @@ my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
 require App::Followme::ConvertPages;
-require App::Followme::PageTemplate;
-require App::Followme::PageIO;
+require App::Followme::Common;
 
 my $test_dir = catdir(@path, 'test');
 system("/bin/rm -rf $test_dir");
@@ -76,30 +75,34 @@ This is preformatted text.
 </pre>
 EOQ
 
-    App::Followme::PageIO::write_page('index.html', $index);
-    App::Followme::PageIO::write_page('template.htm', $template);
+    App::Followme::Common::write_page('index.html', $index);
+    App::Followme::Common::write_page('template.htm', $template);
 
     foreach my $count (qw(four three two one)) {
         my $output = $text;
         $output =~ s/%%/$count/g;
         
         my $filename = "$count.txt";
-        App::Followme::PageIO::write_page($filename, $output);
+        App::Followme::Common::write_page($filename, $output);
     }
+
+    my $prototype_file =
+        App::Followme::Common::find_prototype($test_dir, 'html', 0);
+        
+    my $prototype_file_ok = catfile($test_dir, 'index.html');
+    is($prototype_file, $prototype_file_ok, 'Find page templae'); # test 1
+
+    my $source =
+        App::Followme::Common::make_template('template.htm', $test_dir, 'html');
+
+    like($source, qr/<ul>/, 'Make template links'); # test 2
+    like($source, qr/{{body}}/, 'Make template body'); # test 3
 
     my $configuration = {base_dir => $test_dir,
                          page_template => 'template.htm'};
     
     my $cvt = App::Followme::ConvertPages->new($configuration);
-    my $template_file = $cvt->find_template();
-    my $template_file_ok = catfile($test_dir, 'index.html');
-    is($template_file, $template_file_ok, 'Find page templae'); # test 1
-
-    my $source = $cvt->make_template('two.txt');
-    like($source, qr/<ul>/, 'Make template links'); # test 2
-    like($source, qr/{{body}}/, 'Make template body'); # test 3
-
-    my $page = App::Followme::PageIO::read_page('three.txt');
+    my $page = App::Followme::Common::read_page('three.txt');
     my $tagged_text = $cvt->convert_text($page);
     my $tagged_text_ok = $text;
     
@@ -108,14 +111,14 @@ EOQ
     
     is($tagged_text, $tagged_text_ok, 'Convert Text'); # test 4
 
-    my $sub = App::Followme::PageTemplate::compile_template($template);    
+    my $sub = App::Followme::Common::compile_template($template);    
     $cvt->convert_a_file('four.txt', $sub);
-    $page = App::Followme::PageIO::read_page('four.html');
+    $page = App::Followme::Common::read_page('four.html');
     like($page, qr/<h1>Four<\/h1>/, 'Convert a file'); # test 5
 
     $cvt->run();
-    $page = App::Followme::PageIO::read_page('one.html');
+    $page = App::Followme::Common::read_page('one.html');
     like($page, qr/<h1>One<\/h1>/, 'Convert text file one'); # test 6
-    $page = App::Followme::PageIO::read_page('two.html');
+    $page = App::Followme::Common::read_page('two.html');
     like($page, qr/<h1>Two<\/h1>/, 'Convert text file two'); # test 7
 };

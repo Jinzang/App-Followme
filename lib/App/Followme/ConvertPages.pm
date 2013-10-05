@@ -7,12 +7,8 @@ use lib '../..';
 
 use Cwd;
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
-
-use App::Followme::PageBlocks qw(update_page);
-use App::Followme::PageIO qw(read_page write_page);
-use App::Followme::PageTemplate qw(compile_template);
-use App::Followme::SortPages qw(sort_by_date);
-use App::Followme::Variables qw(set_variables);
+use App::Followme::Common qw(compile_template make_template
+                             read_page write_page set_variables);
 
 our $VERSION = "0.90";
 
@@ -47,7 +43,10 @@ sub parameters {
 sub run {
     my ($self) = @_;
 
-    my $template = $self->make_template();
+    my $template = make_template($self->{page_template},
+                                 $self->{base_dir},
+                                 $self->{web_extension});
+    
     my $sub = compile_template($template);
     my $pattern = "*.$self->{text_extension}";
 
@@ -61,7 +60,7 @@ sub run {
         }
     }
 
-    return 1;    
+    return ! $self->{options}{quick};    
 }
 
 #----------------------------------------------------------------------
@@ -109,59 +108,6 @@ sub convert_text {
     }
     
     return $page;
-}
-
-#----------------------------------------------------------------------
-# Find an file in a directory above the current directory
-
-sub find_template {
-    my ($self) = @_;
-
-    my $filename;
-    my $directory = getcwd();
-    my $current_directory = $directory;
-    my $pattern = "*.$self->{web_extension}";
-    
-    for (;;) {
-        my @files = sort_by_date(glob($pattern));
-        if (@files) {
-            $filename = rel2abs(pop(@files));
-            last;
-        }
-
-        last if $directory eq $self->{base_dir};
-        $directory = updir();
-        chdir($directory);        
-    }
-
-    chdir($current_directory);
-    return $filename;
-}
-
-#----------------------------------------------------------------------
-# Combine template with most recently modified file in a directory
-
-sub make_template {
-    my ($self, $filename) = @_;
-    
-    my $directory_template_name = $self->find_template($filename);
-    my $directory_template = read_page($directory_template_name); 
-    
-    my $page_template_name = rel2abs($self->{page_template}, $self->{base_dir});
-    my $page_template = read_page($page_template_name);
-    die "Couldn't find template: $page_template_name\n" unless $page_template;
-    
-    my $template;
-    if ($directory_template) {
-        my $decorated = 0;
-        my $template_path = {};
-        $template = update_page($directory_template, $page_template, 
-                                $decorated, $template_path);
-    } else {
-        $template = $page_template;
-    }
-
-    return $template;
 }
 
 1;

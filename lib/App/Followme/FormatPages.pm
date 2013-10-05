@@ -3,12 +3,11 @@ use 5.008005;
 use strict;
 use warnings;
 
-use Cwd;
-use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile updir);
+use lib '../..';
 
-use App::Followme::SortPages qw(sort_by_date);
-use App::Followme::PageIO qw(read_page write_page);
-use App::Followme::PageBlocks qw(unchanged_template update_page);
+use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
+use App::Followme::Common qw(find_prototype read_page sort_by_date 
+                             unchanged_prototype update_page write_page);
 
 our $VERSION = "0.90";
 
@@ -30,6 +29,7 @@ sub parameters {
     
     return (
             options => {},
+            base_dir => '',
             web_extension => 'html',
            );
 }
@@ -44,80 +44,57 @@ sub run {
     my @filenames = reverse sort_by_date(glob($pattern));
     return 1 unless @filenames;
     
-    my $template_file = $self->find_template();
-    $template_file = shift(@filenames) unless defined $template_file;
+    my $prototype_file = find_prototype($self->{base_dir},
+                                        $self->{web_extension},
+                                        1);
+    $prototype_file = shift(@filenames) unless defined $prototype_file;
 
-    my $template_path = $self->get_template_path($template_file);
-    my $template = read_page($template_file);
+    my $prototype_path = $self->get_prototype_path($prototype_file);
+    my $prototype = read_page($prototype_file);
     
     my $count = 0;
-    my $first = 1;
+    my $changed = 0;
     my $decorated = 1;
 
     foreach my $filename (@filenames) {        
         my $page = read_page($filename);
         die "Couldn't read $filename" unless defined $page;
 
-        my $skip = unchanged_template($template, $page, $decorated, 
-                                      $template_path);
+        my $skip = unchanged_prototype($prototype, $page, $decorated, 
+                                      $prototype_path);
 
         if ($skip) {
-            last unless $first || $self->{options}{all}; 
+            last if $self->{options}{quick} && $count; 
 
         } else {
-            $count ++;
+            $changed += 1;
             
             if ($self->{options}{noop}) {
                 print "$filename\n";
 
             } else {
-                $page = update_page($template, $page, $decorated,
-                                    $template_path);
+                $page = update_page($prototype, $page, $decorated,
+                                    $prototype_path);
 
                 $self->write_page_same_date($filename, $page);
             }
         }
 
-        if ($first) {
-            $first = 0;
-            $template = $page;
-            $template_path = $self->get_template_path($filename);
+        if ($count == 0) {
+            $prototype = $page;
+            $prototype_path = $self->get_prototype_path($filename);
         }
-    }
-    
-    return $self->{options}{all} || $count;
-}
-
-#----------------------------------------------------------------------
-# Find an file in a directory above the current directory
-
-sub find_template {
-    my ($self) = @_;
-
-    my $filename;
-    my $directory = getcwd();
-    my $current_directory = $directory;
-    my $pattern = "*.$self->{web_extension}";
-    
-    while ($directory ne $self->{base_dir}) {
-        $directory = updir();
-        chdir($directory);
         
-        my @files = sort_by_date(glob($pattern));
-        if (@files) {
-            $filename = rel2abs(pop(@files));
-            last;
-        }
+        $count += 1;
     }
-
-    chdir($current_directory);
-    return $filename;
+    
+    return $changed || ! $self->{options}{quick};
 }
 
 #----------------------------------------------------------------------
-# Get the template path for the current directory
+# Get the prototype path for the current directory
 
-sub get_template_path {
+sub get_prototype_path {
     my ($self, $filename) = @_;
     
     $filename = rel2abs($filename);
@@ -125,8 +102,8 @@ sub get_template_path {
     my @path = splitdir($filename);
     pop(@path);
     
-    my %template_path = map {$_ => 1} @path;
-    return \%template_path;    
+    my %prototype_path = map {$_ => 1} @path;
+    return \%prototype_path;    
 }
 
 #----------------------------------------------------------------------
