@@ -123,7 +123,7 @@ App::Followme - Simple static web site maintenance
 
     use App::Followme::ConvertPages;
     my $converter = App::Followme::ConvertPages->new($configuration);
-    $convertter->run();
+    $converter->run();
 
 =head1 DESCRIPTION
 
