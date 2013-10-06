@@ -76,7 +76,7 @@ sub build_page_name {
 sub build_title {
     my ($filename) = @_;
     
-    my ($dir, $root, $ext) = parse_filename($filename);
+    my ($dir, $root, $ext) = parse_filename(rel2abs($filename));
 
     if ($root eq 'index') {
         my @dirs = splitdir($dir);
