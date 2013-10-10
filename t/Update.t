@@ -16,6 +16,7 @@ my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
 require App::Followme::Update;
+require App::Followme::Common;
 
 my $test_dir = catdir(@path, 'test');
 system("/bin/rm -rf $test_dir");
@@ -29,8 +30,10 @@ do {
     my $updater = App::Followme::Update->new({});
     is(ref $updater, 'App::Followme::Update', 'Create updater'); # test 1
    
-    my $updater2 = $updater->load_module('App::Followme::Update', {});
-    is(ref $updater2, 'App::Followme::Update', 'Load module'); # test 2
+    my $configuration = {module => ['App::Followme::Update']};
+    $updater->load_modules($configuration);
+    my $module = $configuration->{module}[0];
+    is(ref $module, 'App::Followme::Update', 'Load modules'); # test 2
 };
 
 #----------------------------------------------------------------------
@@ -109,14 +112,15 @@ do {
         my $fd = IO::File->new($filename, 'w');
         print $fd "level$i = $levels[$i]\n";
         print $fd "bottom = $levels[$i]\n";
+        print $fd "module = App::Followme::Mock";
         close($fd);
     }
     
     my $up = App::Followme::Update->new({});
     my $configuration = $up->initialize_configuration($path);
 
-    is($configuration->{base_dir}, "$test_dir/level1",
-       'Set base directory'); # test 10
+    my $top_dir = App::Followme::Common::top_directory();
+    is($top_dir, "$test_dir/level1", 'Set top directory'); # test 10
     
     is($configuration->{bottom}, $levels[5],
        'Initialize configuration variable'); # test 11
