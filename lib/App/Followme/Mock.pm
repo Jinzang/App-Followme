@@ -19,6 +19,22 @@ sub new {
 }
 
 #----------------------------------------------------------------------
+# Read the default parameter values
+
+sub parameters {
+    my ($pkg) = @_;
+    
+    return (
+            level1 => '',
+            level2 => '',
+            level3 => '',
+            level4 => '',
+            level5 => '',
+            bottom => '',
+            );
+}
+
+#----------------------------------------------------------------------
 # Perform all updates on the directory
 
 sub run {
