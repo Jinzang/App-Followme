@@ -24,6 +24,8 @@ mkdir $test_dir;
 mkdir "$test_dir/sub";
 chdir $test_dir;
 
+App::Followme::Common::top_directory($test_dir);
+
 #----------------------------------------------------------------------
 # Create indexes
 
@@ -93,7 +95,6 @@ EOQ
     }
 
     my $configuration = {
-            base_dir => $test_dir,
             include_directories => 0,
             include_files => '*.html',
             index_template => $index_name,

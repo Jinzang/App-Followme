@@ -6,7 +6,7 @@ use warnings;
 use lib '../..';
 
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
-use App::Followme::Common qw(find_prototype read_page sort_by_date 
+use App::Followme::Common qw(find_prototype read_page top_directory sort_by_date 
                              unchanged_prototype update_page write_page);
 
 our $VERSION = "0.90";
@@ -29,7 +29,6 @@ sub parameters {
     
     return (
             options => {},
-            base_dir => '',
             web_extension => 'html',
            );
 }
@@ -44,9 +43,7 @@ sub run {
     my @filenames = reverse sort_by_date(glob($pattern));
     return 1 unless @filenames;
     
-    my $prototype_file = find_prototype($self->{base_dir},
-                                        $self->{web_extension},
-                                        1);
+    my $prototype_file = find_prototype($self->{web_extension}, 1);
     $prototype_file = shift(@filenames) unless defined $prototype_file;
 
     my $prototype_path = $self->get_prototype_path($prototype_file);
@@ -98,7 +95,7 @@ sub get_prototype_path {
     my ($self, $filename) = @_;
     
     $filename = rel2abs($filename);
-    $filename = abs2rel($filename, $self->{base_dir});
+    $filename = abs2rel($filename, top_directory());
     my @path = splitdir($filename);
     pop(@path);
     

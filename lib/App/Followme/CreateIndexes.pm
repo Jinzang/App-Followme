@@ -7,9 +7,11 @@ use lib '../..';
 
 use Cwd;
 use IO::Dir;
-use File::Spec::Functions qw(abs2rel splitdir catfile);
+use File::Spec::Functions qw(abs2rel splitdir catfile no_upwards);
+
 use App::Followme::Common qw(compile_template make_template read_page 
-                             set_variables sort_by_name write_page);
+                             set_variables sort_by_name top_directory
+                             write_page);
 
 our $VERSION = "0.90";
 
@@ -31,7 +33,6 @@ sub parameters {
     
     return (
             options => {},
-            base_dir => '',
             web_extension => 'html',
             include_directories => 1,
             include_files => '*.html',
@@ -89,7 +90,6 @@ sub create_an_index {
     
     my $data = $self->index_data($index_file);
     my $template = make_template($self->{index_template},
-                                 $self->{base_dir},
                                  $self->{web_extension});
 
     my $sub = compile_template($template);
@@ -113,13 +113,11 @@ sub find_directories {
     my $index_name = "index.$self->{web_extension}";
     
     while (defined (my $file = $dd->read())) {                   
-        if (-d $file && $file ne '.' && $file ne '..') {
-            push(@filenames, catfile($file, $index_name));
-        }
+        push(@filenames, catfile($file, $index_name));
     }
     
     $dd->close;
-    return sort_by_name(@filenames);
+    return sort_by_name(no_upwards(@filenames));
 }
 
 #----------------------------------------------------------------------
@@ -228,10 +226,6 @@ The following fields in the configuration are used:
 =item options
 
 A hash of the command line options passed to followme
-
-=item base_dir
-
-The base directory of the web site.
 
 =item web_extension
 

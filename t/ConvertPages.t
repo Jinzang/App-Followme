@@ -23,6 +23,8 @@ mkdir $test_dir;
 mkdir "$test_dir/sub";
 chdir $test_dir;
 
+App::Followme::Common::top_directory($test_dir);
+
 #----------------------------------------------------------------------
 # Test 
 
@@ -86,20 +88,16 @@ EOQ
         App::Followme::Common::write_page($filename, $output);
     }
 
-    my $prototype_file =
-        App::Followme::Common::find_prototype($test_dir, 'html', 0);
-        
+    my $prototype_file = App::Followme::Common::find_prototype('html', 0);
     my $prototype_file_ok = catfile($test_dir, 'index.html');
     is($prototype_file, $prototype_file_ok, 'Find page templae'); # test 1
 
-    my $source =
-        App::Followme::Common::make_template('template.htm', $test_dir, 'html');
+    my $source = App::Followme::Common::make_template('template.htm', 'html');
 
     like($source, qr/<ul>/, 'Make template links'); # test 2
     like($source, qr/{{body}}/, 'Make template body'); # test 3
 
-    my $configuration = {base_dir => $test_dir,
-                         page_template => 'template.htm'};
+    my $configuration = {page_template => 'template.htm'};
     
     my $cvt = App::Followme::ConvertPages->new($configuration);
     my $page = App::Followme::Common::read_page('three.txt');

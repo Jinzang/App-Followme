@@ -30,7 +30,6 @@ sub parameters {
     
     return (
             options => {},
-            base_dir => '',
             web_extension => 'html',
             text_extension => 'txt',
             page_template => catfile('templates', 'page.htm'),
@@ -44,7 +43,6 @@ sub run {
     my ($self) = @_;
 
     my $template = make_template($self->{page_template},
-                                 $self->{base_dir},
                                  $self->{web_extension});
     
     my $sub = compile_template($template);
@@ -169,13 +167,9 @@ The following parameters are used from the configuration:
 
 =over 4
 
-=item base_dir
-
-The base directory of the website
-
 =item page_template
 
-The path to the template used to create a page, relative to the base directory.
+The path to the template used to create a page, relative to the top directory.
 
 =item options
 

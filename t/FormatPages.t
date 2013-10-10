@@ -16,8 +16,7 @@ my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
 require App::Followme::FormatPages;
-require App::Followme::PageIO;
-require App::Followme::PageTemplate;
+require App::Followme::Common;
 
 my $test_dir = catdir(@path, 'test');
 system("/bin/rm -rf $test_dir");
@@ -25,9 +24,10 @@ mkdir $test_dir;
 mkdir "$test_dir/sub";
 chdir $test_dir;
 
-my $configuration = {base_dir => $test_dir,
-                     web_extension => 'html',
+my $configuration = {web_extension => 'html',
                      options => {quick => 0}};
+
+App::Followme::Common::top_directory($test_dir);
 
 #----------------------------------------------------------------------
 # Write test pages
@@ -68,7 +68,7 @@ EOQ
             $output =~ s/section nav/section nav in $dir/ if $dir;
 
             my $filename = $dir ? "$dir/$count.html" : "$count.html";
-            App::Followme::PageIO::write_page($filename, $output);
+            App::Followme::Common::write_page($filename, $output);
         }
     }
 };
@@ -85,9 +85,7 @@ do {
     
     is_deeply($prototype_path, {sub => 1}, 'Get prototype path'); # test 1
     
-    my $prototype_file =
-        App::Followme::PageTemplate::find_prototype($test_dir, 'html', 1);
-        
+    my $prototype_file = App::Followme::Common::find_prototype('html', 1);
     is($prototype_file, catfile($test_dir, 'one.html'),
        'Find prototype'); # test 2
 };
@@ -104,7 +102,7 @@ do {
 
         foreach my $count (qw(two one)) {
             my $filename = "$count.html";
-            my $input = App::Followme::PageIO::read_page($filename);
+            my $input = App::Followme::Common::read_page($filename);
 
             ok($input =~ /Page $count/,
                "Format block in $dir/$count"); # test 3, 7, 11, 15

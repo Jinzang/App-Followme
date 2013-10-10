@@ -11,11 +11,12 @@ use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile updir);
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(build_date build_title build_url compile_template
-                 find_prototype make_template read_page set_variables 
-                 sort_by_date sort_by_depth sort_by_name 
+                 find_prototype make_template read_page top_directory
+                 set_variables sort_by_date sort_by_depth sort_by_name 
                  unchanged_prototype update_page write_page);
 
 our $VERSION = "0.90";
+our $top_directory;
 
 use constant MONTHS => [qw(January February March April May June July
                            August September October November December)];
@@ -92,9 +93,9 @@ sub build_title {
 # Get the url for a file from its name
 
 sub build_url {
-    my ($filename, $base_dir, $absolute) = @_;
+    my ($filename, $absolute) = @_;
 
-    $filename = abs2rel(rel2abs($filename), $base_dir);
+    $filename = abs2rel(rel2abs($filename), $top_directory);
     my @dirs = splitdir($filename);
     my $basename = pop(@dirs);
 
@@ -108,7 +109,7 @@ sub build_url {
     }
     
     my $url = join('/', @dirs, $page_name);
-    return make_relative($url, $base_dir, $absolute);
+    return make_relative($url, $absolute);
 }
 
 #----------------------------------------------------------------------
@@ -184,7 +185,7 @@ EOQ
 # Find an file to serve as a prototype for updating other files
 
 sub find_prototype {
-    my ($base_dir, $ext, $uplevel) = @_;
+    my ($ext, $uplevel) = @_;
 
     my $filename;
     my $pattern = "*.$ext";
@@ -203,7 +204,7 @@ sub find_prototype {
             }
         }
 
-        last if $directory eq $base_dir;
+        last if $directory eq $top_directory;
         chdir(updir());
         $directory = getcwd();
     }
@@ -232,17 +233,14 @@ sub get_level {
 # Make a url relative to a directory unless the absolute flag is set
 
 sub make_relative {
-    my ($url, $base_dir, $absolute) = @_;
+    my ($url, $absolute) = @_;
 
-    $base_dir = '' unless defined $base_dir;
-    $absolute = 0 unless defined $absolute;
-    
     if ($absolute) {
         $url = "/$url";
         
     } else {
         my @urls = split('/', $url);
-        my @dirs = splitdir($base_dir);
+        my @dirs = splitdir($top_directory);
 
         while (@urls && @dirs && $urls[0] eq $dirs[0]) {
             shift(@urls);
@@ -259,13 +257,13 @@ sub make_relative {
 # Combine template with prototype
 
 sub make_template {
-    my ($template_name, $base_dir, $ext) = @_;
+    my ($template_name, $ext) = @_;
 
-    $template_name = rel2abs($template_name, $base_dir);
+    $template_name = rel2abs($template_name, $top_directory);
     my $template = read_page($template_name);
     die "Couldn't find template: $template_name\n" unless $template;
 
-    my $prototype_name = find_prototype($base_dir, $ext, 0);
+    my $prototype_name = find_prototype($ext, 0);
     my $prototype = read_page($prototype_name); 
     
     my $final_template;
@@ -481,6 +479,16 @@ sub sort_by_name {
 }
 
 #----------------------------------------------------------------------
+# Get / set the top directory of the website
+
+sub top_directory {
+    my ($directory) = @_;
+    
+    $top_directory = $directory if defined $directory;
+    return $top_directory;
+}
+
+#----------------------------------------------------------------------
 # Determine if page matches prototype or needs to be updated
 
 sub unchanged_prototype {
@@ -594,7 +602,7 @@ The title of the page is derived from the file name by removing the filename
 extension, removing any leading digits,replacing dashes with spaces, and
 capitalizing the first character of each word.
 
-=item $url = build_url($filename, $base_dir, $absolute);
+=item $url = build_url($filename, $absolute);
 
 Build the url that of a web page.
 
@@ -648,6 +656,10 @@ have the same depth, they are sorted by name.
 =item @filenames = sort_by_name(@fienames);
 
 Sort files by name, except the index file is placed first.
+
+=item $top_directory = top_directory($directory);
+
+Get and optionally set the top directory of the website
 
 =item $page = update_page($prototype, $page, $decorated, $prototype_path);
 
