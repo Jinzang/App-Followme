@@ -11,9 +11,9 @@ use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile updir);
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(build_date build_title build_url compile_template
-                 find_prototype make_template read_page top_directory
+                 find_prototype make_template read_page 
                  set_variables sort_by_date sort_by_depth sort_by_name 
-                 unchanged_prototype update_page write_page);
+                 top_directory unchanged_prototype update_page write_page);
 
 our $VERSION = "0.90";
 our $top_directory;

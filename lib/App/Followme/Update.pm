@@ -77,11 +77,11 @@ sub find_configuration {
 }
 
 #----------------------------------------------------------------------
-# Get the subdirectories in a folder
+# Get the subdirectories in the current folder
 
 sub get_subdirectories {
     my ($self) = @_;
-
+    
     my @subdirectories;    
     my $dd = IO::Dir->new(getcwd());
 
