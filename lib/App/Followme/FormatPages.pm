@@ -81,7 +81,7 @@ sub run {
         $count += 1;
     }
     
-    return ! $self->{options}{quick} || $changed || $count == 0; 
+    return ! $self->{options}{quick} || $changed; 
 }
 
 #----------------------------------------------------------------------
