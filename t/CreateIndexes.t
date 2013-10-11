@@ -101,13 +101,14 @@ EOQ
             };
 
     my $idx = App::Followme::CreateIndexes->new($configuration);
-    my $data = $idx->index_data('index.html');
+    my $data = $idx->index_data();
+
     is($data->{title}, 'Archive', 'Index title'); # test 1
     is($data->{url}, 'index.html', 'Index url'); # test 2
     is($data->{loop}[0]{title}, 'Four', 'Index first page title'); # test 3
     is($data->{loop}[3]{title}, 'Two', 'Index last page title'); # test 4
     
-    $idx->create_an_index('index.html');
+    $idx->create_an_index();
     $page = App::Followme::Common::read_page('index.html');
     
     like($page, qr/<title>Archive<\/title>/, 'Write index title'); # test 5

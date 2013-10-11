@@ -35,6 +35,7 @@ sub parameters {
             options => {},
             web_extension => 'html',
             include_directories => 1,
+            index_file => 'index.html',
             include_files => '*.html',
             index_template => catfile('templates', 'index.htm'),
            );
@@ -46,14 +47,13 @@ sub parameters {
 sub run {
     my ($self) = @_;
 
-    my $index_file = "index.$self->{web_extension}";
-    if ($self->changed_directory($index_file)) {
+    if ($self->changed_directory()) {
         if ($self->{options}{noop}) {
-            print "$index_file\n";
+            print "$self->{index_file}\n";
     
         } else {
-            eval {create_an_index($index_file)};
-            warn "$index_file: $@" if $@;
+            eval {create_an_index()};
+            warn "$self->{index_file}: $@" if $@;
         }
     }
     
@@ -64,14 +64,14 @@ sub run {
 # Has the directory changed since the index was last created
 
 sub changed_directory {
-    my ($self, $index_file) = @_;
+    my ($self) = @_;
     
     my $changed;
-    if (-e $index_file) {
+    if (-e $self->{index_file}) {
         my @stats = stat(getcwd());  
         my $dir_date = $stats[9];
 
-        @stats = stat($index_file);
+        @stats = stat($self->{index_file});
         my $index_date = $stats[9];
         $changed = $dir_date > $index_date;
         
@@ -86,16 +86,16 @@ sub changed_directory {
 # Create the index file for a directory
 
 sub create_an_index {
-    my ($self, $index_file) = @_;
+    my ($self) = @_;
     
-    my $data = $self->index_data($index_file);
+    my $data = $self->index_data();
     my $template = make_template($self->{index_template},
                                  $self->{web_extension});
 
     my $sub = compile_template($template);
     my $page = $sub->($data);
  
-    write_page($index_file, $page);
+    write_page($self->{index_file}, $page);
     return;
 }
 
@@ -140,9 +140,9 @@ sub get_file_data {
 # Retrieve the data needed to build an index
 
 sub index_data {
-    my ($self, $index_file) = @_;        
+    my ($self) = @_;        
 
-    my @loop_data = $self->get_file_data($index_file);
+    my @loop_data = $self->get_file_data($self->{index_file});
     my $data = shift(@loop_data);
     
     my @filenames;
@@ -154,6 +154,8 @@ sub index_data {
     my @patterns = split(' ', $self->{include_files});
     foreach my $pattern (@patterns) {
         @filenames = sort_by_name(glob($pattern));
+        @filenames = grep {$_ ne $self->{index_file}} @filenames;
+        
         push(@loop_data, $self->get_file_data(@filenames));
     }
 
@@ -238,6 +240,10 @@ If true, subdirectories will be included in the index
 =item include_files
 
 A space delimeted list of expressions used to create the index
+
+=item index_file
+
+Name of the index file to be created
 
 =item index_template
 
