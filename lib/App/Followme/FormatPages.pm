@@ -39,13 +39,9 @@ sub parameters {
 sub run {
     my ($self) = @_;
 
-    my $pattern = "*.$self->{web_extension}";
-    my @filenames = reverse sort_by_date(glob($pattern));
-    return 1 unless @filenames;
+    my @filenames = $self->get_filenames();
+    my $prototype_file = shift(@filenames);
     
-    my $prototype_file = find_prototype($self->{web_extension}, 1);
-    $prototype_file = shift(@filenames) unless defined $prototype_file;
-
     my $prototype_path = $self->get_prototype_path($prototype_file);
     my $prototype = read_page($prototype_file);
     
@@ -85,7 +81,22 @@ sub run {
         $count += 1;
     }
     
-    return $changed || ! $self->{options}{quick};
+    return ! $self->{options}{quick} || $changed || $count == 0; 
+}
+
+#----------------------------------------------------------------------
+# Get the filename of the prototype and web files
+
+sub get_filenames {
+    my ($self) = @_;
+
+    my $pattern = "*.$self->{web_extension}";
+    my @filenames = reverse sort_by_date(glob($pattern));
+    
+    my $prototype_file = find_prototype($self->{web_extension}, 1);
+    unshift(@filenames, $prototype_file) if defined $prototype_file;
+
+    return @filenames;   
 }
 
 #----------------------------------------------------------------------
