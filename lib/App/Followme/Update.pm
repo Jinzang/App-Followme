@@ -37,7 +37,7 @@ sub parameters {
     
     return (
             configuration_file => 'followme.cfg',
-            options => {},
+            quick_update => 0,
             );
 }
 
@@ -172,6 +172,7 @@ sub set_directory {
         if (! -d $directory) {
             my $file;
             ($directory, $file) = $self->split_filename($directory);
+            $self->{quick_update} = 1;
         }
         
     } else {

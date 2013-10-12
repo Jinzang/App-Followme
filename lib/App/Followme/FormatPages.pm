@@ -28,7 +28,7 @@ sub parameters {
     my ($pkg) = @_;
     
     return (
-            options => {},
+            quick_update => 0,
             web_extension => 'html',
            );
 }
@@ -61,16 +61,10 @@ sub run {
 
         } else {
             $changed += 1;
-            
-            if ($self->{options}{noop}) {
-                print "$filename\n";
+            $page = update_page($prototype, $page, $decorated,
+                                 $prototype_path);
 
-            } else {
-                $page = update_page($prototype, $page, $decorated,
-                                    $prototype_path);
-
-                $self->write_page_same_date($filename, $page);
-            }
+             $self->write_page_same_date($filename, $page);
         }
 
         if ($count == 0) {
@@ -81,7 +75,7 @@ sub run {
         $count += 1;
     }
     
-    return ! $self->{options}{quick} || $changed; 
+    return ! $self->{quick_update} || $changed; 
 }
 
 #----------------------------------------------------------------------
@@ -170,9 +164,9 @@ The following parameters are used from the configuration:
 
 =over 4
 
-=item options
+=item quick_update
 
-A hash holding the command line option flags
+Only check files in current directory
 
 =item web_extension
 

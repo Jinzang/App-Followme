@@ -32,8 +32,8 @@ sub parameters {
     my ($pkg) = @_;
     
     return (
-            options => {},
             absolute => 0,
+            quick_update => 1,
             web_extension => 'html',
             include_directories => 1,
             index_file => 'index.html',
@@ -49,16 +49,11 @@ sub run {
     my ($self) = @_;
 
     if ($self->changed_directory()) {
-        if ($self->{options}{noop}) {
-            print "$self->{index_file}\n";
-    
-        } else {
-            eval {create_an_index()};
-            warn "$self->{index_file}: $@" if $@;
-        }
+        eval {create_an_index()};
+        warn "$self->{index_file}: $@" if $@;
     }
     
-    return 1;
+    return ! $self->{quick_update};
 }
 
 #----------------------------------------------------------------------
@@ -231,10 +226,6 @@ The following fields in the configuration are used:
 
 If true, urls in a page will be absolute
 
-=item options
-
-A hash of the command line options passed to followme
-
 =item include_directories
 
 If true, subdirectories will be included in the index
@@ -250,6 +241,10 @@ Name of the index file to be created
 =item index_template
 
 The path to the template file, relative to the base directory.
+
+=item quick_update
+
+Only create index for current directory
 
 =item web_extension
 

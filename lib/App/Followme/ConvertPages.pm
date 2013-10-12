@@ -29,8 +29,8 @@ sub parameters {
     my ($pkg) = @_;
     
     return (
-            options => {},
             absolute => 0,
+            quick_update => 1,
             web_extension => 'html',
             text_extension => 'txt',
             page_template => catfile('templates', 'page.htm'),
@@ -50,16 +50,11 @@ sub run {
     my $pattern = "*.$self->{text_extension}";
 
     foreach my $filename (glob($pattern)) {
-        if ($self->{options}{noop}) {
-            print "$filename\n";
-
-        } else {
-            eval {$self->convert_a_file($filename, $sub)};
-            warn "$filename: $@" if $@;
-        }
+        eval {$self->convert_a_file($filename, $sub)};
+        warn "$filename: $@" if $@;
     }
 
-    return ! $self->{options}{quick};    
+    return ! $self->{quick_update};    
 }
 
 #----------------------------------------------------------------------
@@ -174,9 +169,9 @@ The following parameters are used from the configuration:
 
 If true, urls in a page will be absolute
 
-=item options
+=item quick_update
 
-A hash holding the command line option flags.
+Only convert files in current directory
 
 =item page_template
 

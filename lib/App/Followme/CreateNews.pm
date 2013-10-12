@@ -30,7 +30,6 @@ sub parameters {
     my ($pkg) = @_;
     
     return (
-            options => {},
             absolute => 0,
             base_directory => '',
             news_file => 'index.html',
@@ -47,15 +46,13 @@ sub parameters {
 sub run {
     my ($self) = @_;
 
+    my $current_directory = getcwd();
+    chdir($self->{base_directory});
 
-    if ($self->{options}{noop}) {
-        print "$self->{news_file}\n";
-    } else {
-        chdir($self->{base_directory});
-        eval {$self->create_news_index()};
-        warn "$self->{news_file}: $@" if $@;
-    }
+    eval {$self->create_news_index()};
+    warn "$self->{news_file}: $@" if $@;
 
+    chdir($current_directory);    
     return;
 }
 
