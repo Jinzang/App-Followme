@@ -33,6 +33,7 @@ sub parameters {
     
     return (
             options => {},
+            absolute => 0,
             web_extension => 'html',
             include_directories => 1,
             index_file => 'index.html',
@@ -128,8 +129,9 @@ sub get_file_data {
     
     my @loop_data;
     foreach my $filename (@filenames) {
-        my $data = set_variables($filename);
-        $data->{url} = $filename;
+        my $data = set_variables($filename,
+                                 $self->{web_extension},
+                                 $self->{absolute});
         push(@loop_data, $data); 
     }
 
@@ -225,13 +227,13 @@ The following fields in the configuration are used:
 
 =over 4
 
+=item absolute
+
+If true, urls in a page will be absolute
+
 =item options
 
 A hash of the command line options passed to followme
-
-=item web_extension
-
-The extension used for web pages.
 
 =item include_directories
 
@@ -248,6 +250,10 @@ Name of the index file to be created
 =item index_template
 
 The path to the template file, relative to the base directory.
+
+=item web_extension
+
+The extension used for web pages.
 
 =back
 

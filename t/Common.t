@@ -3,7 +3,7 @@ use strict;
 
 use IO::File;
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
-use Test::More tests => 39;
+use Test::More tests => 40;
 
 #----------------------------------------------------------------------
 # Load package
@@ -418,23 +418,27 @@ do {
     $title_ok = 'Watch';
     is($title, $title_ok, 'Build directory title'); # test 35
     
-    my $url = App::Followme::Common::build_url($text_name);
+    my $url = App::Followme::Common::build_url($text_name, 'html', 0);
     my $url_ok = 'watch/this-is-only-a-test.html';
     is($url, $url_ok, 'Build file url'); # test 36
 
-    $url = App::Followme::Common::build_url('watch');
+    mkdir('watch');
+    $url = App::Followme::Common::build_url('watch', 'html', 0);
     is($url, 'watch/index.html', 'Build directory url'); #test 37
+       
+    $url = App::Followme::Common::build_url('watch', 'html', 1);
+    is($url, '/watch/index.html', 'Build absolute url'); #test 38
        
     my $time = 1;
     my $date = App::Followme::Common::build_date(time());
     my @date_fields = grep {/\S/} sort keys %$date;
     my @date_ok = sort qw(day month monthnum  weekday hour24 hour 
                    minute second year ampm);
-    is_deeply(\@date_fields, \@date_ok, 'Build date'); # test 38
+    is_deeply(\@date_fields, \@date_ok, 'Build date'); # test 39
     
-    my $data = App::Followme::Common::set_variables('two.html');
+    my $data = App::Followme::Common::set_variables('two.html', 'html', 0);
     my @keys = sort keys %$data;
-    my @keys_ok = sort(@date_ok, 'title');
-    is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 39
+    my @keys_ok = sort(@date_ok, 'title', 'url');
+    is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 40
 };
 

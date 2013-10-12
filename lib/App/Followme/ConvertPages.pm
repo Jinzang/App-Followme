@@ -30,6 +30,7 @@ sub parameters {
     
     return (
             options => {},
+            absolute => 0,
             web_extension => 'html',
             text_extension => 'txt',
             page_template => catfile('templates', 'page.htm'),
@@ -70,7 +71,9 @@ sub convert_a_file {
     my $text = read_page($filename);
     die "Couldn't read\n" unless defined $text;
 
-    my $data = set_variables($filename);
+    my $data = set_variables($filename,
+                             $self->{web_extension},
+                             $self->{absolute});
     $data->{body} = $self->convert_text($text);
     my $page = $sub->($data);
 
@@ -167,13 +170,17 @@ The following parameters are used from the configuration:
 
 =over 4
 
-=item page_template
+=item absolute
 
-The path to the template used to create a page, relative to the top directory.
+If true, urls in a page will be absolute
 
 =item options
 
 A hash holding the command line option flags.
+
+=item page_template
+
+The path to the template used to create a page, relative to the top directory.
 
 =item text_extension 
 

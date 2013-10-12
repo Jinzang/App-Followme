@@ -90,26 +90,23 @@ sub build_title {
 }
 
 #----------------------------------------------------------------------
-# Get the url for a file from its name
+# Build a url from a filename
 
 sub build_url {
-    my ($filename, $absolute) = @_;
+    my ($filename, $web_extension, $absolute) = @_;
 
-    $filename = abs2rel(rel2abs($filename), $top_directory);
-    my @dirs = splitdir($filename);
-    my $basename = pop(@dirs);
-
-    my $page_name;
-    if ($basename !~ /\./) {
-        push(@dirs, $basename);
-        $page_name = 'index.html';
-
-    } else {
-        $page_name = build_page_name($basename);
+    $filename = catfile($filename, 'index.html') if -d $filename;
+    
+    if ($absolute) {
+        $filename = rel2abs($filename);
+        $filename = abs2rel($filename, $top_directory);
     }
     
-    my $url = join('/', @dirs, $page_name);
-    return make_relative($url, $absolute);
+    my $url = join('/', splitdir($filename));
+    $url = "/$url" if $absolute;
+    
+    $url =~ s/\.[^\.]*$/.html/;
+    return $url;
 }
 
 #----------------------------------------------------------------------
@@ -227,30 +224,6 @@ sub get_level {
     }
 
     return $level;  
-}
-
-#----------------------------------------------------------------------
-# Make a url relative to a directory unless the absolute flag is set
-
-sub make_relative {
-    my ($url, $absolute) = @_;
-
-    if ($absolute) {
-        $url = "/$url";
-        
-    } else {
-        my @urls = split('/', $url);
-        my @dirs = splitdir($top_directory);
-
-        while (@urls && @dirs && $urls[0] eq $dirs[0]) {
-            shift(@urls);
-            shift(@dirs);
-        }
-       
-        $url = join('/', @urls);
-    }
-    
-    return $url;
 }
 
 #----------------------------------------------------------------------
@@ -406,7 +379,7 @@ sub read_page {
 # Set the variables used to construct a page
 
 sub set_variables {
-    my ($filename) = @_;
+    my ($filename, $web_extension, $absolute) = @_;
 
     my $time;
     if (-e $filename) {
@@ -418,6 +391,7 @@ sub set_variables {
     
     my $data = build_date($time);
     $data->{title} = build_title($filename);
+    $data->{url} = build_url($filename, $web_extension, $absolute);
     
     return $data;
 }
@@ -602,9 +576,11 @@ The title of the page is derived from the file name by removing the filename
 extension, removing any leading digits,replacing dashes with spaces, and
 capitalizing the first character of each word.
 
-=item $url = build_url($filename, $absolute);
+=item $url = build_url($filename, $web_extension, $absolute);
 
-Build the url that of a web page.
+Build the url that of a web page from its filename. Web extension is a string
+containing the extension html pages have . Absolute is a flag indicating if the
+url is absolute or relative to the current web page.
 
 =item my $sub = compile_template($template, $variable);
 

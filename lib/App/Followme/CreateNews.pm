@@ -8,7 +8,7 @@ use lib '../..';
 use Cwd;
 use IO::Dir;
 use File::Spec::Functions qw(abs2rel splitdir catfile);
-use App::Followme::Common qw(compile_template make_template read_page 
+use App::Followme::Common qw(compile_template make_template read_page
                              set_variables sort_by_date write_page);
 
 our $VERSION = "0.90";
@@ -31,7 +31,8 @@ sub parameters {
     
     return (
             options => {},
-            base_dir => '',
+            absolute => 0,
+            base_directory => '',
             news_file => 'index.html',
             news_index_length => 5,
             web_extension => 'html',
@@ -46,12 +47,15 @@ sub parameters {
 sub run {
     my ($self) = @_;
 
+
     if ($self->{options}{noop}) {
         print "$self->{news_file}\n";
     } else {
-        eval {$self->create_news_index($self->{news_file})};
+        chdir($self->{base_directory});
+        eval {$self->create_news_index()};
         warn "$self->{news_file}: $@" if $@;
     }
+
     return;
 }
 
@@ -59,15 +63,15 @@ sub run {
 # Create the index of most recent additions to the news
 
 sub create_news_index {
-    my ($self, $news_index) = @_;
+    my ($self) = @_;
 
-    my $data = $self->recent_news_data($news_index);
+    my $data = $self->recent_news_data();
 
-    my $template = make_template($news_index);
+    my $template = make_template($self->{news_file});
     my $sub = compile_template($template);
     my $page = $sub->($data);
  
-    write_page($news_index, $page);
+    write_page($self->{news_file}, $page);
     return;
 }
 
@@ -75,17 +79,14 @@ sub create_news_index {
 # Get the more recently changed files
 
 sub more_recent_files {
-    my ($limit) = @_;
+    my ($self, $limit) = @_;
     
     my @dated_files;
     my $visitor = visitor_function();
     
     while (defined (my $filename = &$visitor)) {
-        my ($dir, $root, $ext) = parse_filename($filename);
-
-        next if $root eq 'index';
-        next if $root =~ /template$/;
-
+        next if $filename eq $self->{news_file};
+        
         my @stats = stat($filename);
         if (@dated_files < $limit || $stats[9] > $dated_files[0]->[0]) {
             shift(@dated_files) if @dated_files >= $limit;
@@ -103,20 +104,20 @@ sub more_recent_files {
 # Get the data to put in the news index
 
 sub recent_news_data {
-    my ($self, $news_index) = @_;
+    my ($self) = @_;
 
     my @loop;
     my $limit = $self->{news_index_length};
-    my $data = set_variables($news_index);
+    my $data = set_variables($self->{news_file},
+                             $self->{web_extension},
+                             $self->{absolute});
 
-    my ($index_dir, $root, $ext) = parse_filename($news_index);
-    $data->{url} = build_url($news_index, $index_dir);
-
-    my @filenames = more_recent_files($limit);
+    my @filenames = $self->more_recent_files($limit);
    
     foreach my $filename (@filenames) {
-        my $loopdata = set_variables($filename);
-        $loopdata->{url} = build_url($filename, $index_dir);
+        my $loopdata = set_variables($filename,
+                                     $self->{web_extension},
+                                     $self->{absolute});
         
         my $page = read_page($filename);
         my $blocks = parse_page($page);
@@ -179,12 +180,13 @@ __END__
 
 =head1 NAME
 
-App::Followme - Simple static web site maintenance
+App::Followme::CreateNews - Create an index with the more recent files
 
 =head1 SYNOPSIS
 
-    use App::Followme qw(followme);
-    followme();
+    use App::Followme::CreateNew;
+    my $indexer = App::Followme::CreateNews->new($configuration);
+    $indexer->run();
 
 =head1 DESCRIPTION
 
