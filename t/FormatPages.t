@@ -24,8 +24,7 @@ mkdir $test_dir;
 mkdir "$test_dir/sub";
 chdir $test_dir;
 
-my $configuration = {web_extension => 'html',
-                     options => {quick => 0}};
+my $configuration = {web_extension => 'html'};
 
 App::Followme::Common::top_directory($test_dir);
 

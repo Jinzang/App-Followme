@@ -5,7 +5,9 @@ use warnings;
 
 use lib '../..';
 
+use Cwd;
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
+
 use App::Followme::Common qw(find_prototype read_page top_directory sort_by_date 
                              unchanged_prototype update_page write_page);
 
@@ -39,6 +41,10 @@ sub parameters {
 sub run {
     my ($self) = @_;
 
+    my $current_directory = getcwd();
+    my @stats = stat($current_directory);
+    my $modtime = $stats[9];
+    
     my @filenames = $self->get_filenames();
     my $prototype_file = shift(@filenames);
     
@@ -46,27 +52,32 @@ sub run {
     my $prototype = read_page($prototype_file);
     
     my $count = 0;
-    my $changed = 0;
+    my $changes = 0;
     my $decorated = 1;
 
     foreach my $filename (@filenames) {        
         my $page = read_page($filename);
         die "Couldn't read $filename" unless defined $page;
 
-        my $skip = unchanged_prototype($prototype, $page, $decorated, 
-                                      $prototype_path);
+        # Check for changes before updating page
+        my $skip = unchanged_prototype($prototype, $page,
+                                       $decorated, $prototype_path);
 
         if ($skip) {
-            last if $self->{options}{quick} && $count; 
-
-        } else {
-            $changed += 1;
-            $page = update_page($prototype, $page, $decorated,
-                                 $prototype_path);
-
-             $self->write_page_same_date($filename, $page);
+            last if $self->{quick_update} && $count;
+            
+        } else {    
+            $page = update_page($prototype, $page, 
+                                $decorated, $prototype_path);
+        
+            my @stats = stat($filename);
+            my $modtime = $stats[9];
+        
+            write_page($filename, $page);
+            utime($modtime, $modtime, $filename);
+            $changes += 1;
         }
-
+        
         if ($count == 0) {
             $prototype = $page;
             $prototype_path = $self->get_prototype_path($filename);
@@ -75,7 +86,8 @@ sub run {
         $count += 1;
     }
     
-    return ! $self->{quick_update} || $changed; 
+    utime($modtime, $modtime, $current_directory);
+    return ! $self->{quick_update} || $changes; 
 }
 
 #----------------------------------------------------------------------
@@ -106,24 +118,6 @@ sub get_prototype_path {
     
     my %prototype_path = map {$_ => 1} @path;
     return \%prototype_path;    
-}
-
-#----------------------------------------------------------------------
-# Set modification date for file when writing
-
-sub write_page_same_date {
-    my ($self, $filename, $page) = @_;
-
-    my $modtime;
-    if (-e $filename) {
-        my @stats = stat($filename);
-        $modtime = $stats[9];
-    }
-
-    write_page($filename, $page);
-    utime($modtime, $modtime, $filename) if defined $modtime;
-    
-    return;
 }
 
 1;
