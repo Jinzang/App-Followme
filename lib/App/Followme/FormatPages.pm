@@ -48,6 +48,8 @@ sub run {
     my @filenames = $self->get_filenames();
     my $prototype_file = shift(@filenames);
     
+    # The first update uses a file from the directory above
+    # as a prototype, if one is found
     my $prototype_path = $self->get_prototype_path($prototype_file);
     my $prototype = read_page($prototype_file);
     
@@ -79,6 +81,9 @@ sub run {
         }
         
         if ($count == 0) {
+            # The second and subsequent updates use the most recently
+            # modified file in a directory as the prototype, so we
+            # must change the values used for the first update
             $prototype = $page;
             $prototype_path = $self->get_prototype_path($filename);
         }

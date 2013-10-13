@@ -46,13 +46,9 @@ sub parameters {
 sub run {
     my ($self) = @_;
 
-    my $current_directory = getcwd();
-    chdir($self->{base_directory});
-
     eval {$self->create_news_index()};
     warn "$self->{news_file}: $@" if $@;
 
-    chdir($current_directory);    
     return;
 }
 
@@ -187,57 +183,22 @@ App::Followme::CreateNews - Create an index with the more recent files
 
 =head1 DESCRIPTION
 
-Followme does three things. First, it updates the constant portions of each web
-page when it is changed on any page. Second, it converts text files into html
-using a template. Third, it creates indexes for files when they are placed in a
-special directory, the news directory. This simplifies keeping a blog on a
-static site. Each of these three actions are explained in turn.
+This package creates an index for files in the current directory that contains
+the text of the most recently modified files together with links to the files,
+It can be used to create a basic weblog. The index is built using a template.
+The template has Loop comments that look like
 
-Each html page has sections that are different from other pages and other
-sections that are the same. The sections that differ are enclosed in html
-comments that look like
+    <!-- loop -->
+    <!-- endloop -->
 
-    <!-- section name-->
-    <!-- endsection name -->
-
-and indicate where the section begins and ends. When a page is changed, followme
-checks the text outside of these comments. If that text has changed. the other
-pages on the site are also changed to match the page that has changed. Each page
-updated by substituting all its named blocks into corresponding block in the
-changed page. The effect is that all the text outside the named blocks are
-updated to be the same across all the html pages.
-
-Block text will be synchronized over all files in the folder if the begin
-comment has "in folder" after the name. For example:
-
-    <!-- section name in folder -->
-    <!-- endsection name -->
-
-Text in "in folder" blocks can be used for navigation or other sections of the
-page that are constant, but not constant across the entire site.
-
-If there are any text files in the directory, they are converted into html files
-by substituting the content into a template. After the conversion the original
-file is deleted. Along with the content, other variables are calculated from the
-file name and modification date. Variables in the template are surrounded by
-double braces, so that a link would look like:
-
-    <li><a href="{{url}}">{{title}}</a></li>
-
-The string which indicates a variable is configurable. The variables that are
-calculated for a text file are:
+and indicate the section of the template that is repeated for each file
+contained in the index. The following variables may be used in the template:
 
 =over 4
 
 =item body
 
-All the content of the text file. The content is passed through a subroutine
-before being stored in this variable. The subroutine takes one input, the
-content stored as a string, and returns it as a string containing html. The
-default subroutine, add_tags in this module, only surrounds paragraphs with
-p tags, where paragraphs are separated by a blank line. You can supply a
-different subroutine by changing the value of the configuration variable
-page_converter.
+All the text inside the content tags in an page.
 
 =item title
 
@@ -247,7 +208,7 @@ capitalizing the first character of each word.
 
 =item url
 
-The relative url of the resulting html page. 
+The relative url of an html page. 
 
 =item time fields
 
@@ -255,87 +216,45 @@ The variables calculated from the modification time are: C<weekday, month,>
 C<monthnum, day, year, hour24, hour, ampm, minute,> and C<second.>
 
 =back
+            news_file => 'index.html',
+            news_index_length => 5,
 
-The template for the text file is selected by first looking for a file in
-the same directory starting with the same name as the file, e.g.,
-index_template.html for index.html. If not found, then a file named
-template.html in the same directory is used. If neither is found, the same
-search is done in the directory above the file, up to the top directory of
-the site.
-
-As a final step, followme builds indexes for each directory in the news
-directory. Each directory gets an index containing links to all the files and
-directories contained in it. And one index is created from all the most
-recently changed files in the news directory. This index thus serves as a
-weblog. Both kinds of index are built using a template. The variables are
-the same as mentioned above, except that the body variable is set to the
-block inside the content comment. Loop comments that look like
-
-    <!-- loop -->
-    <!-- endloop -->
-
-indicate the section of the template that is repeated for each file contained
-in the index. 
 
 =head1 CONFIGURATION
 
-Followme is called with the function followme, which takes one or no argument.
-
-    followme($directory);
-    
-The argument is the name of the top directory of the site. If no argument is
-passed, the current directory is taken as the top directory. Before calling
-this function, it can be configured by calling the function configure_followme.
-
-    configure_followme($name, $value);
-
-The first argument is the name and the second the value of the configuration
-parameter. All parameters have scalar values except for page-converter and
-variable_setter, whose values are references to a function. The configuration
-parameters all have default values, which are listed below with each parameter.
+The following fields in the configuration file are used:
 
 =over 4
 
-=item absolute_url (C<0>)
+=item absolute
 
-If Perl-true, urls on generated index pages are absolute (start with a slash.)
-If not, they are relative to the index page. Typically, you want absolute urls
-if you have a base tag in your template and relative otherwise.
+If true, urls in a page will be absolute
 
-=item text_extension (C<txt>)
+=item body_tag
 
-The extension of files that are converted to html.
+The the name of the tag pair containing the body text.
 
-=item news_index_length (C<5>)
+=item base_directory
 
-The number of recent files to include in the weblog index.
+The directory containig the configuration file. This directory is searched to
+create the index.
 
-=item news_index (C<blog.html>)
+=item news_file
 
-The filename of the weblog index.
+Name of the news index file to be created, relative to the base directory.
 
-=item body_tag (C<content>)
+=item news_index_length
 
-The comment name surrounding the weblog entry content.
+The number of pages to include in the index.
 
-=item variable (C<{{*}}>)
+=item news_template
 
-The string which indicates a variable in a template. The variable name replaces
-the star in the pattern.
+The path to the template file, relative to the top directory.
 
-=item page_converter (C<add_tags>)
+=item web_extension
 
-A reference to a function use to convert text to html. The function should
-take one argument, a string containing the text to be converted and return one
-value, the converted text.
-
-=item variable_setter (C<set_variables>)
-
-A reference to a function that sets the variables that will be substituted
-into the templates, with the exception of body, which is set by page_converter.
-The function takes one argument, the name of the file the variables are
-generated from, and returns a reference to a hash containing the variables and
-their values.
+The extension used for web pages. Pages with this extension are considerd for
+inclusion in the index.
 
 =back
 

@@ -218,7 +218,7 @@ C<monthnum, day, year, hour24, hour, ampm, minute,> and C<second.>
 
 =head1 CONFIGURATION
 
-The following fields in the configuration are used:
+The following fields in the configuration file are used:
 
 =over 4
 
