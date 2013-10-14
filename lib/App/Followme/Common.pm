@@ -11,7 +11,7 @@ use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile updir);
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(build_date build_title build_url compile_template
-                 find_prototype make_template read_page 
+                 find_prototype make_template parse_page read_page 
                  set_variables sort_by_date sort_by_depth sort_by_name 
                  top_directory unchanged_prototype update_page write_page);
 
@@ -100,6 +100,9 @@ sub build_url {
     if ($absolute) {
         $filename = rel2abs($filename);
         $filename = abs2rel($filename, $top_directory);
+
+    } else {
+        $filename = abs2rel($filename);
     }
     
     my $url = join('/', splitdir($filename));
@@ -607,6 +610,11 @@ hash will be interpolated into the text. Loop comments look like
     <!-- endloop -->
 
 There should be only one pair of loop comments in the template. 
+
+=item $blocks = parse_page($page, $decorated);
+
+Extract blocks from a web page. Page is a string containing the web page. Decorates
+is a flag indicating if the block is surrounded by the block tags.
 
 =item $str = read_page($filename);
 

@@ -7,8 +7,8 @@ use lib '../..';
 
 use Cwd;
 use IO::Dir;
-use File::Spec::Functions qw(abs2rel splitdir catfile);
-use App::Followme::Common qw(compile_template make_template read_page
+use File::Spec::Functions qw(abs2rel splitdir catfile no_upwards);
+use App::Followme::Common qw(compile_template make_template parse_page read_page
                              set_variables sort_by_date write_page);
 
 our $VERSION = "0.90";
@@ -46,6 +46,7 @@ sub parameters {
 sub run {
     my ($self) = @_;
 
+    chdir($self->{base_directory});
     eval {$self->create_news_index()};
     warn "$self->{news_file}: $@" if $@;
 
@@ -60,11 +61,13 @@ sub create_news_index {
 
     my $data = $self->recent_news_data();
 
-    my $template = make_template($self->{news_file});
+    my $template = make_template($self->{news_template},
+                                 $self->{web_extension});
+    
     my $sub = compile_template($template);
     my $page = $sub->($data);
- 
     write_page($self->{news_file}, $page);
+
     return;
 }
 
@@ -77,7 +80,7 @@ sub more_recent_files {
     my @dated_files;
     my $visitor = visitor_function();
     
-    while (defined (my $filename = &$visitor)) {
+    while (defined (my $filename = $visitor->($self->{web_extension}))) {
         next if $filename eq $self->{news_file};
         
         my @stats = stat($filename);
@@ -106,7 +109,7 @@ sub recent_news_data {
                              $self->{absolute});
 
     my @filenames = $self->more_recent_files($limit);
-   
+
     foreach my $filename (@filenames) {
         my $loopdata = set_variables($filename,
                                      $self->{web_extension},
@@ -128,12 +131,14 @@ sub recent_news_data {
 
 sub visitor_function {
     my ($self) = @_;
-    
+
     my @dirlist;
     my @filelist;
-    push(@dirlist, getcwd());
+    push(@dirlist, '');
 
     return sub {
+        my ($ext) = @_;
+        
         for (;;) {
             my $file = shift(@filelist);
             return $file if defined $file;
@@ -141,19 +146,19 @@ sub visitor_function {
             return unless @dirlist;
             my $dir = shift(@dirlist);
     
-            my $dd = IO::Dir->new($dir);
+            my $dd = $dir ? IO::Dir->new($dir) : IO::Dir->new(getcwd());
             die "Couldn't open $dir: $!\n" unless $dd;
     
             # Find matching files and directories
             while (defined (my $file = $dd->read())) {
-                my $path = catfile($dir, $file);
+                my $path = $dir ? catfile($dir, $file) : $file;
                 
                 if (-d $path) {
-                    next if $file    =~ /^\./;
+                    next unless no_upwards($file);
                     push(@dirlist, $path);
                     
                 } else {
-                    next unless $file =~ /^[^\.]+\.$self->{web_extension}$/;
+                    next unless $file =~ /^[^\.]+\.$ext$/;
                     push(@filelist, $path);
                 }
             }
