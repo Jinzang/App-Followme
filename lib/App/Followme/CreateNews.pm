@@ -19,7 +19,7 @@ our $VERSION = "0.90";
 sub new {
     my ($pkg, $configuration) = @_;
     
-    my %self = ($pkg->parameters(), %$configuration); 
+    my %self = %$configuration; 
     return bless(\%self, $pkg);
 }
 

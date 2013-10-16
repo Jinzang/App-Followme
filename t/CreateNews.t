@@ -26,6 +26,15 @@ chdir $test_dir;
 
 App::Followme::Common::top_directory($test_dir);
 
+my $configuration = {
+                        absolute => 0,
+                        base_directory => $test_dir,
+                        news_file => 'blog.html',
+                        news_index_length => 5,
+                        web_extension => 'html',
+                        body_tag => 'content',
+                        news_template => 'blog_template.htm',
+                     };
 #----------------------------------------------------------------------
 # Write test files
 
@@ -66,7 +75,7 @@ EOQ
 # Test file visitor
 
 do {
-    my $idx = App::Followme::CreateNews->new({});
+    my $idx = App::Followme::CreateNews->new($configuration);
     my $visitor = $idx->visitor_function();
     
     my @filenames;
@@ -89,7 +98,7 @@ do {
 # Test more_recent_files 
 
 do {
-    my $idx = App::Followme::CreateNews->new({});
+    my $idx = App::Followme::CreateNews->new($configuration);
     my @filenames = $idx->more_recent_files(3);
 
     my @ok_filenames = qw(one.html two.html three.html);
@@ -148,7 +157,7 @@ my $body_ok = <<'EOQ';
 <p>All about three.</p>
 EOQ
 
-    App::Followme::Common::write_page('blog_template.html', $archive_template);
+    App::Followme::Common::write_page('blog_template.htm', $archive_template);
 
     my @archived_files;
     foreach my $count (qw(four three two one)) {
@@ -162,8 +171,6 @@ EOQ
     }
 
     chdir('archive');
-    
-    my $configuration = {news_file => 'blog.html', news_template => 'blog_template.html'};
     my $idx = App::Followme::CreateNews->new($configuration);
 
     my $data = $idx->recent_news_data();

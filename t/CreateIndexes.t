@@ -98,6 +98,8 @@ EOQ
             include_directories => 0,
             include_files => '*.html',
             index_template => $index_name,
+            index_file => 'index.html',
+            web_extension => 'html',
             };
 
     my $idx = App::Followme::CreateIndexes->new($configuration);
