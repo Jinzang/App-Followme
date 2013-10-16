@@ -15,7 +15,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
-require App::FollowmeSite;
+require App::Followme::Initialize;
 
 my $test_dir = catdir(@path, 'test');
 system("/bin/rm -rf $test_dir");
@@ -27,13 +27,14 @@ chdir $test_dir;
 
 do {
     my (@files, @texts);
-    while(my ($file, $text) = App::FollowmeSite::next_file()) {
+    while(my ($file, $text) = App::Followme::Initialize::next_file()) {
         push(@files, $file);
         push(@texts, $text);
     }
     
-    my @files_ok = qw(template.html {{archive_index}}_template.html
-                      {{archive_directory}}/index_template.html);
+    my @files_ok = qw(followme.cfg blog/followme.cfg 
+                      templates/page.htm templates/news.htm
+                      templates/index.htm);
 
     foreach (@files_ok) {
         my @dirs = split('/', $_);
@@ -42,11 +43,11 @@ do {
     
     is_deeply(\@files, \@files_ok, "Next file name"); # test 1
     
-    my @long = grep {length($_) > 100} @texts;
-    is(@long, 3, "Next file"); # test 2
+    my @long = grep {length($_) > 50} @texts;
+    is(@long, 5, "Next file"); # test 2
     
     my $file = shift @files;
     my $text = shift @texts;
-    App::FollowmeSite::copy_file($file, $text);
+    App::Followme::Initialize::copy_file($file, $text);
     ok(-e $file, 'Copy file'); #test 3
 };

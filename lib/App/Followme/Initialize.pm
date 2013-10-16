@@ -1,4 +1,4 @@
-package App::FollowmeSite;
+package App::Followme::Initialize;
 use 5.008005;
 use strict;
 use warnings;
@@ -6,12 +6,28 @@ use warnings;
 use IO::File;
 use File::Spec::Functions qw(splitdir catfile);
 
-our $VERSION = "0.89";
+our $VERSION = "0.90";
 our $modeline;
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(copy_file next_file);
+our @EXPORT_OK = qw(initialize);
+
+#----------------------------------------------------------------------
+# Initialize a new web site
+
+sub initialize {
+    my ($directory) = @_;
+
+    for (;;) {
+        my ($file, $text) = next_file();
+        last unless defined $file;
+        
+        copy_file($file, $text, $directory);
+    }
+    
+    return;
+}
 
 #----------------------------------------------------------------------
 # Create a copy of the input file
@@ -20,7 +36,7 @@ sub copy_file {
     my ($file, $text, $directory) = @_;
 
     my @dirs;    
-    push(@dirs, split(/\//, $directory)) if $directory;
+    push(@dirs, splitdir($directory)) if $directory;
     push(@dirs, split(/\//, $file));
     my $base = pop(@dirs);
     
@@ -76,7 +92,15 @@ sub next_file {
 
 1;
 __DATA__
-#--%X--%X template.html
+#--%X--%X followme.cfg
+module = App::Followme::FormatPages
+module = App::Followme::ConvertPages
+#--%X--%X blog/followme.cfg
+module = App::Followme::CreateIndexes
+module = App::Followme::CreateNews
+index_file = archive.html
+news_file = index.html
+#--%X--%X templates/page.htm
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
@@ -88,6 +112,12 @@ __DATA__
 <body>
 <div id="header">
 <h1>Site Title</h1>
+</div>
+<div id="sidebar">
+<!-- section navigation -->
+<!-- endsection navigation -->
+<!-- section sidebar -->
+<!-- endsection sidebar -->
 </div>
 <div id="content">
 <!-- section content -->
@@ -96,16 +126,10 @@ __DATA__
 {{body}}    
 <!-- endsection content-->
 </div>
-<div id="sidebar">
-<!-- section navigation in folder -->
-<!-- endsection navigation -->
-<!-- section sidebar -->
-<!-- endsection sidebar -->
-</div>
 </body>
 </html>
 
-#--%X--%X {{archive_index}}_template.html
+#--%X--%X templates/news.htm
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
@@ -117,6 +141,12 @@ __DATA__
 <body>
 <div id="header">
 <h1>Site Title</h1>
+</div>
+<div id="sidebar">
+<!-- section navigation -->
+<!-- endsection navigation -->
+<!-- section sidebar -->
+<!-- endsection sidebar -->
 </div>
 <div id="content">
 <!-- section content -->
@@ -126,16 +156,10 @@ __DATA__
 <!-- endloop -->
 <!-- endsection content-->
 </div>
-<div id="sidebar">
-<!-- section navigation in folder -->
-<!-- endsection navigation -->
-<!-- section sidebar -->
-<!-- endsection sidebar -->
-</div>
 </body>
 </html>
 
-#--%X--%X {{archive_directory}}/index_template.html
+#--%X--%X templates/index.htm
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -146,6 +170,12 @@ __DATA__
 <body>
 <div id="header">
 <h1>Site Title</h1>
+</div>
+<div id="sidebar">
+<!-- section navigation -->
+<!-- endsection navigation -->
+<!-- section sidebar -->
+<!-- endsection sidebar -->
 </div>
 <div id="content">
 <!-- section content -->
@@ -156,12 +186,6 @@ __DATA__
 <!-- endloop -->
 </ul>
 <!-- endsection content-->
-</div>
-<div id="sidebar">
-<!-- section navigation in folder -->
-<!-- endsection navigation -->
-<!-- section sidebar -->
-<!-- endsection sidebar -->
 </div>
 </body>
 </html>
