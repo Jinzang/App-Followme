@@ -3,99 +3,36 @@
 use strict;
 use lib '../lib';
 
-use IO::File;
 use Getopt::Long;
-use App::Followme qw(configure_followme followme);
+use App::Followme::Update;
+use App::Followme::Initialize qw(initialize);
 
-set_options();
-my $dir = shift @ARGV;
+my ($initialize, $help);
+GetOptions('init|i' => \$initialize, 'help|h' => \$help);
 
-read_configuration($dir);
-followme($dir);
+my $filename = shift @ARGV;
+if ($help) {
+    show_help();
+    
+} elsif ($initialize) {
+    initialize($filename);
 
+} else {
+    my $filename = configuration_file();
+    my $updater = App::Followme::Update->new({configuration_file => $filename});
+
+    $updater->run($filename);
+}
 
 #----------------------------------------------------------------------
 # Construct configuration file name
 
 sub configuration_file {
-    my ($dir) = @_;
-    
     my @path = split(/\//, $0);
     my $basename = pop(@path);
     $basename =~ s/[^\.]*$/cfg/;
     
-    @path = split($dir);
-    push(@path, $basename);
-    
-    return join('/', @path);
-}
-
-#----------------------------------------------------------------------
-# Load a module containing the named routine
-
-sub load_module {
-    my ($subroutine) = @_;
-    
-    my @path = split(/::/, $subroutine);
-    pop(@path);
-    
-    if (@path) {
-        my $pkg = join('::', @path);
-        eval "require $pkg" or die "Subroutine not found: $subroutine\n";
-    }
-    
-    return \&$subroutine;
-}
-
-#----------------------------------------------------------------------
-# Read configuration file
-
-sub read_configuration {
-    my ($dir) = @_;
-    $dir = '.' unless defined $dir;
-    
-    my $filename = configuration_file($dir);
-    my $fd = IO::File->new($filename, 'r');
-    return unless $fd;
-
-    while (<$fd>) {
-        my ($line, $comment) = split(/#/, $_, 2);
-        $line =~ s/\s+$//;
-
-        if (length $line) {
-            die "Bad configuration: $line\n" unless $line =~ /=/;
-            my ($name, $value) = split(/\s*=\s*/, $line, 2);
-
-            $value = load_module($value) if $name eq 'page_converter'
-                                         || $name eq 'variable_setter';
-            
-            configure_followme($name, $value) if $value;
-        }
-    }
-
-    close($fd);
-    return;
-}
-
-#----------------------------------------------------------------------
-# Set configuration options from command line flags
-
-sub set_options {
-
-    my ($reindex, $noop, $initialize, $help);
-    GetOptions(
-               'reindex|r' => \$reindex,
-               'noop|n' => \$noop,
-               'init|i' => \$initialize,
-               'help|h' => \$help
-              );
-
-    configure_followme('reindex_option', $reindex);    
-    configure_followme('noop_option', $noop);
-    configure_followme('initialize_option', $initialize);
-
-    show_help() if $help;
-    return;
+    return $basename;
 }
 
 #----------------------------------------------------------------------
@@ -103,22 +40,26 @@ sub set_options {
 
 sub show_help {
     print <<'EOQ';
-Usage: followme [directory]
+
+Usage: followme [file or directory]
 
 Update a static website after changes. Constant portions of each page are
 updated to match, text files are converted to html, and indexes are created
 for new files in the archive.
 
-The script is run on the directory passed as its argument. If no argument is
-given, it is run on the current directory.
+The script is run on the directory or file passed as its argument. If no
+argument is given, it is run on the current directory.
+
+If a file is passed, the script is run on the directory the file is in. In
+addition, the script is run in quick mode, meaning that only the directory
+the file is in is checked for changes. Otherwise not only that directory, but
+all directories below it are checked.
 
 Options:
 
 -h --help    print this help
--i --init    copy default templates to directory
--n --noop    print files to be changed without changing them
--r --reindex recreate all index files in archive
+-i --init    copy default templates and configurations to directory
 
 EOQ
-    exit;
+    return;
 }

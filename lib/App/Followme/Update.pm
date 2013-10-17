@@ -13,7 +13,6 @@ use Clone qw(clone);
 use File::Spec::Functions qw(rel2abs splitdir catfile no_upwards rootdir updir);
 
 use App::Followme::Common qw(top_directory);
-use App::Followme::Initialize qw(initialize);
 
 our $VERSION = "0.90";
 
@@ -46,17 +45,12 @@ sub parameters {
 # Perform all updates on the directory
 
 sub run {
-    my ($self, $directory, $initialize) = @_;
+    my ($self, $filename) = @_;
 
-    $directory = $self->set_directory($directory);    
+    my $directory = $self->set_directory($filename);    
+    my $configuration = $self->initialize_configuration($directory);
+    $self->update_folder($directory, $configuration);
 
-    if ($initialize) {
-        initialize($directory);
-    } else {
-        my $configuration = $self->initialize_configuration($directory);
-        $self->update_folder($directory, $configuration);
-    }
-    
     return;
 }
 
@@ -172,12 +166,12 @@ sub set_configuration {
 # If name passed is not directory, set a sensible default
 
 sub set_directory {
-    my ($self, $directory) = @_;
+    my ($self, $filename) = @_;
     
-    if (defined $directory) {
-        if (! -d $directory) {
-            my $file;
-            ($directory, $file) = $self->split_filename($directory);
+    my ($directory, $file);
+    if (defined $filename) {
+        if (! -d $filename) {
+            ($directory, $file) = $self->split_filename($filename);
             $self->{quick_update} = 1;
         }
         

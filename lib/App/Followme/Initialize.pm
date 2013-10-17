@@ -3,6 +3,7 @@ use 5.008005;
 use strict;
 use warnings;
 
+use Cwd;
 use IO::File;
 use File::Spec::Functions qw(splitdir catfile);
 
@@ -18,12 +19,13 @@ our @EXPORT_OK = qw(initialize);
 
 sub initialize {
     my ($directory) = @_;
-
+    chdir($directory) if defined $directory;
+    
     for (;;) {
         my ($file, $text) = next_file();
         last unless defined $file;
         
-        copy_file($file, $text, $directory);
+        copy_file($file, $text);
     }
     
     return;
@@ -33,11 +35,9 @@ sub initialize {
 # Create a copy of the input file
 
 sub copy_file {
-    my ($file, $text, $directory) = @_;
+    my ($file, $text) = @_;
 
-    my @dirs;    
-    push(@dirs, splitdir($directory)) if $directory;
-    push(@dirs, split(/\//, $file));
+    my @dirs = split(/\//, $file);
     my $base = pop(@dirs);
     
     my $path = '.';
