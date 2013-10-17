@@ -49,7 +49,7 @@ sub run {
     my ($self) = @_;
 
     if ($self->changed_directory()) {
-        eval {create_an_index()};
+        eval {$self->create_an_index()};
         warn "$self->{index_file}: $@" if $@;
     }
     
