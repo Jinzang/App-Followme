@@ -53,7 +53,6 @@ sub copy_file {
     return if -e $path;    
 
     my $out = IO::File->new($path, 'w') or die "Can't write $path";
-    chomp $text;
     print $out $text;        
     close($out);
     

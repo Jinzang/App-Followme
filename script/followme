@@ -1,7 +1,8 @@
 #!/usr/bin/perl
 
 use strict;
-use lib '../lib';
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
 
 use Getopt::Long;
 use App::Followme::Update;
@@ -18,8 +19,8 @@ if ($help) {
     initialize($filename);
 
 } else {
-    my $filename = configuration_file();
-    my $updater = App::Followme::Update->new({configuration_file => $filename});
+    my $config = configuration_file();
+    my $updater = App::Followme::Update->new({configuration_file => $config});
 
     $updater->run($filename);
 }
@@ -30,7 +31,7 @@ if ($help) {
 sub configuration_file {
     my @path = split(/\//, $0);
     my $basename = pop(@path);
-    $basename =~ s/[^\.]*$/cfg/;
+    $basename .= '.cfg';
     
     return $basename;
 }
