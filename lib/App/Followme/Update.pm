@@ -125,21 +125,19 @@ sub initialize_configuration {
 sub load_modules {
     my ($self, $configuration) = @_;
 
-    if (exists $configuration->{module}) {
-        foreach (reverse @{$configuration->{module}}) {
-            last if ref $_;
-            
-            my $module = $_;
-            eval "require $module" or die "Module not found: $module\n";
-    
-            $configuration->{base_directory} = getcwd();
-            my %parameters = $self->update_parameters($module, $configuration);
-            my $obj = $module->new(\%parameters);
+    foreach (reverse @{$configuration->{module}}) {
+        last if ref $_;
+        
+        my $module = $_;
+        eval "require $module" or die "Module not found: $module\n";
 
-            $_ = $obj;
-        }
+        $configuration->{base_directory} = getcwd();
+        my %parameters = $self->update_parameters($module, $configuration);
+        my $obj = $module->new(\%parameters);
+
+        $_ = $obj;
     }
-    
+
     return;
 }
 
@@ -249,22 +247,20 @@ sub update_folder {
     # Run the modules mentioned in the configuration
     # Run any that return true on the subdirectories
     
-    if (exists $configuration->{module}) {
-        my @modules;
-        foreach my $module (@{$configuration->{module}}) {
-            push(@modules, $module) if $module->run();
-            chdir($directory);
-        }
+    my @modules;
+    foreach my $module (@{$configuration->{module}}) {
+        push(@modules, $module) if $module->run();
+        chdir($directory);
+    }
+
+    # Recurse on the subdirectories running the filtered list of modules
     
-        # Recurse on the subdirectories running the filtered list of modules
-        
-        if (@modules) {
-            $configuration->{module} = \@modules;
-            my @subdirectories = $self->get_subdirectories();
-        
-            foreach my $subdirectory (@subdirectories) {
-                $self->update_folder($subdirectory, $configuration);
-            }
+    if (@modules) {
+        $configuration->{module} = \@modules;
+        my @subdirectories = $self->get_subdirectories();
+    
+        foreach my $subdirectory (@subdirectories) {
+            $self->update_folder($subdirectory, $configuration);
         }
     }
 
