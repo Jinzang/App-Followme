@@ -65,11 +65,11 @@ sub find_configuration {
     my @configuration_files;
 
     for (;;) {
+        chdir(updir());
+        last if getcwd() eq $root_dir;
+
         push(@configuration_files, rel2abs($self->{configuration_file}))
             if -e $self->{configuration_file};
-
-        last if getcwd() eq $root_dir;
-        chdir(updir());
     }
     
     chdir($directory);
@@ -249,20 +249,22 @@ sub update_folder {
     # Run the modules mentioned in the configuration
     # Run any that return true on the subdirectories
     
-    my @modules;
-    foreach my $module (@{$configuration->{module}}) {
-        push(@modules, $module) if $module->run();
-        chdir($directory);
-    }
-
-    # Recurse on the subdirectories running the filtered list of modules
+    if (exists $configuration->{module}) {
+        my @modules;
+        foreach my $module (@{$configuration->{module}}) {
+            push(@modules, $module) if $module->run();
+            chdir($directory);
+        }
     
-    if (@modules) {
-        $configuration->{module} = \@modules;
-        my @subdirectories = $self->get_subdirectories();
-    
-        foreach my $subdirectory (@subdirectories) {
-            $self->update_folder($subdirectory, $configuration);
+        # Recurse on the subdirectories running the filtered list of modules
+        
+        if (@modules) {
+            $configuration->{module} = \@modules;
+            my @subdirectories = $self->get_subdirectories();
+        
+            foreach my $subdirectory (@subdirectories) {
+                $self->update_folder($subdirectory, $configuration);
+            }
         }
     }
 
