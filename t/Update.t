@@ -2,7 +2,7 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 21;
+use Test::More tests => 20;
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
 #----------------------------------------------------------------------
@@ -54,7 +54,7 @@ do {
 # Test update configuration
 
 do {
-    my $configuration = {hash => {}, array => []};
+    my $configuration = {hash => {}, array => [], module => []};
     my $up = App::Followme::Update->new({});
 
     $up->set_configuration($configuration, 'scalar', 'one');
@@ -122,12 +122,12 @@ do {
     my $top_dir = App::Followme::Common::top_directory();
     is($top_dir, "$test_dir/level1", 'Set top directory'); # test 10
     
-    is($configuration->{bottom}, $levels[5],
+    is($configuration->{bottom}, $levels[4],
        'Initialize configuration variable'); # test 11
 
-    foreach my $i (1..5) {
+    foreach my $i (1..4) {
         is($configuration->{"level$i"}, $levels[$i],
-           "Initialize configuration level $i"); # test 12-16
+           "Initialize configuration level $i"); # test 12-15
     }
 };
 
@@ -153,6 +153,6 @@ do {
             $hash{$name} = $value;
         }
         close($fd);
-        is($hash{bottom}, $level, "Update folder level$i"); # tests 17-21
+        is($hash{bottom}, $level, "Update folder level$i"); # tests 16-20
     }
 };
