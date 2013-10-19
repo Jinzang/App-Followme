@@ -187,7 +187,8 @@ EOQ
 
 sub exclude_file {
     my ($exclude_files, $filename) = @_;
-
+    return unless $exclude_files;
+    
     my $dir;
     ($dir, $filename) = split_filename($filename);
     my @excluded_files = split(/\s*,\s*/, $exclude_files);
