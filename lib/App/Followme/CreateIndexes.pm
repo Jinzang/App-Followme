@@ -8,10 +8,10 @@ use lib '../..';
 use Cwd;
 use IO::Dir;
 use File::Spec::Functions qw(abs2rel splitdir catfile no_upwards);
-
-use App::Followme::Common qw(compile_template make_template read_page 
-                             set_variables sort_by_name top_directory
-                             write_page);
+ 
+use App::Followme::Common qw(compile_template exclude_file make_template  
+                             read_page set_variables sort_by_name  
+                             split_filename top_directory write_page);
 
 our $VERSION = "0.90";
 
@@ -38,6 +38,7 @@ sub parameters {
             include_directories => 1,
             index_file => 'index.html',
             include_files => '*.html',
+            exclude_files => 'index.html',
             index_template => catfile('templates', 'index.htm'),
            );
 }
@@ -108,12 +109,13 @@ sub find_directories {
     my @filenames;
     my $index_name = "index.$self->{web_extension}";
     
-    while (defined (my $file = $dd->read())) {                   
+    while (defined (my $file = $dd->read())) {
+        next unless -d $file && no_upwards($file);
         push(@filenames, catfile($file, $index_name));
     }
     
     $dd->close;
-    return sort_by_name(no_upwards(@filenames));
+    return sort_by_name(@filenames);
 }
 
 #----------------------------------------------------------------------
@@ -124,6 +126,8 @@ sub get_file_data {
     
     my @loop_data;
     foreach my $filename (@filenames) {
+        next if exclude_file($self->{exclude_files}, $filename);
+
         my $data = set_variables($filename,
                                  $self->{web_extension},
                                  $self->{absolute});
@@ -151,8 +155,6 @@ sub index_data {
     my @patterns = split(' ', $self->{include_files});
     foreach my $pattern (@patterns) {
         @filenames = sort_by_name(glob($pattern));
-        @filenames = grep {$_ ne $self->{index_file}} @filenames;
-        
         push(@loop_data, $self->get_file_data(@filenames));
     }
 
@@ -225,6 +227,10 @@ The following fields in the configuration file are used:
 =item absolute
 
 If true, urls in a page will be absolute
+
+=item exclude_files
+
+One or more filenames or patterns to exclude from the index
 
 =item include_directories
 

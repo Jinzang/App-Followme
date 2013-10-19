@@ -12,7 +12,7 @@ use IO::File;
 use Clone qw(clone);
 use File::Spec::Functions qw(rel2abs splitdir catfile no_upwards rootdir updir);
 
-use App::Followme::Common qw(top_directory);
+use App::Followme::Common qw(exclude_file split_filename top_directory);
 
 our $VERSION = "0.90";
 
@@ -37,6 +37,7 @@ sub parameters {
     
     return (
             configuration_file => 'followme.cfg',
+            exclude_folders => 'templates',
             quick_update => 0,
             );
 }
@@ -105,7 +106,7 @@ sub initialize_configuration {
     $configuration->{module} = [];
 
     foreach my $filename ($self->find_configuration($directory)) {
-        my ($dir, $file) = $self->split_filename($filename);
+        my ($dir, $file) = split_filename($filename);
         $top_dir ||= $dir;
         chdir($dir);
         
@@ -169,7 +170,7 @@ sub set_directory {
     my ($directory, $file);
     if (defined $filename) {
         if (! -d $filename) {
-            ($directory, $file) = $self->split_filename($filename);
+            ($directory, $file) = split_filename($filename);
             $self->{quick_update} = 1;
         }
         
@@ -178,19 +179,6 @@ sub set_directory {
     }
 
     return $directory;
-}
-
-#----------------------------------------------------------------------
-# Split filename from directory
-
-sub split_filename {
-    my ($self, $filename) = @_;
-    
-    my @path = splitdir($filename);
-    my $file = pop(@path);
-    my $dir = catfile(@path);
-    
-    return ($dir, $file);
 }
 
 #----------------------------------------------------------------------
@@ -260,6 +248,7 @@ sub update_folder {
         my @subdirectories = $self->get_subdirectories();
     
         foreach my $subdirectory (@subdirectories) {
+            next if exclude_file($self->{exclude_folders}, $subdirectory);
             $self->update_folder($subdirectory, $configuration);
         }
     }

@@ -8,8 +8,9 @@ use lib '../..';
 use Cwd;
 use IO::Dir;
 use File::Spec::Functions qw(abs2rel splitdir catfile no_upwards);
-use App::Followme::Common qw(compile_template make_template parse_page read_page
-                             set_variables sort_by_date write_page);
+use App::Followme::Common qw(compile_template exclude_file make_template
+                             parse_page read_page set_variables sort_by_date
+                             split_filename write_page);
 
 our $VERSION = "0.90";
 
@@ -36,6 +37,7 @@ sub parameters {
             news_index_length => 5,
             web_extension => 'html',
             body_tag => 'content',
+            exclude_files => 'index.html',
             news_template => catfile('templates', 'news.htm'),
            );
 }
@@ -81,7 +83,7 @@ sub more_recent_files {
     my $visitor = visitor_function();
     
     while (defined (my $filename = $visitor->($self->{web_extension}))) {
-        next if $filename eq $self->{news_file};
+        next if exclude_file($self->{exclude_files}, $filename);
         
         my @stats = stat($filename);
         if (@dated_files < $limit || $stats[9] > $dated_files[0]->[0]) {
@@ -243,6 +245,10 @@ The the name of the tag pair containing the body text.
 
 The directory containig the configuration file. This directory is searched to
 create the index.
+
+=item exclude_files
+
+One or more filenames or patterns to exclude from the index
 
 =item news_file
 

@@ -99,6 +99,7 @@ module = App::Followme::CreateIndexes
 module = App::Followme::CreateNews
 index_file = archive.html
 news_file = index.html
+exclude_files = archive.html,index.html
 #--%X--%X templates/page.htm
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>

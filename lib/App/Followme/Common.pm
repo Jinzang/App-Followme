@@ -11,9 +11,10 @@ use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile updir);
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(build_date build_title build_url compile_template
-                 find_prototype make_template parse_page read_page 
+                 exclude_file find_prototype make_template parse_page read_page 
                  set_variables sort_by_date sort_by_depth sort_by_name 
-                 top_directory unchanged_prototype update_page write_page);
+                 split_filename top_directory unchanged_prototype update_page
+                 write_page);
 
 our $VERSION = "0.90";
 our $top_directory;
@@ -179,6 +180,30 @@ EOQ
     my $sub = eval ($code);
     die $@ unless $sub;
     return $sub;
+}
+
+#----------------------------------------------------------------------
+# Return true if this is an excluded file
+
+sub exclude_file {
+    my ($exclude_files, $filename) = @_;
+
+    my $dir;
+    ($dir, $filename) = split_filename($filename);
+    my @excluded_files = split(/\s*,\s*/, $exclude_files);
+    
+    foreach my $excluded_file (@excluded_files) {
+        if ($excluded_file =~ /\*\?/) {
+            foreach my $file (glob($excluded_file)) {
+                return 1 if $file eq $filename;
+            }
+
+        } else {
+            return 1 if $excluded_file eq $filename;
+        }
+    }
+    
+    return;
 }
 
 #----------------------------------------------------------------------
@@ -456,6 +481,19 @@ sub sort_by_name {
 }
 
 #----------------------------------------------------------------------
+# Split filename from directory
+
+sub split_filename {
+    my ($filename) = @_;
+    
+    my @path = splitdir($filename);
+    my $file = pop(@path);
+    my $dir = catfile(@path);
+    
+    return ($dir, $file);
+}
+
+#----------------------------------------------------------------------
 # Get / set the top directory of the website
 
 sub top_directory {
@@ -611,6 +649,10 @@ hash will be interpolated into the text. Loop comments look like
 
 There should be only one pair of loop comments in the template. 
 
+=item $flag = exclude_file($exclude_files, $filename);
+
+Return true if filename is in a list of excluded files
+
 =item $blocks = parse_page($page, $decorated);
 
 Extract blocks from a web page. Page is a string containing the web page. Decorates
@@ -640,6 +682,10 @@ have the same depth, they are sorted by name.
 =item @filenames = sort_by_name(@fienames);
 
 Sort files by name, except the index file is placed first.
+
+=item ($dir, $file) = split_filename($filename);
+
+Split a filename into directory and bare filename.
 
 =item $top_directory = top_directory($directory);
 
