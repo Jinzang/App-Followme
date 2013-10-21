@@ -68,7 +68,9 @@ sub create_news_index {
     
     my $sub = compile_template($template);
     my $page = $sub->($data);
-    write_page($self->{news_file}, $page);
+
+    my $news_file = $self->news_file_name();
+    write_page($news_file, $page);
 
     return;
 }
@@ -96,6 +98,18 @@ sub more_recent_files {
     my @recent_files = map {$_->[1]} @dated_files;
     @recent_files = reverse @recent_files if @recent_files > 1;
     return @recent_files;
+}
+
+#----------------------------------------------------------------------
+# Construct news file name. Name is relative to the base directory
+
+sub news_file_name {
+    my ($self) = @_;
+
+    my @dirs = splitdir($self->{base_directory});
+    push(@dirs, splitdir($self->{news_file}));
+    
+    return catfile(@dirs);  
 }
 
 #----------------------------------------------------------------------

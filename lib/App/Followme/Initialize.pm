@@ -94,12 +94,12 @@ __DATA__
 #--%X--%X followme.cfg
 module = App::Followme::FormatPages
 module = App::Followme::ConvertPages
-#--%X--%X blog/followme.cfg
-module = App::Followme::CreateIndexes
+#--%X--%X archive/followme.cfg
 module = App::Followme::CreateNews
-index_file = archive.html
-news_file = index.html
-exclude_files = archive.html,index.html
+module = App::Followme::CreateIndexes
+index_file = index.html
+news_file = ../blog.html
+exclude_files = index.html
 #--%X--%X templates/page.htm
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
