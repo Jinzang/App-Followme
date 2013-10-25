@@ -419,15 +419,15 @@ do {
     is($title, $title_ok, 'Build directory title'); # test 35
     
     my $url = App::Followme::Common::build_url($text_name, 'html', 0);
-    my $url_ok = 'watch/this-is-only-a-test.html';
+    my $url_ok = '/watch/this-is-only-a-test.html';
     is($url, $url_ok, 'Build file url'); # test 36
 
     mkdir('watch');
-    $url = App::Followme::Common::build_url('watch', 'html', 0);
-    is($url, 'watch/index.html', 'Build directory url'); #test 37
+    $url = App::Followme::Common::build_url('watch', 'html');
+    is($url, '/watch/index.html', 'Build directory url'); #test 37
        
-    $url = App::Followme::Common::build_url('watch', 'html', 1);
-    is($url, '/watch/index.html', 'Build absolute url'); #test 38
+    $url = App::Followme::Common::make_relative('/watch/index.html');
+    is($url, 'watch/index.html', 'Make relative'); #test 38
        
     my $time = 1;
     my $date = App::Followme::Common::build_date(time());

@@ -32,7 +32,7 @@ do {
         push(@texts, $text);
     }
     
-    my @files_ok = qw(followme.cfg blog/followme.cfg 
+    my @files_ok = qw(followme.cfg archive/followme.cfg 
                       templates/page.htm templates/news.htm
                       templates/index.htm);
 

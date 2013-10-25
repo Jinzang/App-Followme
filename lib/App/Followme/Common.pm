@@ -11,10 +11,10 @@ use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile updir);
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(build_date build_title build_url compile_template
-                 exclude_file find_prototype make_template parse_page read_page 
-                 set_variables sort_by_date sort_by_depth sort_by_name 
-                 split_filename top_directory unchanged_prototype update_page
-                 write_page);
+                 exclude_file find_prototype make_relative make_template 
+                 parse_page read_page set_variables sort_by_date sort_by_depth  
+                 sort_by_name split_filename top_directory unchanged_prototype 
+                 update_page write_page);
 
 our $VERSION = "0.90";
 our $top_directory;
@@ -94,22 +94,17 @@ sub build_title {
 # Build a url from a filename
 
 sub build_url {
-    my ($filename, $web_extension, $absolute) = @_;
+    my ($filename, $web_extension) = @_;
 
     $filename = catfile($filename, 'index.html') if -d $filename;
     
-    if ($absolute) {
-        $filename = rel2abs($filename);
-        $filename = abs2rel($filename, $top_directory);
+    $filename = rel2abs($filename);
+    $filename = abs2rel($filename, $top_directory);
 
-    } else {
-        $filename = abs2rel($filename);
-    }
-    
     my $url = join('/', splitdir($filename));
-    $url = "/$url" if $absolute;
+    $url = "/$url";
     
-    $url =~ s/\.[^\.]*$/.html/;
+    $url =~ s/\.[^\.]*$/.$web_extension/;
     return $url;
 }
 
@@ -253,6 +248,23 @@ sub get_level {
     }
 
     return $level;  
+}
+
+#----------------------------------------------------------------------
+# Make url relative to a filename
+
+sub make_relative {
+    my ($url, $filename) = @_;
+    
+    my $dir;
+    ($dir, $filename) = split_filename($filename);
+    $dir = rel2abs($dir);
+    
+    $url =~ s/^\///;
+    $url = rel2abs($url, top_directory());
+    $url = abs2rel($url, $dir);
+    
+    return $url;
 }
 
 #----------------------------------------------------------------------
@@ -408,7 +420,7 @@ sub read_page {
 # Set the variables used to construct a page
 
 sub set_variables {
-    my ($filename, $web_extension, $absolute) = @_;
+    my ($filename, $web_extension) = @_;
 
     my $time;
     if (-e $filename) {
@@ -420,7 +432,7 @@ sub set_variables {
     
     my $data = build_date($time);
     $data->{title} = build_title($filename);
-    $data->{url} = build_url($filename, $web_extension, $absolute);
+    $data->{url} = build_url($filename, $web_extension);
     
     return $data;
 }
@@ -618,11 +630,10 @@ The title of the page is derived from the file name by removing the filename
 extension, removing any leading digits,replacing dashes with spaces, and
 capitalizing the first character of each word.
 
-=item $url = build_url($filename, $web_extension, $absolute);
+=item $url = build_url($filename, $web_extension);
 
 Build the url that of a web page from its filename. Web extension is a string
-containing the extension html pages have . Absolute is a flag indicating if the
-url is absolute or relative to the current web page.
+containing the extension html pages have.
 
 =item my $sub = compile_template($template, $variable);
 
@@ -654,6 +665,9 @@ There should be only one pair of loop comments in the template.
 
 Return true if filename is in a list of excluded files
 
+=item $url = make_relative($url, $filename);
+
+
 =item $blocks = parse_page($page, $decorated);
 
 Extract blocks from a web page. Page is a string containing the web page. Decorates
@@ -665,7 +679,7 @@ Read a fie into a string. An the entire file is read from a string, there is no
 line at a time IO. This is because files are typically small and the parsing
 done is not line oriented. 
 
-=item $data = set_variables($filename);
+=item $data = set_variables($filename, $web_extension);
 
 Create title and date variables from the filename and the modification date
 of the file.

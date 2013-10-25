@@ -7,7 +7,7 @@ use lib '../..';
 
 use Cwd;
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
-use App::Followme::Common qw(compile_template make_template
+use App::Followme::Common qw(compile_template make_relative make_template
                              read_page write_page set_variables);
 
 our $VERSION = "0.90";
@@ -66,9 +66,10 @@ sub convert_a_file {
     my $text = read_page($filename);
     die "Couldn't read\n" unless defined $text;
 
-    my $data = set_variables($filename,
-                             $self->{web_extension},
-                             $self->{absolute});
+    my $data = set_variables($filename, $self->{web_extension});
+    $data->{url} = make_relative($data->{url}, $filename)
+                   unless $self->{absolute};
+
     $data->{body} = $self->convert_text($text);
     my $page = $sub->($data);
 

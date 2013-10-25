@@ -8,9 +8,9 @@ use lib '../..';
 use Cwd;
 use IO::Dir;
 use File::Spec::Functions qw(abs2rel splitdir catfile no_upwards);
-use App::Followme::Common qw(compile_template exclude_file make_template
-                             parse_page read_page set_variables sort_by_date
-                             split_filename write_page);
+use App::Followme::Common qw(compile_template exclude_file make_relative 
+                             make_template parse_page read_page set_variables 
+                             sort_by_date split_filename write_page);
 
 our $VERSION = "0.90";
 
@@ -120,17 +120,17 @@ sub recent_news_data {
 
     my @loop;
     my $limit = $self->{news_index_length};
-    my $data = set_variables($self->{news_file},
-                             $self->{web_extension},
-                             $self->{absolute});
-
+    my $data = set_variables($self->{news_file}, $self->{web_extension});
+    $data->{url} = make_relative($data->{url}, $self->{news_file})
+                   unless $self->{absolute};
+    
     my @filenames = $self->more_recent_files($limit);
 
     foreach my $filename (@filenames) {
-        my $loopdata = set_variables($filename,
-                                     $self->{web_extension},
-                                     $self->{absolute});
-        
+        my $loopdata = set_variables($filename, $self->{web_extension});
+        $loopdata->{url} = make_relative($loopdata->{url}, $self->{news_file})
+                           unless $self->{absolute};
+
         my $page = read_page($filename);
         my $blocks = parse_page($page);
 

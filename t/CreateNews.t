@@ -178,7 +178,7 @@ EOQ
     is($data->{loop}[2]{body}, $body_ok, "Archive index body"); #test 4
 
     $idx->create_news_index();
-    $page = App::Followme::Common::read_page('blog.html');
+    $page = App::Followme::Common::read_page("$test_dir/blog.html");
     like($page, qr/All about two/, 'Archive index content'); # test 5
     like($page, qr/<a href="one.html">/, 'Archive index link'); # test 6
 };
