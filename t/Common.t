@@ -403,7 +403,9 @@ EOQ
 # Test builders
 
 do {
-
+    App::Followme::Common::top_directory($test_dir);
+    chdir($test_dir);
+    
     my $text_name = catfile('watch','this-is-only-a-test.txt');
     my $page_name = App::Followme::Common::build_page_name($text_name);
     my $page_name_ok = catfile('watch','this-is-only-a-test.html');
@@ -426,7 +428,8 @@ do {
     $url = App::Followme::Common::build_url('watch', 'html');
     is($url, '/watch/index.html', 'Build directory url'); #test 37
        
-    $url = App::Followme::Common::make_relative('/watch/index.html');
+    $url = App::Followme::Common::make_relative('/watch/index.html',
+                                                'index.html');
     is($url, 'watch/index.html', 'Make relative'); #test 38
        
     my $time = 1;

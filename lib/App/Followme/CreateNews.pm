@@ -10,7 +10,7 @@ use IO::Dir;
 use File::Spec::Functions qw(abs2rel splitdir catfile no_upwards);
 use App::Followme::Common qw(compile_template exclude_file make_relative 
                              make_template parse_page read_page set_variables 
-                             sort_by_date split_filename write_page);
+                             sort_by_date write_page);
 
 our $VERSION = "0.90";
 

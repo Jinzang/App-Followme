@@ -11,8 +11,7 @@ use File::Spec::Functions qw(abs2rel splitdir catfile no_upwards);
  
 use App::Followme::Common qw(compile_template exclude_file make_relative 
                              make_template  read_page set_variables  
-                             sort_by_name  split_filename top_directory
-                             write_page);
+                             sort_by_name  top_directory write_page);
 
 our $VERSION = "0.90";
 

@@ -6,7 +6,7 @@ use warnings;
 use Cwd;
 use IO::File;
 use Digest::MD5 qw(md5_hex);
-use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile updir);
+use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile updir no_upwards);
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -258,10 +258,9 @@ sub make_relative {
     
     my $dir;
     ($dir, $filename) = split_filename($filename);
-    $dir = rel2abs($dir);
     
     $url =~ s/^\///;
-    $url = rel2abs($url, top_directory());
+    $url = rel2abs($url, $top_directory);
     $url = abs2rel($url, $dir);
     
     return $url;
@@ -499,11 +498,21 @@ sub sort_by_name {
 sub split_filename {
     my ($filename) = @_;
     
+    $filename = rel2abs($filename);
     my @path = splitdir($filename);
     my $file = pop(@path);
-    my $dir = catfile(@path);
     
-    return ($dir, $file);
+    my @new_path;
+    foreach my $dir (@path) {
+        if (no_upwards($dir)) {
+            push(@new_path, $dir);
+        } else {
+            pop(@new_path);
+        }
+    }
+    
+    my $new_dir = catfile(@new_path);
+    return ($new_dir, $file);
 }
 
 #----------------------------------------------------------------------
