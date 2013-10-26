@@ -145,18 +145,19 @@ sub get_file_data {
 sub index_data {
     my ($self) = @_;        
 
-    my @loop_data = $self->get_file_data($self->{index_file});
-    my $data = shift(@loop_data);
-    
-    my @filenames;
+    my $data = set_variables($self->{index_file}, $self->{web_extension});
+    $data->{url} = make_relative($data->{url}, $self->{index_file})
+        unless $self->{absolute};
+
+    my @loop_data;
     if ($self->{include_directories}) {
-        @filenames = $self->find_directories();
+        my @filenames = $self->find_directories();
         push(@loop_data, $self->get_file_data(@filenames));
     }
 
     my @patterns = split(' ', $self->{include_files});
     foreach my $pattern (@patterns) {
-        @filenames = sort_by_name(glob($pattern));
+        my @filenames = sort_by_name(glob($pattern));
         push(@loop_data, $self->get_file_data(@filenames));
     }
 
