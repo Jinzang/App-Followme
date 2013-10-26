@@ -122,11 +122,11 @@ sub find_directories {
 # Get data for each file
 
 sub get_file_data {
-    my ($self, @filenames) = @_;
+    my ($self, $exclude, @filenames) = @_;
     
     my @loop_data;
     foreach my $filename (@filenames) {
-        next if exclude_file($self->{exclude_files}, $filename);
+        next if $exclude && exclude_file($self->{exclude_files}, $filename);
 
         my $data = set_variables($filename, $self->{web_extension});
         $data->{url} = make_relative($data->{url}, $self->{index_file})
@@ -144,20 +144,21 @@ sub get_file_data {
 sub index_data {
     my ($self) = @_;        
 
-    my $data = set_variables($self->{index_file}, $self->{web_extension});
-    $data->{url} = make_relative($data->{url}, $self->{index_file})
-        unless $self->{absolute};
-
-    my @loop_data;
+    my $exclude = 0;
+    my @loop_data = $self->get_file_data($exclude, $self->{index_file});
+    my $data = shift(@loop_data);
+    
     if ($self->{include_directories}) {
         my @filenames = $self->find_directories();
-        push(@loop_data, $self->get_file_data(@filenames));
+        push(@loop_data, $self->get_file_data($exclude, @filenames));
     }
 
+    $exclude = 1;
     my @patterns = split(' ', $self->{include_files});
+
     foreach my $pattern (@patterns) {
         my @filenames = sort_by_name(glob($pattern));
-        push(@loop_data, $self->get_file_data(@filenames));
+        push(@loop_data, $self->get_file_data($exclude, @filenames));
     }
 
     $data->{loop} = \@loop_data;
