@@ -698,12 +698,12 @@ of the file.
 Sort filenames by modification date, placing the least recently modified
 file first. If two files have the same date, they are sorted by name.
 
-=item @filenames = sort_by_depth(@fienames);
+=item @filenames = sort_by_depth(@filenames);
 
 Sort filenames by directory depth, with least deep files first. If two files
 have the same depth, they are sorted by name.
 
-=item @filenames = sort_by_name(@fienames);
+=item @filenames = sort_by_name(@filenames);
 
 Sort files by name, except the index file is placed first.
 

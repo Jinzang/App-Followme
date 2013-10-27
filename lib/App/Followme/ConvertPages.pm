@@ -184,7 +184,9 @@ The extension of files that are converted to web pages.
 
 =item web_extension
 
-The extension uesd by web pages. The default value is html
+The extension used by web pages. The default value is html
+
+=back
 
 =head1 LICENSE
 

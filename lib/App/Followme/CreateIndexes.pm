@@ -241,7 +241,7 @@ If true, subdirectories will be included in the index
 
 =item include_files
 
-A space delimeted list of expressions used to create the index
+A space delimited list of expressions used to create the index
 
 =item index_file
 

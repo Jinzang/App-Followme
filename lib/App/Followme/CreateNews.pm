@@ -237,9 +237,6 @@ The variables calculated from the modification time are: C<weekday, month,>
 C<monthnum, day, year, hour24, hour, ampm, minute,> and C<second.>
 
 =back
-            news_file => 'index.html',
-            news_index_length => 5,
-
 
 =head1 CONFIGURATION
 
@@ -257,7 +254,7 @@ The the name of the tag pair containing the body text.
 
 =item base_directory
 
-The directory containig the configuration file. This directory is searched to
+The directory containing the configuration file. This directory is searched to
 create the index.
 
 =item exclude_files
@@ -278,7 +275,7 @@ The path to the template file, relative to the top directory.
 
 =item web_extension
 
-The extension used for web pages. Pages with this extension are considerd for
+The extension used for web pages. Pages with this extension are considered for
 inclusion in the index.
 
 =back
