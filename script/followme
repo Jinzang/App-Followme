@@ -20,9 +20,8 @@ if ($help) {
 
 } else {
     my $config = configuration_file();
-    my $updater = App::Followme::Update->new({configuration_file => $config});
-
-    $updater->run($filename);
+    my $app = App::Followme->new({configuration_file => $config});
+    $app->run($filename);
 }
 
 #----------------------------------------------------------------------

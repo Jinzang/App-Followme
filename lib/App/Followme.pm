@@ -1,10 +1,10 @@
-package App::Followme::Update;
+package App::Followme;
 
 use 5.008005;
 use strict;
 use warnings;
 
-use lib '../..';
+use lib '..';
 
 use Cwd;
 use IO::Dir;
@@ -282,13 +282,13 @@ __END__
 
 =head1 NAME
 
-App::Followme::Update - Update a static website
+App::Followme - Update a static website
 
 =head1 SYNOPSIS
 
-    use App::Followme::Update ;
-    my $updater = App::Followme::Update->new($options);
-    $updater->run(shift @ARGV);
+    use App::Followme;
+    my $app = App::Followme->new($configuration);
+    $app->run(shift @ARGV);
 
 =head1 DESCRIPTION
 

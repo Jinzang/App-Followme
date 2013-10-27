@@ -15,7 +15,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
-require App::Followme::Update;
+require App::Followme;
 require App::Followme::Common;
 
 my $test_dir = catdir(@path, 'test');
@@ -27,13 +27,13 @@ chdir $test_dir;
 # Test new and load module
 
 do {
-    my $updater = App::Followme::Update->new({});
-    is(ref $updater, 'App::Followme::Update', 'Create updater'); # test 1
+    my $app = App::Followme->new({});
+    is(ref $app, 'App::Followme', 'Create Followme'); # test 1
    
-    my $configuration = {module => ['App::Followme::Update']};
-    $updater->load_modules($configuration);
+    my $configuration = {module => ['App::Followme']};
+    $app->load_modules($configuration);
     my $module = $configuration->{module}[0];
-    is(ref $module, 'App::Followme::Update', 'Load modules'); # test 2
+    is(ref $module, 'App::Followme', 'Load modules'); # test 2
 };
 
 #----------------------------------------------------------------------
@@ -45,8 +45,8 @@ do {
         mkdir $dir;
     }
     
-    my $up = App::Followme::Update->new({});
-    my @subdirectories = sort $up->get_subdirectories();
+    my $app = App::Followme->new({});
+    my @subdirectories = sort $app->get_subdirectories();
     is_deeply(\@subdirectories, \@dirs, 'Get subdirectories'); # test 3
 };
 
@@ -55,20 +55,20 @@ do {
 
 do {
     my $configuration = {hash => {}, array => [], module => []};
-    my $up = App::Followme::Update->new({});
+    my $app = App::Followme->new({});
 
-    $up->set_configuration($configuration, 'scalar', 'one');
+    $app->set_configuration($configuration, 'scalar', 'one');
     is($configuration->{scalar}, 'one', 'set scalar configuration'); # test 4
 
-    $up->set_configuration($configuration, 'array', 1);
-    $up->set_configuration($configuration, 'array', 2);
-    $up->set_configuration($configuration, 'array', 3);
+    $app->set_configuration($configuration, 'array', 1);
+    $app->set_configuration($configuration, 'array', 2);
+    $app->set_configuration($configuration, 'array', 3);
     is_deeply($configuration->{array}, [1, 2, 3],
               'set array configuration'); # test 5
 
-    $up->set_configuration($configuration, 'hash', 'a');
-    $up->set_configuration($configuration, 'hash', 'b');
-    $up->set_configuration($configuration, 'hash', 'c');
+    $app->set_configuration($configuration, 'hash', 'a');
+    $app->set_configuration($configuration, 'hash', 'b');
+    $app->set_configuration($configuration, 'hash', 'c');
     is_deeply($configuration->{hash}, {a => 1, b => 1, c => 1},
               'set hash configuration'); # test 6
 
@@ -86,7 +86,7 @@ EOQ
     print $fd $source;
     close($fd);
     
-    $configuration = $up->update_configuration($filename, $configuration);
+    $configuration = $app->update_configuration($filename, $configuration);
     is($configuration->{scalar}, 'two', 'update scalar configuration'); # test 7
 
     is_deeply($configuration->{array}, [1, 2, 3, 4],
@@ -116,8 +116,8 @@ do {
         close($fd);
     }
     
-    my $up = App::Followme::Update->new({});
-    my $configuration = $up->initialize_configuration($path);
+    my $app = App::Followme->new({});
+    my $configuration = $app->initialize_configuration($path);
 
     my $top_dir = App::Followme::Common::top_directory();
     is($top_dir, "$test_dir/level1", 'Set top directory'); # test 10
@@ -136,8 +136,8 @@ do {
 
 do {
     my $configuration = {module => ['App::Followme::Mock']};
-    my $up = App::Followme::Update->new($configuration);
-    $up->update_folder("$test_dir/level1", $configuration);
+    my $app = App::Followme->new($configuration);
+    $app->update_folder("$test_dir/level1", $configuration);
 
     my $path = $test_dir;
     foreach my $i (1..5) {
