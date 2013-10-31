@@ -9,7 +9,6 @@ use lib '..';
 use Cwd;
 use IO::Dir;
 use IO::File;
-use Clone qw(clone);
 use File::Spec::Functions qw(rel2abs splitdir catfile no_upwards rootdir updir);
 
 use App::Followme::Common qw(exclude_file split_filename top_directory);
@@ -53,6 +52,36 @@ sub run {
     $self->update_folder($directory, $configuration);
 
     return;
+}
+
+#----------------------------------------------------------------------
+# Perform a deep copy of the configuration
+
+sub copy_config {
+    my ($self, $data) = @_;
+
+    my $copied_data;
+    my $ref = ref $data;
+
+    if ($ref eq 'ARRAY') {
+        my @array;
+        foreach my $item (@$data) {
+            push(@array, $self->copy_config($item));
+        }
+        $copied_data = \@array;
+
+    } elsif ($ref eq 'HASH') {
+        my %hash;
+        while (my ($name, $value) = each(%$data)) {
+            $hash{$name} = $self->copy_config($value);
+        }
+        $copied_data = \%hash;
+        
+    } else {
+        $copied_data = $data;
+    }
+    
+    return $copied_data;
 }
 
 #----------------------------------------------------------------------
@@ -221,7 +250,7 @@ sub update_folder {
     my ($self, $directory, $configuration) = @_;
     
     # Copy the configuration so all changes are local to this sub
-    $configuration = clone($configuration);
+    $configuration = $self->copy_config($configuration);
 
     # Save the current directory so we can return when finished
     my $current_directory = getcwd();
