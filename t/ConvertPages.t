@@ -81,6 +81,7 @@ EOQ
     App::Followme::Common::write_page('template.htm', $template);
 
     foreach my $count (qw(four three two one)) {
+        sleep(1);
         my $output = $text;
         $output =~ s/%%/$count/g;
         
