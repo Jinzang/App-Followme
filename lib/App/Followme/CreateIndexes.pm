@@ -10,8 +10,8 @@ use IO::Dir;
 use File::Spec::Functions qw(abs2rel splitdir catfile no_upwards);
  
 use App::Followme::Common qw(compile_template exclude_file make_relative 
-                             make_template  read_page set_variables  
-                             sort_by_name  top_directory write_page);
+                             make_template read_page set_variables  
+                             sort_by_name top_directory write_page);
 
 our $VERSION = "0.90";
 
@@ -128,10 +128,11 @@ sub get_file_data {
     foreach my $filename (@filenames) {
         next if $exclude && exclude_file($self->{exclude_files}, $filename);
 
-        my $data = set_variables($filename, $self->{web_extension});
-        $data->{url} = make_relative($data->{url}, $self->{index_file})
-            unless $self->{absolute};
-
+        my $data = $self->{absolute} ?
+                   set_variables($filename, $self->{web_extension}) :
+                   set_variables($filename, $self->{web_extension},
+                                 $self->{index_file});
+                   
         push(@loop_data, $data); 
     }
 

@@ -120,17 +120,20 @@ sub recent_news_data {
 
     my @loop;
     my $limit = $self->{news_index_length};
-    my $data = set_variables($self->{news_file}, $self->{web_extension});
-    $data->{url} = make_relative($data->{url}, $self->{news_file})
-                   unless $self->{absolute};
-    
+
+    my $data = $self->{absolute} ?
+               set_variables($self->{news_file}, $self->{web_extension}) :
+               set_variables($self->{news_file}, $self->{web_extension},
+                             $self->{news_file});
+               
     my @filenames = $self->more_recent_files($limit);
 
     foreach my $filename (@filenames) {
-        my $loopdata = set_variables($filename, $self->{web_extension});
-        $loopdata->{url} = make_relative($loopdata->{url}, $self->{news_file})
-                           unless $self->{absolute};
-
+        my $loopdata = $self->{absolute} ?
+                       set_variables($filename, $self->{web_extension}) :
+                       set_variables($filename, $self->{web_extension},
+                                     $self->{news_file});
+                       
         my $page = read_page($filename);
         my $blocks = parse_page($page);
 

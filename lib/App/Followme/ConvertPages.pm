@@ -66,9 +66,9 @@ sub convert_a_file {
     my $text = read_page($filename);
     die "Couldn't read\n" unless defined $text;
 
-    my $data = set_variables($filename, $self->{web_extension});
-    $data->{url} = make_relative($data->{url}, $filename)
-                   unless $self->{absolute};
+    my $data = $self->{absolute} ?
+               set_variables($filename, $self->{web_extension}) :
+               set_variables($filename, $self->{web_extension}, $filename);
 
     $data->{body} = $self->convert_text($text);
     my $page = $sub->($data);
