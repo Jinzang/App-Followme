@@ -10,7 +10,7 @@ use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
 use App::Followme::Common qw(compile_template make_relative make_template
                              read_page write_page set_variables);
 
-our $VERSION = "0.90";
+our $VERSION = "0.91";
 
 #----------------------------------------------------------------------
 # Create a new object to update a website

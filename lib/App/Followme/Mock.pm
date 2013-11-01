@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use IO::File;
-our $VERSION = "0.90";
+our $VERSION = "0.91";
 
 #----------------------------------------------------------------------
 # Create a new object to update a website

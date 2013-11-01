@@ -16,7 +16,7 @@ our @EXPORT_OK = qw(build_date build_title build_url compile_template
                  sort_by_name split_filename top_directory unchanged_prototype 
                  update_page write_page);
 
-our $VERSION = "0.90";
+our $VERSION = "0.91";
 our $top_directory;
 
 use constant MONTHS => [qw(January February March April May June July

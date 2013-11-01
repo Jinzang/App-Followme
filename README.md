@@ -26,11 +26,14 @@ configuration files are combined with those set in the files in directories
 above it.
 
 The module parameter contains the name of a module to be run on the directory
-containing the configuration file and possibly its subdirectories. It must have
-new and run methods. An object is created by calling the new method with the
-configuration. The run method is then called without arguments. The run method
-returns a value, which if true indicates that module should be run in the
-subdirectories of the current directory.
+containing the configuration file and possibly its subdirectories. There may be
+more than one module parameter in a module file. They are run in order, starting
+with the module in the topmost configuration file. The module to be run must
+have new and run methods. The module is created and run from the directory
+containing the configuration file. The object is created by calling the new
+method with the configuration. The run method is then called without arguments.
+The run method returns a value, which if true indicates that module should be
+run in the subdirectories of the current directory.
 
 # LICENSE
 
