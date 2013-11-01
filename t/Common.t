@@ -420,17 +420,16 @@ do {
     $title_ok = 'Watch';
     is($title, $title_ok, 'Build directory title'); # test 35
     
-    my $url = App::Followme::Common::build_url($text_name, 'html', 0);
+    my $url = App::Followme::Common::build_url($text_name, 'html');
     my $url_ok = '/watch/this-is-only-a-test.html';
     is($url, $url_ok, 'Build file url'); # test 36
 
     mkdir('watch');
     $url = App::Followme::Common::build_url('watch', 'html');
-    is($url, '/watch/index.html', 'Build directory url'); #test 37
+    is($url, '/watch/index.html', 'Build absolute directory url'); #test 37
        
-    $url = App::Followme::Common::make_relative('/watch/index.html',
-                                                'index.html');
-    is($url, 'watch/index.html', 'Make relative'); #test 38
+    $url = App::Followme::Common::build_url('watch', 'html', 'index.html');
+    is($url, 'watch/index.html', 'Build relative directory url'); #test 38
        
     my $time = 1;
     my $date = App::Followme::Common::build_date(time());

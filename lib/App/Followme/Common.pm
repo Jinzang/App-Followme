@@ -94,15 +94,24 @@ sub build_title {
 # Build a url from a filename
 
 sub build_url {
-    my ($filename, $web_extension) = @_;
+    my ($filename, $web_extension, $relative_to) = @_;
 
+    my $directory;
+    if (defined $relative_to) {
+        my $file;
+        ($directory, $file) = split_filename($relative_to);
+
+    } else {
+        $directory = $top_directory;
+    }
+    
     $filename = catfile($filename, 'index.html') if -d $filename;
     
     $filename = rel2abs($filename);
-    $filename = abs2rel($filename, $top_directory);
+    $filename = abs2rel($filename, $directory);
 
     my $url = join('/', splitdir($filename));
-    $url = "/$url";
+    $url = "/$url" unless defined $relative_to;
     
     $url =~ s/\.[^\.]*$/.$web_extension/;
     return $url;
@@ -248,22 +257,6 @@ sub get_level {
     }
 
     return $level;  
-}
-
-#----------------------------------------------------------------------
-# Make url relative to a filename
-
-sub make_relative {
-    my ($url, $filename) = @_;
-    
-    my $dir;
-    ($dir, $filename) = split_filename($filename);
-    
-    $url =~ s/^\///;
-    $url = rel2abs($url, $top_directory);
-    $url = abs2rel($url, $dir);
-    
-    return $url;
 }
 
 #----------------------------------------------------------------------
@@ -419,7 +412,7 @@ sub read_page {
 # Set the variables used to construct a page
 
 sub set_variables {
-    my ($filename, $web_extension) = @_;
+    my ($filename, $web_extension, $relative_to) = @_;
 
     my $time;
     if (-e $filename) {
@@ -431,7 +424,7 @@ sub set_variables {
     
     my $data = build_date($time);
     $data->{title} = build_title($filename);
-    $data->{url} = build_url($filename, $web_extension);
+    $data->{url} = build_url($filename, $web_extension, $relative_to);
     
     return $data;
 }
@@ -639,10 +632,11 @@ The title of the page is derived from the file name by removing the filename
 extension, removing any leading digits,replacing dashes with spaces, and
 capitalizing the first character of each word.
 
-=item $url = build_url($filename, $web_extension);
+=item $url = build_url($filename, $web_extension, $relative_to);
 
 Build the url that of a web page from its filename. Web extension is a string
-containing the extension html pages have.
+containing the extension html pages have. Relative_to is an optional filename
+that the url is relative_to. If it is unset, the url is absolute.
 
 =item my $sub = compile_template($template, $variable);
 
@@ -674,9 +668,6 @@ There should be only one pair of loop comments in the template.
 
 Return true if filename is in a list of excluded files
 
-=item $url = make_relative($url, $filename);
-
-
 =item $blocks = parse_page($page, $decorated);
 
 Extract blocks from a web page. Page is a string containing the web page. Decorates
@@ -688,9 +679,9 @@ Read a fie into a string. An the entire file is read from a string, there is no
 line at a time IO. This is because files are typically small and the parsing
 done is not line oriented. 
 
-=item $data = set_variables($filename, $web_extension);
+=item $data = set_variables($filename, $web_extension, $relative_to);
 
-Create title and date variables from the filename and the modification date
+Create title, url, and date variables from the filename and the modification date
 of the file.
 
 =item @filenames = sort_by_date(@filenames);
