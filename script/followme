@@ -188,6 +188,17 @@ contained between
 
 comments. 
 
+In addition to normal section blocks, there are per folder section blocks.
+The contents of these blocks is kept constant across all files in a folder and
+all subfolders of it. If the block is changed in one file in the folder, it will
+be updated in all the other files. Per folder section blocks look like
+
+    <!-- section in folder_name -->
+    <!-- endsection -->
+
+where folder_name is the the folder the content is kept constant across. The
+folder name is not a full path, it is the last folder in the path.
+
 Followme is run from the folder it is invoked from if it is called with no
 arguments, or if it is run with arguments, it will run on the folder passed as
 an argument or the folder the file passed as an argument is contained in.
