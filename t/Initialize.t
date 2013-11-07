@@ -2,8 +2,10 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 3;
+use File::Path qw(rmtree);
 use File::Spec::Functions qw(catfile catdir rel2abs splitdir);
+
+use Test::More tests => 3;
 
 #----------------------------------------------------------------------
 # Load package
@@ -18,7 +20,8 @@ unshift(@INC, $lib);
 require App::Followme::Initialize;
 
 my $test_dir = catdir(@path, 'test');
-system("/bin/rm -rf $test_dir");
+
+rmtree($test_dir);
 mkdir $test_dir;
 chdir $test_dir;
 

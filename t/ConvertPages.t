@@ -1,8 +1,10 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 7;
+use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
+
+use Test::More tests => 7;
 
 #----------------------------------------------------------------------
 # Load package
@@ -18,7 +20,8 @@ require App::Followme::ConvertPages;
 require App::Followme::Common;
 
 my $test_dir = catdir(@path, 'test');
-system("/bin/rm -rf $test_dir");
+
+rmtree($test_dir);
 mkdir $test_dir;
 mkdir "$test_dir/sub";
 chdir $test_dir;

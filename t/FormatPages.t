@@ -2,8 +2,10 @@
 use strict;
 
 use IO::File;
-use Test::More tests => 18;
+use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
+
+use Test::More tests => 18;
 
 #----------------------------------------------------------------------
 # Load package
@@ -19,7 +21,8 @@ require App::Followme::FormatPages;
 require App::Followme::Common;
 
 my $test_dir = catdir(@path, 'test');
-system("/bin/rm -rf $test_dir");
+
+rmtree($test_dir);
 mkdir $test_dir;
 mkdir "$test_dir/sub";
 chdir $test_dir;
