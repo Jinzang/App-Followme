@@ -1,6 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+
+0.92 2013-11-07T23:55:46Z
     - Replaced rm -rf with rmtree for os independence
     
 0.91 2013-11-01T23:02:43Z
