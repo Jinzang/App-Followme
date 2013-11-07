@@ -11,7 +11,7 @@ use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
 use App::Followme::Common qw(find_prototype read_page top_directory sort_by_date 
                              unchanged_prototype update_page write_page);
 
-our $VERSION = "0.91";
+our $VERSION = "0.92";
 
 #----------------------------------------------------------------------
 # Create a new object to update a website

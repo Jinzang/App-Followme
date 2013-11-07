@@ -1,7 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
-
+    - Replaced rm -rf with rmtree for os independence
+    
 0.91 2013-11-01T23:02:43Z
     - Rewrote build_url
 

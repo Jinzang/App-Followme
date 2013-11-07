@@ -13,7 +13,7 @@ use File::Spec::Functions qw(rel2abs splitdir catfile no_upwards rootdir updir);
 
 use App::Followme::Common qw(exclude_file split_filename top_directory);
 
-our $VERSION = "0.91";
+our $VERSION = "0.92";
 
 #----------------------------------------------------------------------
 # Create a new object to update a website
