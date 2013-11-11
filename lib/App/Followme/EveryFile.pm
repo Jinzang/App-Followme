@@ -12,13 +12,19 @@ use File::Spec::Functions qw(rel2abs catfile no_upwards);
 our $VERSION = "0.93";
 
 #----------------------------------------------------------------------
-# Create a new object to update a website
+#Create object that returns files in a directory tree
 
 sub new {
-    my ($pkg, $dir) = @_;
+    my ($pkg, $configuration) = @_;
 
-    my $configuration = {};
-    $configuration = {base_directory => $dir} if defined $dir;
+    if (defined $configuration ) {
+        if (! ref $configuration) {
+            $configuration = {base_directory => $configuration};
+        }
+
+    } else {
+        $configuration = {};
+    }
     
     my %self = ($pkg->parameters(), %$configuration);
     my $self = bless(\%self, $pkg);
