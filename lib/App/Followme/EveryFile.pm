@@ -22,7 +22,7 @@ sub new {
     
     my %self = ($pkg->parameters(), %$configuration);
     my $self = bless(\%self, $pkg);
-    $self->base_directory();
+    $self->setup();
     
     return $self;
 }
@@ -53,18 +53,6 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Set the base directory of the search
-
-sub base_directory {
-    my ($self) = @_;
-    
-    $self->{pending_files} = [];
-    $self->{pending_folders} =[$self->{base_directory}];
-    
-    return;
-}
-
-#----------------------------------------------------------------------
 # Return 1 if filename passes test
 
 sub match_file {
@@ -86,6 +74,18 @@ sub match_folder {
 sub next {
     my ($self) = @_;
     return $self->visit;
+}
+
+#----------------------------------------------------------------------
+# Set up non-configured fields in the object
+
+sub setup {
+    my ($self) = @_;
+    
+    $self->{pending_files} = [];
+    $self->{pending_folders} =[$self->{base_directory}];
+    
+    return;
 }
 
 #----------------------------------------------------------------------
