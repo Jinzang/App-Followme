@@ -144,3 +144,37 @@ sub visit {
 
 1;
 __END__
+
+=encoding utf-8
+
+=head1 NAME
+
+App::Followme::EveryFile - Base class for App::Followme classes
+
+=head1 SYNOPSIS
+
+    use App::Followme::EveryFile;
+    my @files;
+    my $dd = App::Followme::EveryFiles->new($directory);
+    while (defined (my $file = $ef->next)) {
+        push(@files, $file)
+    }
+
+=head1 DESCRIPTION
+
+This class has methods for looping all the files in a directory. The files in
+a directory are returned in date order, with the most recently modified file
+returned first. 
+
+=head1 LICENSE
+
+Copyright (C) Bernie Simon.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 AUTHOR
+
+Bernie Simon E<lt>bernie.simon@gmail.comE<gt>
+
+=cut
