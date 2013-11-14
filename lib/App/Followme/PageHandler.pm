@@ -217,7 +217,7 @@ sub find_prototype {
             $uplevel -= 1;
 
         } else {
-            my $mrf = MostRecentFile->new($directory);
+            my $mrf = App::Followme::MostRecentFile->new($directory);
             $filename = $mrf->next;
             last if $filename;
         }
