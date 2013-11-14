@@ -1,26 +1,16 @@
-package App::Followme::ConvertPages;
+package App::Followme::NewConvertPages;
 use 5.008005;
 use strict;
 use warnings;
 
 use lib '../..';
 
-use Cwd;
-use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
-use App::Followme::Common qw(compile_template make_relative make_template
-                             read_page write_page set_variables);
+use base qw(App::Followme::PageHandler);
 
-our $VERSION = "0.92";
+use File::Spec::Functions qw(catfile);
+use App::Followme::MostRecentFile;
 
-#----------------------------------------------------------------------
-# Create a new object to update a website
-
-sub new {
-    my ($pkg, $configuration) = @_;
-    
-    my %self = ($pkg->parameters(), %$configuration); 
-    return bless(\%self, $pkg);
-}
+our $VERSION = "0.93";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
@@ -28,28 +18,27 @@ sub new {
 sub parameters {
     my ($pkg) = @_;
     
-    return (
-            absolute => 0,
-            quick_update => 1,
-            web_extension => 'html',
+    my %parameters = (
             text_extension => 'txt',
             page_template => catfile('templates', 'page.htm'),
            );
+
+    my %base_params = $pkg->SUPER::parameters();
+    %parameters = (%base_params, %parameters);
+
+    return %parameters;
 }
 
 #----------------------------------------------------------------------
-# Convert text files into web pages
+# Create a new page from the old (example)
 
 sub run {
     my ($self) = @_;
 
-    my $template = make_template($self->{page_template},
-                                 $self->{web_extension});
-    
-    my $sub = compile_template($template);
-    my $pattern = "*.$self->{text_extension}";
+    my $template = $self->make_template();
+    my $sub = $self->compile_template($template);
 
-    foreach my $filename (glob($pattern)) {
+    while (defined(my $filename = $self->next)) {
         eval {$self->convert_a_file($filename, $sub)};
         warn "$filename: $@" if $@;
     }
@@ -58,25 +47,18 @@ sub run {
 }
 
 #----------------------------------------------------------------------
-# Convert a single page
+# Convert a single file
 
 sub convert_a_file {
     my ($self, $filename, $sub) = @_;
     
-    my $text = read_page($filename);
-    die "Couldn't read\n" unless defined $text;
-
-    my $data = $self->{absolute} ?
-               set_variables($filename, $self->{web_extension}) :
-               set_variables($filename, $self->{web_extension}, $filename);
-
-    $data->{body} = $self->convert_text($text);
+    my $data = $self->set_fields($filename);
     my $page = $sub->($data);
-
-    my $page_name = $filename;
-    $page_name =~ s/$self->{text_extension}$/$self->{web_extension}/;
     
-    write_page($page_name, $page);
+    my $new_file = $filename;
+    $new_file =~ s/$self->{text_extension}$/$self->{web_extension}/;
+
+    $self->write_page($new_file, $page);
     unlink($filename);
 
     return;
@@ -105,6 +87,26 @@ sub convert_text {
     }
     
     return $page;
+}
+#----------------------------------------------------------------------
+# Get fields from reading the file
+
+sub internal_fields {
+    my ($self, $data, $filename) = @_;   
+
+    my $text = $self->read_page($filename);
+    die "Couldn't read\n" unless defined $text;
+
+    $data->{body} = $self->convert_text($text);
+    return $data;
+}
+
+#----------------------------------------------------------------------
+# Return 1 if filename passes test
+
+sub match_file {
+    my ($self, $path) = @_;
+    return ! -d $path && $path =~ /\.$self->{text_extension}$/;
 }
 
 1;
@@ -166,14 +168,6 @@ The following parameters are used from the configuration:
 
 =over 4
 
-=item absolute
-
-If true, urls in a page will be absolute
-
-=item quick_update
-
-Only convert files in current directory
-
 =item page_template
 
 The path to the template used to create a page, relative to the top directory.
@@ -181,10 +175,6 @@ The path to the template used to create a page, relative to the top directory.
 =item text_extension 
 
 The extension of files that are converted to web pages.
-
-=item web_extension
-
-The extension used by web pages. The default value is html
 
 =back
 
@@ -200,4 +190,3 @@ it under the same terms as Perl itself.
 Bernie Simon E<lt>bernie.simon@gmail.comE<gt>
 
 =cut
-
