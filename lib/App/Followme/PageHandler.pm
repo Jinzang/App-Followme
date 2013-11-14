@@ -36,7 +36,7 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Convert text files into web pages
+# Create a new page from the old (example)
 
 sub run {
     my ($self) = @_;
@@ -45,7 +45,12 @@ sub run {
     my $sub = $self->compile_template($template);
 
     while (defined(my $filename = $self->next)) {
-        eval {$self->handle_page($filename, $sub)};
+        eval {
+              my $data = $self->set_fields($filename);
+              my $page = $sub->($data);
+              $self->write_page($filename, $page);
+             };
+
         warn "$filename: $@" if $@;
     }
 
@@ -235,23 +240,6 @@ sub get_template_name {
 }
 
 #----------------------------------------------------------------------
-# Handle the changes on a single page
-
-sub handle_page {
-    my ($self, $filename, $sub) = @_;
-    
-    my $data = {};
-    $data = $self->external_fields($data, $filename);
-    $data = $self->internal_fields($data, $filename);
-    my $page = $sub->($data);
-
-    $self->write_page($filename, $page);
-    unlink($filename);
-
-    return;
-}
-
-#----------------------------------------------------------------------
 # Get fields from reading the file (stub)
 
 sub internal_fields {
@@ -424,6 +412,19 @@ sub read_page {
     close($fd);
     
     return $page;
+}
+
+#----------------------------------------------------------------------
+# Set the data fields for a file
+
+sub set_fields {
+    my ($self, $filename) = @_;
+    
+    my $data = {};
+    $data = $self->external_fields($data, $filename);
+    $data = $self->internal_fields($data, $filename);
+
+    return $data;
 }
 
 #----------------------------------------------------------------------
