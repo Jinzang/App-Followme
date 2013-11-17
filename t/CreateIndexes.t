@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 6;
+use Test::More tests => 8;
 
 #----------------------------------------------------------------------
 # Load package
@@ -17,8 +17,8 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
-require App::Followme::CreateIndexes;
-require App::Followme::Common;
+require App::Followme::NewCreateIndexes;
+require App::Followme::TopDirectory;
 
 my $test_dir = catdir(@path, 'test');
 
@@ -27,7 +27,7 @@ mkdir $test_dir;
 mkdir "$test_dir/sub";
 chdir $test_dir;
 
-App::Followme::Common::top_directory($test_dir);
+App::Followme::TopDirectory->name($test_dir);
 
 #----------------------------------------------------------------------
 # Create indexes
@@ -81,31 +81,33 @@ my $body_ok = <<'EOQ';
 EOQ
 
     my $index_name = 'index_template.htm';
-    App::Followme::Common::write_page($index_name, $index_template);
-
-    mkdir('archive');    
-    chdir('archive');
-    
-    my @archived_files;
-    foreach my $count (qw(four three two one)) {
-        sleep(1);
-        my $output = $page;
-        $output =~ s/%%/$count/g;
-        
-        my $filename = "$count.html";
-        App::Followme::Common::write_page($filename, $output);
-        push(@archived_files, $filename);
-    }
 
     my $configuration = {
-            include_directories => 0,
+            include_directories => 1,
             include_files => '*.html',
             index_template => $index_name,
             index_file => 'index.html',
             web_extension => 'html',
             };
 
-    my $idx = App::Followme::CreateIndexes->new($configuration);
+    my $idx = App::Followme::NewCreateIndexes->new($configuration);
+    $idx->write_page($index_name, $index_template);
+
+    mkdir('archive');    
+    chdir('archive');
+    
+    my @archived_files;
+    foreach my $count (qw(four three two one)) {
+        my $output = $page;
+        $output =~ s/%%/$count/g;
+        
+        my $filename = "$count.html";
+        $idx->write_page($filename, $output);
+        push(@archived_files, $filename);
+    }
+
+
+    $idx = App::Followme::NewCreateIndexes->new($configuration);
     my $data = $idx->index_data();
 
     is($data->{title}, 'Archive', 'Index title'); # test 1
@@ -113,10 +115,26 @@ EOQ
     is($data->{loop}[0]{title}, 'Four', 'Index first page title'); # test 3
     is($data->{loop}[3]{title}, 'Two', 'Index last page title'); # test 4
     
+    $idx = App::Followme::NewCreateIndexes->new($configuration);
     $idx->create_an_index();
-    $page = App::Followme::Common::read_page('index.html');
+    $page = $idx->read_page('index.html');
     
     like($page, qr/<title>Archive<\/title>/, 'Write index title'); # test 5
     like($page, qr/<li><a href="two.html">Two<\/a><\/li>/,
        'Write index link'); #test 6
+
+    $idx = App::Followme::NewCreateIndexes->new($configuration);
+    $idx->create_an_index();
+    $page = $idx->read_page('index.html');
+
+    my $pos = index($page, 'index.html');
+    is($pos, -1, 'Exclude index file'); # test 7
+    
+    chdir($test_dir);
+    $idx = App::Followme::NewCreateIndexes->new($configuration);
+    $idx->create_an_index();
+    $page = $idx->read_page('index.html');
+
+    like($page, qr/<li><a href="archive\/index.html">Archive<\/a><\/li>/,
+       'Index with directory'); #test 8
 };

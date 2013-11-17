@@ -1,29 +1,18 @@
-package App::Followme::CreateIndexes;
+package App::Followme::NewCreateIndexes;
 use 5.008005;
 use strict;
 use warnings;
 
 use lib '../..';
 
+use base qw(App::Followme::PageHandler);
+
 use Cwd;
 use IO::Dir;
-use File::Spec::Functions qw(abs2rel splitdir catfile no_upwards);
- 
-use App::Followme::Common qw(compile_template exclude_file make_relative 
-                             make_template read_page set_variables  
-                             sort_by_name top_directory write_page);
+use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile no_upwards);
+use App::Followme::TopDirectory;
 
-our $VERSION = "0.92";
-
-#----------------------------------------------------------------------
-# Create a new object to update a website
-
-sub new {
-    my ($pkg, $configuration) = @_;
-    
-    my %self = %$configuration; 
-    return bless(\%self, $pkg);
-}
+our $VERSION = "0.93";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
@@ -31,16 +20,18 @@ sub new {
 sub parameters {
     my ($pkg) = @_;
     
-    return (
-            absolute => 0,
-            quick_update => 1,
-            web_extension => 'html',
-            include_directories => 1,
-            index_file => 'index.html',
-            include_files => '*.html',
-            exclude_files => 'index.html',
-            index_template => catfile('templates', 'index.htm'),
-           );
+    my %parameters = (
+                      include_directories => 1,
+                      index_file => 'index.html',
+                      include_files => '*.html',
+                      exclude_files => 'index.html',
+                      index_template => catfile('templates', 'index.htm'),
+                     );
+
+    my %base_params = $pkg->SUPER::parameters();
+    %parameters = (%base_params, %parameters);
+
+    return %parameters;
 }
 
 #----------------------------------------------------------------------
@@ -86,13 +77,25 @@ sub create_an_index {
     my ($self) = @_;
     
     my $data = $self->index_data();
-    my $template = make_template($self->{index_template},
-                                 $self->{web_extension});
+    my $template = $self->make_template($self->{index_template});
 
-    my $sub = compile_template($template);
+    my $sub = $self->compile_template($template);
     my $page = $sub->($data);
  
-    write_page($self->{index_file}, $page);
+    $self->write_page($self->{index_file}, $page);
+    return;
+}
+
+#----------------------------------------------------------------------
+# Return true if this is an excluded file
+
+sub exclude_file {
+    my ($self, $filename) = @_;
+    
+    foreach my $pattern (@{$self->{exclude_files}}) {
+        return 1 if $filename =~ /$pattern/;
+    }
+    
     return;
 }
 
@@ -119,24 +122,42 @@ sub find_directories {
 }
 
 #----------------------------------------------------------------------
-# Get data for each file
+# Get the full template name (stub)
 
-sub get_file_data {
-    my ($self, $exclude, @filenames) = @_;
+sub get_template_name {
+    my ($self) = @_;
     
-    my @loop_data;
-    foreach my $filename (@filenames) {
-        next if $exclude && exclude_file($self->{exclude_files}, $filename);
+    my $top_directory = App::Followme::TopDirectory->name;
+    return catfile($top_directory, $self->{index_template});
+}
 
-        my $data = $self->{absolute} ?
-                   set_variables($filename, $self->{web_extension}) :
-                   set_variables($filename, $self->{web_extension},
-                                 $self->{index_file});
-                   
-        push(@loop_data, $data); 
+#----------------------------------------------------------------------
+# Map filename globbing metacharacters onto regexp metacharacters
+
+sub glob_pattern {
+    my ($self, $pattern) = @_;
+
+    return '' if $pattern eq '*';
+
+    my $start;
+    if ($pattern =~ s/^\*//) {
+        $start = '';
+    } else {
+        $start = '^';
     }
 
-    return @loop_data;
+    my $finish;
+    if ($pattern =~ s/\*$//) {
+        $finish = '';
+    } else {
+        $finish = '$';
+    }
+
+	$pattern =~ s/\./\\./g;
+	$pattern =~ s/\*/\.\*/g;
+	$pattern =~ s/\?/\.\?/g;
+
+    return $start . $pattern . $finish;
 }
 
 #----------------------------------------------------------------------
@@ -145,25 +166,109 @@ sub get_file_data {
 sub index_data {
     my ($self) = @_;        
 
-    my $exclude = 0;
-    my @loop_data = $self->get_file_data($exclude, $self->{index_file});
-    my $data = shift(@loop_data);
+    my $data = $self->set_fields(rel2abs($self->{index_file}));
+
+    my @loop_data;
+    my $index_name = "index.$self->{web_extension}";
     
-    if ($self->{include_directories}) {
-        my @filenames = $self->find_directories();
-        push(@loop_data, $self->get_file_data($exclude, @filenames));
-    }
-
-    $exclude = 1;
-    my @patterns = split(' ', $self->{include_files});
-
-    foreach my $pattern (@patterns) {
-        my @filenames = sort_by_name(glob($pattern));
-        push(@loop_data, $self->get_file_data($exclude, @filenames));
+    while (defined(my $filename = $self->next)) {
+        $filename = catfile($filename, $index_name) if -d $filename;
+        my $data = $self->set_fields($filename);
+        push(@loop_data, $data);
     }
 
     $data->{loop} = \@loop_data;
     return $data;
+}
+
+#----------------------------------------------------------------------
+# Return 1 if filename passes test
+
+sub match_file {
+    my ($self, $filename) = @_;
+
+    my $flag;
+    if (-d $filename) {
+        $flag = $self->{include_directories};
+
+    } else {
+        my $dir;
+        ($dir, $filename) = $self->split_filename($filename);
+        my $pattern = $self->glob_pattern($self->{include_files});
+
+        $flag = $filename =~ /$pattern/ && ! $self->exclude_file($filename);
+    }
+
+    return  $flag;
+}
+
+#----------------------------------------------------------------------
+# Return 1 if folder passes test
+
+sub match_folder {
+    my ($self, $path) = @_;
+    return;
+}
+
+#----------------------------------------------------------------------
+# Set up non-configured fields in the object
+
+sub setup {
+    my ($self) = @_;
+    
+    $self->SUPER::setup();
+    my @excluded_files = split(/\s*,\s*/, $self->{exclude_files});
+
+    my @patterns;
+    foreach my $excluded_file (@excluded_files) {
+        my $pattern = $self->glob_pattern($excluded_file);
+        push(@patterns, $pattern);
+    }
+
+    $self->{exclude_files} = \@patterns;
+    return;
+}
+
+#----------------------------------------------------------------------
+# Sort a list of files so that directories are first
+
+sub sort_files {
+    my ($self) = @_;
+
+    my @augmented_files;
+    foreach my $filename (@{$self->{pending_files}}) {
+        my $dir = -d $filename ? 1 : 0;
+        push(@augmented_files, [$filename, $dir]);
+    }
+
+    @augmented_files = sort {$b->[1] <=> $a->[1] ||
+                             $a->[0] cmp $b->[0]   } @augmented_files;
+    
+    @{$self->{pending_files}} = map {$_->[0]} @augmented_files;
+    return;
+}
+
+#----------------------------------------------------------------------
+# Split filename from directory
+
+sub split_filename {
+    my ($self, $filename) = @_;
+    
+    $filename = rel2abs($filename);
+    my @path = splitdir($filename);
+    my $file = pop(@path);
+    
+    my @new_path;
+    foreach my $dir (@path) {
+        if (no_upwards($dir)) {
+            push(@new_path, $dir);
+        } else {
+            pop(@new_path);
+        }
+    }
+    
+    my $new_dir = catfile(@new_path);
+    return ($new_dir, $file);
 }
 
 1;
@@ -177,7 +282,7 @@ App::Followme::CreateIndexes - Create index file for a directory
 
 =head1 SYNOPSIS
 
-    use App::Followme::ConvertPages;
+    use App::Followme::CreateIndexes;
     my $indexer = App::Followme::CreateIndexes->new($configuration);
     $indexer->run();
 

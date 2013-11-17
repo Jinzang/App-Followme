@@ -8,8 +8,9 @@ use lib '../..';
 use Cwd;
 use IO::File;
 use File::Spec::Functions qw(abs2rel catfile rel2abs splitdir updir);
-
 use App::Followme::TopDirectory;
+use App::Followme::MostRecentFile;
+
 use base qw(App::Followme::EveryFile);
 
 our $VERSION = "0.93";
@@ -236,6 +237,7 @@ sub find_prototype {
 
 sub get_template_name {
     my ($self) = @_;
+    
     return catfile($self->{base_directory}, 'template.htm');
 }
 

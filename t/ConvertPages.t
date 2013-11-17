@@ -16,7 +16,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
-require App::Followme::NewConvertPages;
+require App::Followme::ConvertPages;
 
 my $test_dir = catdir(@path, 'test');
 

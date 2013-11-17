@@ -9,6 +9,7 @@ use base qw(App::Followme::PageHandler);
 
 use File::Spec::Functions qw(catfile);
 use App::Followme::MostRecentFile;
+use App::Followme::TopDirectory;
 
 our $VERSION = "0.93";
 
@@ -88,6 +89,17 @@ sub convert_text {
     
     return $page;
 }
+
+#----------------------------------------------------------------------
+# Get the full template name (stub)
+
+sub get_template_name {
+    my ($self) = @_;
+    
+    my $top_directory = App::Followme::TopDirectory->name;
+    return catfile($top_directory, $self->{page_template});
+}
+
 #----------------------------------------------------------------------
 # Get fields from reading the file
 

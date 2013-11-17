@@ -103,13 +103,13 @@ sub sort_files {
     my @augmented_files;
     foreach my $filename (@{$self->{pending_files}}) {
         my @stats = stat($filename);
-        push(@augmented_files, [$stats[9], $filename]);
+        push(@augmented_files, [$filename, $stats[9]]);
     }
 
-    @augmented_files = sort {$b->[0] <=> $a->[0] ||
-                             $b->[1] cmp $a->[1]   } @augmented_files;
+    @augmented_files = sort {$b->[1] <=> $a->[1] ||
+                             $b->[0] cmp $a->[0]   } @augmented_files;
     
-    @{$self->{pending_files}} = map {$_->[1]} @augmented_files;
+    @{$self->{pending_files}} = map {$_->[0]} @augmented_files;
     return;
 }
 
@@ -126,7 +126,7 @@ sub visit {
         return unless @{$self->{pending_folders}};
         my $dir = shift(@{$self->{pending_folders}});
 
-        my $dd = $dir ? IO::Dir->new($dir) : IO::Dir->new(getcwd());
+        my $dd = IO::Dir->new($dir);
         die "Couldn't open $dir: $!\n" unless $dd;
 
         # Find matching files and directories
@@ -135,7 +135,7 @@ sub visit {
             my $path = catfile($dir, $file);
             
             push(@{$self->{pending_folders}}, $path)
-                if -d $path && $self->match_folder($path);;
+                if -d $path && $self->match_folder($path);
 
             push(@{$self->{pending_files}}, $path)
                 if $self->match_file($path);
