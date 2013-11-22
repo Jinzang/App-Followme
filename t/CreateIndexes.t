@@ -17,7 +17,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
-require App::Followme::NewCreateIndexes;
+require App::Followme::CreateIndexes;
 require App::Followme::TopDirectory;
 
 my $test_dir = catdir(@path, 'test');
@@ -90,7 +90,7 @@ EOQ
             web_extension => 'html',
             };
 
-    my $idx = App::Followme::NewCreateIndexes->new($configuration);
+    my $idx = App::Followme::CreateIndexes->new($configuration);
     $idx->write_page($index_name, $index_template);
 
     mkdir('archive');    
@@ -107,7 +107,7 @@ EOQ
     }
 
 
-    $idx = App::Followme::NewCreateIndexes->new($configuration);
+    $idx = App::Followme::CreateIndexes->new($configuration);
     my $data = $idx->index_data();
 
     is($data->{title}, 'Archive', 'Index title'); # test 1
@@ -115,7 +115,7 @@ EOQ
     is($data->{loop}[0]{title}, 'Four', 'Index first page title'); # test 3
     is($data->{loop}[3]{title}, 'Two', 'Index last page title'); # test 4
     
-    $idx = App::Followme::NewCreateIndexes->new($configuration);
+    $idx = App::Followme::CreateIndexes->new($configuration);
     $idx->create_an_index();
     $page = $idx->read_page('index.html');
     
@@ -123,7 +123,7 @@ EOQ
     like($page, qr/<li><a href="two.html">Two<\/a><\/li>/,
        'Write index link'); #test 6
 
-    $idx = App::Followme::NewCreateIndexes->new($configuration);
+    $idx = App::Followme::CreateIndexes->new($configuration);
     $idx->create_an_index();
     $page = $idx->read_page('index.html');
 
@@ -131,7 +131,7 @@ EOQ
     is($pos, -1, 'Exclude index file'); # test 7
     
     chdir($test_dir);
-    $idx = App::Followme::NewCreateIndexes->new($configuration);
+    $idx = App::Followme::CreateIndexes->new($configuration);
     $idx->create_an_index();
     $page = $idx->read_page('index.html');
 

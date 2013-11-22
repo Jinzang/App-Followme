@@ -1,11 +1,11 @@
-package App::Followme::NewCreateIndexes;
+package App::Followme::CreateIndexes;
 use 5.008005;
 use strict;
 use warnings;
 
 use lib '../..';
 
-use base qw(App::Followme::PageHandler);
+use base qw(App::Followme::IndexHandler);
 
 use Cwd;
 use IO::Dir;
@@ -87,41 +87,6 @@ sub create_an_index {
 }
 
 #----------------------------------------------------------------------
-# Return true if this is an excluded file
-
-sub exclude_file {
-    my ($self, $filename) = @_;
-    
-    foreach my $pattern (@{$self->{exclude_files}}) {
-        return 1 if $filename =~ /$pattern/;
-    }
-    
-    return;
-}
-
-#----------------------------------------------------------------------
-# Find the subdirectories of a directory
-
-sub find_directories {
-    my ($self) = @_;
-
-    my $dir = getcwd();
-    my $dd = IO::Dir->new($dir);
-    die "Couldn't open $dir: $!\n" unless $dd;
-        
-    my @filenames;
-    my $index_name = "index.$self->{web_extension}";
-    
-    while (defined (my $file = $dd->read())) {
-        next unless -d $file && no_upwards($file);
-        push(@filenames, catfile($file, $index_name));
-    }
-    
-    $dd->close;
-    return sort_by_name(@filenames);
-}
-
-#----------------------------------------------------------------------
 # Get the full template name (stub)
 
 sub get_template_name {
@@ -129,35 +94,6 @@ sub get_template_name {
     
     my $top_directory = App::Followme::TopDirectory->name;
     return catfile($top_directory, $self->{index_template});
-}
-
-#----------------------------------------------------------------------
-# Map filename globbing metacharacters onto regexp metacharacters
-
-sub glob_pattern {
-    my ($self, $pattern) = @_;
-
-    return '' if $pattern eq '*';
-
-    my $start;
-    if ($pattern =~ s/^\*//) {
-        $start = '';
-    } else {
-        $start = '^';
-    }
-
-    my $finish;
-    if ($pattern =~ s/\*$//) {
-        $finish = '';
-    } else {
-        $finish = '$';
-    }
-
-	$pattern =~ s/\./\\./g;
-	$pattern =~ s/\*/\.\*/g;
-	$pattern =~ s/\?/\.\?/g;
-
-    return $start . $pattern . $finish;
 }
 
 #----------------------------------------------------------------------
@@ -203,33 +139,6 @@ sub match_file {
 }
 
 #----------------------------------------------------------------------
-# Return 1 if folder passes test
-
-sub match_folder {
-    my ($self, $path) = @_;
-    return;
-}
-
-#----------------------------------------------------------------------
-# Set up non-configured fields in the object
-
-sub setup {
-    my ($self) = @_;
-    
-    $self->SUPER::setup();
-    my @excluded_files = split(/\s*,\s*/, $self->{exclude_files});
-
-    my @patterns;
-    foreach my $excluded_file (@excluded_files) {
-        my $pattern = $self->glob_pattern($excluded_file);
-        push(@patterns, $pattern);
-    }
-
-    $self->{exclude_files} = \@patterns;
-    return;
-}
-
-#----------------------------------------------------------------------
 # Sort a list of files so that directories are first
 
 sub sort_files {
@@ -246,29 +155,6 @@ sub sort_files {
     
     @{$self->{pending_files}} = map {$_->[0]} @augmented_files;
     return;
-}
-
-#----------------------------------------------------------------------
-# Split filename from directory
-
-sub split_filename {
-    my ($self, $filename) = @_;
-    
-    $filename = rel2abs($filename);
-    my @path = splitdir($filename);
-    my $file = pop(@path);
-    
-    my @new_path;
-    foreach my $dir (@path) {
-        if (no_upwards($dir)) {
-            push(@new_path, $dir);
-        } else {
-            pop(@new_path);
-        }
-    }
-    
-    my $new_dir = catfile(@new_path);
-    return ($new_dir, $file);
 }
 
 1;
