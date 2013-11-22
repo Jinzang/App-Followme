@@ -34,7 +34,7 @@ sub next {
     my ($self) = @_;
     
     return if $self->{count} ++;
-    return $self->visit;
+    return $self->SUPER::next;
 }
 
 #----------------------------------------------------------------------

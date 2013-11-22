@@ -79,7 +79,34 @@ sub match_folder {
 
 sub next {
     my ($self) = @_;
-    return $self->visit;
+
+    for (;;) {
+        my $file = shift(@{$self->{pending_files}});
+        return $file if defined $file;
+    
+        return unless @{$self->{pending_folders}};
+        my $dir = shift(@{$self->{pending_folders}});
+
+        my $dd = IO::Dir->new($dir);
+        die "Couldn't open $dir: $!\n" unless $dd;
+
+        # Find matching files and directories
+        while (defined (my $file = $dd->read())) {
+            next unless no_upwards($file);
+            my $path = catfile($dir, $file);
+            
+            push(@{$self->{pending_folders}}, $path)
+                if -d $path && $self->match_folder($path);
+
+            push(@{$self->{pending_files}}, $path)
+                if $self->match_file($path);
+        }
+
+        $dd->close;
+
+        $self->sort_files();
+        @{$self->{pending_folders}} = sort(@{$self->{pending_folders}});
+    }
 }
 
 #----------------------------------------------------------------------
@@ -111,41 +138,6 @@ sub sort_files {
     
     @{$self->{pending_files}} = map {$_->[0]} @augmented_files;
     return;
-}
-
-#----------------------------------------------------------------------
-# Return a filename from a directory
-
-sub visit {
-    my ($self) = @_;
-
-    for (;;) {
-        my $file = shift(@{$self->{pending_files}});
-        return $file if defined $file;
-    
-        return unless @{$self->{pending_folders}};
-        my $dir = shift(@{$self->{pending_folders}});
-
-        my $dd = IO::Dir->new($dir);
-        die "Couldn't open $dir: $!\n" unless $dd;
-
-        # Find matching files and directories
-        while (defined (my $file = $dd->read())) {
-            next unless no_upwards($file);
-            my $path = catfile($dir, $file);
-            
-            push(@{$self->{pending_folders}}, $path)
-                if -d $path && $self->match_folder($path);
-
-            push(@{$self->{pending_files}}, $path)
-                if $self->match_file($path);
-        }
-
-        $dd->close;
-
-        $self->sort_files();
-        @{$self->{pending_folders}} = sort(@{$self->{pending_folders}});
-    }
 }
 
 1;
