@@ -5,24 +5,14 @@ use warnings;
 
 use lib '../..';
 
+use base qw(App::Followme::IndexHandler);
+
 use Cwd;
 use IO::Dir;
-use File::Spec::Functions qw(abs2rel splitdir catfile no_upwards);
-use App::Followme::Common qw(compile_template exclude_file make_relative 
-                             make_template parse_page read_page set_variables 
-                             sort_by_date write_page);
+use File::Spec::Functions qw(abs2rel catfile no_upwards rel2abs splitdir);
+use App::Followme::TopDirectory;
 
-our $VERSION = "0.92";
-
-#----------------------------------------------------------------------
-# Create a new object to update a website
-
-sub new {
-    my ($pkg, $configuration) = @_;
-    
-    my %self = %$configuration; 
-    return bless(\%self, $pkg);
-}
+our $VERSION = "0.93";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
@@ -30,16 +20,18 @@ sub new {
 sub parameters {
     my ($pkg) = @_;
     
-    return (
-            absolute => 0,
-            base_directory => '',
-            news_file => 'index.html',
-            news_index_length => 5,
-            web_extension => 'html',
-            body_tag => 'content',
-            exclude_files => 'index.html',
-            news_template => catfile('templates', 'news.htm'),
-           );
+    my %parameters = (
+                      news_file => 'index.html',
+                      news_index_length => 5,
+                      body_tag => 'content',
+                      exclude_files => 'index.html',
+                      news_template => catfile('templates', 'news.htm'),
+                     );
+
+    my %base_params = $pkg->SUPER::parameters();
+    %parameters = (%base_params, %parameters);
+
+    return %parameters;
 }
 
 #----------------------------------------------------------------------
@@ -61,18 +53,73 @@ sub run {
 sub create_news_index {
     my ($self) = @_;
 
-    my $data = $self->recent_news_data();
+    my $data = $self->index_data();
+    my $template = $self->make_template($self->{news_template});
 
-    my $template = make_template($self->{news_template},
-                                 $self->{web_extension});
-    
-    my $sub = compile_template($template);
+    my $sub = $self->compile_template($template);
     my $page = $sub->($data);
 
     my $news_file = $self->news_file_name();
-    write_page($news_file, $page);
+    $self->write_page($news_file, $page);
 
     return;
+}
+
+#----------------------------------------------------------------------
+# Get the full template name (stub)
+
+sub get_template_name {
+    my ($self) = @_;
+    
+    my $top_directory = App::Followme::TopDirectory->name;
+    return catfile($top_directory, $self->{news_template});
+}
+
+#----------------------------------------------------------------------
+# Retrieve the data needed to build an index
+
+sub index_data {
+    my ($self) = @_;        
+
+
+    my $limit = $self->{news_index_length};
+    my @filenames = $self->more_recent_files($limit);
+
+    my @loop_data;
+    my $data = $self->set_fields(rel2abs($self->{news_file}));
+
+    foreach my $filename (@filenames) {
+        my $data = $self->set_fields($filename);
+        push(@loop_data, $data);
+    }
+
+    $data->{loop} = \@loop_data;
+    return $data;
+}
+
+#----------------------------------------------------------------------
+# Get the body field from the file
+
+sub internal_fields {
+    my ($self, $data, $filename) = @_;   
+    
+    my $page = $self->read_page($filename);
+    
+    if ($page) {
+        my $decorated = 0;
+        my $blocks = $self->parse_page($page, $decorated);    
+        $data->{body} = $blocks->{$self->{body_tag}};
+    }
+    
+    return $data;
+}
+
+#----------------------------------------------------------------------
+# Return 1 if folder passes test
+
+sub match_folder {
+    my ($self, $path) = @_;
+    return 1;
 }
 
 #----------------------------------------------------------------------
@@ -82,11 +129,8 @@ sub more_recent_files {
     my ($self, $limit) = @_;
     
     my @dated_files;
-    my $visitor = visitor_function();
-    
-    while (defined (my $filename = $visitor->($self->{web_extension}))) {
-        next if exclude_file($self->{exclude_files}, $filename);
-        
+    while (defined (my $filename = $self->next)) {
+         
         my @stats = stat($filename);
         if (@dated_files < $limit || $stats[9] > $dated_files[0]->[0]) {
             shift(@dated_files) if @dated_files >= $limit;
@@ -112,84 +156,6 @@ sub news_file_name {
     return catfile(@dirs);  
 }
 
-#----------------------------------------------------------------------
-# Get the data to put in the news index
-
-sub recent_news_data {
-    my ($self) = @_;
-
-    my @loop;
-    my $limit = $self->{news_index_length};
-
-    my $data = $self->{absolute} ?
-               set_variables($self->{news_file}, $self->{web_extension}) :
-               set_variables($self->{news_file}, $self->{web_extension},
-                             $self->{news_file});
-               
-    my @filenames = $self->more_recent_files($limit);
-
-    foreach my $filename (@filenames) {
-        my $loopdata = $self->{absolute} ?
-                       set_variables($filename, $self->{web_extension}) :
-                       set_variables($filename, $self->{web_extension},
-                                     $self->{news_file});
-                       
-        my $page = read_page($filename);
-        my $blocks = parse_page($page);
-
-        $loopdata->{body} = $blocks->{$self->{body_tag}};
-        push(@loop, $loopdata);
-    }
-
-    $data->{loop} = \@loop;
-    return $data;
-}
-
-#----------------------------------------------------------------------
-# Return a closure that returns each file name with a specific extension
-
-sub visitor_function {
-    my ($self) = @_;
-
-    my @dirlist;
-    my @filelist;
-    push(@dirlist, '');
-
-    return sub {
-        my ($ext) = @_;
-        
-        for (;;) {
-            my $file = shift(@filelist);
-            return $file if defined $file;
-        
-            return unless @dirlist;
-            my $dir = shift(@dirlist);
-    
-            my $dd = $dir ? IO::Dir->new($dir) : IO::Dir->new(getcwd());
-            die "Couldn't open $dir: $!\n" unless $dd;
-    
-            # Find matching files and directories
-            while (defined (my $file = $dd->read())) {
-                my $path = $dir ? catfile($dir, $file) : $file;
-                
-                if (-d $path) {
-                    next unless no_upwards($file);
-                    push(@dirlist, $path);
-                    
-                } else {
-                    next unless $file =~ /^[^\.]+\.$ext$/;
-                    push(@filelist, $path);
-                }
-            }
-
-            $dd->close;
-
-            @dirlist = sort(@dirlist);
-            @filelist = reverse sort_by_date(@filelist);
-        }
-    };
-}
-
 1;
 __END__
 
@@ -201,7 +167,7 @@ App::Followme::CreateNews - Create an index with the more recent files
 
 =head1 SYNOPSIS
 
-    use App::Followme::CreateNew;
+    use App::Followme::CreateNews;
     my $indexer = App::Followme::CreateNews->new($configuration);
     $indexer->run();
 

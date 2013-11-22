@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 6;
+use Test::More tests => 5;
 
 #----------------------------------------------------------------------
 # Load package
@@ -18,7 +18,7 @@ my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
 require App::Followme::CreateNews;
-require App::Followme::Common;
+require App::Followme::TopDirectory;
 
 my $test_dir = catdir(@path, 'test');
 
@@ -26,8 +26,6 @@ rmtree($test_dir);
 mkdir $test_dir;
 mkdir "$test_dir/sub";
 chdir $test_dir;
-
-App::Followme::Common::top_directory($test_dir);
 
 my $configuration = {
                         absolute => 0,
@@ -38,6 +36,9 @@ my $configuration = {
                         body_tag => 'content',
                         news_template => 'blog_template.htm',
                      };
+
+App::Followme::TopDirectory->name($test_dir);
+
 #----------------------------------------------------------------------
 # Write test files
 
@@ -68,33 +69,16 @@ EOQ
             $output =~ s/%%/Page $count/g;
             $output =~ s/&&/$dir link/g;
 
-            my $filename = $dir ? "$dir/$count.html" : "$count.html";
-            App::Followme::Common::write_page($filename, $output);
+            my @dirs;
+            push(@dirs, $test_dir);
+            push(@dirs, $dir) if $dir;
+            my $filename = catfile(@dirs, "$count.html");
+            
+            my $fd = IO::File->new($filename, 'w');
+            print $fd $output;
+            close $fd;
         }
     }
-};
-
-#----------------------------------------------------------------------
-# Test file visitor
-
-do {
-    my $idx = App::Followme::CreateNews->new($configuration);
-    my $visitor = $idx->visitor_function();
-    
-    my @filenames;
-    while (my $filename = $visitor->('html')) {
-        push(@filenames, $filename);
-    }
-    
-    my @ok_filenames = qw(one.html two.html three.html four.html
-                          sub/one.html sub/two.html sub/three.html
-                          sub/four.html);
-    for (@ok_filenames) {
-        my @dirs = split('/', $_);
-        $_ = catfile(@dirs);
-    }
-    
-    is_deeply(\@filenames, \@ok_filenames, 'File visitor'); # test 1
 };
 
 #----------------------------------------------------------------------
@@ -104,8 +88,12 @@ do {
     my $idx = App::Followme::CreateNews->new($configuration);
     my @filenames = $idx->more_recent_files(3);
 
-    my @ok_filenames = qw(one.html two.html three.html);
-    is_deeply(\@filenames, \@ok_filenames, 'Most recent files'); # test 2
+    my @ok_filenames;
+    foreach my $file (qw(one.html two.html three.html)) {
+        push(@ok_filenames, rel2abs($file));
+    }
+    
+    is_deeply(\@filenames, \@ok_filenames, 'Most recent files'); # test 1
 };
 
 #----------------------------------------------------------------------
@@ -160,8 +148,9 @@ my $body_ok = <<'EOQ';
 <p>All about three.</p>
 EOQ
 
-    App::Followme::Common::write_page('blog_template.htm', $archive_template);
-
+    my $idx = App::Followme::CreateNews->new($configuration);
+    $idx->write_page('blog_template.htm', $archive_template);
+    
     my @archived_files;
     foreach my $count (qw(four three two one)) {
         sleep(2);
@@ -169,19 +158,21 @@ EOQ
         $output =~ s/%%/$count/g;
         
         my $filename = catfile('archive',"$count.html");
-        App::Followme::Common::write_page($filename, $output);
+        $idx->write_page($filename, $output);
         push(@archived_files, $filename);
     }
 
     chdir('archive');
-    my $idx = App::Followme::CreateNews->new($configuration);
+    $idx = App::Followme::CreateNews->new($configuration);
 
-    my $data = $idx->recent_news_data();
-    is($data->{url}, 'blog.html', 'Archive index url'); # test 3
-    is($data->{loop}[2]{body}, $body_ok, "Archive index body"); #test 4
+    my $data = $idx->index_data();
+    is($data->{url}, 'archive/blog.html', 'Archive index url'); # test 2
+    is($data->{loop}[2]{body}, $body_ok, "Archive index body"); #test 3
 
+    $idx = App::Followme::CreateNews->new($configuration);
     $idx->create_news_index();
-    $page = App::Followme::Common::read_page("$test_dir/blog.html");
-    like($page, qr/All about two/, 'Archive index content'); # test 5
-    like($page, qr/<a href="one.html">/, 'Archive index link'); # test 6
+    $page = $idx->read_page(catfile($test_dir,"blog.html"));
+
+    like($page, qr/All about two/, 'Archive index content'); # test 4
+    like($page, qr/<a href="one.html">/, 'Archive index link'); # test 5
 };
