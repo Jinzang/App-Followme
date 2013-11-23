@@ -7,8 +7,6 @@ use lib '../..';
 
 use base qw(App::Followme::IndexHandler);
 
-use Cwd;
-use IO::Dir;
 use File::Spec::Functions qw(abs2rel catfile no_upwards rel2abs splitdir);
 use App::Followme::TopDirectory;
 

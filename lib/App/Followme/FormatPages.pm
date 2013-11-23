@@ -5,35 +5,13 @@ use warnings;
 
 use lib '../..';
 
-use Cwd;
+use base qw(App::Followme::PageHandler);
+
+use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
+use App::Followme::TopDirectory;
 
-use App::Followme::Common qw(find_prototype read_page top_directory sort_by_date 
-                             unchanged_prototype update_page write_page);
-
-our $VERSION = "0.92";
-
-#----------------------------------------------------------------------
-# Create a new object to update a website
-
-sub new {
-    my ($pkg, $configuration) = @_;
-    
-    my %self = ($pkg->parameters(), %$configuration); 
-    return bless(\%self, $pkg);
-}
-
-#----------------------------------------------------------------------
-# Read the default parameter values
-
-sub parameters {
-    my ($pkg) = @_;
-    
-    return (
-            quick_update => 0,
-            web_extension => 'html',
-           );
-}
+our $VERSION = "0.93";
 
 #----------------------------------------------------------------------
 # Perform all updates on the directory
@@ -41,41 +19,41 @@ sub parameters {
 sub run {
     my ($self) = @_;
 
-    my $current_directory = getcwd();
-    my @stats = stat($current_directory);
+    my @stats = stat($self->{base_directory});
     my $modtime = $stats[9];
-    
-    my @filenames = $self->get_filenames();
-    my $prototype_file = shift(@filenames);
     
     # The first update uses a file from the directory above
     # as a prototype, if one is found
+
+    my $prototype_file = $self->find_prototype(1);
+    $prototype_file = $self->next unless defined $prototype_file;
+    
     my $prototype_path = $self->get_prototype_path($prototype_file);
-    my $prototype = read_page($prototype_file);
+    my $prototype = $self->read_page($prototype_file);
     
     my $count = 0;
     my $changes = 0;
     my $decorated = 1;
 
-    foreach my $filename (@filenames) {        
-        my $page = read_page($filename);
+    while (defined(my $filename = $self->next)) {
+        my $page = $self->read_page($filename);
         die "Couldn't read $filename" unless defined $page;
 
         # Check for changes before updating page
-        my $skip = unchanged_prototype($prototype, $page,
-                                       $decorated, $prototype_path);
+        my $skip = $self->unchanged_prototype($prototype, $page,
+                                              $decorated, $prototype_path);
 
         if ($skip) {
             last if $self->{quick_update} && $count;
             
         } else {    
-            $page = update_page($prototype, $page, 
-                                $decorated, $prototype_path);
+            $page = $self->update_page($prototype, $page, 
+                                       $decorated, $prototype_path);
         
             my @stats = stat($filename);
             my $modtime = $stats[9];
         
-            write_page($filename, $page);
+            $self->write_page($filename, $page);
             utime($modtime, $modtime, $filename);
             $changes += 1;
         }
@@ -91,23 +69,33 @@ sub run {
         $count += 1;
     }
     
-    utime($modtime, $modtime, $current_directory);
+    utime($modtime, $modtime, $self->{base_directory});
     return ! $self->{quick_update} || $changes; 
 }
 
 #----------------------------------------------------------------------
-# Get the filename of the prototype and web files
+# Compute checksum for constant sections of page
 
-sub get_filenames {
-    my ($self) = @_;
+sub checksum_prototype {
+    my ($self, $prototype, $decorated, $prototype_path) = @_;    
 
-    my $pattern = "*.$self->{web_extension}";
-    my @filenames = reverse sort_by_date(glob($pattern));
+    my $md5 = Digest::MD5->new;
+
+    my $block_handler = sub {
+        my ($blockname, $locality, $blocktext) = @_;
+        $md5->add($blocktext) if exists $prototype_path->{$locality};
+    };
     
-    my $prototype_file = find_prototype($self->{web_extension}, 1);
-    unshift(@filenames, $prototype_file) if defined $prototype_file;
+    my $prototype_handler = sub {
+        my ($blocktext) = @_;
+        $md5->add($blocktext);
+        return;
+    };
 
-    return @filenames;   
+    $self->parse_blocks($prototype, $decorated,
+                        $block_handler, $prototype_handler);
+
+    return $md5->hexdigest;
 }
 
 #----------------------------------------------------------------------
@@ -117,12 +105,35 @@ sub get_prototype_path {
     my ($self, $filename) = @_;
     
     $filename = rel2abs($filename);
-    $filename = abs2rel($filename, top_directory());
+    $filename = abs2rel($filename, App::Followme::TopDirectory->name);
     my @path = splitdir($filename);
     pop(@path);
     
     my %prototype_path = map {$_ => 1} @path;
     return \%prototype_path;    
+}
+
+#----------------------------------------------------------------------
+# Determine if page matches prototype or needs to be updated
+
+sub unchanged_prototype {
+    my ($self, $prototype, $page, $decorated, $prototype_path) = @_;
+    
+    my $prototype_checksum = $self->checksum_prototype($prototype,
+                                                       $decorated,
+                                                       $prototype_path);
+    my $page_checksum = $self->checksum_prototype($page,
+                                                  $decorated,
+                                                  $prototype_path);
+
+    my $unchanged;
+    if ($prototype_checksum eq $page_checksum) {
+        $unchanged = 1;
+    } else {
+        $unchanged = 0;
+    }
+    
+    return $unchanged;
 }
 
 1;

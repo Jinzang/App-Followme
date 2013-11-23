@@ -210,10 +210,11 @@ sub find_prototype {
     my ($self, $uplevel) = @_;
 
     my $filename;
-    my $directory = $self->{base_directory};
+    chdir($self->{base_directory});
     my $top_directory = App::Followme::TopDirectory->name;
     
     for (;;) {
+        my $directory = getcwd();
         if ($uplevel) {
             $uplevel -= 1;
 
@@ -225,7 +226,6 @@ sub find_prototype {
 
         last if $directory eq $top_directory;
         chdir(updir());
-        $directory = getcwd();
     }
 
     chdir($self->{base_directory});

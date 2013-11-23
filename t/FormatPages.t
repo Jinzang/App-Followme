@@ -18,7 +18,6 @@ my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
 require App::Followme::FormatPages;
-require App::Followme::Common;
 
 my $test_dir = catdir(@path, 'test');
 
@@ -27,9 +26,8 @@ mkdir $test_dir;
 mkdir "$test_dir/sub";
 chdir $test_dir;
 
-my $configuration = {web_extension => 'html'};
-
-App::Followme::Common::top_directory($test_dir);
+App::Followme::TopDirectory->name($test_dir);
+my $configuration = {};
 
 #----------------------------------------------------------------------
 # Write test pages
@@ -57,7 +55,7 @@ do {
 </html>
 EOQ
 
-    my $up = App::Followme::FormatPages->new({});
+    my $up = App::Followme::FormatPages->new($configuration);
 
     foreach my $dir (('sub', '')) {
         foreach my $count (qw(four three two one)) {
@@ -69,8 +67,12 @@ EOQ
             $output =~ s/&&/$dir_name/g;
             $output =~ s/section nav/section nav in $dir/ if $dir;
 
-            my $filename = $dir ? "$dir/$count.html" : "$count.html";
-            App::Followme::Common::write_page($filename, $output);
+            my @dirs;
+            push(@dirs, $test_dir);
+            push(@dirs, $dir) if $dir;
+            my $filename = catfile(@dirs, "$count.html");
+            
+            $up->write_page($filename, $output);
         }
     }
 };
@@ -87,7 +89,7 @@ do {
     
     is_deeply($prototype_path, {sub => 1}, 'Get prototype path'); # test 1
     
-    my $prototype_file = App::Followme::Common::find_prototype('html', 1);
+    my $prototype_file = $up->find_prototype(1);
     is($prototype_file, catfile($test_dir, 'one.html'),
        'Find prototype'); # test 2
 };
@@ -96,15 +98,16 @@ do {
 # Test run
 
 do {
-    my $up = App::Followme::FormatPages->new($configuration);
     foreach my $dir (('', 'sub')) {
         my $path = $dir ? catfile($test_dir, $dir) : $test_dir;
         chdir ($path);
+
+        my $up = App::Followme::FormatPages->new($configuration);
         $up->run();
 
         foreach my $count (qw(two one)) {
             my $filename = "$count.html";
-            my $input = App::Followme::Common::read_page($filename);
+            my $input = $up->read_page($filename);
 
             ok($input =~ /Page $count/,
                "Format block in $dir/$count"); # test 3, 7, 11, 15
