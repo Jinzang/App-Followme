@@ -7,24 +7,16 @@ use lib '../..';
 
 use Cwd;
 use IO::Dir;
-use File::Spec::Functions qw(rel2abs catfile no_upwards);
+use File::Spec::Functions qw(rel2abs catfile splitdir no_upwards);
 
 our $VERSION = "0.93";
 
 #----------------------------------------------------------------------
-#Create object that returns files in a directory tree
+# Create object that returns files in a directory tree
 
 sub new {
     my ($pkg, $configuration) = @_;
-
-    if (defined $configuration ) {
-        if (! ref $configuration) {
-            $configuration = {base_directory => $configuration};
-        }
-
-    } else {
-        $configuration = {};
-    }
+    $configuration = {} unless defined $configuration;
     
     my %self = ($pkg->parameters(), %$configuration);
     my $self = bless(\%self, $pkg);
@@ -55,7 +47,83 @@ sub parameters {
     
     return (
             base_directory => getcwd(),
+            web_extension => 'html',
            );
+}
+
+#----------------------------------------------------------------------
+# Get the list of excluded files
+
+sub get_excluded_files {
+    my ($self) = @_;
+    return '';
+}
+
+#----------------------------------------------------------------------
+# Get the list of included files
+
+sub get_included_files {
+    my ($self) = @_;
+    return "*.$self->{web_extension}";
+}
+
+#----------------------------------------------------------------------
+# Map filename globbing metacharacters onto regexp metacharacters
+
+sub glob_patterns {
+    my ($self, $patterns) = @_;
+
+    my @globbed_patterns;
+    my @patterns = split(/\s*,\s*/, $patterns);
+
+    foreach my $pattern (@patterns) {
+        if ($pattern eq '*') {
+            push(@globbed_patterns,  '') if $pattern eq '*';
+            
+        } else {
+            my $start;
+            if ($pattern =~ s/^\*//) {
+                $start = '';
+            } else {
+                $start = '^';
+            }
+        
+            my $finish;
+            if ($pattern =~ s/\*$//) {
+                $finish = '';
+            } else {
+                $finish = '$';
+            }
+        
+            $pattern =~ s/\./\\./g;
+            $pattern =~ s/\*/\.\*/g;
+            $pattern =~ s/\?/\.\?/g;
+        
+            push(@globbed_patterns, $start . $pattern . $finish);
+        }
+    }
+    
+    return \@globbed_patterns;
+}
+
+#----------------------------------------------------------------------
+# Return true if this is an included file
+
+sub include_file {
+    my ($self, $filename) = @_;
+    
+    my $dir;
+    ($dir, $filename) = $self->split_filename($filename);
+    
+    foreach my $pattern (@{$self->{exclude_files}}) {
+        return if $filename =~ /$pattern/;
+    }
+    
+    foreach my $pattern (@{$self->{include_files}}) {
+        return 1 if $filename =~ /$pattern/;
+    }
+
+    return;
 }
 
 #----------------------------------------------------------------------
@@ -63,7 +131,7 @@ sub parameters {
 
 sub match_file {
     my ($self, $path) = @_;
-    return ! -d $path;
+    return $self->include_file($path) && ! -d $path;
 }
 
 #----------------------------------------------------------------------
@@ -117,6 +185,8 @@ sub setup {
     
     $self->{pending_files} = [];
     $self->{pending_folders} =[$self->{base_directory}];
+    $self->{include_files} = $self->glob_patterns($self->get_included_files());
+    $self->{exclude_files} = $self->glob_patterns($self->get_excluded_files());
     
     return;
 }
@@ -138,6 +208,29 @@ sub sort_files {
     
     @{$self->{pending_files}} = map {$_->[0]} @augmented_files;
     return;
+}
+
+#----------------------------------------------------------------------
+# Split filename from directory
+
+sub split_filename {
+    my ($self, $filename) = @_;
+    
+    $filename = rel2abs($filename);
+    my @path = splitdir($filename);
+    my $file = pop(@path);
+    
+    my @new_path;
+    foreach my $dir (@path) {
+        if (no_upwards($dir)) {
+            push(@new_path, $dir);
+        } else {
+            pop(@new_path);
+        }
+    }
+    
+    my $new_dir = catfile(@new_path);
+    return ($new_dir, $file);
 }
 
 1;

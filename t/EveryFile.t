@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 3;
+use Test::More tests => 6;
 
 #----------------------------------------------------------------------
 # Load package
@@ -88,3 +88,22 @@ EOQ
     is($filename, $ok_filename, 'Most recent file next'); #test 3
 };
 
+#----------------------------------------------------------------------
+# Test file visitor
+
+do {
+    my $exclude_files = '*.htm,template_*';
+    my $excluded_files_ok = ['\.htm$', '^template_'];
+    
+    my $ef = App::Followme::EveryFile->new();
+    my $excluded_files = $ef->glob_patterns($exclude_files);
+
+    is_deeply($excluded_files, $excluded_files_ok, 'Glob patterns'); # test 4
+
+    my $dir_ok = $test_dir;
+    my $file_ok = 'index.html';
+    my $filename = catfile($dir_ok, $file_ok);
+    my ($dir, $file) = $ef->split_filename($filename);
+    is($dir, $dir_ok, 'Split directory'); # test 5
+    is($file, $file_ok, 'Split filename'); # test 6
+};
