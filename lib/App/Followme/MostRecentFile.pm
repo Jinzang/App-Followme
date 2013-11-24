@@ -11,6 +11,20 @@ use File::Spec::Functions qw(rel2abs);
 use base qw(App::Followme::EveryFile);
 
 #----------------------------------------------------------------------
+# Create object that returns files in a directory tree
+
+sub new {
+    my ($pkg, $directory) = @_;
+    
+    my %configuration = $directory ? (base_directory => $directory) : ();
+    my %self = ($pkg->parameters(), %configuration);
+    my $self = bless(\%self, $pkg);
+    $self->setup();
+    
+    return $self;
+}
+
+#----------------------------------------------------------------------
 # Read the default parameter values
 
 sub parameters {
@@ -18,7 +32,6 @@ sub parameters {
     
     my %parameters = (
                 count => 0,
-                web_extension => 'html',
            );
 
     my %base_params = $pkg->SUPER::parameters();
