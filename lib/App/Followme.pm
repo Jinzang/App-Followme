@@ -6,27 +6,14 @@ use warnings;
 
 use lib '..';
 
+use base qw(App::Followme::PageHandler);
+
 use Cwd;
-use IO::Dir;
 use IO::File;
 use File::Spec::Functions qw(rel2abs splitdir catfile no_upwards rootdir updir);
+use App::Followme::TopDirectory;
 
-use App::Followme::Common qw(exclude_file split_filename top_directory);
-
-our $VERSION = "0.92";
-
-#----------------------------------------------------------------------
-# Create a new object to update a website
-
-sub new {
-    my ($pkg, $configuration) = @_;
-
-    my $self = bless({}, $pkg);    
-    my %parameters = $self->update_parameters($pkg, $configuration);
-    $self->{$_} = $parameters{$_} foreach keys %parameters;
-    
-    return $self;
-}
+our $VERSION = "0.93";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
@@ -34,11 +21,15 @@ sub new {
 sub parameters {
     my ($pkg) = @_;
     
-    return (
-            configuration_file => 'followme.cfg',
-            exclude_folders => 'templates',
-            quick_update => 0,
-            );
+    my %parameters = (
+                      configuration_file => 'followme.cfg',
+                      exclude_folders => 'templates',
+                     );
+
+    my %base_params = $pkg->SUPER::parameters();
+    %parameters = (%base_params, %parameters);
+
+    return %parameters;
 }
 
 #----------------------------------------------------------------------
@@ -85,6 +76,22 @@ sub copy_config {
 }
 
 #----------------------------------------------------------------------
+# Get the list of excluded files
+
+sub get_excluded_files {
+    my ($self) = @_;
+    return $self->{exclude_folders};
+}
+
+#----------------------------------------------------------------------
+# Get the list of included files
+
+sub get_included_files {
+    my ($self) = @_;
+    return '*';
+}
+
+#----------------------------------------------------------------------
 # Find the configuration files above a directory
 
 sub find_configuration {
@@ -107,23 +114,6 @@ sub find_configuration {
 }
 
 #----------------------------------------------------------------------
-# Get the subdirectories in the current folder
-
-sub get_subdirectories {
-    my ($self) = @_;
-    
-    my @subdirectories;    
-    my $dd = IO::Dir->new(getcwd());
-
-    while (defined (my $file = $dd->read())) {
-        push(@subdirectories, $file) if -d $file;
-    }
-    
-    $dd->close();
-    return no_upwards(@subdirectories);
-}
-
-#----------------------------------------------------------------------
 # Find and read the configuration files
 
 sub initialize_configuration {
@@ -135,7 +125,7 @@ sub initialize_configuration {
     $configuration->{module} = [];
 
     foreach my $filename ($self->find_configuration($directory)) {
-        my ($dir, $file) = split_filename($filename);
+        my ($dir, $file) = $self->split_filename($filename);
         $top_dir ||= $dir;
         chdir($dir);
         
@@ -143,32 +133,34 @@ sub initialize_configuration {
     }
 
     $top_dir ||= $directory;
-    top_directory($top_dir);
+    App::Followme::TopDirectory->name($top_dir);
     
     chdir($directory);
     return $configuration;
 }
 
 #----------------------------------------------------------------------
-# Load a modeule if it has not already been loaded
+# Load a modeule and create a new instance
 
-sub load_modules {
-    my ($self, $configuration) = @_;
+sub load_module {
+    my ($self, $module, $configuration) = @_;
 
-    foreach (reverse @{$configuration->{module}}) {
-        last if ref $_;
-        
-        my $module = $_;
-        eval "require $module" or die "Module not found: $module\n";
+    eval "require $module" or die "Module not found: $module\n";
 
-        $configuration->{base_directory} = getcwd();
-        my %parameters = $self->update_parameters($module, $configuration);
-        my $obj = $module->new(\%parameters);
+    $configuration->{base_directory} = getcwd();
+    my %parameters = $self->update_parameters($module, $configuration);
+    my $obj = $module->new(\%parameters);
 
-        $_ = $obj;
-    }
+    return $obj;
+}
 
-    return;
+#----------------------------------------------------------------------
+# Return 1 if filename passes test
+
+sub match_file {
+    my ($self, $path) = @_;
+    
+    return -d $path && $self->include_file();
 }
 
 #----------------------------------------------------------------------
@@ -199,7 +191,7 @@ sub set_directory {
     my ($directory, $file);
     if (defined $filename) {
         if (! -d $filename) {
-            ($directory, $file) = split_filename($filename);
+            ($directory, $file) = $self->split_filename($filename);
             $self->{quick_update} = 1;
         }
         
@@ -207,6 +199,7 @@ sub set_directory {
         $directory = getcwd();
     }
 
+    $self->{base_directory} = $directory;
     return $directory;
 }
 
@@ -239,7 +232,6 @@ sub update_configuration {
         close($fd);
     }
 
-    $self->load_modules($configuration);
     return $configuration;
 }
 
@@ -266,7 +258,8 @@ sub update_folder {
     
     my @modules;
     foreach my $module (@{$configuration->{module}}) {
-        push(@modules, $module) if $module->run();
+        my $obj = $self->load_module($module, $configuration);
+        push(@modules, $module) if $obj->run();
         chdir($directory);
     }
 
@@ -274,10 +267,9 @@ sub update_folder {
     
     if (@modules) {
         $configuration->{module} = \@modules;
-        my @subdirectories = $self->get_subdirectories();
-    
-        foreach my $subdirectory (@subdirectories) {
-            next if exclude_file($self->{exclude_folders}, $subdirectory);
+        $self->visit($directory);
+        
+        while (defined(my $subdirectory = $self->next)) {
             $self->update_folder($subdirectory, $configuration);
         }
     }

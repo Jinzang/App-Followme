@@ -183,8 +183,7 @@ sub next {
 sub setup {
     my ($self) = @_;
     
-    $self->{pending_files} = [];
-    $self->{pending_folders} =[$self->{base_directory}];
+    $self->visit($self->{base_directory});
     $self->{include_files} = $self->glob_patterns($self->get_included_files());
     $self->{exclude_files} = $self->glob_patterns($self->get_excluded_files());
     
@@ -233,6 +232,17 @@ sub split_filename {
     return ($new_dir, $file);
 }
 
+#----------------------------------------------------------------------
+# Set the direcory to visit
+
+sub visit {
+    my ($self, $directory) = @_;
+    
+    $self->{pending_files} = [];
+    $self->{pending_folders} =[rel2abs($directory)];
+    
+    return;   
+}
 1;
 __END__
 
