@@ -20,7 +20,8 @@ sub parameters {
     my ($pkg) = @_;
     
     my %parameters = (
-            text_extension => 'txt',
+            include_files => '*.txt',
+            exclude_files => 'index.html',
             page_template => catfile('templates', 'page.htm'),
            );
 
@@ -57,7 +58,7 @@ sub convert_a_file {
     my $page = $sub->($data);
     
     my $new_file = $filename;
-    $new_file =~ s/$self->{text_extension}$/$self->{web_extension}/;
+    $new_file =~ s/\.[^\.]*$/.$self->{web_extension}/;
 
     $self->write_page($new_file, $page);
     unlink($filename);
@@ -111,14 +112,6 @@ sub internal_fields {
 
     $data->{body} = $self->convert_text($text);
     return $data;
-}
-
-#----------------------------------------------------------------------
-# Return 1 if filename passes test
-
-sub match_file {
-    my ($self, $path) = @_;
-    return ! -d $path && $path =~ /\.$self->{text_extension}$/;
 }
 
 1;
