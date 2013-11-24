@@ -5,7 +5,7 @@ use warnings;
 
 use lib '../..';
 
-use base qw(App::Followme::IndexHandler);
+use base qw(App::Followme::PageHandler);
 
 use File::Spec::Functions qw(abs2rel catfile no_upwards rel2abs splitdir);
 use App::Followme::TopDirectory;
@@ -22,6 +22,7 @@ sub parameters {
                       news_file => 'index.html',
                       news_index_length => 5,
                       body_tag => 'content',
+                      include_files => '*.html',
                       exclude_files => 'index.html',
                       news_template => catfile('templates', 'news.htm'),
                      );
