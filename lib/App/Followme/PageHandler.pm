@@ -27,7 +27,8 @@ sub parameters {
     my %parameters = (
             absolute => 0,
             quick_update => 0,
-            web_extension => 'html',
+            include_files => '*.html',
+            exclude_files => '',
            );
 
     my %base_params = $pkg->SUPER::parameters();
@@ -233,6 +234,22 @@ sub find_prototype {
 }
 
 #----------------------------------------------------------------------
+# Get the list of excluded files
+
+sub get_excluded_files {
+    my ($self) = @_;
+    return $self->{exclude_files};
+}
+
+#----------------------------------------------------------------------
+# Get the list of included files
+
+sub get_included_files {
+    my ($self) = @_;
+    return $self->{include_files};
+}
+
+#----------------------------------------------------------------------
 # Get the full template name (stub)
 
 sub get_template_name {
@@ -278,15 +295,7 @@ sub make_template {
 }
 
 #----------------------------------------------------------------------
-# Return 1 if filename passes test
-
-sub match_file {
-    my ($self, $path) = @_;
-    return ! -d $path && $path =~ /\.$self->{web_extension}$/;
-}
-
-#----------------------------------------------------------------------
-# Return 1 if folder passes test
+# Do not descend into folders
 
 sub match_folder {
     my ($self, $path) = @_;
