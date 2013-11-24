@@ -5,7 +5,7 @@ use warnings;
 
 use lib '../..';
 
-use base qw(App::Followme::IndexHandler);
+use base qw(App::Followme::PageHandler);
 
 use Cwd;
 use IO::Dir;
@@ -128,11 +128,7 @@ sub match_file {
         $flag = $self->{include_directories};
 
     } else {
-        my $dir;
-        ($dir, $filename) = $self->split_filename($filename);
-        my $pattern = $self->glob_pattern($self->{include_files});
-
-        $flag = $filename =~ /$pattern/ && ! $self->exclude_file($filename);
+        $flag = $self->include_file($filename);
     }
 
     return  $flag;
