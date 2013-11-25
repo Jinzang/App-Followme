@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 30;
+use Test::More tests => 29;
 
 #----------------------------------------------------------------------
 # Load package
@@ -61,9 +61,8 @@ do {
 
     my $page = join("\n", @page) . "\n";
     
-    my $decorated = 0;
     my $ph = App::Followme::PageHandler->new;
-    $ph->parse_blocks($page, $decorated, $block_handler, $template_handler);
+    $ph->parse_blocks($page, $block_handler, $template_handler);
 
     my $ok_blocks = {
         first => "\nFirst block\n",
@@ -90,9 +89,7 @@ do {
     $page =join("\n", @bad_page) . "\n";
 
     eval {
-        $ph->parse_blocks($page, $decorated,
-                                            $block_handler,
-                                            $template_handler);
+        $ph->parse_blocks($page, $block_handler, $template_handler);
     };
     is($@, "Unmatched block (<!-- section second -->)\n", 'Missing end'); # test 3
 
@@ -101,9 +98,7 @@ do {
     $page =join("\n", @bad_page) . "\n";
 
     eval {
-        $ph->parse_blocks($page, $decorated,
-                                            $block_handler,
-                                            $template_handler);
+        $ph->parse_blocks($page, $block_handler, $template_handler);
     };
     is($@, "Unmatched (<!-- endsection first -->)\n", 'Missing begin'); # test 4
 
@@ -112,9 +107,7 @@ do {
     $page =join("\n", @bad_page) . "\n";
 
     eval {
-        $ph->parse_blocks($page, $decorated,
-                                            $block_handler,
-                                            $template_handler);
+        $ph->parse_blocks($page, $block_handler, $template_handler);
     };
     is($@, "Improperly nested block (<!-- section second -->)\n",
        'Begin inside of begin'); # test 5
@@ -124,9 +117,7 @@ do {
     $page =join("\n", @bad_page) . "\n";
 
     eval {
-        $ph->parse_blocks($page, $decorated,
-                                            $block_handler,
-                                            $template_handler);
+        $ph->parse_blocks($page, $block_handler, $template_handler);
     };
     is($@, "Unmatched (<!-- endsection second -->)\n",
        'Begin does not match end'); # test 6
@@ -148,10 +139,9 @@ do {
                 "Last line",
                );
 
-    my $decorated = 0;
     my $page = join("\n", @page) . "\n";
     my $ph = App::Followme::PageHandler->new;
-    my $blocks = $ph->parse_page($page, $decorated);
+    my $blocks = $ph->parse_page($page);
 
     my $ok_blocks = {
         first => "\nFirst block\n",
@@ -160,21 +150,11 @@ do {
     
     is_deeply($blocks, $ok_blocks, 'Parse undecorated blocks'); # test 7
 
-    $decorated = 1;
-    $blocks = $ph->parse_page($page, $decorated);
-
-    $ok_blocks = {
-        first => "<!-- section first -->\nFirst block\n<!-- endsection first -->",
-        second => "<!-- section second -->\nSecond block\n<!-- endsection second -->",
-    };
-
-    is_deeply($blocks, $ok_blocks, 'Parse decorated blocks'); # test 8
-
     my $bad_page = $page;
     $bad_page =~ s/second/first/g;
-    $blocks = eval {$ph->parse_page($bad_page, $decorated)};
+    $blocks = eval {$ph->parse_page($bad_page)};
     
-    is($@, "Duplicate block name (first)\n", 'Duplicate block names'); # test 9
+    is($@, "Duplicate block name (first)\n", 'Duplicate block names'); # test 8
 };
 
 #----------------------------------------------------------------------
@@ -195,29 +175,24 @@ do {
 
     my $prototype = join("\n", @prototype) . "\n";
 
-    my $decorated = 0;
     my $page = $prototype;
     $page =~ s/line/portion/g;
     $page =~ s/block/section/g;
     
     my $prototype_path = {folder => 1};
     my $ph = App::Followme::PageHandler->new;
-    my $output = $ph->update_page($prototype, $page,
-                                                    $decorated,
-                                                    $prototype_path);
+    my $output = $ph->update_page($prototype, $page, $prototype_path);
     my @output = split(/\n/, $output);
     
     my @output_ok = @prototype;
     $output_ok[6] =~ s/block/section/;
 
-    is_deeply(\@output, \@output_ok, 'Update page'); # test 10
-
+    is_deeply(\@output, \@output_ok, 'Update page'); # test 9
     my $bad_page = $page;
     $bad_page =~ s/second/third/g;
 
-    $output = eval{$ph->update_page($prototype, $bad_page,
-                                                      $decorated, $prototype_path)};
-    is($@, "Unused blocks (third)\n", 'Update page bad block'); # test 11
+    $output = eval{$ph->update_page($prototype, $bad_page, $prototype_path)};
+    is($@, "Unused blocks (third)\n", 'Update page bad block'); # test 10
 };
 
 #----------------------------------------------------------------------
@@ -259,7 +234,7 @@ EOQ
             $ph->write_page($filename, $output);
 
             my $input = $ph->read_page($filename);
-            is($input, $output, "Read and write page $filename"); #tests 12-20
+            is($input, $output, "Read and write page $filename"); #tests 11-18
         }
     }
 };
@@ -313,13 +288,13 @@ EOQ
     my $sub = $ph->compile_template($template);
     my $page = $sub->($data);
 
-    ok($page =~ /<h1>Three<\/h1>/, 'Apply template to title'); # test 20
+    ok($page =~ /<h1>Three<\/h1>/, 'Apply template to title'); # test 19
     ok($page =~ /<p>This is a paragraph<\/p>/,
-       'Apply template to body'); # test 21
+       'Apply template to body'); # test 20
 
     my @li = $page =~ /(<li>)/g;
-    is(@li, 4, 'Loop over data items'); # test 22
-    ok($page =~ /<li>2 two<\/li>/, 'Substitute in loop'); # test 23
+    is(@li, 4, 'Loop over data items'); # test 21
+    ok($page =~ /<li>2 two<\/li>/, 'Substitute in loop'); # test 22
 };
 
 #----------------------------------------------------------------------
@@ -335,37 +310,37 @@ do {
     
     $data = $ph->build_title($data, $text_name);
     my $title_ok = 'This Is Only A Test';
-    is($data->{title}, $title_ok, 'Build file title'); # test 24
+    is($data->{title}, $title_ok, 'Build file title'); # test 23
 
     my $index_name = catfile('watch','index.html');
     $data = $ph->build_title($data, $index_name);
     $title_ok = 'Watch';
-    is($data->{title}, $title_ok, 'Build directory title'); # test 25
+    is($data->{title}, $title_ok, 'Build directory title'); # test 24
     
     $data = $ph->build_url($data, $text_name);
     my $url_ok = 'watch/this-is-only-a-test.html';
-    is($data->{url}, $url_ok, 'Build rleativr file url'); # test 26
+    is($data->{url}, $url_ok, 'Build rleativr file url'); # test 25
 
     $ph->{absolute} = 1;
     $data = $ph->build_url($data, $text_name);
     $url_ok = '/watch/this-is-only-a-test.html';
-    is($data->{url}, $url_ok, 'Build rleativr file url'); # test 27
+    is($data->{url}, $url_ok, 'Build rleativr file url'); # test 26
 
     mkdir('watch');
     $data = $ph->build_url($data, 'watch');
-    is($data->{url}, '/watch/index.html', 'Build directory url'); #test 28
+    is($data->{url}, '/watch/index.html', 'Build directory url'); #test 27
        
     $data = {};
     my $date = $ph->build_date($data, 'two.html');
     my @date_fields = grep {/\S/} sort keys %$date;
     my @date_ok = sort qw(day month monthnum  weekday hour24 hour 
                    minute second year ampm);
-    is_deeply(\@date_fields, \@date_ok, 'Build date'); # test 29
+    is_deeply(\@date_fields, \@date_ok, 'Build date'); # test 28
     
     $data = {};
     $data = $ph->external_fields($data, 'two.html');
     my @keys = sort keys %$data;
     my @keys_ok = sort(@date_ok, 'title', 'url');
-    is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 30
+    is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 29
 };
 

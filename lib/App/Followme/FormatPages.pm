@@ -33,22 +33,19 @@ sub run {
     
     my $count = 0;
     my $changes = 0;
-    my $decorated = 1;
 
     while (defined(my $filename = $self->next)) {
         my $page = $self->read_page($filename);
         die "Couldn't read $filename" unless defined $page;
 
         # Check for changes before updating page
-        my $skip = $self->unchanged_prototype($prototype, $page,
-                                              $decorated, $prototype_path);
+        my $skip = $self->unchanged_prototype($prototype, $page, $prototype_path);
 
         if ($skip) {
             last if $self->{quick_update} && $count;
             
         } else {    
-            $page = $self->update_page($prototype, $page, 
-                                       $decorated, $prototype_path);
+            $page = $self->update_page($prototype, $page, $prototype_path);
         
             my @stats = stat($filename);
             my $modtime = $stats[9];
@@ -77,7 +74,7 @@ sub run {
 # Compute checksum for constant sections of page
 
 sub checksum_prototype {
-    my ($self, $prototype, $decorated, $prototype_path) = @_;    
+    my ($self, $prototype, $prototype_path) = @_;    
 
     my $md5 = Digest::MD5->new;
 
@@ -92,9 +89,7 @@ sub checksum_prototype {
         return;
     };
 
-    $self->parse_blocks($prototype, $decorated,
-                        $block_handler, $prototype_handler);
-
+    $self->parse_blocks($prototype, $block_handler, $prototype_handler);
     return $md5->hexdigest;
 }
 
@@ -114,17 +109,58 @@ sub get_prototype_path {
 }
 
 #----------------------------------------------------------------------
+# This code considers the surrounding tags to be part of the block
+
+sub parse_blocks {
+    my ($self, $page, $block_handler, $prototype_handler) = @_;
+    
+    my $locality;
+    my $block = '';
+    my $blockname = '';
+    my @tokens = split(/(<!--\s*(?:section|endsection)\s+.*?-->)/, $page);
+    
+    foreach my $token (@tokens) {
+        if ($token =~ /^<!--\s*section\s+(.*?)-->/) {
+            die "Improperly nested block ($token)\n" if $blockname;
+                
+            ($blockname, $locality) = $self->parse_blockname($1);
+            $block .= $token
+            
+        } elsif ($token =~ /^<!--\s*endsection\s+(.*?)-->/) {
+            my ($endname) = $self->parse_blockname($1);
+            die "Unmatched ($token)\n"
+                if $blockname eq '' || $blockname ne $endname;
+                
+            $block .= $token;
+            $block_handler->($blockname, $locality, $block);
+
+            $block = '';
+            $blockname = '';
+
+        } else {
+            if ($blockname) {
+                $block .= $token;
+            } else {
+                $prototype_handler->($token);
+            }            
+        }
+    }
+ 
+    die "Unmatched block (<!-- section $blockname -->)\n" if $blockname;
+    return;
+}
+
+#----------------------------------------------------------------------
 # Determine if page matches prototype or needs to be updated
 
 sub unchanged_prototype {
-    my ($self, $prototype, $page, $decorated, $prototype_path) = @_;
+    my ($self, $prototype, $page, $prototype_path) = @_;
     
-    my $prototype_checksum = $self->checksum_prototype($prototype,
-                                                       $decorated,
-                                                       $prototype_path);
-    my $page_checksum = $self->checksum_prototype($page,
-                                                  $decorated,
-                                                  $prototype_path);
+    my $prototype_checksum =
+        $self->checksum_prototype($prototype, $prototype_path);
+    
+    my $page_checksum =
+        $self->checksum_prototype($page, $prototype_path);
 
     my $unchanged;
     if ($prototype_checksum eq $page_checksum) {

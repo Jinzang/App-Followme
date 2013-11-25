@@ -283,10 +283,9 @@ sub make_template {
     
     my $final_template;
     if ($prototype) {
-        my $decorated = 0;
         my $prototype_path = {};
         $final_template = $self->update_page($prototype, $template, 
-                                             $decorated, $prototype_path);
+                                             $prototype_path);
     } else {
         $final_template = $template;
     }
@@ -324,7 +323,7 @@ sub parse_blockname {
 # Break page into blocks
 
 sub parse_blocks {
-    my ($self, $page, $decorated, $block_handler, $prototype_handler) = @_;
+    my ($self, $page, $block_handler, $prototype_handler) = @_;
     
     my $locality;
     my $block = '';
@@ -336,24 +335,16 @@ sub parse_blocks {
             die "Improperly nested block ($token)\n" if $blockname;
                 
             ($blockname, $locality) = $self->parse_blockname($1);
-            if ($decorated) {
-                $block .= $token
-            } else {
-                $prototype_handler->($token);
-            }
+            $prototype_handler->($token);
+
             
         } elsif ($token =~ /^<!--\s*endsection\s+(.*?)-->/) {
             my ($endname) = $self->parse_blockname($1);
             die "Unmatched ($token)\n"
                 if $blockname eq '' || $blockname ne $endname;
                 
-            if ($decorated) {
-                $block .= $token;
-                $block_handler->($blockname, $locality, $block);
-            } else {
-                $block_handler->($blockname, $locality, $block);
-                $prototype_handler->($token);
-            }
+            $block_handler->($blockname, $locality, $block);
+            $prototype_handler->($token);
 
             $block = '';
             $blockname = '';
@@ -389,7 +380,7 @@ sub parse_filename {
 # Extract named blocks from a page
 
 sub parse_page {
-    my ($self, $page, $decorated) = @_;
+    my ($self, $page) = @_;
     
     my $blocks = {};
     my $block_handler = sub {
@@ -405,7 +396,7 @@ sub parse_page {
         return;
     };
 
-    $self->parse_blocks($page, $decorated, $block_handler, $prototype_handler);    
+    $self->parse_blocks($page, $block_handler, $prototype_handler);    
     return $blocks;
 }
 
@@ -442,10 +433,10 @@ sub set_fields {
 # Parse prototype and page and combine them
 
 sub update_page {
-    my ($self, $prototype, $page, $decorated, $prototype_path) = @_;
+    my ($self, $prototype, $page, $prototype_path) = @_;
 
     my $output = [];
-    my $blocks = $self->parse_page($page, $decorated);
+    my $blocks = $self->parse_page($page);
     
     my $block_handler = sub {
         my ($blockname, $locality, $blocktext) = @_;
@@ -468,8 +459,7 @@ sub update_page {
         return;
     };
 
-    $self->parse_blocks($prototype, $decorated,
-                        $block_handler, $prototype_handler);
+    $self->parse_blocks($prototype, $block_handler, $prototype_handler);
 
     if (%$blocks) {
         my $names = join(' ', sort keys %$blocks);
@@ -562,10 +552,9 @@ hash will be interpolated into the text. Loop comments look like
 
 There should be only one pair of loop comments in the template. 
 
-=item $blocks = $self->parse_page($page, $decorated);
+=item $blocks = $self->parse_page($page);
 
-Extract blocks from a web page. Page is a string containing the web page. Decorates
-is a flag indicating if the block is surrounded by the block tags.
+Extract blocks from a web page. Page is a string containing the web page.
 
 =item $str = $self->read_page($filename);
 
@@ -578,7 +567,7 @@ done is not line oriented.
 Create title, url, and date variables from the filename and the modification date
 of the file. Calculate the body variable from the contents of the file.
 
-=item $page = $self->update_page($prototype, $page, $decorated, $prototype_path);
+=item $page = $self->update_page($prototype, $page, $prototype_path);
 
 This function combines the contents of a prototype and page to create a new
 page. Update_page updates the constant portions of a web page from a prototype. 
@@ -607,14 +596,10 @@ any other block and varies from page to page.
 Text in conditional blocks can be used for navigation or other sections of the
 page that are constant, but not constant across the entire site.
 
-Both prototype and page are strings, not filenames. The argument decorated
-controls whether the section comment tags are copied from the prototype or page.
-If decorated is true, the section tags are treated as part of the block and are
-copied from the page. If decorated is false, the section tags are copied from
-the prototype. Template_path is a hash containing the directories from the base
-directory of the web site down to the directory containing the prototype. The
-hash is treated as a set, that is, the directory names are the keys and the
-values of the keys are one/
+Both prototype and page are strings, not filenames. Template_path is a hash
+containing the directories from the base directory of the web site down to the
+directory containing the prototype. The hash is treated as a set, that is, the
+directory names are the keys and the values of the keys are one/
 
 =item $self->write_page($filename, $str);
 
