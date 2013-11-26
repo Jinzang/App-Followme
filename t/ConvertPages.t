@@ -80,7 +80,7 @@ This is preformatted text.
 EOQ
 
     my $configuration = {page_template => 'template.htm'};
-    my $cvt = App::Followme::NewConvertPages->new($configuration);
+    my $cvt = App::Followme::ConvertPages->new($configuration);
     
     $cvt->write_page('index.html', $index);
     $cvt->write_page('template.htm', $template);

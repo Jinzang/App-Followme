@@ -22,8 +22,7 @@ sub parameters {
                       news_file => 'index.html',
                       news_index_length => 5,
                       body_tag => 'content',
-                      include_files => '*.html',
-                      exclude_files => 'index.html',
+                      news_exclude => 'index.html',
                       news_template => catfile('templates', 'news.htm'),
                      );
 
@@ -62,6 +61,14 @@ sub create_news_index {
     $self->write_page($news_file, $page);
 
     return;
+}
+
+#----------------------------------------------------------------------
+# Get the list of excluded files
+
+sub get_excluded_files {
+    my ($self) = @_;
+    return $self->{news_exclude};
 }
 
 #----------------------------------------------------------------------
@@ -212,20 +219,7 @@ The following fields in the configuration file are used:
 
 =over 4
 
-=item absolute
-
-If true, urls in a page will be absolute
-
-=item body_tag
-
-The the name of the tag pair containing the body text.
-
-=item base_directory
-
-The directory containing the configuration file. This directory is searched to
-create the index.
-
-=item exclude_files
+=item news_exclude
 
 One or more filenames or patterns to exclude from the index
 
@@ -240,11 +234,6 @@ The number of pages to include in the index.
 =item news_template
 
 The path to the template file, relative to the top directory.
-
-=item web_extension
-
-The extension used for web pages. Pages with this extension are considered for
-inclusion in the index.
 
 =back
 

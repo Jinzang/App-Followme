@@ -84,7 +84,7 @@ EOQ
 
     my $configuration = {
             include_directories => 1,
-            include_files => '*.html',
+            index_include => '*.html',
             index_template => $index_name,
             index_file => 'index.html',
             web_extension => 'html',

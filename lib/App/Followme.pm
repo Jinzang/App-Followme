@@ -160,7 +160,7 @@ sub load_module {
 sub match_file {
     my ($self, $path) = @_;
     
-    return -d $path && $self->include_file();
+    return -d $path && $self->include_file($path);
 }
 
 #----------------------------------------------------------------------

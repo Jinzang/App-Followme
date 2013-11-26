@@ -1,4 +1,4 @@
-package App::Followme::NewConvertPages;
+package App::Followme::ConvertPages;
 use 5.008005;
 use strict;
 use warnings;
@@ -20,8 +20,7 @@ sub parameters {
     my ($pkg) = @_;
     
     my %parameters = (
-            include_files => '*.txt',
-            exclude_files => 'index.html',
+            text_extension => 'txt',
             page_template => catfile('templates', 'page.htm'),
            );
 
@@ -89,6 +88,14 @@ sub convert_text {
     }
     
     return $page;
+}
+
+#----------------------------------------------------------------------
+# Get the list of included files
+
+sub get_included_files {
+    my ($self) = @_;
+    return "*.$self->{text_extension}";
 }
 
 #----------------------------------------------------------------------

@@ -115,12 +115,12 @@ sub include_file {
     my $dir;
     ($dir, $filename) = $self->split_filename($filename);
     
-    foreach my $pattern (@{$self->{exclude_files}}) {
-        return if $filename =~ /$pattern/;
+    foreach my $pattern (@{$self->{excluded_files}}) {
+        return if length($pattern) == 0 || $filename =~ /$pattern/;
     }
     
-    foreach my $pattern (@{$self->{include_files}}) {
-        return 1 if $filename =~ /$pattern/;
+    foreach my $pattern (@{$self->{included_files}}) {
+        return 1 if length($pattern) == 0 || $filename =~ /$pattern/;
     }
 
     return;
@@ -184,8 +184,8 @@ sub setup {
     my ($self) = @_;
     
     $self->visit($self->{base_directory});
-    $self->{include_files} = $self->glob_patterns($self->get_included_files());
-    $self->{exclude_files} = $self->glob_patterns($self->get_excluded_files());
+    $self->{included_files} = $self->glob_patterns($self->get_included_files());
+    $self->{excluded_files} = $self->glob_patterns($self->get_excluded_files());
     
     return;
 }
@@ -266,6 +266,25 @@ App::Followme::EveryFile - Base class for App::Followme classes
 This class has methods for looping all the files in a directory. The files in
 a directory are returned in date order, with the most recently modified file
 returned first. 
+
+=head1 CONFIGURATION
+
+The following fields in the configuration file are used in this class and every class
+based on it:
+
+=over 4
+
+=item base_directory
+
+The directory the class is invoked from. This controls which files are returned. The
+default value is the current directory.
+
+=item web_extension
+
+The extension used by web pages. This controls which files are returned. The
+default value is 'html'.
+
+=back
 
 =head1 LICENSE
 

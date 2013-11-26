@@ -23,8 +23,8 @@ sub parameters {
     my %parameters = (
                       include_directories => 1,
                       index_file => 'index.html',
-                      include_files => '*.html',
-                      exclude_files => 'index.html',
+                      index_include => '*.html',
+                      index_exclude => 'index.html',
                       index_template => catfile('templates', 'index.htm'),
                      );
 
@@ -84,6 +84,22 @@ sub create_an_index {
  
     $self->write_page($self->{index_file}, $page);
     return;
+}
+
+#----------------------------------------------------------------------
+# Get the list of excluded files
+
+sub get_excluded_files {
+    my ($self) = @_;
+    return $self->{index_exclude};
+}
+
+#----------------------------------------------------------------------
+# Get the list of included files
+
+sub get_included_files {
+    my ($self) = @_;
+    return $self->{index_include};
 }
 
 #----------------------------------------------------------------------
@@ -219,17 +235,17 @@ The following fields in the configuration file are used:
 
 If true, urls in a page will be absolute
 
-=item exclude_files
-
-One or more filenames or patterns to exclude from the index
-
 =item include_directories
 
 If true, subdirectories will be included in the index
 
-=item include_files
+=item index_exclude
 
-A space delimited list of expressions used to create the index
+A comma separated list of filename patterns to exclude from the index
+
+=item index_include
+
+A comma separated list of filename patterns used to create the index
 
 =item index_file
 
@@ -238,14 +254,6 @@ Name of the index file to be created
 =item index_template
 
 The path to the template file, relative to the base directory.
-
-=item quick_update
-
-Only create index for current directory
-
-=item web_extension
-
-The extension used for web pages.
 
 =back
 

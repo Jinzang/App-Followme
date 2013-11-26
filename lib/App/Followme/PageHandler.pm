@@ -27,8 +27,6 @@ sub parameters {
     my %parameters = (
             absolute => 0,
             quick_update => 0,
-            include_files => '*.html',
-            exclude_files => '',
            );
 
     my %base_params = $pkg->SUPER::parameters();
@@ -231,22 +229,6 @@ sub find_prototype {
 
     chdir($self->{base_directory});
     return $filename;
-}
-
-#----------------------------------------------------------------------
-# Get the list of excluded files
-
-sub get_excluded_files {
-    my ($self) = @_;
-    return $self->{exclude_files};
-}
-
-#----------------------------------------------------------------------
-# Get the list of included files
-
-sub get_included_files {
-    my ($self) = @_;
-    return $self->{include_files};
 }
 
 #----------------------------------------------------------------------
