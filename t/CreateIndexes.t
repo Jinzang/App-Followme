@@ -80,18 +80,18 @@ my $body_ok = <<'EOQ';
 <p>All about three.</p>
 EOQ
 
-    my $index_name = 'index_template.htm';
+    my $template_name = 'index_template.htm';
 
     my $configuration = {
             include_directories => 1,
             index_include => '*.html',
-            index_template => $index_name,
+            index_template => $template_name,
             index_file => 'index.html',
             web_extension => 'html',
             };
 
     my $idx = App::Followme::CreateIndexes->new($configuration);
-    $idx->write_page($index_name, $index_template);
+    $idx->write_page($template_name, $index_template);
 
     mkdir('archive');    
     chdir('archive');
@@ -106,9 +106,9 @@ EOQ
         push(@archived_files, $filename);
     }
 
-
     $idx = App::Followme::CreateIndexes->new($configuration);
-    my $data = $idx->index_data();
+    my $index_name = $idx->full_file_name($idx->{index_file});
+    my $data = $idx->index_data($index_name);
 
     is($data->{title}, 'Archive', 'Index title'); # test 1
     is($data->{url}, 'index.html', 'Index url'); # test 2

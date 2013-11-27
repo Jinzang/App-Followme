@@ -76,13 +76,15 @@ sub changed_directory {
 sub create_an_index {
     my ($self) = @_;
     
-    my $data = $self->index_data();
+    my $index_file = $self->full_file_name($self->{index_file});
+    my $data = $self->index_data($index_file);
+    
     my $template = $self->make_template($self->{index_template});
 
     my $sub = $self->compile_template($template);
     my $page = $sub->($data);
  
-    $self->write_page($self->{index_file}, $page);
+    $self->write_page($index_file, $page);
     return;
 }
 
@@ -116,9 +118,9 @@ sub get_template_name {
 # Retrieve the data needed to build an index
 
 sub index_data {
-    my ($self) = @_;        
+    my ($self, $filename) = @_;        
 
-    my $data = $self->set_fields(rel2abs($self->{index_file}));
+    my $data = $self->set_fields($filename);
 
     my @loop_data;
     my $index_name = "index.$self->{web_extension}";

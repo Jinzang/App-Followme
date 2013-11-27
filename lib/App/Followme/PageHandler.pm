@@ -7,7 +7,9 @@ use lib '../..';
 
 use Cwd;
 use IO::File;
-use File::Spec::Functions qw(abs2rel catfile rel2abs splitdir updir);
+use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
+                             no_upwards rel2abs splitdir updir);
+
 use App::Followme::TopDirectory;
 use App::Followme::MostRecentFile;
 
@@ -232,12 +234,36 @@ sub find_prototype {
 }
 
 #----------------------------------------------------------------------
+# Construct the full file name from a relative file name
+
+sub full_file_name {
+    my ($self, $filename, $directory) = @_;
+
+    return $filename if file_name_is_absolute($filename);
+    $directory = $self->{base_directory} unless defined $directory;
+    
+    my @dirs = splitdir($directory);
+    push(@dirs, splitdir($filename));
+    
+    my @new_dirs;
+    foreach my $dir (@dirs) {
+        if (no_upwards($dir)) {
+            push(@new_dirs, $dir);
+        } else {
+            pop(@new_dirs) unless $dir eq '.';
+        }
+    }
+    
+    return catfile(@new_dirs);  
+}
+
+#----------------------------------------------------------------------
 # Get the full template name (stub)
 
 sub get_template_name {
     my ($self) = @_;
     
-    return catfile($self->{base_directory}, 'template.htm');
+    return $self->full_file_name('template.htm');
 }
 
 #----------------------------------------------------------------------

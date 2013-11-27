@@ -51,15 +51,14 @@ sub run {
 sub create_news_index {
     my ($self) = @_;
 
-    my $data = $self->index_data();
+    my $news_file = $self->full_file_name($self->{news_file});
+    my $data = $self->index_data($news_file);
     my $template = $self->make_template($self->{news_template});
 
     my $sub = $self->compile_template($template);
     my $page = $sub->($data);
 
-    my $news_file = $self->news_file_name();
     $self->write_page($news_file, $page);
-
     return;
 }
 
@@ -85,14 +84,13 @@ sub get_template_name {
 # Retrieve the data needed to build an index
 
 sub index_data {
-    my ($self) = @_;        
-
+    my ($self, $filename) = @_;        
 
     my $limit = $self->{news_index_length};
     my @filenames = $self->more_recent_files($limit);
 
     my @loop_data;
-    my $data = $self->set_fields(rel2abs($self->{news_file}));
+    my $data = $self->set_fields($filename);
 
     foreach my $filename (@filenames) {
         my $data = $self->set_fields($filename);
@@ -148,18 +146,6 @@ sub more_recent_files {
     my @recent_files = map {$_->[1]} @dated_files;
     @recent_files = reverse @recent_files if @recent_files > 1;
     return @recent_files;
-}
-
-#----------------------------------------------------------------------
-# Construct news file name. Name is relative to the base directory
-
-sub news_file_name {
-    my ($self) = @_;
-
-    my @dirs = splitdir($self->{base_directory});
-    push(@dirs, splitdir($self->{news_file}));
-    
-    return catfile(@dirs);  
 }
 
 1;

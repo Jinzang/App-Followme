@@ -164,9 +164,10 @@ EOQ
 
     chdir('archive');
     $idx = App::Followme::CreateNews->new($configuration);
+    my $index_name = $idx->full_file_name($idx->{news_file});
 
-    my $data = $idx->index_data();
-    is($data->{url}, 'archive/blog.html', 'Archive index url'); # test 2
+    my $data = $idx->index_data($index_name);
+    is($data->{url}, 'blog.html', 'Archive index url'); # test 2
     is($data->{loop}[2]{body}, $body_ok, "Archive index body"); #test 3
 
     $idx = App::Followme::CreateNews->new($configuration);
