@@ -78,7 +78,7 @@ sub glob_patterns {
 
     foreach my $pattern (@patterns) {
         if ($pattern eq '*') {
-            push(@globbed_patterns,  '') if $pattern eq '*';
+            push(@globbed_patterns,  '.') if $pattern eq '*';
             
         } else {
             my $start;
@@ -116,11 +116,11 @@ sub include_file {
     ($dir, $filename) = $self->split_filename($filename);
     
     foreach my $pattern (@{$self->{excluded_files}}) {
-        return if length($pattern) == 0 || $filename =~ /$pattern/;
+        return if $filename =~ /$pattern/;
     }
     
     foreach my $pattern (@{$self->{included_files}}) {
-        return 1 if length($pattern) == 0 || $filename =~ /$pattern/;
+        return 1 if $filename =~ /$pattern/;
     }
 
     return;
