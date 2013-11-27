@@ -1,11 +1,12 @@
 #!/usr/bin/env perl
 use strict;
 
+use Cwd;
 use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 19;
+use Test::More tests => 15;
 
 #----------------------------------------------------------------------
 # Load package
@@ -33,8 +34,10 @@ do {
     my $app = App::Followme->new({});
     is(ref $app, 'App::Followme', 'Create Followme'); # test 1
    
-    my $configuration = {};
-    my $module = $app->load_module('App::Followme', $configuration);
+    my $configuration = {module => ['App::Followme']};
+    $configuration = $app->load_modules($configuration);
+    my $module = $configuration->{module}[0];
+    
     is(ref $module, 'App::Followme', 'Load modules'); # test 2
 };
 
@@ -88,59 +91,51 @@ EOQ
 # Test initialize configuration
 
 do {
-    my @levels;
-    my $path = $test_dir;
-
+    chdir($test_dir);
+    my $user = 'Bieber';
+    my $fd = IO::File->new('followme.cfg', 'w');
+    print $fd "module = App::Followme::Mock\nuser = $user\n";
+    close($fd);
+    
     foreach my $i (1..5) {
-        $path = catfile($path, "level$i");
-        my $filename = catfile($path, 'followme.cfg');
-        $levels[$i] = "Now we are on level $i";
-        
-        mkdir($path);
-        my $fd = IO::File->new($filename, 'w');
-        print $fd "level$i = $levels[$i]\n";
-        print $fd "bottom = $levels[$i]\n";
-        close($fd);
+        my $dir = "level$i";
+        mkdir $dir;
+        chdir($dir);
     }
     
-    my $app = App::Followme->new({});
+    my $path = getcwd();
+    my $app = App::Followme->new();
     my $configuration = $app->initialize_configuration($path);
 
     my $top_dir = App::Followme::TopDirectory->name;
-    is($top_dir, catfile($test_dir, "level1"), 'Set top directory'); # test 9
+    is($top_dir, $test_dir, 'Set top directory'); # test 9
     
-    is($configuration->{bottom}, $levels[4],
+    is($configuration->{user}, $user,
        'Initialize configuration variable'); # test 10
-
-    foreach my $i (1..4) {
-        is($configuration->{"level$i"}, $levels[$i],
-           "Initialize configuration level $i"); # test 11-14
-    }
 };
 
 #----------------------------------------------------------------------
 # Test update folder
 
 do {
-    chdir($test_dir);
     my $configuration = {module => ['App::Followme::Mock']};
     my $app = App::Followme->new($configuration);
+    $app->load_modules($configuration);
+    my $mock = $app->{module}[0];
+    
+    chdir($test_dir);
     $app->update_folder(catfile($test_dir,"level1"), $configuration);
 
     my $path = $test_dir;
     foreach my $i (1..5) {
         $path = catfile($path, "level$i");
         my $filename = catfile($path, 'mock.txt');
-        my $level = "Now we are on level $i";
-        
-        my %hash;
+
         my $fd = IO::File->new($filename, 'r');
-        while (<$fd>) {
-            chomp;
-            my($name, $value) = split(/\s*=\s*/, $_, 2);
-            $hash{$name} = $value;
-        }
-        close($fd);
-        is($hash{bottom}, $level, "Update folder level$i"); # tests 15-19
+        my $text = <$fd>;
+        close $fd;
+        
+        my $text_ok = "$mock->{user} is here: $path\n";
+        is($text, $text_ok, "Update folder level$i"); # tests 11-15
     }
 };

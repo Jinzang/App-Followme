@@ -120,9 +120,10 @@ sub initialize_configuration {
     my ($self, $directory) = @_;
 
     my $top_dir;
-    my $configuration = {};
-    %$configuration = %$self;
-    $configuration->{module} = [];
+    my $configuration = {module => []};
+    while (my ($name, $value) = each %$self) {
+        $configuration->{$name} = $value unless ref $value;
+    }
 
     foreach my $filename ($self->find_configuration($directory)) {
         my ($dir, $file) = $self->split_filename($filename);
@@ -130,6 +131,7 @@ sub initialize_configuration {
         chdir($dir);
         
         $configuration = $self->update_configuration($filename, $configuration);
+        $configuration = $self->load_modules($configuration);
     }
 
     $top_dir ||= $directory;
@@ -142,16 +144,23 @@ sub initialize_configuration {
 #----------------------------------------------------------------------
 # Load a modeule and create a new instance
 
-sub load_module {
-    my ($self, $module, $configuration) = @_;
+sub load_modules {
+    my ($self, $configuration) = @_;
 
-    eval "require $module" or die "Module not found: $module\n";
+    my @objects;
+    foreach (@{$configuration->{module}}) {
+        my $module = $_;
 
-    $configuration->{base_directory} = getcwd();
-    my %parameters = $self->update_parameters($module, $configuration);
-    my $obj = $module->new(\%parameters);
+        if (! ref $module) {
+            eval "require $module" or die "Module not found: $module\n";
 
-    return $obj;
+            $configuration->{base_directory} = getcwd();
+            my %parameters = $self->update_parameters($module, $configuration);
+            $_ = $module->new(\%parameters);
+        }
+    }
+    
+    return $configuration;
 }
 
 #----------------------------------------------------------------------
@@ -249,17 +258,18 @@ sub update_folder {
     chdir($directory);
      
     # Read any configuration found in this directory
-    $configuration = $self->update_configuration($self->{configuration_file},
-                                                 $configuration)
-                     if -e $self->{configuration_file};
+    if (-e $self->{configuration_file}) {
+        $configuration = $self->update_configuration($self->{configuration_file},
+                                                     $configuration);
+        $configuration = $self->load_modules($configuration);
+    }
     
     # Run the modules mentioned in the configuration
     # Run any that return true on the subdirectories
     
     my @modules;
     foreach my $module (@{$configuration->{module}}) {
-        my $obj = $self->load_module($module, $configuration);
-        push(@modules, $module) if $obj->run();
+        push(@modules, $module) if $module->run();
         chdir($directory);
     }
 

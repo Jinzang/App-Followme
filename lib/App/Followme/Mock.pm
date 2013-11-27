@@ -4,8 +4,9 @@ use 5.008005;
 use strict;
 use warnings;
 
+use Cwd;
 use IO::File;
-our $VERSION = "0.92";
+our $VERSION = "0.93";
 
 #----------------------------------------------------------------------
 # Create a new object to update a website
@@ -25,12 +26,8 @@ sub parameters {
     my ($pkg) = @_;
     
     return (
-            level1 => '',
-            level2 => '',
-            level3 => '',
-            level4 => '',
-            level5 => '',
-            bottom => '',
+            user => '',
+            mock_file => 'mock.txt',
             );
 }
 
@@ -40,14 +37,9 @@ sub parameters {
 sub run {
     my ($self) = @_;
 
-    my $fd = IO::File->new('mock.txt', 'w');
-    foreach my $field (sort keys %$self) {
-        my $value = $self->{$field};
-        next if ref $value;
-        
-        print $fd "$field = $value\n";
-    }
-
+    my $dir = getcwd();
+    my $fd = IO::File->new($self->{mock_file}, 'w');
+    print $fd "$self->{user} is here: $dir\n";
     close($fd);
     return 1;
 }
