@@ -253,11 +253,8 @@ sub update_folder {
     # Copy the configuration so all changes are local to this sub
     $configuration = $self->copy_config($configuration);
 
-    # Save the current directory so we can return when finished
-    my $current_directory = getcwd();
-    chdir($directory);
-     
     # Read any configuration found in this directory
+    chdir($directory);
     if (-e $self->{configuration_file}) {
         $configuration = $self->update_configuration($self->{configuration_file},
                                                      $configuration);
@@ -269,8 +266,8 @@ sub update_folder {
     
     my @modules;
     foreach my $module (@{$configuration->{module}}) {
-        push(@modules, $module) if $module->run();
         chdir($directory);
+        push(@modules, $module) if $module->run();
     }
 
     # Recurse on the subdirectories running the filtered list of modules
@@ -284,7 +281,6 @@ sub update_folder {
         }
     }
 
-    chdir($current_directory);
     return;
 }
 
