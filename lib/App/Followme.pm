@@ -254,9 +254,10 @@ sub update_folder {
     $configuration = $self->copy_config($configuration);
 
     # Read any configuration found in this directory
-    chdir($directory);
-    if (-e $self->{configuration_file}) {
-        $configuration = $self->update_configuration($self->{configuration_file},
+    my $configuration_file = catfile($directory, $self->{configuration_file});
+
+    if (-e $configuration_file) {
+        $configuration = $self->update_configuration($configuration_file,
                                                      $configuration);
         $configuration = $self->load_modules($configuration);
     }
