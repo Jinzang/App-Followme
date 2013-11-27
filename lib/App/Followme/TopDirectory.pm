@@ -3,6 +3,7 @@ use 5.008005;
 use strict;
 use warnings;
 
+use Carp;
 our $VERSION = "0.93";
 our $top_directory;
 
@@ -13,7 +14,7 @@ sub name {
     my ($pkg, $dir) = @_;
 
     if (defined $dir) {
-        die "Can't redefine top directory" if defined $top_directory;
+        croak "Can't redefine top directory" if defined $top_directory;
         $top_directory = $dir;
     }
     
