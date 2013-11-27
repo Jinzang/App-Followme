@@ -50,7 +50,7 @@ sub run {
 
 #----------------------------------------------------------------------
 # Has the directory changed since the index was last created
-
+# TODO: generalize and move into base directory
 sub changed_directory {
     my ($self) = @_;
     
