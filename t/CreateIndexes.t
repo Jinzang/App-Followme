@@ -93,8 +93,9 @@ EOQ
     my $idx = App::Followme::CreateIndexes->new($configuration);
     $idx->write_page($template_name, $index_template);
 
-    mkdir('archive');    
-    chdir('archive');
+    my $archive_dir = catfile($test_dir, 'archive');
+    mkdir($archive_dir);
+    chdir($archive_dir);
     
     my @archived_files;
     foreach my $count (qw(four three two one)) {
@@ -107,8 +108,8 @@ EOQ
     }
 
     $idx = App::Followme::CreateIndexes->new($configuration);
-    my $index_name = $idx->full_file_name($idx->{index_file});
-    my $data = $idx->index_data($index_name);
+    my $index_name = $idx->full_file_name($archive_dir, $idx->{index_file});
+    my $data = $idx->index_data($archive_dir, $index_name);
 
     is($data->{title}, 'Archive', 'Index title'); # test 1
     is($data->{url}, 'index.html', 'Index url'); # test 2
@@ -116,7 +117,7 @@ EOQ
     is($data->{loop}[3]{title}, 'Two', 'Index last page title'); # test 4
     
     $idx = App::Followme::CreateIndexes->new($configuration);
-    $idx->create_an_index();
+    $idx->create_an_index($archive_dir);
     $page = $idx->read_page('index.html');
     
     like($page, qr/<title>Archive<\/title>/, 'Write index title'); # test 5
@@ -124,7 +125,7 @@ EOQ
        'Write index link'); #test 6
 
     $idx = App::Followme::CreateIndexes->new($configuration);
-    $idx->create_an_index();
+    $idx->create_an_index($archive_dir);
     $page = $idx->read_page('index.html');
 
     my $pos = index($page, 'index.html');
@@ -132,7 +133,7 @@ EOQ
     
     chdir($test_dir);
     $idx = App::Followme::CreateIndexes->new($configuration);
-    $idx->create_an_index();
+    $idx->create_an_index($test_dir);
     $page = $idx->read_page('index.html');
 
     like($page, qr/<li><a href="archive\/index.html">Archive<\/a><\/li>/,

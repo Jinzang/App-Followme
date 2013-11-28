@@ -34,11 +34,12 @@ sub parameters {
 # Create a new page from the old (example)
 
 sub run {
-    my ($self) = @_;
+    my ($self, $directory) = @_;
 
-    my $template = $self->make_template();
+    my $template = $self->make_template($directory);
     my $sub = $self->compile_template($template);
 
+    $self->visit($directory);
     while (defined(my $filename = $self->next)) {
         eval {$self->convert_a_file($filename, $sub)};
         warn "$filename: $@" if $@;
@@ -134,7 +135,7 @@ App::Followme - Simple static web site maintenance
 
     use App::Followme::ConvertPages;
     my $converter = App::Followme::ConvertPages->new($configuration);
-    $converter->run();
+    $converter->run($directory);
 
 =head1 DESCRIPTION
 

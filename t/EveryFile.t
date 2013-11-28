@@ -74,6 +74,7 @@ EOQ
     is($ef->{base_directory}, $test_dir, 'Set EveryFile base directory');  # test 1
     
     my @filenames;
+    $ef->visit($ef->{base_directory});
     while (my $filename = $ef->next()) {
         push(@filenames, $filename);
     }

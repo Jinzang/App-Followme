@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 32;
+use Test::More tests => 31;
 
 #----------------------------------------------------------------------
 # Load package
@@ -247,17 +247,12 @@ do {
 
     my $filename = 'foobar.txt';
     my $filename_ok = catfile($test_dir, $filename);
-    my $test_filename = $ph->full_file_name($filename);
+    my $test_filename = $ph->full_file_name($test_dir, $filename);
     is($test_filename, $filename_ok, 'Full file name relative path'); # test 19
     
     $filename = $filename_ok;
-    $test_filename = $ph->full_file_name($filename);
+    $test_filename = $ph->full_file_name($test_dir, $filename);
     is($test_filename, $filename_ok, 'Full file name absolute path'); # test 20
-
-    my $top_dir = App::Followme::TopDirectory->name;
-    $filename = 'foobar.txt';
-    $test_filename = $ph->full_file_name($filename, $top_dir);
-    is($test_filename, $filename_ok, 'Full file name relative path'); # test 21
 };
 
 #----------------------------------------------------------------------
@@ -309,13 +304,13 @@ EOQ
     my $sub = $ph->compile_template($template);
     my $page = $sub->($data);
 
-    ok($page =~ /<h1>Three<\/h1>/, 'Apply template to title'); # test 22
+    ok($page =~ /<h1>Three<\/h1>/, 'Apply template to title'); # test 21
     ok($page =~ /<p>This is a paragraph<\/p>/,
-       'Apply template to body'); # test 23
+       'Apply template to body'); # test 22
 
     my @li = $page =~ /(<li>)/g;
-    is(@li, 4, 'Loop over data items'); # test 24
-    ok($page =~ /<li>2 two<\/li>/, 'Substitute in loop'); # test 25
+    is(@li, 4, 'Loop over data items'); # test 23
+    ok($page =~ /<li>2 two<\/li>/, 'Substitute in loop'); # test 24
 };
 
 #----------------------------------------------------------------------
@@ -331,37 +326,37 @@ do {
     
     $data = $ph->build_title($data, $text_name);
     my $title_ok = 'This Is Only A Test';
-    is($data->{title}, $title_ok, 'Build file title'); # test 26
+    is($data->{title}, $title_ok, 'Build file title'); # test 25
 
     my $index_name = catfile('watch','index.html');
     $data = $ph->build_title($data, $index_name);
     $title_ok = 'Watch';
-    is($data->{title}, $title_ok, 'Build directory title'); # test 27
+    is($data->{title}, $title_ok, 'Build directory title'); # test 26
     
     $data = $ph->build_url($data, $text_name);
-    my $url_ok = 'watch/this-is-only-a-test.html';
-    is($data->{url}, $url_ok, 'Build rleativr file url'); # test 28
+    my $url_ok = 'this-is-only-a-test.html';
+    is($data->{url}, $url_ok, 'Build relative file url'); # test 27
 
     $ph->{absolute} = 1;
     $data = $ph->build_url($data, $text_name);
     $url_ok = '/watch/this-is-only-a-test.html';
-    is($data->{url}, $url_ok, 'Build rleativr file url'); # test 29
+    is($data->{url}, $url_ok, 'Build absolute file url'); # test 28
 
     mkdir('watch');
     $data = $ph->build_url($data, 'watch');
-    is($data->{url}, '/watch/index.html', 'Build directory url'); #test 30
+    is($data->{url}, '/watch/index.html', 'Build directory url'); #test 29
        
     $data = {};
     my $date = $ph->build_date($data, 'two.html');
     my @date_fields = grep {/\S/} sort keys %$date;
     my @date_ok = sort qw(day month monthnum  weekday hour24 hour 
                    minute second year ampm);
-    is_deeply(\@date_fields, \@date_ok, 'Build date'); # test 31
+    is_deeply(\@date_fields, \@date_ok, 'Build date'); # test 30
     
     $data = {};
     $data = $ph->external_fields($data, 'two.html');
     my @keys = sort keys %$data;
     my @keys_ok = sort(@date_ok, 'title', 'url');
-    is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 32
+    is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 31
 };
 

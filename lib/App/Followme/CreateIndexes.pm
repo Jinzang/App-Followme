@@ -38,10 +38,10 @@ sub parameters {
 # Convert text files into web pages
 
 sub run {
-    my ($self) = @_;
+    my ($self, $directory) = @_;
 
-    if ($self->changed_directory()) {
-        eval {$self->create_an_index()};
+    if ($self->changed_directory($directory)) {
+        eval {$self->create_an_index($directory)};
         warn "$self->{index_file}: $@" if $@;
     }
     
@@ -52,11 +52,11 @@ sub run {
 # Has the directory changed since the index was last created
 # TODO: generalize and move into base directory
 sub changed_directory {
-    my ($self) = @_;
+    my ($self, $directory) = @_;
     
     my $changed;
     if (-e $self->{index_file}) {
-        my @stats = stat(getcwd());  
+        my @stats = stat($directory);  
         my $dir_date = $stats[9];
 
         @stats = stat($self->{index_file});
@@ -74,12 +74,12 @@ sub changed_directory {
 # Create the index file for a directory
 
 sub create_an_index {
-    my ($self) = @_;
+    my ($self, $directory) = @_;
     
-    my $index_file = $self->full_file_name($self->{index_file});
-    my $data = $self->index_data($index_file);
+    my $index_file = $self->full_file_name($directory, $self->{index_file});
+    my $data = $self->index_data($directory, $index_file);
     
-    my $template = $self->make_template($self->{index_template});
+    my $template = $self->make_template($directory);
 
     my $sub = $self->compile_template($template);
     my $page = $sub->($data);
@@ -118,15 +118,15 @@ sub get_template_name {
 # Retrieve the data needed to build an index
 
 sub index_data {
-    my ($self, $filename) = @_;        
+    my ($self, $directory, $filename) = @_;        
 
     my $data = $self->set_fields($filename);
 
     my @loop_data;
     my $index_name = "index.$self->{web_extension}";
     
+    $self->visit($directory);
     while (defined(my $filename = $self->next)) {
-        $filename = catfile($filename, $index_name) if -d $filename;
         my $data = $self->set_fields($filename);
         push(@loop_data, $data);
     }
@@ -184,7 +184,7 @@ App::Followme::CreateIndexes - Create index file for a directory
 
     use App::Followme::CreateIndexes;
     my $indexer = App::Followme::CreateIndexes->new($configuration);
-    $indexer->run();
+    $indexer->run($directory);
 
 =head1 DESCRIPTION
 

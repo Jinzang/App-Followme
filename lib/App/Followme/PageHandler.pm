@@ -41,11 +41,12 @@ sub parameters {
 # Create a new page from the old (example)
 
 sub run {
-    my ($self) = @_;
+    my ($self, $directory) = @_;
 
-    my $template = $self->make_template();
+    my $template = $self->make_template($directory);
     my $sub = $self->compile_template($template);
 
+    $self->visit($directory);
     while (defined(my $filename = $self->next)) {
         eval {
               my $data = $self->set_fields($filename);
@@ -110,8 +111,9 @@ sub build_date {
 sub build_title {
     my ($self, $data, $filename) = @_;
     
-    my ($dir, $root, $ext) = $self->parse_filename($filename);
-
+    my ($dir, $file) = $self->split_filename($filename);
+    my ($root, $ext) = split(/\./, $file);
+    
     if ($root eq 'index') {
         my @dirs = splitdir($dir);
         $root = pop(@dirs) || '';
@@ -130,15 +132,21 @@ sub build_title {
 sub build_url {
     my ($self, $data, $filename) = @_;
 
-    my $directory = $self->{absolute}
-                  ? App::Followme::TopDirectory->name()
-                  : $self->{base_directory};
-                  
-    $filename = catfile($filename, 'index.html') if -d $filename;
     $filename = rel2abs($filename);
-    $filename = abs2rel($filename, $directory);
+    my $is_dir = -d $filename;
+    
+    if ($self->{absolute}) {
+        my $directory = App::Followme::TopDirectory->name;
+        $filename = abs2rel($filename, $directory);        
 
-    my $url = join('/', splitdir($filename));
+    } else {
+        $filename = $self->make_relative($filename);
+    }
+
+    my @path = splitdir($filename);
+    push(@path, 'index.html') if $is_dir;
+    
+    my $url = join('/', @path);
     $url = "/$url" if $self->{absolute};
     $url =~ s/\.[^\.]*$/.$self->{web_extension}/;
 
@@ -208,28 +216,31 @@ sub external_fields {
 # Find an file to serve as a prototype for updating other files
 
 sub find_prototype {
-    my ($self, $uplevel) = @_;
-
-    my $filename;
-    chdir($self->{base_directory});
-    my $top_directory = App::Followme::TopDirectory->name;
+    my ($self, $directory, $uplevel) = @_;
+    $uplevel = 0 unless defined $uplevel;
     
+    my $current_directory = getcwd();
+    chdir($directory);
+    
+    my $top_directory = App::Followme::TopDirectory->name;
+    my $filename;
+
     for (;;) {
-        my $directory = getcwd();
+        my $dir = getcwd();
         if ($uplevel) {
             $uplevel -= 1;
 
         } else {
-            my $mrf = App::Followme::MostRecentFile->new($directory);
+            my $mrf = App::Followme::MostRecentFile->new($dir);
             $filename = $mrf->next;
             last if $filename;
         }
 
-        last if $directory eq $top_directory;
+        last if $dir eq $top_directory;
         chdir(updir());
     }
 
-    chdir($self->{base_directory});
+    chdir($current_directory);
     return $filename;
 }
 
@@ -237,11 +248,10 @@ sub find_prototype {
 # Construct the full file name from a relative file name
 
 sub full_file_name {
-    my ($self, $filename, $directory) = @_;
+    my ($self, $directory, $filename) = @_;
 
     return $filename if file_name_is_absolute($filename);
-    $directory = $self->{base_directory} unless defined $directory;
-    
+   
     my @dirs = splitdir($directory);
     push(@dirs, splitdir($filename));
     
@@ -263,7 +273,7 @@ sub full_file_name {
 sub get_template_name {
     my ($self) = @_;
     
-    return $self->full_file_name('template.htm');
+    return catfile($self->{base_directory}, 'template.htm');
 }
 
 #----------------------------------------------------------------------
@@ -272,28 +282,42 @@ sub get_template_name {
 sub internal_fields {
     my ($self, $data, $filename) = @_;   
 
+    if (-d $filename) {
+        my $index_name = "index.$self->{web_extension}";
+        $filename = catfile($filename, $index_name);
+    }
+
     $data->{body} = $self->read_page($filename);
     return $data;
+}
+
+#----------------------------------------------------------------------
+# Make an absolute filename relative to its current directory
+
+sub make_relative {
+    my ($self, $filename) = @_;
+
+    my ($dir, $file) =  $self->split_filename($filename);
+    return $file;
 }
 
 #----------------------------------------------------------------------
 # Combine template with prototype
 
 sub make_template {
-    my ($self) = @_;
+    my ($self, $directory) = @_;
 
     my $template_name = $self->get_template_name();
     my $template = $self->read_page($template_name);
     die "Couldn't find template: $template_name\n" unless $template;
 
-    my $prototype_name = $self->find_prototype(0);
-    my $prototype = $self->read_page($prototype_name); 
-    
+    my $prototype_name = $self->find_prototype($directory);
     my $final_template;
-    if ($prototype) {
-        my $prototype_path = {};
-        $final_template = $self->update_page($prototype, $template, 
-                                             $prototype_path);
+
+    if (defined $prototype_name) {
+        my $prototype = $self->read_page($prototype_name); 
+        $final_template = $self->update_page($prototype, $template);
+        
     } else {
         $final_template = $template;
     }
@@ -371,20 +395,6 @@ sub parse_blocks {
 }
 
 #----------------------------------------------------------------------
-# Parse filename into directory, root, and extension
-
-sub parse_filename {
-    my ($self, $filename) = @_;
-
-    my @dirs = splitdir($filename);
-    my $basename = pop(@dirs);
-    my ($root, $ext) = split(/\./, $basename);
-    my $dir = @dirs ? catfile(@dirs) : '';
-    
-    return ($dir, $root, $ext);
-}
-
-#----------------------------------------------------------------------
 # Extract named blocks from a page
 
 sub parse_page {
@@ -413,7 +423,8 @@ sub parse_page {
 
 sub read_page {
     my ($self, $filename) = @_;
-
+    return unless defined $filename;
+    
     local $/;
     my $fd = IO::File->new($filename, 'r');
     return unless $fd;
@@ -442,7 +453,8 @@ sub set_fields {
 
 sub update_page {
     my ($self, $prototype, $page, $prototype_path) = @_;
-
+    $prototype_path = {} unless defined $prototype_path;
+    
     my $output = [];
     my $blocks = $self->parse_page($page);
     

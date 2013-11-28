@@ -36,10 +36,12 @@ sub parameters {
 # Convert text files into web pages
 
 sub run {
-    my ($self) = @_;
+    my ($self, $directory) = @_;
 
-    chdir($self->{base_directory});
-    eval {$self->create_news_index()};
+    # Override input directory, news is always relative to base directory
+    $directory = $self->{base_directory};
+
+    eval {$self->create_news_index($directory)};
     warn "$self->{news_file}: $@" if $@;
 
     return;
@@ -49,16 +51,20 @@ sub run {
 # Create the index of most recent additions to the news
 
 sub create_news_index {
-    my ($self) = @_;
+    my ($self, $directory) = @_;
 
-    my $news_file = $self->full_file_name($self->{news_file});
-    my $data = $self->index_data($news_file);
-    my $template = $self->make_template($self->{news_template});
+    my $news_file = $self->full_file_name($directory, $self->{news_file});
+    my $data = $self->index_data($directory, $news_file);
+    
+    if ($data) {
+        my $template = $self->make_template($directory);
 
-    my $sub = $self->compile_template($template);
-    my $page = $sub->($data);
+        my $sub = $self->compile_template($template);
+        my $page = $sub->($data);
 
-    $self->write_page($news_file, $page);
+        $self->write_page($news_file, $page);
+    }
+    
     return;
 }
 
@@ -84,11 +90,12 @@ sub get_template_name {
 # Retrieve the data needed to build an index
 
 sub index_data {
-    my ($self, $filename) = @_;        
+    my ($self, $directory, $filename) = @_;        
 
     my $limit = $self->{news_index_length};
-    my @filenames = $self->more_recent_files($limit);
-
+    my @filenames = $self->more_recent_files($directory, $limit);
+    # TODO: Test times and return if not more recent than news file
+    
     my @loop_data;
     my $data = $self->set_fields($filename);
 
@@ -110,12 +117,19 @@ sub internal_fields {
     my $page = $self->read_page($filename);
     
     if ($page) {
-        my $decorated = 0;
-        my $blocks = $self->parse_page($page, $decorated);    
+        my $blocks = $self->parse_page($page);    
         $data->{body} = $blocks->{$self->{body_tag}};
     }
     
     return $data;
+}
+
+#----------------------------------------------------------------------
+# Make an absolute filename relative
+
+sub make_relative {
+    my ($self, $filename) = @_;
+    return abs2rel($filename, $self->{base_directory});
 }
 
 #----------------------------------------------------------------------
@@ -130,9 +144,10 @@ sub match_folder {
 # Get the more recently changed files
 
 sub more_recent_files {
-    my ($self, $limit) = @_;
+    my ($self, $directory, $limit) = @_;
     
     my @dated_files;
+    $self->visit($directory);
     while (defined (my $filename = $self->next)) {
          
         my @stats = stat($filename);
@@ -161,7 +176,7 @@ App::Followme::CreateNews - Create an index with the more recent files
 
     use App::Followme::CreateNews;
     my $indexer = App::Followme::CreateNews->new($configuration);
-    $indexer->run();
+    $indexer->run($directory);
 
 =head1 DESCRIPTION
 

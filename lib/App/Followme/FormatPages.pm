@@ -17,15 +17,16 @@ our $VERSION = "0.93";
 # Perform all updates on the directory
 
 sub run {
-    my ($self) = @_;
+    my ($self, $directory) = @_;
 
-    my @stats = stat($self->{base_directory});
+    my @stats = stat($directory);
     my $modtime = $stats[9];
     
     # The first update uses a file from the directory above
     # as a prototype, if one is found
 
-    my $prototype_file = $self->find_prototype(1);
+    $self->visit($directory);
+    my $prototype_file = $self->find_prototype($directory, 1);
     $prototype_file = $self->next unless defined $prototype_file;
     
     my $prototype_path = $self->get_prototype_path($prototype_file);
@@ -66,7 +67,7 @@ sub run {
         $count += 1;
     }
     
-    utime($modtime, $modtime, $self->{base_directory});
+    utime($modtime, $modtime, $directory);
     return ! $self->{quick_update} || $changes; 
 }
 
@@ -185,7 +186,7 @@ App::Followme::FormatPages - Simple static web site maintenance
 
     use App::Followme::FormatPages;
     my $formatter = App::Followme::FormatPages->new($configuration);
-    $formatter->run();
+    $formatter->run($directory);
     
 =head1 DESCRIPTION
 

@@ -81,7 +81,7 @@ EOQ
 # Test get prototype path and find prototype
 
 do {
-    my $bottom = "$test_dir/sub";
+    my $bottom = catfile($test_dir, 'sub');
     chdir($bottom);
 
     my $up = App::Followme::FormatPages->new($configuration);
@@ -89,7 +89,7 @@ do {
     
     is_deeply($prototype_path, {sub => 1}, 'Get prototype path'); # test 1
     
-    my $prototype_file = $up->find_prototype(1);
+    my $prototype_file = $up->find_prototype($bottom, 1);
     is($prototype_file, catfile($test_dir, 'one.html'),
        'Find prototype'); # test 2
 };
@@ -100,10 +100,10 @@ do {
 do {
     foreach my $dir (('', 'sub')) {
         my $path = $dir ? catfile($test_dir, $dir) : $test_dir;
-        chdir ($path);
+        chdir($path);
 
         my $up = App::Followme::FormatPages->new($configuration);
-        $up->run();
+        $up->run($path);
 
         foreach my $count (qw(two one)) {
             my $filename = "$count.html";

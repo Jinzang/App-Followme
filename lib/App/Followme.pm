@@ -36,9 +36,8 @@ sub parameters {
 # Perform all updates on the directory
 
 sub run {
-    my ($self, $filename) = @_;
+    my ($self, $directory) = @_;
 
-    my $directory = $self->set_directory($filename);    
     my $configuration = $self->initialize_configuration($directory);
     $self->update_folder($directory, $configuration);
 
@@ -136,6 +135,7 @@ sub initialize_configuration {
 
     $top_dir ||= $directory;
     App::Followme::TopDirectory->name($top_dir);
+    $self->{base_dir} = $top_dir;
     
     chdir($directory);
     return $configuration;
@@ -189,27 +189,6 @@ sub set_configuration {
     }
 
     return;
-}
-
-#----------------------------------------------------------------------
-# If name passed is not directory, set a sensible default
-
-sub set_directory {
-    my ($self, $filename) = @_;
-    
-    my ($directory, $file);
-    if (defined $filename) {
-        if (! -d $filename) {
-            ($directory, $file) = $self->split_filename($filename);
-            $self->{quick_update} = 1;
-        }
-        
-    } else {
-        $directory = getcwd();
-    }
-
-    $self->{base_directory} = $directory;
-    return $directory;
 }
 
 #----------------------------------------------------------------------
@@ -316,7 +295,7 @@ App::Followme - Update a static website
 
     use App::Followme;
     my $app = App::Followme->new($configuration);
-    $app->run(shift @ARGV);
+    $app->run($directory);
 
 =head1 DESCRIPTION
 

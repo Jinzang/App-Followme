@@ -86,7 +86,7 @@ EOQ
 
 do {
     my $idx = App::Followme::CreateNews->new($configuration);
-    my @filenames = $idx->more_recent_files(3);
+    my @filenames = $idx->more_recent_files($test_dir, 3);
 
     my @ok_filenames;
     foreach my $file (qw(one.html two.html three.html)) {
@@ -99,8 +99,9 @@ do {
 #----------------------------------------------------------------------
 # Create indexes
 
-do {    
-    mkdir('archive');
+do {
+    my $archive_dir = catfile($test_dir, 'archive');
+    mkdir($archive_dir);
 
    my $page = <<'EOQ';
 <html>
@@ -162,16 +163,16 @@ EOQ
         push(@archived_files, $filename);
     }
 
-    chdir('archive');
+    chdir($archive_dir);
     $idx = App::Followme::CreateNews->new($configuration);
-    my $index_name = $idx->full_file_name($idx->{news_file});
+    my $index_name = $idx->full_file_name($archive_dir, $idx->{news_file});
 
-    my $data = $idx->index_data($index_name);
-    is($data->{url}, 'blog.html', 'Archive index url'); # test 2
+    my $data = $idx->index_data($archive_dir, $index_name);
+    is($data->{url}, 'archive/blog.html', 'Archive index url'); # test 2
     is($data->{loop}[2]{body}, $body_ok, "Archive index body"); #test 3
 
     $idx = App::Followme::CreateNews->new($configuration);
-    $idx->create_news_index();
+    $idx->create_news_index($test_dir);
     $page = $idx->read_page(catfile($test_dir,"blog.html"));
 
     like($page, qr/All about two/, 'Archive index content'); # test 4

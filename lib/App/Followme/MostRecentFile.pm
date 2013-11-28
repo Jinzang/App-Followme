@@ -19,8 +19,8 @@ sub new {
     my %configuration = $directory ? (base_directory => $directory) : ();
     my %self = ($pkg->parameters(), %configuration);
     my $self = bless(\%self, $pkg);
-    $self->setup();
-    
+
+    $self->visit($directory);
     return $self;
 }
 

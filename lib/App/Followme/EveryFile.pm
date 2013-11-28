@@ -20,7 +20,6 @@ sub new {
     
     my %self = ($pkg->parameters(), %$configuration);
     my $self = bless(\%self, $pkg);
-    $self->setup();
     
     return $self;
 }
@@ -29,9 +28,10 @@ sub new {
 # Print a list of files
 
 sub run {
-    my ($self) = @_;
+    my ($self, $directory) = @_;
 
     my $ref = ref $self;
+    $self->visit($directory);
     while(defined (my $filename = $self->next)) {
         print "$ref\t$filename\n";
     }
@@ -178,19 +178,6 @@ sub next {
 }
 
 #----------------------------------------------------------------------
-# Set up non-configured fields in the object
-
-sub setup {
-    my ($self) = @_;
-    
-    $self->visit($self->{base_directory});
-    $self->{included_files} = $self->glob_patterns($self->get_included_files());
-    $self->{excluded_files} = $self->glob_patterns($self->get_excluded_files());
-    
-    return;
-}
-
-#----------------------------------------------------------------------
 # Sort a list of files so the most recently modified file is first
 
 sub sort_files {
@@ -218,18 +205,9 @@ sub split_filename {
     $filename = rel2abs($filename);
     my @path = splitdir($filename);
     my $file = pop(@path);
-    
-    my @new_path;
-    foreach my $dir (@path) {
-        if (no_upwards($dir)) {
-            push(@new_path, $dir);
-        } else {
-            pop(@new_path);
-        }
-    }
-    
-    my $new_dir = catfile(@new_path);
-    return ($new_dir, $file);
+        
+    my $dir = catfile(@path);
+    return ($dir, $file);
 }
 
 #----------------------------------------------------------------------
@@ -240,6 +218,8 @@ sub visit {
     
     $self->{pending_files} = [];
     $self->{pending_folders} =[rel2abs($directory)];
+    $self->{included_files} = $self->glob_patterns($self->get_included_files());
+    $self->{excluded_files} = $self->glob_patterns($self->get_excluded_files());
     
     return;   
 }

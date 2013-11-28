@@ -94,11 +94,11 @@ EOQ
         $cvt->write_page($filename, $output);
     }
 
-    my $prototype_file = $cvt->find_prototype(0);
+    my $prototype_file = $cvt->find_prototype($test_dir);
     my $prototype_file_ok = catfile($test_dir, 'index.html');
     is($prototype_file, $prototype_file_ok, 'Find page templae'); # test 1
 
-    my $source = $cvt->make_template();
+    my $source = $cvt->make_template($test_dir);
 
     like($source, qr/<ul>/, 'Make template links'); # test 2
     like($source, qr/{{body}}/, 'Make template body'); # test 3
@@ -117,7 +117,7 @@ EOQ
     $page = $cvt->read_page('four.html');
     like($page, qr/<h1>Four<\/h1>/, 'Convert a file'); # test 5
 
-    $cvt->run();
+    $cvt->run($test_dir);
     $page = $cvt->read_page('one.html');
     like($page, qr/<h1>One<\/h1>/, 'Convert text file one'); # test 6
     $page = $cvt->read_page('two.html');
