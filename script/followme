@@ -6,6 +6,8 @@ use lib "$Bin/../lib";
 
 use Cwd;
 use Getopt::Long;
+use File::Spec::Functions qw(splitdir catfile);
+
 use App::Followme;
 use App::Followme::Initialize qw(initialize);
 
@@ -13,7 +15,9 @@ my ($initialize, $help);
 GetOptions('init|i' => \$initialize, 'help|h' => \$help);
 
 my $filename = shift @ARGV;
-my ($directory, $quick_update) = set_directory($filename);
+my $config = configuration_file();
+my $quick_update = set_quick_update($filename);
+my $directory = set_directory($filename);
 
 if ($help) {
     show_help();
@@ -22,7 +26,6 @@ if ($help) {
     initialize($directory);
 
 } else {
-    my $config = configuration_file();
     my $app = App::Followme->new({configuration_file => $config,
                                   quick_update => $quick_update});
     $app->run($directory);
@@ -40,30 +43,34 @@ sub configuration_file {
 }
 
 #----------------------------------------------------------------------
-# If name passed is not directory, set a sensible default
+# Change directory to filename or directory containing filename if passed
 
 sub set_directory {
     my ($filename) = @_;
     
-    my $directory;
-    my $quick_update = 0;
-    
     if (defined $filename) {
         if (-d $filename) {
-            $directory = $filename;
+            chdir($filename);
 
         } else {
-            $quick_update = 1;
-
             my @path = splitdir($filename);
             pop(@path);
-
-            $directory = catfile(@path) if @path;
+            chdir(catfile(@path)) if @path;
         }
     }
 
-    $directory = getcwd() unless defined $directory;
-    return ($directory, $quick_update);
+    my $directory = getcwd();
+    return $directory;
+}
+
+#----------------------------------------------------------------------
+# Set quick update mode
+
+sub set_quick_update {
+    my ($filename) = @_;
+    
+    my $quick_update = defined $filename && ! -d $filename;
+    return $quick_update;
 }
 
 #----------------------------------------------------------------------
