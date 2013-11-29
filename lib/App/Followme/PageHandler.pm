@@ -49,7 +49,7 @@ sub run {
     $self->visit($directory);
     while (defined(my $filename = $self->next)) {
         eval {
-              my $data = $self->set_fields($filename);
+              my $data = $self->set_fields($directory, $filename);
               my $page = $sub->($data);
               $self->write_page($filename, $page);
              };
@@ -130,24 +130,19 @@ sub build_title {
 # Build a url from a filename
 
 sub build_url {
-    my ($self, $data, $filename) = @_;
+    my ($self, $data, $directory, $filename) = @_;
+
+    my $is_dir = -d $filename;
+    $directory = App::Followme::TopDirectory->name if $self->{absolute};
 
     $filename = rel2abs($filename);
-    my $is_dir = -d $filename;
+    $filename = abs2rel($filename, $directory);
+    $filename = "/$filename" if $self->{absolute};
     
-    if ($self->{absolute}) {
-        my $directory = App::Followme::TopDirectory->name;
-        $filename = abs2rel($filename, $directory);        
-
-    } else {
-        $filename = $self->make_relative($filename);
-    }
-
     my @path = splitdir($filename);
     push(@path, 'index.html') if $is_dir;
     
     my $url = join('/', @path);
-    $url = "/$url" if $self->{absolute};
     $url =~ s/\.[^\.]*$/.$self->{web_extension}/;
 
     $data->{url} = $url;
@@ -203,11 +198,11 @@ EOQ
 # Get fields external to file content
 
 sub external_fields {
-    my ($self, $data, $filename) = @_;
+    my ($self, $data, $directory, $filename) = @_;
 
     $data = $self->build_date($data, $filename);
     $data = $self->build_title($data, $filename);
-    $data = $self->build_url($data, $filename);
+    $data = $self->build_url($data, $directory, $filename);
 
     return $data;
 }
@@ -289,16 +284,6 @@ sub internal_fields {
 
     $data->{body} = $self->read_page($filename);
     return $data;
-}
-
-#----------------------------------------------------------------------
-# Make an absolute filename relative to its current directory
-
-sub make_relative {
-    my ($self, $filename) = @_;
-
-    my ($dir, $file) =  $self->split_filename($filename);
-    return $file;
 }
 
 #----------------------------------------------------------------------
@@ -439,10 +424,10 @@ sub read_page {
 # Set the data fields for a file
 
 sub set_fields {
-    my ($self, $filename) = @_;
+    my ($self, $directory, $filename) = @_;
     
     my $data = {};
-    $data = $self->external_fields($data, $filename);
+    $data = $self->external_fields($data, $directory, $filename);
     $data = $self->internal_fields($data, $filename);
 
     return $data;
@@ -582,7 +567,7 @@ Read a fie into a string. An the entire file is read from a string, there is no
 line at a time IO. This is because files are typically small and the parsing
 done is not line oriented. 
 
-=item $data = $self->set_fields($filename);
+=item $data = $self->set_fields($directory, $filename);
 
 Create title, url, and date variables from the filename and the modification date
 of the file. Calculate the body variable from the contents of the file.

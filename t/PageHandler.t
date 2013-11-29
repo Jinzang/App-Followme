@@ -333,17 +333,17 @@ do {
     $title_ok = 'Watch';
     is($data->{title}, $title_ok, 'Build directory title'); # test 26
     
-    $data = $ph->build_url($data, $text_name);
-    my $url_ok = 'this-is-only-a-test.html';
+    $data = $ph->build_url($data, $test_dir, $text_name);
+    my $url_ok = 'watch/this-is-only-a-test.html';
     is($data->{url}, $url_ok, 'Build relative file url'); # test 27
 
     $ph->{absolute} = 1;
-    $data = $ph->build_url($data, $text_name);
+    $data = $ph->build_url($data, $test_dir, $text_name);
     $url_ok = '/watch/this-is-only-a-test.html';
     is($data->{url}, $url_ok, 'Build absolute file url'); # test 28
 
     mkdir('watch');
-    $data = $ph->build_url($data, 'watch');
+    $data = $ph->build_url($data, $test_dir, 'watch');
     is($data->{url}, '/watch/index.html', 'Build directory url'); #test 29
        
     $data = {};
@@ -354,7 +354,7 @@ do {
     is_deeply(\@date_fields, \@date_ok, 'Build date'); # test 30
     
     $data = {};
-    $data = $ph->external_fields($data, 'two.html');
+    $data = $ph->external_fields($data, $test_dir, 'two.html');
     my @keys = sort keys %$data;
     my @keys_ok = sort(@date_ok, 'title', 'url');
     is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 31

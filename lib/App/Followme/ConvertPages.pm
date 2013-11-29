@@ -41,7 +41,7 @@ sub run {
 
     $self->visit($directory);
     while (defined(my $filename = $self->next)) {
-        eval {$self->convert_a_file($filename, $sub)};
+        eval {$self->convert_a_file($directory, $filename, $sub)};
         warn "$filename: $@" if $@;
     }
 
@@ -52,9 +52,9 @@ sub run {
 # Convert a single file
 
 sub convert_a_file {
-    my ($self, $filename, $sub) = @_;
+    my ($self, $directory, $filename, $sub) = @_;
     
-    my $data = $self->set_fields($filename);
+    my $data = $self->set_fields($directory, $filename);
     my $page = $sub->($data);
     
     my $new_file = $filename;

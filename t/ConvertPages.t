@@ -113,7 +113,7 @@ EOQ
     is($tagged_text, $tagged_text_ok, 'Convert Text'); # test 4
 
     my $sub = $cvt->compile_template($template);    
-    $cvt->convert_a_file('four.txt', $sub);
+    $cvt->convert_a_file($test_dir, 'four.txt', $sub);
     $page = $cvt->read_page('four.html');
     like($page, qr/<h1>Four<\/h1>/, 'Convert a file'); # test 5
 

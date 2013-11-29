@@ -120,14 +120,14 @@ sub get_template_name {
 sub index_data {
     my ($self, $directory, $filename) = @_;        
 
-    my $data = $self->set_fields($filename);
+    my $data = $self->set_fields($directory, $filename);
 
     my @loop_data;
     my $index_name = "index.$self->{web_extension}";
     
     $self->visit($directory);
     while (defined(my $filename = $self->next)) {
-        my $data = $self->set_fields($filename);
+        my $data = $self->set_fields($directory, $filename);
         push(@loop_data, $data);
     }
 

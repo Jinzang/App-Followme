@@ -97,10 +97,11 @@ sub index_data {
     # TODO: Test times and return if not more recent than news file
     
     my @loop_data;
-    my $data = $self->set_fields($filename);
+    my $data = $self->set_fields($directory, $filename);
 
     foreach my $filename (@filenames) {
-        my $data = $self->set_fields($filename);
+        my ($dir, $file) = $self->split_filename($filename);
+        my $data = $self->set_fields($dir, $filename);
         push(@loop_data, $data);
     }
 
@@ -122,14 +123,6 @@ sub internal_fields {
     }
     
     return $data;
-}
-
-#----------------------------------------------------------------------
-# Make an absolute filename relative
-
-sub make_relative {
-    my ($self, $filename) = @_;
-    return abs2rel($filename, $self->{base_directory});
 }
 
 #----------------------------------------------------------------------
