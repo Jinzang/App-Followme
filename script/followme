@@ -4,6 +4,7 @@ use strict;
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
 
+use Cwd;
 use Getopt::Long;
 use App::Followme;
 use App::Followme::Initialize qw(initialize);

@@ -118,26 +118,23 @@ sub find_configuration {
 sub initialize_configuration {
     my ($self, $directory) = @_;
 
+    my $configuration = {};
+    %$configuration = %$self;
+    $configuration->{module} = [];
+    
     my $top_dir;
-    my $configuration = {module => []};
-    while (my ($name, $value) = each %$self) {
-        $configuration->{$name} = $value unless ref $value;
-    }
-
     foreach my $filename ($self->find_configuration($directory)) {
         my ($dir, $file) = $self->split_filename($filename);
         $top_dir ||= $dir;
-        chdir($dir);
         
         $configuration = $self->update_configuration($filename, $configuration);
-        $configuration = $self->load_modules($configuration);
+        $configuration = $self->load_modules($dir, $configuration);
     }
 
     $top_dir ||= $directory;
     App::Followme::TopDirectory->name($top_dir);
     $self->{base_dir} = $top_dir;
     
-    chdir($directory);
     return $configuration;
 }
 
@@ -145,7 +142,7 @@ sub initialize_configuration {
 # Load a modeule and create a new instance
 
 sub load_modules {
-    my ($self, $configuration) = @_;
+    my ($self, $directory, $configuration) = @_;
 
     my @objects;
     foreach (@{$configuration->{module}}) {
@@ -154,7 +151,7 @@ sub load_modules {
         if (! ref $module) {
             eval "require $module" or die "Module not found: $module\n";
 
-            $configuration->{base_directory} = getcwd();
+            $configuration->{base_directory} = $directory;
             my %parameters = $self->update_parameters($module, $configuration);
             $_ = $module->new(\%parameters);
         }
@@ -238,7 +235,7 @@ sub update_folder {
     if (-e $configuration_file) {
         $configuration = $self->update_configuration($configuration_file,
                                                      $configuration);
-        $configuration = $self->load_modules($configuration);
+        $configuration = $self->load_modules($directory, $configuration);
     }
     
     # Run the modules mentioned in the configuration
@@ -246,8 +243,7 @@ sub update_folder {
     
     my @modules;
     foreach my $module (@{$configuration->{module}}) {
-        chdir($directory);
-        push(@modules, $module) if $module->run();
+        push(@modules, $module) if $module->run($directory);
     }
 
     # Recurse on the subdirectories running the filtered list of modules

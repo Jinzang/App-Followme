@@ -35,12 +35,13 @@ sub parameters {
 # Perform all updates on the directory
 
 sub run {
-    my ($self) = @_;
+    my ($self, $directory) = @_;
 
-    my $dir = getcwd();
+    chdir($directory);
     my $fd = IO::File->new($self->{mock_file}, 'w');
-    print $fd "$self->{user} is here: $dir\n";
+    print $fd "$self->{user} is here: $directory\n";
     close($fd);
+
     return 1;
 }
 

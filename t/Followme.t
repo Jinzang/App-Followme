@@ -35,7 +35,7 @@ do {
     is(ref $app, 'App::Followme', 'Create Followme'); # test 1
    
     my $configuration = {module => ['App::Followme']};
-    $configuration = $app->load_modules($configuration);
+    $configuration = $app->load_modules($test_dir, $configuration);
     my $module = $configuration->{module}[0];
     
     is(ref $module, 'App::Followme', 'Load modules'); # test 2
@@ -118,9 +118,9 @@ do {
 # Test update folder
 
 do {
-    my $configuration = {module => ['App::Followme::Mock']};
+    my $configuration = {module => ['App::Followme::Mock'], user => 'She'};
     my $app = App::Followme->new($configuration);
-    $app->load_modules($configuration);
+    $app->load_modules($test_dir, $configuration);
     my $mock = $app->{module}[0];
     
     chdir($test_dir);
