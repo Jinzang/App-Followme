@@ -40,51 +40,29 @@ sub parameters {
 sub run {
     my ($self, $directory) = @_;
 
-    if ($self->changed_directory($directory)) {
-        eval {$self->create_an_index($directory)};
-        warn "$self->{index_file}: $@" if $@;
+    my $index_name = $self->full_file_name($directory, $self->{index_file});
+
+    if ($self->is_newer($directory, $index_name)) {
+        eval {$self->create_an_index($directory, $index_name)};
+        warn "$index_name: $@" if $@;
     }
     
     return ! $self->{quick_update};
 }
 
 #----------------------------------------------------------------------
-# Has the directory changed since the index was last created
-# TODO: generalize and move into base directory
-sub changed_directory {
-    my ($self, $directory) = @_;
-    
-    my $changed;
-    if (-e $self->{index_file}) {
-        my @stats = stat($directory);  
-        my $dir_date = $stats[9];
-
-        @stats = stat($self->{index_file});
-        my $index_date = $stats[9];
-        $changed = $dir_date > $index_date;
-        
-    } else {
-        $changed = 1;
-    }
-
-    return $changed;
-}
-
-#----------------------------------------------------------------------
 # Create the index file for a directory
 
 sub create_an_index {
-    my ($self, $directory) = @_;
+    my ($self, $directory, $index_name) = @_;
     
-    my $index_file = $self->full_file_name($directory, $self->{index_file});
-    my $data = $self->index_data($directory, $index_file);
-    
+    my $data = $self->index_data($directory, $index_name);   
     my $template = $self->make_template($directory);
 
     my $sub = $self->compile_template($template);
     my $page = $sub->($data);
  
-    $self->write_page($index_file, $page);
+    $self->write_page($index_name, $page);
     return;
 }
 
@@ -118,12 +96,11 @@ sub get_template_name {
 # Retrieve the data needed to build an index
 
 sub index_data {
-    my ($self, $directory, $filename) = @_;        
+    my ($self, $directory, $index_name) = @_;        
 
-    my $data = $self->set_fields($directory, $filename);
+    my $data = $self->set_fields($directory, $index_name);
 
     my @loop_data;
-    my $index_name = "index.$self->{web_extension}";
     
     $self->visit($directory);
     while (defined(my $filename = $self->next)) {

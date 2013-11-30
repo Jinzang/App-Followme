@@ -287,6 +287,31 @@ sub internal_fields {
 }
 
 #----------------------------------------------------------------------
+# Is the source file newer than the target?
+
+sub is_newer {
+    my ($self, $source, $target) = @_;
+    
+    my $newer;
+    if (-e $target) {
+        if (-e $source) {
+            my @stats = stat($target);  
+            my $target_date = $stats[9];
+            
+            @stats = stat($source);  
+            my $source_date = $stats[9];
+            
+            $newer = $source_date >= $target_date;
+        }
+
+    } else {
+        $newer = -e $source;
+    }
+    
+    return $newer;
+}
+
+#----------------------------------------------------------------------
 # Combine template with prototype
 
 sub make_template {

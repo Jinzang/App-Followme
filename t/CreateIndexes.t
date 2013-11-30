@@ -117,24 +117,24 @@ EOQ
     is($data->{loop}[3]{title}, 'Two', 'Index last page title'); # test 4
     
     $idx = App::Followme::CreateIndexes->new($configuration);
-    $idx->create_an_index($archive_dir);
-    $page = $idx->read_page('index.html');
+    $idx->create_an_index($archive_dir, $index_name);
+    $page = $idx->read_page($index_name);
     
     like($page, qr/<title>Archive<\/title>/, 'Write index title'); # test 5
     like($page, qr/<li><a href="two.html">Two<\/a><\/li>/,
        'Write index link'); #test 6
 
     $idx = App::Followme::CreateIndexes->new($configuration);
-    $idx->create_an_index($archive_dir);
-    $page = $idx->read_page('index.html');
+    $idx->create_an_index($archive_dir, $index_name);
+    $page = $idx->read_page($index_name);
 
-    my $pos = index($page, 'index.html');
+    my $pos = index($page, $index_name);
     is($pos, -1, 'Exclude index file'); # test 7
     
     chdir($test_dir);
     $idx = App::Followme::CreateIndexes->new($configuration);
-    $idx->create_an_index($test_dir);
-    $page = $idx->read_page('index.html');
+    $idx->create_an_index($test_dir, $index_name);
+    $page = $idx->read_page($index_name);
 
     like($page, qr/<li><a href="archive\/index.html">Archive<\/a><\/li>/,
        'Index with directory'); #test 8

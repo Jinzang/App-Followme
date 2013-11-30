@@ -90,14 +90,14 @@ sub get_template_name {
 # Retrieve the data needed to build an index
 
 sub index_data {
-    my ($self, $directory, $filename) = @_;        
+    my ($self, $directory, $news_file) = @_;        
 
     my $limit = $self->{news_index_length};
     my @filenames = $self->more_recent_files($directory, $limit);
-    # TODO: Test times and return if not more recent than news file
+    return unless $self->is_newer($filenames[0], $news_file);
     
     my @loop_data;
-    my $data = $self->set_fields($directory, $filename);
+    my $data = $self->set_fields($directory, $news_file);
 
     foreach my $filename (@filenames) {
         my ($dir, $file) = $self->split_filename($filename);
