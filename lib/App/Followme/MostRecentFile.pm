@@ -11,58 +11,41 @@ use File::Spec::Functions qw(rel2abs);
 use base qw(App::Followme::EveryFile);
 
 #----------------------------------------------------------------------
-# Create object that returns files in a directory tree
+# Return most recent file
 
-sub new {
-    my ($pkg, $directory) = @_;
+sub finish_folder {
+    my ($self, $directory) = @_;
     
-    my %configuration = $directory ? (base_directory => $directory) : ();
-    my %self = ($pkg->parameters(), %configuration);
-    my $self = bless(\%self, $pkg);
-
-    $self->visit($directory);
-    return $self;
+    $self->{done} = exists $self->{newest_file}
+                    ? $self->{newest_file}
+                    : undef;
+    return;
 }
 
 #----------------------------------------------------------------------
-# Read the default parameter values
+# Update most recent file
 
-sub parameters {
-    my ($pkg) = @_;
+sub handle_file {
+    my ($self, $filename) = @_;
     
-    my %parameters = (
-                count => 0,
-           );
+    my @stats = stat($filename);  
+    my $file_date = $stats[9];
 
-    my %base_params = $pkg->SUPER::parameters();
-    %parameters = (%base_params, %parameters);
+    if ($file_date > $self->{newest_date}) {
+        $self->{newest_date} = $file_date;
+        $self->{newest_file} = $filename;
+    }
 
-    return %parameters;
-}
-
-#---------------------------------------------------------------------
-# Return the next file
-
-sub next {
-    my ($self) = @_;
-    
-    return if $self->{count} ++;
-    return $self->SUPER::next;
+    return;
 }
 
 #----------------------------------------------------------------------
-# Return 1 if filename passes test
+# Initialize search for most recent file
 
-sub match_file {
-    my ($self, $path) = @_;
-    return ! -d $path && $path =~ /\.$self->{web_extension}$/;
-}
+sub start_folder {
+    my ($self, $directory) = @_;
 
-#----------------------------------------------------------------------
-# Return 1 if folder passes test
-
-sub match_folder {
-    my ($self, $path) = @_;
+    $self->{newest_date} = 0;
     return;
 }
 
