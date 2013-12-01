@@ -287,14 +287,15 @@ App::Followme::EveryFile - Base class for App::Followme classes
 
 =head1 DESCRIPTION
 
-This class has methods for looping all the files in a directory. The files in
-a directory are returned in date order, with the most recently modified file
-returned first. 
+This class loops over all files in a directory and its subdirectories. It calls
+methods when it starts and finishes, when each folder starts and finishes, and
+for each file in each folder. All modules used by followme subclass this class
+and perform their functions by overriding these methods.
 
 =head1 CONFIGURATION
 
-The following fields in the configuration file are used in this class and every class
-based on it:
+The following fields in the configuration file are used in this class and every
+class based on it:
 
 =over 4
 

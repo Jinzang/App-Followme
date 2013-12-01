@@ -6,18 +6,13 @@ use warnings;
 
 use Cwd;
 use IO::File;
+
+use lib '../..';
+
+use File::Spec::Functions qw(abs2rel);
+use base qw(App::Followme::EveryFile);
+
 our $VERSION = "0.93";
-
-#----------------------------------------------------------------------
-# Create a new object to update a website
-
-sub new {
-    my ($pkg, $configuration) = @_;
-    $configuration = {} unless defined $configuration;
-    
-    my %self = %$configuration; 
-    return bless(\%self, $pkg);
-}
 
 #----------------------------------------------------------------------
 # Read the default parameter values
@@ -25,24 +20,76 @@ sub new {
 sub parameters {
     my ($pkg) = @_;
     
-    return (
-            user => '',
-            mock_file => 'mock.txt',
-            );
+    my %parameters = (
+            subdir => 0,
+            extension => 'html',
+           );
+
+    my %base_params = $pkg->SUPER::parameters();
+    %parameters = (%base_params, %parameters);
+
+    return %parameters;
 }
 
 #----------------------------------------------------------------------
-# Perform all updates on the directory
+# Do processing needed at end of folder (stub)
 
-sub run {
+sub finish_folder {
+    my ($self, $directory) = @_;
+
+    my @folders = sort(@{$self->{files}});
+    $self->{files} = \@folders;
+    $self->{done} = $self->{files} unless $self->{subdir};
+    
+    return;
+}
+
+#----------------------------------------------------------------------
+# Do processing needed at end of site (stub)
+
+sub finish_site {
+    my ($self, $directory) = @_;
+
+    $self->{done} = $self->{files};
+    return;
+}
+
+#----------------------------------------------------------------------
+# Get the list of included files
+
+sub get_included_files {
+    my ($self) = @_;
+    return "*.$self->{extension}";
+}
+
+#----------------------------------------------------------------------
+# Do processing needed for a file (stub)
+
+sub handle_file {
+    my ($self, $filename) = @_;
+
+    $filename = abs2rel($filename);
+    push(@{$self->{files}}, $filename);
+    return;
+}
+
+#----------------------------------------------------------------------
+# Do processing needed at start of folder (stub)
+
+sub start_folder {
+    my ($self, $directory) = @_;
+    return;
+}
+
+#----------------------------------------------------------------------
+# Do processing needed at start of site (stub)
+
+sub start_site {
     my ($self, $directory) = @_;
 
     chdir($directory);
-    my $fd = IO::File->new($self->{mock_file}, 'w');
-    print $fd "$self->{user} is here: $directory\n";
-    close($fd);
-
-    return 1;
+    $self->{files} = [];
+    return;
 }
 
 1;
@@ -58,11 +105,16 @@ App::Followme::Mock - Mock object for unit tests
 
     use App::Followme::Mock;
     my $mock = App::Followme::Mock->new();
-    $mock->run();
+    $mock->run($directory);
 
 =head1 DESCRIPTION
 
 This is a minimal objects intended for unit tests and not for production use.
+It also serves as an example of how to create a module, although modules will
+probably be a subclass of App:Followme::HandleSite instead of EveryFile. It
+returns a sorted list of relative filenames with the specified extension when
+run. If subdir is set to true, it will return all filenames in the
+subdirectories.
 
 =head1 LICENSE
 
