@@ -93,7 +93,7 @@ sub next_file {
 __DATA__
 #--%X--%X followme.cfg
 module = App::Followme::FormatPages
-module = App::Followme::ConvertPages
+module = App::Followme::ConvertPage
 #--%X--%X archive/followme.cfg
 module = App::Followme::CreateNews
 module = App::Followme::CreateIndexes

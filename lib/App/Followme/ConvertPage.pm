@@ -5,7 +5,7 @@ use warnings;
 
 use lib '../..';
 
-use base qw(App::Followme::PageHandler);
+use base qw(App::Followme::HandleSite);
 
 use File::Spec::Functions qw(catfile);
 use App::Followme::MostRecentFile;
@@ -133,8 +133,8 @@ App::Followme - Simple static web site maintenance
 
 =head1 SYNOPSIS
 
-    use App::Followme::ConvertPages;
-    my $converter = App::Followme::ConvertPages->new($configuration);
+    use App::Followme::ConvertPage;
+    my $converter = App::Followme::ConvertPage->new($configuration);
     $converter->run($directory);
 
 =head1 DESCRIPTION

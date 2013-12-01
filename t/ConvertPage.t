@@ -16,7 +16,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
-require App::Followme::ConvertPages;
+require App::Followme::ConvertPage;
 
 my $test_dir = catdir(@path, 'test');
 
@@ -80,7 +80,7 @@ This is preformatted text.
 EOQ
 
     my $configuration = {page_template => 'template.htm'};
-    my $cvt = App::Followme::ConvertPages->new($configuration);
+    my $cvt = App::Followme::ConvertPage->new($configuration);
     
     $cvt->write_page('index.html', $index);
     $cvt->write_page('template.htm', $template);
