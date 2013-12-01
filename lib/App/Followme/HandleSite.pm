@@ -1,4 +1,4 @@
-package App::Followme::PageHandler;
+package App::Followme::HandleSite;
 use 5.008005;
 use strict;
 use warnings;
@@ -10,9 +10,7 @@ use IO::File;
 use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
                              no_upwards rel2abs splitdir updir);
 
-use App::Followme::TopDirectory;
 use App::Followme::MostRecentFile;
-
 use base qw(App::Followme::EveryFile);
 
 our $VERSION = "0.93";
@@ -28,36 +26,13 @@ sub parameters {
     
     my %parameters = (
             absolute => 0,
-            quick_update => 0,
+            top_directory => getcwd(),
            );
 
     my %base_params = $pkg->SUPER::parameters();
     %parameters = (%base_params, %parameters);
 
     return %parameters;
-}
-
-#----------------------------------------------------------------------
-# Create a new page from the old (example)
-
-sub run {
-    my ($self, $directory) = @_;
-
-    my $template = $self->make_template($directory);
-    my $sub = $self->compile_template($template);
-
-    $self->visit($directory);
-    while (defined(my $filename = $self->next)) {
-        eval {
-              my $data = $self->set_fields($directory, $filename);
-              my $page = $sub->($data);
-              $self->write_page($filename, $page);
-             };
-
-        warn "$filename: $@" if $@;
-    }
-
-    return ! $self->{quick_update};    
 }
 
 #----------------------------------------------------------------------
@@ -133,7 +108,7 @@ sub build_url {
     my ($self, $data, $directory, $filename) = @_;
 
     my $is_dir = -d $filename;
-    $directory = App::Followme::TopDirectory->name if $self->{absolute};
+    $directory = $self->{top_directory} if $self->{absolute};
 
     $filename = rel2abs($filename);
     $filename = abs2rel($filename, $directory);
@@ -226,8 +201,9 @@ sub find_prototype {
             $uplevel -= 1;
 
         } else {
-            my $mrf = App::Followme::MostRecentFile->new($dir);
-            $filename = $mrf->next;
+            
+            my $mrf = App::Followme::MostRecentFile->new($self);
+            $filename = $mrf->run($dir);
             last if $filename;
         }
 
@@ -333,14 +309,6 @@ sub make_template {
     }
 
     return $final_template;
-}
-
-#----------------------------------------------------------------------
-# Do not descend into folders
-
-sub match_folder {
-    my ($self, $path) = @_;
-    return;
 }
 
 #----------------------------------------------------------------------
@@ -456,6 +424,25 @@ sub set_fields {
     $data = $self->internal_fields($data, $filename);
 
     return $data;
+}
+
+#----------------------------------------------------------------------
+# Sort a list of files so the most recently modified file is first
+
+sub sort_files {
+    my ($self) = @_;
+
+    my @augmented_files;
+    foreach my $filename (@{$self->{pending_files}}) {
+        my @stats = stat($filename);
+        push(@augmented_files, [$filename, $stats[9]]);
+    }
+
+    @augmented_files = sort {$b->[1] <=> $a->[1] ||
+                             $b->[0] cmp $a->[0]   } @augmented_files;
+    
+    @{$self->{pending_files}} = map {$_->[0]} @augmented_files;
+    return;
 }
 
 #----------------------------------------------------------------------

@@ -17,17 +17,14 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
-require App::Followme::PageHandler;
-require App::Followme::TopDirectory;
+require App::Followme::HandleSite;
 
 my $test_dir = catdir(@path, 'test');
 
 rmtree($test_dir);
 mkdir $test_dir;
-mkdir "$test_dir/sub";
+mkdir catfile($test_dir, 'sub');
 chdir $test_dir;
-
-App::Followme::TopDirectory->name($test_dir);
 
 #----------------------------------------------------------------------
 # Test parse_blocks
@@ -61,8 +58,8 @@ do {
 
     my $page = join("\n", @page) . "\n";
     
-    my $ph = App::Followme::PageHandler->new;
-    $ph->parse_blocks($page, $block_handler, $template_handler);
+    my $hs = App::Followme::HandleSite->new;
+    $hs->parse_blocks($page, $block_handler, $template_handler);
 
     my $ok_blocks = {
         first => "\nFirst block\n",
@@ -89,7 +86,7 @@ do {
     $page =join("\n", @bad_page) . "\n";
 
     eval {
-        $ph->parse_blocks($page, $block_handler, $template_handler);
+        $hs->parse_blocks($page, $block_handler, $template_handler);
     };
     is($@, "Unmatched block (<!-- section second -->)\n", 'Missing end'); # test 3
 
@@ -98,7 +95,7 @@ do {
     $page =join("\n", @bad_page) . "\n";
 
     eval {
-        $ph->parse_blocks($page, $block_handler, $template_handler);
+        $hs->parse_blocks($page, $block_handler, $template_handler);
     };
     is($@, "Unmatched (<!-- endsection first -->)\n", 'Missing begin'); # test 4
 
@@ -107,7 +104,7 @@ do {
     $page =join("\n", @bad_page) . "\n";
 
     eval {
-        $ph->parse_blocks($page, $block_handler, $template_handler);
+        $hs->parse_blocks($page, $block_handler, $template_handler);
     };
     is($@, "Improperly nested block (<!-- section second -->)\n",
        'Begin inside of begin'); # test 5
@@ -117,7 +114,7 @@ do {
     $page =join("\n", @bad_page) . "\n";
 
     eval {
-        $ph->parse_blocks($page, $block_handler, $template_handler);
+        $hs->parse_blocks($page, $block_handler, $template_handler);
     };
     is($@, "Unmatched (<!-- endsection second -->)\n",
        'Begin does not match end'); # test 6
@@ -140,8 +137,8 @@ do {
                );
 
     my $page = join("\n", @page) . "\n";
-    my $ph = App::Followme::PageHandler->new;
-    my $blocks = $ph->parse_page($page);
+    my $hs = App::Followme::HandleSite->new;
+    my $blocks = $hs->parse_page($page);
 
     my $ok_blocks = {
         first => "\nFirst block\n",
@@ -152,7 +149,7 @@ do {
 
     my $bad_page = $page;
     $bad_page =~ s/second/first/g;
-    $blocks = eval {$ph->parse_page($bad_page)};
+    $blocks = eval {$hs->parse_page($bad_page)};
     
     is($@, "Duplicate block name (first)\n", 'Duplicate block names'); # test 8
 };
@@ -180,8 +177,8 @@ do {
     $page =~ s/block/section/g;
     
     my $prototype_path = {folder => 1};
-    my $ph = App::Followme::PageHandler->new;
-    my $output = $ph->update_page($prototype, $page, $prototype_path);
+    my $hs = App::Followme::HandleSite->new;
+    my $output = $hs->update_page($prototype, $page, $prototype_path);
     my @output = split(/\n/, $output);
     
     my @output_ok = @prototype;
@@ -191,7 +188,7 @@ do {
     my $bad_page = $page;
     $bad_page =~ s/second/third/g;
 
-    $output = eval{$ph->update_page($prototype, $bad_page, $prototype_path)};
+    $output = eval{$hs->update_page($prototype, $bad_page, $prototype_path)};
     is($@, "Unused blocks (third)\n", 'Update page bad block'); # test 10
 };
 
@@ -218,7 +215,7 @@ do {
 </html>
 EOQ
 
-    my $ph = App::Followme::PageHandler->new;
+    my $hs = App::Followme::HandleSite->new;
     foreach my $dir (('sub', '')) {
         foreach my $count (qw(four three two one)) {
             sleep(1);
@@ -231,9 +228,9 @@ EOQ
             push(@dirs, $dir) if $dir;
 
             my $filename = catfile(@dirs, "$count.html");
-            $ph->write_page($filename, $output);
+            $hs->write_page($filename, $output);
 
-            my $input = $ph->read_page($filename);
+            my $input = $hs->read_page($filename);
             is($input, $output, "Read and write page $filename"); #tests 11-18
         }
     }
@@ -243,15 +240,15 @@ EOQ
 # Test file name conversion
 
 do {
-    my $ph = App::Followme::PageHandler->new;
+    my $hs = App::Followme::HandleSite->new;
 
     my $filename = 'foobar.txt';
     my $filename_ok = catfile($test_dir, $filename);
-    my $test_filename = $ph->full_file_name($test_dir, $filename);
+    my $test_filename = $hs->full_file_name($test_dir, $filename);
     is($test_filename, $filename_ok, 'Full file name relative path'); # test 19
     
     $filename = $filename_ok;
-    $test_filename = $ph->full_file_name($test_dir, $filename);
+    $test_filename = $hs->full_file_name($test_dir, $filename);
     is($test_filename, $filename_ok, 'Full file name absolute path'); # test 20
 };
 
@@ -259,18 +256,18 @@ do {
 # Test is newer?
 
 do {
-    my $ph = App::Followme::PageHandler->new;
+    my $hs = App::Followme::HandleSite->new;
 
-    my $newer = $ph->is_newer('one.html', 'two.html');
+    my $newer = $hs->is_newer('one.html', 'two.html');
     is($newer, 1, 'Is newer file'); # test 21
     
-    $newer = $ph->is_newer('two.html', 'one.html');
+    $newer = $hs->is_newer('two.html', 'one.html');
     is($newer, '', "Is not newer file"); # test 22
     
-    $newer = $ph->is_newer('one.html', 'five.html');
+    $newer = $hs->is_newer('one.html', 'five.html');
     is($newer, 1, 'Is newer than undefined'); # test 23
     
-    $newer = $ph->is_newer('five.html', 'six.html');
+    $newer = $hs->is_newer('five.html', 'six.html');
     is($newer, undef, 'Is newer with both undefined'); # test 24
 };
 
@@ -319,8 +316,8 @@ EOQ
     
     my $data = {title =>'Three', body => $text, loop => \@loop};
 
-    my $ph = App::Followme::PageHandler->new;
-    my $sub = $ph->compile_template($template);
+    my $hs = App::Followme::HandleSite->new;
+    my $sub = $hs->compile_template($template);
     my $page = $sub->($data);
 
     ok($page =~ /<h1>Three<\/h1>/, 'Apply template to title'); # test 25
@@ -336,45 +333,43 @@ EOQ
 # Test builders
 
 do {
-    my $dir = App::Followme::TopDirectory->name;
-    chdir($dir);
+    chdir($test_dir);
     
     my $data = {};
-    my $ph = App::Followme::PageHandler->new;
+    my $hs = App::Followme::HandleSite->new;
     my $text_name = catfile('watch','this-is-only-a-test.txt');
     
-    $data = $ph->build_title($data, $text_name);
+    $data = $hs->build_title($data, $text_name);
     my $title_ok = 'This Is Only A Test';
     is($data->{title}, $title_ok, 'Build file title'); # test 29
 
     my $index_name = catfile('watch','index.html');
-    $data = $ph->build_title($data, $index_name);
+    $data = $hs->build_title($data, $index_name);
     $title_ok = 'Watch';
     is($data->{title}, $title_ok, 'Build directory title'); # test 30
     
-    $data = $ph->build_url($data, $test_dir, $text_name);
+    $data = $hs->build_url($data, $test_dir, $text_name);
     my $url_ok = 'watch/this-is-only-a-test.html';
     is($data->{url}, $url_ok, 'Build relative file url'); # test 31
-    $ph->{absolute} = 1;
-    $data = $ph->build_url($data, $test_dir, $text_name);
+    $hs->{absolute} = 1;
+    $data = $hs->build_url($data, $test_dir, $text_name);
     $url_ok = '/watch/this-is-only-a-test.html';
     is($data->{url}, $url_ok, 'Build absolute file url'); # test 32
 
     mkdir('watch');
-    $data = $ph->build_url($data, $test_dir, 'watch');
+    $data = $hs->build_url($data, $test_dir, 'watch');
     is($data->{url}, '/watch/index.html', 'Build directory url'); #test 33
        
     $data = {};
-    my $date = $ph->build_date($data, 'two.html');
+    my $date = $hs->build_date($data, 'two.html');
     my @date_fields = grep {/\S/} sort keys %$date;
     my @date_ok = sort qw(day month monthnum  weekday hour24 hour 
                    minute second year ampm);
     is_deeply(\@date_fields, \@date_ok, 'Build date'); # test 34
     
     $data = {};
-    $data = $ph->external_fields($data, $test_dir, 'two.html');
+    $data = $hs->external_fields($data, $test_dir, 'two.html');
     my @keys = sort keys %$data;
     my @keys_ok = sort(@date_ok, 'title', 'url');
     is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 35
 };
-
