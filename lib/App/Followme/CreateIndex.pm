@@ -1,11 +1,11 @@
-package App::Followme::CreateIndexes;
+package App::Followme::CreateIndex;
 use 5.008005;
 use strict;
 use warnings;
 
 use lib '../..';
 
-use base qw(App::Followme::PageHandler);
+use base qw(App::Followme::HandleSite);
 
 use Cwd;
 use IO::Dir;
@@ -155,12 +155,12 @@ __END__
 
 =head1 NAME
 
-App::Followme::CreateIndexes - Create index file for a directory
+App::Followme::CreateIndex - Create index file for a directory
 
 =head1 SYNOPSIS
 
-    use App::Followme::CreateIndexes;
-    my $indexer = App::Followme::CreateIndexes->new($configuration);
+    use App::Followme::CreateIndex;
+    my $indexer = App::Followme::CreateIndex->new($configuration);
     $indexer->run($directory);
 
 =head1 DESCRIPTION
