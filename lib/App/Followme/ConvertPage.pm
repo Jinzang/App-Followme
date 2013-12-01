@@ -1,4 +1,4 @@
-package App::Followme::ConvertPages;
+package App::Followme::ConvertPage;
 use 5.008005;
 use strict;
 use warnings;
@@ -31,37 +31,37 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Create a new page from the old (example)
+# Convert a single file
 
-sub run {
-    my ($self, $directory) = @_;
+sub handle_file {
+    my ($self, $filename) = @_;
+    
+    eval {
+        my ($dir, $file) = $self->split_filename($filename);
+        my $data = $self->set_fields($dir, $filename);
+        my $page = $self->{render}->($data);
+        
+        my $new_file = $filename;
+        $new_file =~ s/\.[^\.]*$/.$self->{web_extension}/;
+    
+        $self->write_page($new_file, $page);
+        unlink($filename);
+    };
 
-    my $template = $self->make_template($directory);
-    my $sub = $self->compile_template($template);
-
-    $self->visit($directory);
-    while (defined(my $filename = $self->next)) {
-        eval {$self->convert_a_file($directory, $filename, $sub)};
-        warn "$filename: $@" if $@;
-    }
-
-    return ! $self->{quick_update};    
+    warn "$filename: $@" if $@;
+    return;
 }
 
 #----------------------------------------------------------------------
-# Convert a single file
+# Set template for each folder
 
-sub convert_a_file {
-    my ($self, $directory, $filename, $sub) = @_;
+sub start_folder {
+    my ($self, $directory) = @_;
     
-    my $data = $self->set_fields($directory, $filename);
-    my $page = $sub->($data);
-    
-    my $new_file = $filename;
-    $new_file =~ s/\.[^\.]*$/.$self->{web_extension}/;
-
-    $self->write_page($new_file, $page);
-    unlink($filename);
+    if (@{$self->{pending_files}}) {
+        my $template = $self->make_template($directory);
+        $self->{render} = $self->compile_template($template);
+    }
 
     return;
 }
@@ -105,8 +105,7 @@ sub get_included_files {
 sub get_template_name {
     my ($self) = @_;
     
-    my $top_directory = App::Followme::TopDirectory->name;
-    return catfile($top_directory, $self->{page_template});
+    return catfile($self->{top_directory}, $self->{page_template});
 }
 
 #----------------------------------------------------------------------

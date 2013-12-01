@@ -25,8 +25,6 @@ mkdir $test_dir;
 mkdir catfile($test_dir, "sub");
 chdir $test_dir;
 
-App::Followme::TopDirectory->name($test_dir);
-
 #----------------------------------------------------------------------
 # Test 
 
@@ -112,8 +110,9 @@ EOQ
     
     is($tagged_text, $tagged_text_ok, 'Convert Text'); # test 4
 
-    my $sub = $cvt->compile_template($template);    
-    $cvt->convert_a_file($test_dir, 'four.txt', $sub);
+    $cvt->{render} = $cvt->compile_template($template);    
+    $cvt->handle_file('four.txt');
+    
     $page = $cvt->read_page('four.html');
     like($page, qr/<h1>Four<\/h1>/, 'Convert a file'); # test 5
 
