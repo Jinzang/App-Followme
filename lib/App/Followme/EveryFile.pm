@@ -16,27 +16,14 @@ our $VERSION = "0.93";
 
 sub new {
     my ($pkg, $configuration) = @_;
-    $configuration = {} unless defined $configuration;
-    
-    my %self = ($pkg->parameters(), %$configuration);
+
+    my %self = $pkg->update_parameters($configuration);
     my $self = bless(\%self, $pkg);
     
+    $self->{included_files} = $self->glob_patterns($self->get_included_files());
+    $self->{excluded_files} = $self->glob_patterns($self->get_excluded_files());
+
     return $self;
-}
-
-#----------------------------------------------------------------------
-# Print a list of files
-
-sub run {
-    my ($self, $directory) = @_;
-
-    my $ref = ref $self;
-    $self->visit($directory);
-    while(defined (my $filename = $self->next)) {
-        print "$ref\t$filename\n";
-    }
-    
-    return;
 }
 
 #----------------------------------------------------------------------
@@ -49,6 +36,59 @@ sub parameters {
             base_directory => getcwd(),
             web_extension => 'html',
            );
+}
+
+#----------------------------------------------------------------------
+# Return the next file
+
+sub run {
+    my ($self, $directory) = @_;
+
+    $self->visit($directory);
+    $self->start_site($directory);
+
+    my $dir;
+    until (exists $self->{done}) {
+        my $file = shift(@{$self->{pending_files}});
+        if (defined $file) {
+            $self->handle_file($file);
+
+        } elsif (defined $dir) {
+            $self->finish_folder($dir);
+            undef $dir;
+
+        } else {
+            $dir = shift(@{$self->{pending_folders}});
+
+            if (defined $dir) {
+                $self->read_directory($dir);
+                $self->start_folder($dir);
+            } else {
+                $self->{done} = undef;
+            }
+        }
+    }
+    
+    $self->finish_site($directory);
+    $self->{done} = undef unless exists $self->{done};
+    
+    return $self->{done};
+}
+
+#----------------------------------------------------------------------
+# Do processing needed at end of folder (stub)
+
+sub finish_folder {
+    my ($self, $directory) = @_;
+    return;
+}
+
+#----------------------------------------------------------------------
+# Do processing needed at end of site (stub)
+
+sub finish_site {
+    my ($self, $directory) = @_;
+    return;
 }
 
 #----------------------------------------------------------------------
@@ -107,6 +147,14 @@ sub glob_patterns {
 }
 
 #----------------------------------------------------------------------
+# Do processing needed for a file (stub)
+
+sub handle_file {
+    my ($self, $filename) = @_;
+    return;
+}
+
+#----------------------------------------------------------------------
 # Return true if this is an included file
 
 sub include_file {
@@ -135,64 +183,28 @@ sub match_file {
 }
 
 #----------------------------------------------------------------------
-# Return 1 if folder passes test
+# Read the file and directory names in a directory
 
-sub match_folder {
-    my ($self, $path) = @_;
-    return 1;
-}
+sub read_directory {
+    my ($self, $directory) = @_;
 
-#----------------------------------------------------------------------
-# Return the next file
+    my $dd = IO::Dir->new($directory);
+    die "Couldn't open $directory: $!\n" unless $dd;
 
-sub next {
-    my ($self) = @_;
+    # Find matching files and directories
+    while (defined (my $file = $dd->read())) {
+        next unless no_upwards($file);
+        my $path = catfile($directory, $file);
+        
+        push(@{$self->{pending_folders}}, $path)
+            if -d $path;
 
-    for (;;) {
-        my $file = shift(@{$self->{pending_files}});
-        return $file if defined $file;
-    
-        return unless @{$self->{pending_folders}};
-        my $dir = shift(@{$self->{pending_folders}});
-
-        my $dd = IO::Dir->new($dir);
-        die "Couldn't open $dir: $!\n" unless $dd;
-
-        # Find matching files and directories
-        while (defined (my $file = $dd->read())) {
-            next unless no_upwards($file);
-            my $path = catfile($dir, $file);
-            
-            push(@{$self->{pending_folders}}, $path)
-                if -d $path && $self->match_folder($path);
-
-            push(@{$self->{pending_files}}, $path)
-                if $self->match_file($path);
-        }
-
-        $dd->close;
-
-        $self->sort_files();
-        @{$self->{pending_folders}} = sort(@{$self->{pending_folders}});
-    }
-}
-
-#----------------------------------------------------------------------
-# Sort a list of files so the most recently modified file is first
-
-sub sort_files {
-    my ($self) = @_;
-
-    my @augmented_files;
-    foreach my $filename (@{$self->{pending_files}}) {
-        my @stats = stat($filename);
-        push(@augmented_files, [$filename, $stats[9]]);
+        push(@{$self->{pending_files}}, $path)
+            if $self->match_file($path);
     }
 
-    @augmented_files = sort {$b->[1] <=> $a->[1] ||
-                             $b->[0] cmp $a->[0]   } @augmented_files;
-    
-    @{$self->{pending_files}} = map {$_->[0]} @augmented_files;
+    $dd->close;
+
     return;
 }
 
@@ -211,18 +223,50 @@ sub split_filename {
 }
 
 #----------------------------------------------------------------------
+# Do processing needed at start of folder (stub)
+
+sub start_folder {
+    my ($self, $directory) = @_;
+    return;
+}
+
+#----------------------------------------------------------------------
+# Do processing needed at start of site (stub)
+
+sub start_site {
+    my ($self, $directory) = @_;
+    return;
+}
+
+#----------------------------------------------------------------------
+# Update a module's parameters
+
+sub update_parameters {
+    my ($pkg, $configuration) = @_;
+    $configuration = {} unless defined $configuration;
+        
+    my %parameters = $pkg->parameters();
+    foreach my $field (keys %parameters) {
+        $parameters{$field} = $configuration->{$field}
+            if exists $configuration->{$field};
+    }
+    
+    return %parameters;
+}
+
+#----------------------------------------------------------------------
 # Set the direcory to visit
 
 sub visit {
     my ($self, $directory) = @_;
-    
+
     $self->{pending_files} = [];
     $self->{pending_folders} =[rel2abs($directory)];
-    $self->{included_files} = $self->glob_patterns($self->get_included_files());
-    $self->{excluded_files} = $self->glob_patterns($self->get_excluded_files());
-    
+    delete $self->{done} if exists $self->{done};
+
     return;   
 }
+
 1;
 __END__
 

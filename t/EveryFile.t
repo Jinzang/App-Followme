@@ -18,17 +18,38 @@ my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
 require App::Followme::EveryFile;
-require App::Followme::MostRecentFile;
+require App::Followme::Mock;
 
 my $test_dir = catdir(@path, 'test');
 
 rmtree($test_dir);
 mkdir $test_dir;
-mkdir catfile($test_dir, "sub");
+mkdir catfile($test_dir, "zub");
 chdir $test_dir;
 
 #----------------------------------------------------------------------
 # Test file visitor
+
+do {
+    my $exclude_files = '*.htm,template_*';
+    my $excluded_files_ok = ['\.htm$', '^template_'];
+    
+    my $ef = App::Followme::EveryFile->new();
+    is($ef->{base_directory}, $test_dir, 'Set EveryFile base directory');  # test 1
+
+    my $excluded_files = $ef->glob_patterns($exclude_files);
+    is_deeply($excluded_files, $excluded_files_ok, 'Glob patterns'); # test 2
+
+    my $dir_ok = $test_dir;
+    my $file_ok = 'index.html';
+    my $filename = catfile($dir_ok, $file_ok);
+    my ($dir, $file) = $ef->split_filename($filename);
+    is($dir, $dir_ok, 'Split directory'); # test 3
+    is($file, $file_ok, 'Split filename'); # test 4
+};
+
+#----------------------------------------------------------------------
+# Create test files and test run method and its submethods
 
 do {
    my $code = <<'EOQ';
@@ -51,15 +72,13 @@ do {
 EOQ
 
     my @ok_filenames;
-    foreach my $dir (('sub', '')) {
-        foreach my $count (qw(four three two one)) {
-            sleep(1);
+    foreach my $dir (('', 'zub')) {
+        foreach my $count (qw(first second third)) {
             my $output = $code;
             $output =~ s/%%/Page $count/g;
             $output =~ s/&&/$dir link/g;
 
             my @dirs;
-            push(@dirs, $test_dir);
             push(@dirs, $dir) if $dir;
             my $filename = catfile(@dirs, "$count.html");
             push(@ok_filenames, $filename);
@@ -70,41 +89,13 @@ EOQ
         }
     }
 
-    my $ef = App::Followme::EveryFile->new();
-    is($ef->{base_directory}, $test_dir, 'Set EveryFile base directory');  # test 1
-    
-    my @filenames;
-    $ef->visit($ef->{base_directory});
-    while (my $filename = $ef->next()) {
-        push(@filenames, $filename);
-    }
-    
-    @ok_filenames = reverse @ok_filenames;    
-    is_deeply(\@filenames, \@ok_filenames, 'Everyfile next'); # test 2
+    my $mock = App::Followme::Mock->new({subdir => 1});
+    my $filenames = $mock->run($test_dir);   
+    is_deeply($filenames, \@ok_filenames, 'Everyfile run with subdir'); # test 5
 
-    my $mrf = App::Followme::MostRecentFile->new();
-    
-    my $filename = $mrf->next();
-    my $ok_filename = shift(@ok_filenames);
-    is($filename, $ok_filename, 'Most recent file next'); #test 3
+    $mock = App::Followme::Mock->new({subdir => 0});
+    $filenames = $mock->run($test_dir);
+    @ok_filenames = @ok_filenames[0..2];
+    is_deeply($filenames, \@ok_filenames, 'Everyfile run no subdir'); # test 6
 };
 
-#----------------------------------------------------------------------
-# Test file visitor
-
-do {
-    my $exclude_files = '*.htm,template_*';
-    my $excluded_files_ok = ['\.htm$', '^template_'];
-    
-    my $ef = App::Followme::EveryFile->new();
-    my $excluded_files = $ef->glob_patterns($exclude_files);
-
-    is_deeply($excluded_files, $excluded_files_ok, 'Glob patterns'); # test 4
-
-    my $dir_ok = $test_dir;
-    my $file_ok = 'index.html';
-    my $filename = catfile($dir_ok, $file_ok);
-    my ($dir, $file) = $ef->split_filename($filename);
-    is($dir, $dir_ok, 'Split directory'); # test 5
-    is($file, $file_ok, 'Split filename'); # test 6
-};
