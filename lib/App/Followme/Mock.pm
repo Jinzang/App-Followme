@@ -50,7 +50,9 @@ sub finish_folder {
 sub finish_site {
     my ($self, $directory) = @_;
 
-    $self->{done} = $self->{files};
+    my @files = sort @{$self->{files}};
+    $self->{done} = \@files;
+    
     return;
 }
 
@@ -66,10 +68,11 @@ sub get_included_files {
 # Do processing needed for a file (stub)
 
 sub handle_file {
-    my ($self, $filename) = @_;
+    my ($self, $dir, $filename) = @_;
 
     $filename = abs2rel($filename);
     push(@{$self->{files}}, $filename);
+
     return;
 }
 

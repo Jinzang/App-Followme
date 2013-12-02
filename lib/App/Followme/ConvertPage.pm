@@ -34,11 +34,10 @@ sub parameters {
 # Convert a single file
 
 sub handle_file {
-    my ($self, $filename) = @_;
+    my ($self, $directory, $filename) = @_;
     
     eval {
-        my ($dir, $file) = $self->split_filename($filename);
-        my $data = $self->set_fields($dir, $filename);
+        my $data = $self->set_fields($directory, $filename);
         my $page = $self->{render}->($data);
         
         my $new_file = $filename;

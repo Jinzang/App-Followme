@@ -51,7 +51,7 @@ sub run {
     until (exists $self->{done}) {
         my $file = shift(@{$self->{pending_files}});
         if (defined $file) {
-            $self->handle_file($file);
+            $self->handle_file($dir, $file);
 
         } elsif (defined $dir) {
             $self->finish_folder($dir);

@@ -26,7 +26,7 @@ sub finish_folder {
 # Update most recent file
 
 sub handle_file {
-    my ($self, $filename) = @_;
+    my ($self, $directory, $filename) = @_;
     
     my @stats = stat($filename);  
     my $file_date = $stats[9];
