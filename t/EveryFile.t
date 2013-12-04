@@ -18,7 +18,6 @@ my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
 require App::Followme::EveryFile;
-require App::Followme::Mock;
 
 my $test_dir = catdir(@path, 'test');
 
@@ -71,8 +70,11 @@ do {
 </html>
 EOQ
 
-    my @ok_filenames;
+    my (@ok_filenames, @ok_folders);
     foreach my $dir (('', 'zub')) {
+        my $folder = $dir ? catfile($test_dir, $dir) : $test_dir;
+        push (@ok_folders, $folder);
+        
         foreach my $count (qw(first second third)) {
             my $output = $code;
             $output =~ s/%%/Page $count/g;
@@ -80,7 +82,7 @@ EOQ
 
             my @dirs;
             push(@dirs, $dir) if $dir;
-            my $filename = catfile(@dirs, "$count.html");
+            my $filename = catfile($folder, "$count.html");
             push(@ok_filenames, $filename);
             
             my $fd = IO::File->new($filename, 'w');
@@ -89,13 +91,18 @@ EOQ
         }
     }
 
-    my $mock = App::Followme::Mock->new({subdir => 1});
-    my $filenames = $mock->run($test_dir);   
-    is_deeply($filenames, \@ok_filenames, 'Everyfile run with subdir'); # test 5
+    my $ef = App::Followme::EveryFile->new();
+    my ($visit_folder, $visit_file) = $ef->visit($test_dir);
 
-    $mock = App::Followme::Mock->new({subdir => 0});
-    $filenames = $mock->run($test_dir);
-    @ok_filenames = @ok_filenames[0..2];
-    is_deeply($filenames, \@ok_filenames, 'Everyfile run no subdir'); # test 6
+    my (@folders, @files);
+    while (my $folder = &$visit_folder) {
+        push(@folders, $folder);
+        while (my $file = &$visit_file) {
+            push(@files, $file);
+        }
+    }
+    
+    is_deeply(\@folders, \@ok_folders, 'get list of folders'); # test 5
+    is_deeply(\@files, \@ok_filenames, 'get list of files'); # test 6
 };
 

@@ -39,56 +39,21 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Return the next file
+# Return all the files in a subtree (example)
 
 sub run {
     my ($self, $directory) = @_;
 
-    $self->visit($directory);
-    $self->start_site($directory);
+    my @files;
+    my ($visit_folder, $visit_file) = $self->visit($directory);
 
-    my $dir;
-    until (exists $self->{done}) {
-        my $file = shift(@{$self->{pending_files}});
-        if (defined $file) {
-            $self->handle_file($dir, $file);
-
-        } elsif (defined $dir) {
-            $self->finish_folder($dir);
-            undef $dir;
-
-        } else {
-            $dir = shift(@{$self->{pending_folders}});
-
-            if (defined $dir) {
-                $self->read_directory($dir);
-                $self->start_folder($dir);
-            } else {
-                $self->{done} = undef;
-            }
+    while (my $directory = &$visit_folder) {
+        while (my $filename = &$visit_file) {
+            push(@files, $filename);
         }
     }
     
-    $self->finish_site($directory);
-    $self->{done} = undef unless exists $self->{done};
-    
-    return $self->{done};
-}
-
-#----------------------------------------------------------------------
-# Do processing needed at end of folder (stub)
-
-sub finish_folder {
-    my ($self, $directory) = @_;
-    return;
-}
-
-#----------------------------------------------------------------------
-# Do processing needed at end of site (stub)
-
-sub finish_site {
-    my ($self, $directory) = @_;
-    return;
+    return \@files;
 }
 
 #----------------------------------------------------------------------
@@ -147,14 +112,6 @@ sub glob_patterns {
 }
 
 #----------------------------------------------------------------------
-# Do processing needed for a file (stub)
-
-sub handle_file {
-    my ($self, $filename) = @_;
-    return;
-}
-
-#----------------------------------------------------------------------
 # Return true if this is an included file
 
 sub include_file {
@@ -183,29 +140,13 @@ sub match_file {
 }
 
 #----------------------------------------------------------------------
-# Read the file and directory names in a directory
+# Sort pending filenames
 
-sub read_directory {
-    my ($self, $directory) = @_;
+sub sort_files {
+    my ($self, $pending_files) = @_;
 
-    my $dd = IO::Dir->new($directory);
-    die "Couldn't open $directory: $!\n" unless $dd;
-
-    # Find matching files and directories
-    while (defined (my $file = $dd->read())) {
-        next unless no_upwards($file);
-        my $path = catfile($directory, $file);
-        
-        push(@{$self->{pending_folders}}, $path)
-            if -d $path;
-
-        push(@{$self->{pending_files}}, $path)
-            if $self->match_file($path);
-    }
-
-    $dd->close;
-
-    return;
+    my @files = sort @$pending_files;
+    return \@files;
 }
 
 #----------------------------------------------------------------------
@@ -220,22 +161,6 @@ sub split_filename {
         
     my $dir = catfile(@path);
     return ($dir, $file);
-}
-
-#----------------------------------------------------------------------
-# Do processing needed at start of folder (stub)
-
-sub start_folder {
-    my ($self, $directory) = @_;
-    return;
-}
-
-#----------------------------------------------------------------------
-# Do processing needed at start of site (stub)
-
-sub start_site {
-    my ($self, $directory) = @_;
-    return;
 }
 
 #----------------------------------------------------------------------
@@ -255,16 +180,42 @@ sub update_parameters {
 }
 
 #----------------------------------------------------------------------
-# Set the direcory to visit
+# Return two closures that will visit a directory tree
 
 sub visit {
     my ($self, $directory) = @_;
 
-    $self->{pending_files} = [];
-    $self->{pending_folders} =[rel2abs($directory)];
-    delete $self->{done} if exists $self->{done};
+    my $pending_files = [];
+    my $pending_folders =[rel2abs($directory)];
 
-    return;   
+    my $visit_folder = sub {
+        $pending_files = [];
+        my $directory = shift(@$pending_folders);
+        return unless defined $directory;
+        
+        my $dd = IO::Dir->new($directory);
+        die "Couldn't open $directory: $!\n" unless $dd;
+
+        # Find matching files and directories
+        while (defined (my $file = $dd->read())) {
+            next unless no_upwards($file);
+            my $path = catfile($directory, $file);
+        
+            push(@$pending_folders, $path) if -d $path;
+            push(@$pending_files, $path) if $self->match_file($path);
+        }
+
+        $dd->close;
+        $pending_files = $self->sort_files($pending_files);
+
+        return $directory;
+    };
+    
+    my $visit_file = sub {
+        return shift(@$pending_files);
+    };
+
+    return ($visit_folder, $visit_file);   
 }
 
 1;
@@ -280,7 +231,7 @@ App::Followme::EveryFile - Base class for App::Followme classes
 
     use App::Followme::EveryFile;
     my @files;
-    my $dd = App::Followme::EveryFiles->new($directory);
+    my $ef = App::Followme::EveryFiles->new();
     while (defined (my $file = $ef->next)) {
         push(@files, $file)
     }
