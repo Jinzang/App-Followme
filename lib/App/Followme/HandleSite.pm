@@ -430,10 +430,10 @@ sub set_fields {
 # Sort a list of files so the most recently modified file is first
 
 sub sort_files {
-    my ($self) = @_;
+    my ($self, $pending_files) = @_;
 
     my @augmented_files;
-    foreach my $filename (@{$self->{pending_files}}) {
+    foreach my $filename (@$pending_files) {
         my @stats = stat($filename);
         push(@augmented_files, [$filename, $stats[9]]);
     }
@@ -441,8 +441,8 @@ sub sort_files {
     @augmented_files = sort {$b->[1] <=> $a->[1] ||
                              $b->[0] cmp $a->[0]   } @augmented_files;
     
-    @{$self->{pending_files}} = map {$_->[0]} @augmented_files;
-    return;
+    my @pending_files = map {$_->[0]} @augmented_files;
+    return \@pending_files;
 }
 
 #----------------------------------------------------------------------
