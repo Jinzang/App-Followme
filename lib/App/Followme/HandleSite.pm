@@ -191,23 +191,21 @@ sub find_prototype {
     
     my $current_directory = getcwd();
     chdir($directory);
-    
-    my $top_directory = App::Followme::TopDirectory->name;
     my $filename;
 
     for (;;) {
         my $dir = getcwd();
+
         if ($uplevel) {
             $uplevel -= 1;
 
         } else {
-            
             my $mrf = App::Followme::MostRecentFile->new($self);
             $filename = $mrf->run($dir);
             last if $filename;
         }
 
-        last if $dir eq $top_directory;
+        last if $dir eq $self->{top_directory};
         chdir(updir());
     }
 
