@@ -7,46 +7,31 @@ use lib '../..';
 
 our $VERSION = "0.93";
 
-use File::Spec::Functions qw(rel2abs);
 use base qw(App::Followme::EveryFile);
 
 #----------------------------------------------------------------------
-# Return most recent file
+# Return most recently modified file in directory
 
-sub finish_folder {
+sub run {
     my ($self, $directory) = @_;
+
+    my ($visit_folder, $visit_file) = $self->visit($directory);
+
+    $directory = &$visit_folder;
+    my $newest_date = 0;
+    my $newest_file;
     
-    $self->{done} = exists $self->{newest_file}
-                    ? $self->{newest_file}
-                    : undef;
-    return;
-}
-
-#----------------------------------------------------------------------
-# Update most recent file
-
-sub handle_file {
-    my ($self, $directory, $filename) = @_;
+    while (my $filename = &$visit_file) {
+        my @stats = stat($filename);  
+        my $file_date = $stats[9];
     
-    my @stats = stat($filename);  
-    my $file_date = $stats[9];
-
-    if ($file_date > $self->{newest_date}) {
-        $self->{newest_date} = $file_date;
-        $self->{newest_file} = $filename;
+        if ($file_date > $newest_date) {
+            $newest_date = $file_date;
+            $newest_file = $filename;
+        }
     }
 
-    return;
-}
-
-#----------------------------------------------------------------------
-# Initialize search for most recent file
-
-sub start_folder {
-    my ($self, $directory) = @_;
-
-    $self->{newest_date} = 0;
-    return;
+    return $newest_file;    
 }
 
 1;
