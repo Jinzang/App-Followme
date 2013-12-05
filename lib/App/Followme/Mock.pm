@@ -32,28 +32,24 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Do processing needed at end of folder (stub)
+# Return all the files in a subtree (example)
 
-sub finish_folder {
+sub run {
     my ($self, $directory) = @_;
+    chdir($directory);
 
-    my @folders = sort(@{$self->{files}});
-    $self->{files} = \@folders;
-    $self->{done} = $self->{files} unless $self->{subdir};
+    my @files;
+    my ($visit_folder, $visit_file) = $self->visit($directory);
+
+    while (my $directory = &$visit_folder) {
+        while (my $filename = &$visit_file) {
+            push(@files, $filename);
+        }
+        
+        last if $self->{subdir};
+    }
     
-    return;
-}
-
-#----------------------------------------------------------------------
-# Do processing needed at end of site (stub)
-
-sub finish_site {
-    my ($self, $directory) = @_;
-
-    my @files = sort @{$self->{files}};
-    $self->{done} = \@files;
-    
-    return;
+    return \@files;
 }
 
 #----------------------------------------------------------------------
@@ -73,25 +69,6 @@ sub handle_file {
     $filename = abs2rel($filename);
     push(@{$self->{files}}, $filename);
 
-    return;
-}
-
-#----------------------------------------------------------------------
-# Do processing needed at start of folder (stub)
-
-sub start_folder {
-    my ($self, $directory) = @_;
-    return;
-}
-
-#----------------------------------------------------------------------
-# Do processing needed at start of site (stub)
-
-sub start_site {
-    my ($self, $directory) = @_;
-
-    chdir($directory);
-    $self->{files} = [];
     return;
 }
 
