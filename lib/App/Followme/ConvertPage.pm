@@ -9,7 +9,6 @@ use base qw(App::Followme::HandleSite);
 
 use File::Spec::Functions qw(catfile);
 use App::Followme::MostRecentFile;
-use App::Followme::TopDirectory;
 
 our $VERSION = "0.93";
 
@@ -31,36 +30,45 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Convert a single file
+# Return all the files in a subtree (example)
 
-sub handle_file {
-    my ($self, $directory, $filename) = @_;
-    
-    eval {
-        my $data = $self->set_fields($directory, $filename);
-        my $page = $self->{render}->($data);
-        
-        my $new_file = $filename;
-        $new_file =~ s/\.[^\.]*$/.$self->{web_extension}/;
-    
-        $self->write_page($new_file, $page);
-        unlink($filename);
-    };
+sub run {
+    my ($self, $directory) = @_;
 
-    warn "$filename: $@" if $@;
-    return;
+    my @files;
+    my ($visit_folder, $visit_file) = $self->visit($directory);
+
+    while (my $directory = &$visit_folder) {
+
+        my $render;
+        while (my $filename = &$visit_file) {
+            unless ($render) {
+                my $template = $self->make_template($directory);
+                $render = $self->compile_template($template);
+            }
+
+            eval {$self->convert_a_file($render, $directory, $filename)};
+            warn "$filename: $@" if $@;
+        }
+    }
+    
+    return \@files;
 }
 
 #----------------------------------------------------------------------
-# Set template for each folder
+# Convert a single file
 
-sub start_folder {
-    my ($self, $directory) = @_;
+sub convert_a_file {
+    my ($self, $render, $directory, $filename) = @_;
     
-    if (@{$self->{pending_files}}) {
-        my $template = $self->make_template($directory);
-        $self->{render} = $self->compile_template($template);
-    }
+    my $data = $self->set_fields($directory, $filename);
+    my $page = $render->($data);
+    
+    my $new_file = $filename;
+    $new_file =~ s/\.[^\.]*$/.$self->{web_extension}/;
+
+    $self->write_page($new_file, $page);
+    unlink($filename);
 
     return;
 }
