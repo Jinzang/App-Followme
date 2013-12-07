@@ -10,7 +10,6 @@ use base qw(App::Followme::HandleSite);
 use Cwd;
 use IO::Dir;
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile no_upwards);
-use App::Followme::TopDirectory;
 
 our $VERSION = "0.93";
 
@@ -21,11 +20,9 @@ sub parameters {
     my ($pkg) = @_;
     
     my %parameters = (
-                      include_directories => 1,
                       index_file => 'index.html',
                       index_include => '*.html',
-                      index_exclude => 'index.html',
-                      index_template => catfile('templates', 'index.htm'),
+                      index_template => 'index.htm',
                      );
 
     my %base_params = $pkg->SUPER::parameters();
@@ -35,19 +32,18 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Convert text files into web pages
+# Return all the files in a subtree (example)
 
 sub run {
     my ($self, $directory) = @_;
 
     my $index_name = $self->full_file_name($directory, $self->{index_file});
+    return if $self->is_newer($directory, $index_name);
 
-    if ($self->is_newer($directory, $index_name)) {
-        eval {$self->create_an_index($directory, $index_name)};
-        warn "$index_name: $@" if $@;
-    }
+    eval {$self->create_an_index($directory, $index_name)};
+    warn "$index_name: $@" if $@;
     
-    return ! $self->{quick_update};
+    return;
 }
 
 #----------------------------------------------------------------------
@@ -56,12 +52,13 @@ sub run {
 sub create_an_index {
     my ($self, $directory, $index_name) = @_;
     
-    my $data = $self->index_data($directory, $index_name);   
-    my $template = $self->make_template($directory);
+    my $data = $self->set_fields($directory, $index_name);
+    $data->{loop} = $self->index_data($directory);
 
-    my $sub = $self->compile_template($template);
-    my $page = $sub->($data);
- 
+    my $template = $self->make_template($directory, $self->{index_template});
+    my $render = $self->compile_template($template);
+    my $page = $render->($data);
+
     $self->write_page($index_name, $page);
     return;
 }
@@ -71,7 +68,9 @@ sub create_an_index {
 
 sub get_excluded_files {
     my ($self) = @_;
-    return $self->{index_exclude};
+
+    my ($dir, $file) = $self->split_filename($self->{index_file});
+    return $file;
 }
 
 #----------------------------------------------------------------------
@@ -88,64 +87,24 @@ sub get_included_files {
 sub get_template_name {
     my ($self) = @_;
     
-    my $top_directory = App::Followme::TopDirectory->name;
-    return catfile($top_directory, $self->{index_template});
+    return catfile($self->{top_directory}, $self->{index_template});
 }
 
 #----------------------------------------------------------------------
-# Retrieve the data needed to build an index
+# Get data to be interpolated into template
 
 sub index_data {
-    my ($self, $directory, $index_name) = @_;        
-
-    my $data = $self->set_fields($directory, $index_name);
-
-    my @loop_data;
+    my ($self, $directory) = @_;
     
-    $self->visit($directory);
-    while (defined(my $filename = $self->next)) {
-        my $data = $self->set_fields($directory, $filename);
-        push(@loop_data, $data);
+    my ($visit_folder, $visit_file) = $self->visit($directory);
+
+    my @index_data;
+    $directory = &$visit_folder;        
+    while (my $filename = &$visit_file) {
+        push(@index_data, $self->set_fields($directory, $filename));
     }
 
-    $data->{loop} = \@loop_data;
-    return $data;
-}
-
-#----------------------------------------------------------------------
-# Return 1 if filename passes test
-
-sub match_file {
-    my ($self, $filename) = @_;
-
-    my $flag;
-    if (-d $filename) {
-        $flag = $self->{include_directories};
-
-    } else {
-        $flag = $self->include_file($filename);
-    }
-
-    return  $flag;
-}
-
-#----------------------------------------------------------------------
-# Sort a list of files so that directories are first
-
-sub sort_files {
-    my ($self) = @_;
-
-    my @augmented_files;
-    foreach my $filename (@{$self->{pending_files}}) {
-        my $dir = -d $filename ? 1 : 0;
-        push(@augmented_files, [$filename, $dir]);
-    }
-
-    @augmented_files = sort {$b->[1] <=> $a->[1] ||
-                             $a->[0] cmp $b->[0]   } @augmented_files;
-    
-    @{$self->{pending_files}} = map {$_->[0]} @augmented_files;
-    return;
+    return \@index_data;
 }
 
 1;
@@ -217,10 +176,6 @@ If true, urls in a page will be absolute
 =item include_directories
 
 If true, subdirectories will be included in the index
-
-=item index_exclude
-
-A comma separated list of filename patterns to exclude from the index
 
 =item index_include
 

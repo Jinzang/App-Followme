@@ -20,7 +20,7 @@ sub parameters {
     
     my %parameters = (
             text_extension => 'txt',
-            page_template => catfile('templates', 'page.htm'),
+            page_template => 'page.htm',
            );
 
     my %base_params = $pkg->SUPER::parameters();
@@ -43,7 +43,8 @@ sub run {
         my $render;
         while (my $filename = &$visit_file) {
             unless ($render) {
-                my $template = $self->make_template($directory);
+                my $template =
+                    $self->make_template($directory, $self->{page_template});
                 $render = $self->compile_template($template);
             }
 

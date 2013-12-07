@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 8;
+use Test::More tests => 5;
 
 #----------------------------------------------------------------------
 # Load package
@@ -107,35 +107,18 @@ EOQ
         push(@archived_files, $filename);
     }
 
-    $idx = App::Followme::CreateIndex->new($configuration);
+    my $data = $idx->index_data($archive_dir);
+    is($data->[0]{title}, 'Four', 'Index first page title'); # test 1
+    is($data->[3]{title}, 'Two', 'Index last page title'); # test 2
+    
     my $index_name = $idx->full_file_name($archive_dir, $idx->{index_file});
-    my $data = $idx->index_data($archive_dir, $index_name);
-
-    is($data->{title}, 'Archive', 'Index title'); # test 1
-    is($data->{url}, 'index.html', 'Index url'); # test 2
-    is($data->{loop}[0]{title}, 'Four', 'Index first page title'); # test 3
-    is($data->{loop}[3]{title}, 'Two', 'Index last page title'); # test 4
-    
-    $idx = App::Followme::CreateIndex->new($configuration);
     $idx->create_an_index($archive_dir, $index_name);
     $page = $idx->read_page($index_name);
     
-    like($page, qr/<title>Archive<\/title>/, 'Write index title'); # test 5
+    like($page, qr/<title>Archive<\/title>/, 'Write index title'); # test 3
     like($page, qr/<li><a href="two.html">Two<\/a><\/li>/,
-       'Write index link'); #test 6
-
-    $idx = App::Followme::CreateIndex->new($configuration);
-    $idx->create_an_index($archive_dir, $index_name);
-    $page = $idx->read_page($index_name);
+       'Write index link'); #test 4
 
     my $pos = index($page, $index_name);
-    is($pos, -1, 'Exclude index file'); # test 7
-    
-    chdir($test_dir);
-    $idx = App::Followme::CreateIndex->new($configuration);
-    $idx->create_an_index($test_dir, $index_name);
-    $page = $idx->read_page($index_name);
-
-    like($page, qr/<li><a href="archive\/index.html">Archive<\/a><\/li>/,
-       'Index with directory'); #test 8
+    is($pos, -1, 'Exclude index file'); # test 5
 };
