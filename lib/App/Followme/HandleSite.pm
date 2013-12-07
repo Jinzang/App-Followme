@@ -27,6 +27,7 @@ sub parameters {
     my %parameters = (
             absolute => 0,
             top_directory => getcwd(),
+            template_directory => 'templates',
            );
 
     my %base_params = $pkg->SUPER::parameters();
@@ -217,12 +218,15 @@ sub find_prototype {
 # Construct the full file name from a relative file name
 
 sub full_file_name {
-    my ($self, $directory, $filename) = @_;
+    my ($self, @directories) = @_;
 
-    return $filename if file_name_is_absolute($filename);
+
+    return $directories[-1] if file_name_is_absolute($directories[-1]);
    
-    my @dirs = splitdir($directory);
-    push(@dirs, splitdir($filename));
+    my @dirs;
+    foreach my $dir (@directories) {
+        push(@dirs, splitdir($dir));
+    }
     
     my @new_dirs;
     foreach my $dir (@dirs) {
@@ -240,9 +244,11 @@ sub full_file_name {
 # Get the full template name (stub)
 
 sub get_template_name {
-    my ($self) = @_;
+    my ($self, $template_file) = @_;
     
-    return catfile($self->{base_directory}, 'template.htm');
+    return $self->full_file_name($self->{top_directory},
+                                 $self->{template_directory},
+                                 $template_file);
 }
 
 #----------------------------------------------------------------------
@@ -289,9 +295,9 @@ sub is_newer {
 # Combine template with prototype
 
 sub make_template {
-    my ($self, $directory) = @_;
+    my ($self, $directory, $template_file) = @_;
 
-    my $template_name = $self->get_template_name();
+    my $template_name = $self->get_template_name($template_file);
     my $template = $self->read_page($template_name);
     die "Couldn't find template: $template_name\n" unless $template;
 
@@ -422,25 +428,6 @@ sub set_fields {
     $data = $self->internal_fields($data, $filename);
 
     return $data;
-}
-
-#----------------------------------------------------------------------
-# Sort a list of files so the most recently modified file is first
-
-sub sort_files {
-    my ($self, $pending_files) = @_;
-
-    my @augmented_files;
-    foreach my $filename (@$pending_files) {
-        my @stats = stat($filename);
-        push(@augmented_files, [$filename, $stats[9]]);
-    }
-
-    @augmented_files = sort {$b->[1] <=> $a->[1] ||
-                             $b->[0] cmp $a->[0]   } @augmented_files;
-    
-    my @pending_files = map {$_->[0]} @augmented_files;
-    return \@pending_files;
 }
 
 #----------------------------------------------------------------------
