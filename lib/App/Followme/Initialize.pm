@@ -96,7 +96,7 @@ module = App::Followme::FormatPages
 module = App::Followme::ConvertPage
 #--%X--%X archive/followme.cfg
 module = App::Followme::CreateNews
-module = App::Followme::CreateIndexes
+module = App::Followme::CreateIndex
 index_file = index.html
 news_file = ../blog.html
 exclude_files = index.html
@@ -154,6 +154,37 @@ exclude_files = index.html
 {{body}}
 <p><a href="{{url}}">Written on {{month}} {{day}}, {{year}}</a></p>
 <!-- endloop -->
+<!-- endsection content-->
+</div>
+</body>
+</html>
+
+#--%X--%X templates/news_index.htm
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!-- section meta -->
+<title>{{title}}</title>
+<!-- endsection meta -->
+</head>
+<body>
+<div id="header">
+<h1>Site Title</h1>
+</div>
+<div id="sidebar">
+<!-- section navigation -->
+<!-- endsection navigation -->
+<!-- section sidebar -->
+<!-- endsection sidebar -->
+</div>
+<div id="content">
+<!-- section content -->
+<h2>{{title}}</h2>
+
+<ul>
+<!-- loop --><li><a href="{{url}}">{{title}}</a></li>
+<!-- endloop -->
+</ul>
 <!-- endsection content-->
 </div>
 </body>
