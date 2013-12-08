@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 5;
+use Test::More tests => 7;
 
 #----------------------------------------------------------------------
 # Load package
@@ -18,7 +18,6 @@ my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
 require App::Followme::CreateNews;
-require App::Followme::TopDirectory;
 
 my $test_dir = catdir(@path, 'test');
 
@@ -30,14 +29,16 @@ chdir $test_dir;
 my $configuration = {
                         absolute => 0,
                         base_directory => $test_dir,
-                        news_file => 'blog.html',
-                        news_index_length => 5,
+                        news_file => '../blog.html',
+                        news_index_file => 'index.html',
+                        news_index_length => 3,
                         web_extension => 'html',
                         body_tag => 'content',
                         news_template => 'blog_template.htm',
+                        news_index_template => 'news_index_template.htm',
+                        template_directory => '.',
                      };
 
-App::Followme::TopDirectory->name($test_dir);
 
 #----------------------------------------------------------------------
 # Write test files
@@ -82,22 +83,22 @@ EOQ
 };
 
 #----------------------------------------------------------------------
-# Test more_recent_files 
+# Test recent_files 
 
 do {
     my $idx = App::Followme::CreateNews->new($configuration);
-    my @filenames = $idx->more_recent_files($test_dir, 3);
+    my $filenames = $idx->recent_files($test_dir);
 
     my @ok_filenames;
     foreach my $file (qw(one.html two.html three.html)) {
         push(@ok_filenames, rel2abs($file));
     }
     
-    is_deeply(\@filenames, \@ok_filenames, 'Most recent files'); # test 1
+    is_deeply($filenames, \@ok_filenames, 'Recent files'); # test 1
 };
 
 #----------------------------------------------------------------------
-# Create indexes
+# Create news file
 
 do {
     my $archive_dir = catfile($test_dir, 'archive');
@@ -163,18 +164,59 @@ EOQ
         push(@archived_files, $filename);
     }
 
+    $idx = App::Followme::CreateNews->new($configuration);
+
     chdir($archive_dir);
-    $idx = App::Followme::CreateNews->new($configuration);
+    my($visit_dir, $visit_file) = $idx->visit($archive_dir);
+    &$visit_dir;
+    my $data = $idx->index_data($visit_file, $archive_dir);
+
+    is($data->[2]{url}, 'three.html', 'Archive news url'); # test 2
+    is($data->[2]{body}, $body_ok, "Archive news body"); #test 3
+
     my $index_name = $idx->full_file_name($archive_dir, $idx->{news_file});
-
-    my $data = $idx->index_data($archive_dir, $index_name);
-    is($data->{url}, 'blog.html', 'Archive index url'); # test 2
-    is($data->{loop}[2]{body}, $body_ok, "Archive index body"); #test 3
-
-    $idx = App::Followme::CreateNews->new($configuration);
-    $idx->create_news_index($test_dir);
+    $idx->create_recent_news($index_name);
     $page = $idx->read_page(catfile($test_dir,"blog.html"));
 
-    like($page, qr/All about two/, 'Archive index content'); # test 4
-    like($page, qr/<a href="one.html">/, 'Archive index link'); # test 5
+    like($page, qr/All about two/, 'Archive news content'); # test 4
+    like($page, qr/<a href="archive\/one.html">/, 'Archive news link'); # test 5
+};
+
+#----------------------------------------------------------------------
+# Create index files
+
+do {
+
+   my $index_template = <<'EOQ';
+<html>
+<head>
+<meta name="robots" content="noarchive,follow">
+<!-- section meta -->
+<title>{{title}}</title>
+<!-- endsection meta -->
+</head>
+<body>
+<!-- section content -->
+<h1>{{title}}</h1>
+<ul>
+<!-- loop -->
+<li><a href="{{url}}">{{title}}</a></li>
+<!-- endloop -->
+</ul>
+<!-- endsection content -->
+</body>
+</html>
+EOQ
+
+    chdir($test_dir);
+    my $idx = App::Followme::CreateNews->new($configuration);
+    $idx->write_page('news_index_template.htm', $index_template);
+    
+    my $archive_dir = catfile($test_dir, 'archive');
+    $idx->create_all_indexes();
+    
+    my $page = $idx->read_page(catfile($archive_dir,"index.html"));
+
+    like($page, qr/>One<\/a><\/li>/, 'Archive index content'); # test 6
+    like($page, qr/<a href="one.html">/, 'Archive index link'); # test 7
 };

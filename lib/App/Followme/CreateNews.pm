@@ -5,10 +5,9 @@ use warnings;
 
 use lib '../..';
 
-use base qw(App::Followme::PageHandler);
+use base qw(App::Followme::HandleSite);
 
 use File::Spec::Functions qw(abs2rel catfile no_upwards rel2abs splitdir);
-use App::Followme::TopDirectory;
 
 our $VERSION = "0.93";
 
@@ -19,11 +18,12 @@ sub parameters {
     my ($pkg) = @_;
     
     my %parameters = (
-                      news_file => 'index.html',
+                      news_file => '../blog.html',
+                      news_index_file => 'index.html',
                       news_index_length => 5,
                       body_tag => 'content',
-                      news_exclude => 'index.html',
-                      news_template => catfile('templates', 'news.htm'),
+                      news_template => 'news.htm',
+                      news_index_template => 'news_index.htm',
                      );
 
     my %base_params = $pkg->SUPER::parameters();
@@ -33,38 +33,85 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Convert text files into web pages
+# Return all the files in a subtree (example)
 
 sub run {
     my ($self, $directory) = @_;
 
-    # Override input directory, news is always relative to base directory
-    $directory = $self->{base_directory};
+    my $news_file = $self->full_file_name($directory, $self->{news_file});
+    eval {$self->create_recent_news()};
+    die "$news_file: $@\n" if $@;
+    
+    $self->create_all_indexes();    
+    return;
+}
 
-    eval {$self->create_news_index($directory)};
-    warn "$self->{news_file}: $@" if $@;
+#----------------------------------------------------------------------
+# Create index pages for all directories under news file, if needed
+
+sub create_all_indexes {
+    my ($self) =  @_;
+
+    my $directory = $self->{base_directory};
+    my ($visit_folder, $visit_file) = $self->visit($self->{base_directory});
+
+    while (my $directory = &$visit_folder) {
+        my $index_name =
+            $self->full_file_name($directory, $self->{news_index_file});
+
+        if ($self->is_newer($directory, $index_name)) {
+            eval {$self->create_an_index($visit_file, $directory, $index_name)};
+            warn "$index_name: $@" if $@;
+        }
+    }
 
     return;
 }
 
 #----------------------------------------------------------------------
-# Create the index of most recent additions to the news
+# Create an index file
 
-sub create_news_index {
-    my ($self, $directory) = @_;
-
-    my $news_file = $self->full_file_name($directory, $self->{news_file});
-    my $data = $self->index_data($directory, $news_file);
+sub create_an_index {
+    my ($self, $visit_file, $directory, $index_name) = @_;
     
-    if ($data) {
-        my $template = $self->make_template($directory);
+    my $data = $self->set_fields($directory, $index_name);
+    $data->{loop} = $self->index_data($visit_file, $directory);
 
-        my $sub = $self->compile_template($template);
-        my $page = $sub->($data);
+    my $template =
+        $self->make_template($directory, $self->{news_index_template});
+    my $render = $self->compile_template($template);
+    my $page = $render->($data);
 
-        $self->write_page($news_file, $page);
-    }
+    $self->write_page($index_name, $page);
+    return;
+}
+
+#----------------------------------------------------------------------
+# Create the file containing recent news
+
+sub create_recent_news {
+    my ($self, $news_file) = @_;
     
+    # Get the names of the more recent files
+
+    my $recent_files = $self->recent_files($self->{base_directory}); 
+
+    return unless @$recent_files;
+    return unless $self->is_newer($recent_files->[0], $news_file);
+    
+    # Get the data for these files
+    my $data =
+        $self->recent_data($recent_files, $self->{base_directory}, $news_file);
+
+    # interpolate the data into thr trmplate and write the file
+    
+    my $template =
+        $self->make_template($self->{base_directory}, $self->{news_template});
+
+    my $render = $self->compile_template($template);
+    my $page = $render->($data);
+
+    $self->write_page($news_file, $page);
     return;
 }
 
@@ -73,40 +120,28 @@ sub create_news_index {
 
 sub get_excluded_files {
     my ($self) = @_;
-    return $self->{news_exclude};
-}
-
-#----------------------------------------------------------------------
-# Get the full template name (stub)
-
-sub get_template_name {
-    my ($self) = @_;
     
-    my $top_directory = App::Followme::TopDirectory->name;
-    return catfile($top_directory, $self->{news_template});
+    my @excluded;
+    foreach my $filename ($self->{news_file}, $self->{news_index_file}) {
+        my ($dir, $file) = $self->split_filename($filename);
+        push(@excluded, $file);
+    }
+    
+    return join(',', @excluded);
 }
 
 #----------------------------------------------------------------------
-# Retrieve the data needed to build an index
+# Get data to be interpolated into index template
 
 sub index_data {
-    my ($self, $directory, $news_file) = @_;        
-
-    my $limit = $self->{news_index_length};
-    my @filenames = $self->more_recent_files($directory, $limit);
-    return unless $self->is_newer($filenames[0], $news_file);
+    my ($self, $visit_file, $directory) = @_;
     
-    my @loop_data;
-    my $data = $self->set_fields($directory, $news_file);
-
-    foreach my $filename (@filenames) {
-        my ($dir, $file) = $self->split_filename($filename);
-        my $data = $self->set_fields($dir, $filename);
-        push(@loop_data, $data);
+    my @index_data;
+    while (my $filename = &$visit_file) {
+        push(@index_data, $self->set_fields($directory, $filename));
     }
 
-    $data->{loop} = \@loop_data;
-    return $data;
+    return \@index_data;
 }
 
 #----------------------------------------------------------------------
@@ -126,34 +161,100 @@ sub internal_fields {
 }
 
 #----------------------------------------------------------------------
-# Return 1 if folder passes test
+# Return 1 if filename passes test
 
-sub match_folder {
-    my ($self, $path) = @_;
-    return 1;
+sub match_file {
+    my ($self, $filename) = @_;
+
+    my $flag;
+    if (-d $filename) {
+        $flag = 1;
+
+    } else {
+        $flag = $self->include_file($filename);
+    }
+
+    return  $flag;
 }
 
 #----------------------------------------------------------------------
 # Get the more recently changed files
 
 sub more_recent_files {
-    my ($self, $directory, $limit) = @_;
+    my ($self, $directory, $filename, $augmented_files) = @_;
+       
+    # Add file to list of recent files if modified more recently than others
     
-    my @dated_files;
-    $self->visit($directory);
-    while (defined (my $filename = $self->next)) {
-         
-        my @stats = stat($filename);
-        if (@dated_files < $limit || $stats[9] > $dated_files[0]->[0]) {
-            shift(@dated_files) if @dated_files >= $limit;
-            push(@dated_files, [$stats[9], $filename]);
-            @dated_files = sort {$a->[0] <=> $b->[0]} @dated_files;
+    my @stats = stat($filename);
+    my $limit = $self->{news_index_length};
+    
+    if (@$augmented_files < $limit || $stats[9] > $augmented_files->[0][0]) {
+
+        shift(@$augmented_files) if @$augmented_files >= $limit;
+        push(@$augmented_files, [$stats[9], $filename]);
+        
+        @$augmented_files = sort {$a->[0] <=> $b->[0]} @$augmented_files;
+    }
+
+    return $augmented_files;
+}
+
+#----------------------------------------------------------------------
+# Get the data used to construct the index to the more recent files
+
+sub recent_data {
+    my ($self, $recent_files, $directory, $news_file) = @_;
+    
+    my @recent_data;
+    for my $file (@$recent_files) {
+        push(@recent_data, $self->set_fields($directory, $file));        
+    }
+
+    my $data = $self->set_fields($directory, $news_file);
+    $data->{loop} = \@recent_data;
+    return $data;
+}
+
+#----------------------------------------------------------------------
+# Get a list of recently modified files
+
+sub recent_files {
+    my ($self, $directory) = @_;
+    
+    my ($visit_folder, $visit_file) = $self->visit($directory);
+
+    my $augmented_files = [];
+    while (my $dir = &$visit_folder) {
+        while (my $file = &$visit_file) {
+            next if -d $file;
+            $augmented_files =
+                $self->more_recent_files($dir, $file, $augmented_files);
         }
     }
-    
-    my @recent_files = map {$_->[1]} @dated_files;
+
+    my @recent_files = map {$_->[1]} @$augmented_files;
     @recent_files = reverse @recent_files if @recent_files > 1;
-    return @recent_files;
+
+    return \@recent_files;
+}
+
+#----------------------------------------------------------------------
+# Sort a list of files so that directories are first
+
+sub sort_files {
+    my ($self, $pending_files) = @_;
+
+    my @augmented_files;
+    foreach my $filename (@$pending_files) {
+        my $dir = -d $filename ? 1 : 0;
+        push(@augmented_files, [$filename, $dir]);
+    }
+
+    @augmented_files = sort {$b->[1] <=> $a->[1] ||
+                             $a->[0] cmp $b->[0]   } @augmented_files;
+    
+    @$pending_files = map {$_->[0]} @augmented_files;
+    return $pending_files;
 }
 
 1;
@@ -213,13 +314,13 @@ The following fields in the configuration file are used:
 
 =over 4
 
-=item news_exclude
-
-One or more filenames or patterns to exclude from the index
-
 =item news_file
 
-Name of the news index file to be created, relative to the base directory.
+Name of the file containing recent news items, relative to the base directory.
+
+=item news_index_file
+
+Name of the index files to be created in each directory.
 
 =item news_index_length
 
