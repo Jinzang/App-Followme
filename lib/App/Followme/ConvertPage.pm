@@ -108,15 +108,6 @@ sub get_included_files {
 }
 
 #----------------------------------------------------------------------
-# Get the full template name (stub)
-
-sub get_template_name {
-    my ($self) = @_;
-    
-    return catfile($self->{top_directory}, $self->{page_template});
-}
-
-#----------------------------------------------------------------------
 # Get fields from reading the file
 
 sub internal_fields {
@@ -154,8 +145,7 @@ double braces, so that a link would look like:
 
     <li><a href="{{url}}">{{title}}</a></li>
 
-The string which indicates a variable is configurable. The variables that are
-calculated for a text file are:
+The variables that are calculated for a text file are:
 
 =over 4
 
