@@ -17,7 +17,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
-require App::Followme::FormatPages;
+require App::Followme::FormatPage;
 
 my $test_dir = catdir(@path, 'test');
 
@@ -26,7 +26,6 @@ mkdir $test_dir;
 mkdir catfile($test_dir, "sub");
 chdir $test_dir;
 
-App::Followme::TopDirectory->name($test_dir);
 my $configuration = {};
 
 #----------------------------------------------------------------------
@@ -55,7 +54,7 @@ do {
 </html>
 EOQ
 
-    my $up = App::Followme::FormatPages->new($configuration);
+    my $up = App::Followme::FormatPage->new($configuration);
 
     foreach my $dir (('sub', '')) {
         foreach my $count (qw(four three two one)) {
@@ -81,10 +80,10 @@ EOQ
 # Test get prototype path and find prototype
 
 do {
+    my $up = App::Followme::FormatPage->new($configuration);
     my $bottom = catfile($test_dir, 'sub');
     chdir($bottom);
 
-    my $up = App::Followme::FormatPages->new($configuration);
     my $prototype_path = $up->get_prototype_path('one.html');
     
     is_deeply($prototype_path, {sub => 1}, 'Get prototype path'); # test 1
@@ -98,13 +97,14 @@ do {
 # Test run
 
 do {
-    foreach my $dir (('', 'sub')) {
+    chdir ($test_dir);
+    my $up = App::Followme::FormatPage->new($configuration);
+
+    foreach my $dir (('sub', '')) {
         my $path = $dir ? catfile($test_dir, $dir) : $test_dir;
         chdir($path);
 
-        my $up = App::Followme::FormatPages->new($configuration);
         $up->run($path);
-
         foreach my $count (qw(two one)) {
             my $filename = "$count.html";
             my $input = $up->read_page($filename);

@@ -1,74 +1,32 @@
-package App::Followme::FormatPages;
+package App::Followme::FormatPage;
 use 5.008005;
 use strict;
 use warnings;
 
 use lib '../..';
 
-use base qw(App::Followme::PageHandler);
+use base qw(App::Followme::HandleSite);
 
 use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
-use App::Followme::TopDirectory;
 
 our $VERSION = "0.93";
 
 #----------------------------------------------------------------------
-# Perform all updates on the directory
+# Return all the files in a subtree (example)
 
 sub run {
     my ($self, $directory) = @_;
 
-    my @stats = stat($directory);
-    my $modtime = $stats[9];
-    
-    # The first update uses a file from the directory above
-    # as a prototype, if one is found
-
-    $self->visit($directory);
-    my $prototype_file = $self->find_prototype($directory, 1);
-    $prototype_file = $self->next unless defined $prototype_file;
-    
-    my $prototype_path = $self->get_prototype_path($prototype_file);
-    my $prototype = $self->read_page($prototype_file);
-    
-    my $count = 0;
-    my $changes = 0;
-
-    while (defined(my $filename = $self->next)) {
-        my $page = $self->read_page($filename);
-        die "Couldn't read $filename" unless defined $page;
-
-        # Check for changes before updating page
-        my $skip = $self->unchanged_prototype($prototype, $page, $prototype_path);
-
-        if ($skip) {
-            last if $self->{quick_update} && $count;
-            
-        } else {    
-            $page = $self->update_page($prototype, $page, $prototype_path);
-        
-            my @stats = stat($filename);
-            my $modtime = $stats[9];
-        
-            $self->write_page($filename, $page);
-            utime($modtime, $modtime, $filename);
-            $changes += 1;
-        }
-        
-        if ($count == 0) {
-            # The second and subsequent updates use the most recently
-            # modified file in a directory as the prototype, so we
-            # must change the values used for the first update
-            $prototype = $page;
-            $prototype_path = $self->get_prototype_path($filename);
-        }
-        
-        $count += 1;
+    my ($prototype_file, $prototype_path, $prototype);
+    $prototype_file = $self->find_prototype($directory, 1);
+    if (defined $prototype_file) {
+        $prototype_path = $self->get_prototype_path($prototype_file);
+        $prototype = $self->read_page($prototype_file);
     }
-    
-    utime($modtime, $modtime, $directory);
-    return ! $self->{quick_update} || $changes; 
+
+    $self->update_directory($directory, $prototype, $prototype_path);    
+    return;
 }
 
 #----------------------------------------------------------------------
@@ -95,18 +53,59 @@ sub checksum_prototype {
 }
 
 #----------------------------------------------------------------------
+# Extract the directories from the list of pending files
+
+sub get_directories_and_files {
+    my ($self, $directory) = @_;
+    
+    my ($visit_folders, $visit_files) = $self->visit($directory);
+    $directory = &$visit_folders;
+    
+    my $directories  = [];
+    my $filenames = [];
+
+    while (defined (my $file = &$visit_files)) {
+        if (-d $file) {
+            push(@$directories, $file);
+        } else {
+            push(@$filenames, $file);
+        }
+    }
+
+    $filenames = $self->sort_files_by_date($filenames);
+    return ($directories, $filenames);
+}
+
+#----------------------------------------------------------------------
 # Get the prototype path for the current directory
 
 sub get_prototype_path {
     my ($self, $filename) = @_;
     
     $filename = rel2abs($filename);
-    $filename = abs2rel($filename, App::Followme::TopDirectory->name);
+    $filename = abs2rel($filename, $self->{top_directory});
     my @path = splitdir($filename);
     pop(@path);
     
     my %prototype_path = map {$_ => 1} @path;
     return \%prototype_path;    
+}
+
+#----------------------------------------------------------------------
+# Return 1 if filename passes test
+
+sub match_file {
+    my ($self, $filename) = @_;
+
+    my $flag;
+    if (-d $filename) {
+        $flag = 1;
+
+    } else {
+        $flag = $self->include_file($filename);
+    }
+
+    return  $flag;
 }
 
 #----------------------------------------------------------------------
@@ -152,6 +151,24 @@ sub parse_blocks {
 }
 
 #----------------------------------------------------------------------
+# Sort files so more recently modified files are first
+
+sub sort_files_by_date {
+    my ($self, $filenames) = @_;
+       
+    my @augmented_files;
+    foreach my $filename (@$filenames) {
+        my @stats = stat($filename);
+        push(@augmented_files, [$stats[9], $filename]);
+    }
+    
+    @augmented_files = sort {$b->[0] <=> $a->[0]} @augmented_files;
+    @$filenames = map {$_->[1]} @augmented_files;
+
+    return $filenames;
+}
+
+#----------------------------------------------------------------------
 # Determine if page matches prototype or needs to be updated
 
 sub unchanged_prototype {
@@ -171,6 +188,73 @@ sub unchanged_prototype {
     }
     
     return $unchanged;
+}
+
+#----------------------------------------------------------------------
+# Perform all updates on the directory
+
+sub update_directory {
+    my ($self, $directory, $prototype, $prototype_path) = @_;
+
+    my ($directories, $filenames) = $self->get_directories_and_files($directory);
+    
+    my @stats = stat($directory);
+    my $modtime = $stats[9];
+
+    # The first update uses a file from the directory above
+    # as a prototype, if one is found
+
+    unless (defined $prototype) {
+        my $prototype_file = shift(@$filenames);  
+
+        if (defined $prototype_file) {
+            $prototype_path = $self->get_prototype_path($prototype_file);
+            $prototype = $self->read_page($prototype_file);
+        }
+    }
+    
+    my $count = 0;
+    my $changes = 0;
+    foreach my $filename (@$filenames) {
+        my $page = $self->read_page($filename);
+        die "Couldn't read $filename" unless defined $page;
+
+        # Check for changes before updating page
+        my $skip = $self->unchanged_prototype($prototype, $page, $prototype_path);
+
+        if ($skip) {
+            last if $count;
+            
+        } else {    
+            $page = $self->update_page($prototype, $page, $prototype_path);
+        
+            my @stats = stat($filename);
+            my $modtime = $stats[9];
+        
+            $self->write_page($filename, $page);
+            utime($modtime, $modtime, $filename);
+            $changes += 1;
+        }
+        
+        if ($count == 0) {
+            # The second and subsequent updates use the most recently
+            # modified file in a directory as the prototype, so we
+            # must change the values used for the first update
+            $prototype = $page;
+            $prototype_path = $self->get_prototype_path($filename);
+        }
+        
+        $count += 1;
+    }
+
+    utime($modtime, $modtime, $directory);
+    return unless $changes;
+
+    for my $dir (@$directories) {
+        $self->update_directory($dir, $prototype, $prototype_path);
+    }
+
+    return; 
 }
 
 1;

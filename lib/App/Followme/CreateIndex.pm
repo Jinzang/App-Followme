@@ -82,15 +82,6 @@ sub get_included_files {
 }
 
 #----------------------------------------------------------------------
-# Get the full template name (stub)
-
-sub get_template_name {
-    my ($self) = @_;
-    
-    return catfile($self->{top_directory}, $self->{index_template});
-}
-
-#----------------------------------------------------------------------
 # Get data to be interpolated into template
 
 sub index_data {
