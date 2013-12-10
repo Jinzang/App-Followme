@@ -23,7 +23,6 @@ my $test_dir = catdir(@path, 'test');
 
 rmtree($test_dir);
 mkdir $test_dir;
-mkdir catfile($test_dir, "zub");
 chdir $test_dir;
 
 #----------------------------------------------------------------------
@@ -64,45 +63,36 @@ do {
 <h1>%%</h1>
 <!-- endsection content -->
 <!-- section navigation in folder -->
-<p><a href="">&&</a></p>
+<p><a href="">%%</a></p>
 <!-- endsection navigation -->
 </body>
 </html>
 EOQ
 
-    my (@ok_filenames, @ok_folders);
-    foreach my $dir (('', 'zub')) {
-        my $folder = $dir ? catfile($test_dir, $dir) : $test_dir;
-        push (@ok_folders, $folder);
-        
-        foreach my $count (qw(first second third)) {
-            my $output = $code;
-            $output =~ s/%%/Page $count/g;
-            $output =~ s/&&/$dir link/g;
+    my @ok_filenames;
+    foreach my $count (qw(first second third)) {
+        my $output = $code;
+        $output =~ s/%%/Page $count/g;
 
-            my @dirs;
-            push(@dirs, $dir) if $dir;
-            my $filename = catfile($folder, "$count.html");
-            push(@ok_filenames, $filename);
-            
-            my $fd = IO::File->new($filename, 'w');
-            print $fd $output;
-            close $fd;
-        }
+        my $filename = catfile($test_dir, "$count.html");
+        push(@ok_filenames, $filename) ;
+        
+        my $fd = IO::File->new($filename, 'w');
+        print $fd $output;
+        close $fd;
     }
 
-    my $ef = App::Followme::EveryFile->new();
-    my ($visit_folder, $visit_file) = $ef->visit($test_dir);
-
-    my (@folders, @files);
-    while (my $folder = &$visit_folder) {
-        push(@folders, $folder);
-        while (my $file = &$visit_file) {
-            push(@files, $file);
-        }
+    my @ok_folders;
+    foreach my $folder (qw(sub-one sub-two)) {
+        my $dir = catfile($test_dir, $folder);
+        push(@ok_folders, $dir);
+        mkdir($dir);
     }
     
-    is_deeply(\@folders, \@ok_folders, 'get list of folders'); # test 5
-    is_deeply(\@files, \@ok_filenames, 'get list of files'); # test 6
+    my $ef = App::Followme::EveryFile->new();
+    my ($files, $folders) = $ef->visit($test_dir);
+   
+    is_deeply($folders, \@ok_folders, 'get list of folders'); # test 5
+    is_deeply($files, \@ok_filenames, 'get list of files'); # test 6
 };
 

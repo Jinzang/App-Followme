@@ -44,16 +44,14 @@ sub parameters {
 sub run {
     my ($self, $directory) = @_;
 
-    my @files;
-    my ($visit_folder, $visit_file) = $self->visit($directory);
+    my ($filenames, $directories) = $self->visit($directory);
+    my @files = @$filenames;
 
-    while (my $directory = &$visit_folder) {
-        while (my $filename = &$visit_file) {
-            push(@files, $filename);
-        }
+    while (my $directory = @$directories) {
+        push(@files, $self->run($directory));
     }
     
-    return \@files;
+    return @files;
 }
 
 #----------------------------------------------------------------------
@@ -114,7 +112,7 @@ sub glob_patterns {
 #----------------------------------------------------------------------
 # Return true if this is an included file
 
-sub include_file {
+sub match_file {
     my ($self, $filename) = @_;
     
     my $dir;
@@ -132,28 +130,12 @@ sub include_file {
 }
 
 #----------------------------------------------------------------------
-# Return 1 if filename passes test
-
-sub match_file {
-    my ($self, $path) = @_;
-    return $self->include_file($path) && ! -d $path;
-}
-
-#----------------------------------------------------------------------
-# Return 1 if filename passes test
-
-sub match_folder {
-    my ($self, $path) = @_;
-    return -d $path;
-}
-
-#----------------------------------------------------------------------
 # Sort pending filenames
 
 sub sort_files {
-    my ($self, $pending_files) = @_;
+    my ($self, $files) = @_;
 
-    my @files = sort @$pending_files;
+    my @files = sort @$files;
     return \@files;
 }
 
@@ -193,37 +175,29 @@ sub update_parameters {
 sub visit {
     my ($self, $directory) = @_;
 
-    my $pending_files = [];
-    my $pending_folders =[rel2abs($directory)];
+    my @filenames;
+    my @directories;
+    my $dd = IO::Dir->new($directory);
+    die "Couldn't open $directory: $!\n" unless $dd;
 
-    my $visit_folder = sub {
-        $pending_files = [];
-        my $directory = shift(@$pending_folders);
-        return unless defined $directory;
-        
-        my $dd = IO::Dir->new($directory);
-        die "Couldn't open $directory: $!\n" unless $dd;
-
-        # Find matching files and directories
-        while (defined (my $file = $dd->read())) {
-            next unless no_upwards($file);
-            my $path = catfile($directory, $file);
-        
-            push(@$pending_folders, $path) if $self->match_folder($path);
-            push(@$pending_files, $path) if $self->match_file($path);
-        }
-
-        $dd->close;
-        $pending_files = $self->sort_files($pending_files);
-
-        return $directory;
-    };
+    # Find matching files and directories
+    while (defined (my $file = $dd->read())) {
+        next unless no_upwards($file);
+        my $path = catfile($directory, $file);
     
-    my $visit_file = sub {
-        return shift(@$pending_files);
-    };
+        if (-d $path) {
+            push(@directories, $path);
+        } else {
+            push(@filenames, $path) if $self->match_file($path);
+        }
+    }
 
-    return ($visit_folder, $visit_file);   
+    $dd->close;
+    
+    my $filenames = $self->sort_files(\@filenames);
+    my $directories = $self->sort_files(\@directories);
+    
+    return ($filenames, $directories);   
 }
 
 1;
