@@ -140,6 +140,14 @@ sub match_file {
 }
 
 #----------------------------------------------------------------------
+# Return 1 if filename passes test
+
+sub match_folder {
+    my ($self, $path) = @_;
+    return -d $path;
+}
+
+#----------------------------------------------------------------------
 # Sort pending filenames
 
 sub sort_files {
@@ -201,7 +209,7 @@ sub visit {
             next unless no_upwards($file);
             my $path = catfile($directory, $file);
         
-            push(@$pending_folders, $path) if -d $path;
+            push(@$pending_folders, $path) if $self->match_folder($path);
             push(@$pending_files, $path) if $self->match_file($path);
         }
 
