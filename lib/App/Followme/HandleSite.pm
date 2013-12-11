@@ -316,19 +316,6 @@ sub make_template {
 }
 
 #----------------------------------------------------------------------
-# Return 1 if filename passes test
-
-sub match_folder {
-    my ($self, $path) = @_;
-
-    return unless -d $path;
-
-    my $template_directory = $self->full_file_name($self->{top_directory},
-                                                   $self->{template_directory});
-    return $path ne $template_directory;
-}
-
-#----------------------------------------------------------------------
 # Parse fields out of section tag
 
 sub parse_blockname {
