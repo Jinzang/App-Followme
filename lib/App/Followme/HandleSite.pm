@@ -245,10 +245,19 @@ sub full_file_name {
 
 sub get_template_name {
     my ($self, $template_file) = @_;
+
+    my @directories = ($self->{base_directory},
+                       catfile($self->{top_directory},
+                               $self->{template_directory})
+                      );
     
-    return $self->full_file_name($self->{top_directory},
-                                 $self->{template_directory},
-                                 $template_file);
+    foreach my $directory (@directories) {
+        my $template_name = $self->full_file_name($directory,
+                                                  $template_file);
+        return $template_name if -e $template_name;
+    }
+
+    die "Couldn't find template: $template_file\n";
 }
 
 #----------------------------------------------------------------------
@@ -299,7 +308,6 @@ sub make_template {
 
     my $template_name = $self->get_template_name($template_file);
     my $template = $self->read_page($template_name);
-    die "Couldn't find template: $template_name\n" unless $template;
 
     my $prototype_name = $self->find_prototype($directory);
     my $final_template;
