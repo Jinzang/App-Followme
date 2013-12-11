@@ -15,13 +15,11 @@ use base qw(App::Followme::EveryFile);
 sub run {
     my ($self, $directory) = @_;
 
-    my ($visit_folder, $visit_file) = $self->visit($directory);
+    my ($filenames, $directories) = $self->visit($directory);
 
-    $directory = &$visit_folder;
-    my $newest_date = 0;
     my $newest_file;
-    
-    while (my $filename = &$visit_file) {
+    my $newest_date = 0;    
+    foreach my $filename (@$filenames) {
         my @stats = stat($filename);  
         my $file_date = $stats[9];
     
