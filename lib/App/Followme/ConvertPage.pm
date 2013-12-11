@@ -35,25 +35,21 @@ sub parameters {
 sub run {
     my ($self, $directory) = @_;
 
-    my @files;
-    my ($visit_folder, $visit_file) = $self->visit($directory);
+    my $template = $self->make_template($directory, $self->{page_template});
+    my $render = $self->compile_template($template);
 
-    while (my $directory = &$visit_folder) {
+    my ($filenames, $directories) = $self->visit($directory);
 
-        my $render;
-        while (my $filename = &$visit_file) {
-            unless ($render) {
-                my $template =
-                    $self->make_template($directory, $self->{page_template});
-                $render = $self->compile_template($template);
-            }
+    foreach my $filename (@$filenames) {
+        eval {$self->convert_a_file($render, $directory, $filename)};
+        warn "$filename: $@" if $@;
+    }
 
-            eval {$self->convert_a_file($render, $directory, $filename)};
-            warn "$filename: $@" if $@;
-        }
+    foreach my $directory (@$directories) {
+        $self->run($directory);
     }
     
-    return \@files;
+    return;
 }
 
 #----------------------------------------------------------------------

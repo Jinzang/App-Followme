@@ -77,7 +77,10 @@ This is preformatted text.
 </pre>
 EOQ
 
-    my $configuration = {page_template => 'template.htm'};
+    my $configuration = {page_template => 'template.htm',
+                         template_directory => '.',
+                        };
+
     my $cvt = App::Followme::ConvertPage->new($configuration);
     
     $cvt->write_page('index.html', $index);
@@ -94,9 +97,9 @@ EOQ
 
     my $prototype_file = $cvt->find_prototype($test_dir);
     my $prototype_file_ok = catfile($test_dir, 'index.html');
-    is($prototype_file, $prototype_file_ok, 'Find page templae'); # test 1
+    is($prototype_file, $prototype_file_ok, 'Find page template'); # test 1
 
-    my $source = $cvt->make_template($test_dir);
+    my $source = $cvt->make_template($test_dir, 'template.htm');
 
     like($source, qr/<ul>/, 'Make template links'); # test 2
     like($source, qr/{{body}}/, 'Make template body'); # test 3
