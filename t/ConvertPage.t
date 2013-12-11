@@ -77,10 +77,7 @@ This is preformatted text.
 </pre>
 EOQ
 
-    my $configuration = {page_template => 'template.htm',
-                         template_directory => '.',
-                        };
-
+    my $configuration = {page_template => 'template.htm'};
     my $cvt = App::Followme::ConvertPage->new($configuration);
     
     $cvt->write_page('index.html', $index);
