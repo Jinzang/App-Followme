@@ -20,6 +20,7 @@ sub run {
 
     my ($prototype_file, $prototype_path, $prototype);
     $prototype_file = $self->find_prototype($directory, 1);
+    
     if (defined $prototype_file) {
         $prototype_path = $self->get_prototype_path($prototype_file);
         $prototype = $self->read_page($prototype_file);
@@ -53,30 +54,6 @@ sub checksum_prototype {
 }
 
 #----------------------------------------------------------------------
-# Extract the directories from the list of pending files
-
-sub get_directories_and_files {
-    my ($self, $directory) = @_;
-    
-    my ($visit_folders, $visit_files) = $self->visit($directory);
-    $directory = &$visit_folders;
-    
-    my $directories  = [];
-    my $filenames = [];
-
-    while (defined (my $file = &$visit_files)) {
-        if (-d $file) {
-            push(@$directories, $file);
-        } else {
-            push(@$filenames, $file);
-        }
-    }
-
-    $filenames = $self->sort_files_by_date($filenames);
-    return ($directories, $filenames);
-}
-
-#----------------------------------------------------------------------
 # Get the prototype path for the current directory
 
 sub get_prototype_path {
@@ -89,23 +66,6 @@ sub get_prototype_path {
     
     my %prototype_path = map {$_ => 1} @path;
     return \%prototype_path;    
-}
-
-#----------------------------------------------------------------------
-# Return 1 if filename passes test
-
-sub match_file {
-    my ($self, $filename) = @_;
-
-    my $flag;
-    if (-d $filename) {
-        $flag = 1;
-
-    } else {
-        $flag = $self->include_file($filename);
-    }
-
-    return  $flag;
 }
 
 #----------------------------------------------------------------------
@@ -153,7 +113,7 @@ sub parse_blocks {
 #----------------------------------------------------------------------
 # Sort files so more recently modified files are first
 
-sub sort_files_by_date {
+sub sort_files {
     my ($self, $filenames) = @_;
        
     my @augmented_files;
@@ -196,7 +156,7 @@ sub unchanged_prototype {
 sub update_directory {
     my ($self, $directory, $prototype, $prototype_path) = @_;
 
-    my ($directories, $filenames) = $self->get_directories_and_files($directory);
+    my ($filenames, $directories) = $self->visit($directory);
     
     my @stats = stat($directory);
     my $modtime = $stats[9];
