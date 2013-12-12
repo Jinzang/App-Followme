@@ -87,11 +87,10 @@ sub get_included_files {
 sub index_data {
     my ($self, $directory) = @_;
     
-    my ($visit_folder, $visit_file) = $self->visit($directory);
+    my ($filenames, $directories) = $self->visit($directory);
 
     my @index_data;
-    $directory = &$visit_folder;        
-    while (my $filename = &$visit_file) {
+    foreach my $filename (@$filenames) {
         push(@index_data, $self->set_fields($directory, $filename));
     }
 
