@@ -38,11 +38,14 @@ sub parameters {
 sub run {
     my ($self, $directory) = @_;
 
-    my $news_file = $self->full_file_name($directory, $self->{news_file});
-    eval {$self->create_recent_news()};
-    die "$news_file: $@\n" if $@;
-    
-    $self->create_all_indexes();    
+    eval {$self->create_recent_news($self->{base_directory})};
+    if ($@) {
+        my $news_file = $self->full_file_name($self->{base_directory},
+                                              $self->{news_file});
+        die "$news_file: $@\n";
+    }
+
+    $self->create_all_indexes($self->{base_directory});    
     return;
 }
 
@@ -50,19 +53,18 @@ sub run {
 # Create index pages for all directories under news file, if needed
 
 sub create_all_indexes {
-    my ($self) =  @_;
+    my ($self, $directory) =  @_;
 
-    my $directory = $self->{base_directory};
-    my ($visit_folder, $visit_file) = $self->visit($self->{base_directory});
-
-    while (my $directory = &$visit_folder) {
+    eval {$self->create_an_index($directory)};
+    if ($@) {
         my $index_name =
             $self->full_file_name($directory, $self->{news_index_file});
+        warn "$index_name: $@";        
+    }
 
-        if ($self->is_newer($directory, $index_name)) {
-            eval {$self->create_an_index($visit_file, $directory, $index_name)};
-            warn "$index_name: $@" if $@;
-        }
+    my ($dilenames, $directories) = $self->visit($directory);
+    foreach my $directory (@$directories) {
+        $self->create_all_indexes($directory);
     }
 
     return;
@@ -72,10 +74,13 @@ sub create_all_indexes {
 # Create an index file
 
 sub create_an_index {
-    my ($self, $visit_file, $directory, $index_name) = @_;
+    my ($self, $directory) = @_;
     
+    my $index_name =
+        $self->full_file_name($directory, $self->{news_index_file});
+
     my $data = $self->set_fields($directory, $index_name);
-    $data->{loop} = $self->index_data($visit_file, $directory);
+    $data->{loop} = $self->index_data($directory);
 
     my $template =
         $self->make_template($directory, $self->{news_index_template});
@@ -90,24 +95,24 @@ sub create_an_index {
 # Create the file containing recent news
 
 sub create_recent_news {
-    my ($self, $news_file) = @_;
+    my ($self, $directory) = @_;
     
     # Get the names of the more recent files
 
-    my $recent_files = $self->recent_files($self->{base_directory}); 
+    my $file;
+    my $recent_files = $self->recent_files($directory); 
 
+    my $news_file = $self->full_file_name($directory, $self->{news_file});
+    ($directory, $file) = $self->split_filename($news_file);
+    
     return unless @$recent_files;
     return unless $self->is_newer($recent_files->[0], $news_file);
     
     # Get the data for these files
-    my $data =
-        $self->recent_data($recent_files, $self->{base_directory}, $news_file);
+    my $data = $self->recent_data($recent_files, $directory, $news_file);
 
-    # interpolate the data into thr trmplate and write the file
-    
-    my $template =
-        $self->make_template($self->{base_directory}, $self->{news_template});
-
+    # Interpolate the data into the template and write the file
+    my $template = $self->make_template($directory, $self->{news_template});
     my $render = $self->compile_template($template);
     my $page = $render->($data);
 
@@ -131,19 +136,24 @@ sub get_excluded_files {
 }
 
 #----------------------------------------------------------------------
-# Get data to be interpolated into index template
+# Get data to be interpolated into template
 
 sub index_data {
-    my ($self, $visit_file, $directory) = @_;
+    my ($self, $directory) = @_;
     
+    my ($filenames, $directories) = $self->visit($directory);
+
     my @index_data;
-    while (my $filename = &$visit_file) {
+    foreach my $filename (@$directories) {
+        push(@index_data, $self->set_fields($directory, $filename));
+    }
+
+    foreach my $filename (@$filenames) {
         push(@index_data, $self->set_fields($directory, $filename));
     }
 
     return \@index_data;
 }
-
 #----------------------------------------------------------------------
 # Get the body field from the file
 
@@ -161,39 +171,33 @@ sub internal_fields {
 }
 
 #----------------------------------------------------------------------
-# Return 1 if filename passes test
-
-sub match_file {
-    my ($self, $filename) = @_;
-
-    my $flag;
-    if (-d $filename) {
-        $flag = 1;
-
-    } else {
-        $flag = $self->include_file($filename);
-    }
-
-    return  $flag;
-}
-
-#----------------------------------------------------------------------
 # Get the more recently changed files
 
 sub more_recent_files {
-    my ($self, $directory, $filename, $augmented_files) = @_;
+    my ($self, $directory, $augmented_files) = @_;
        
-    # Add file to list of recent files if modified more recently than others
-    
-    my @stats = stat($filename);
-    my $limit = $self->{news_index_length};
-    
-    if (@$augmented_files < $limit || $stats[9] > $augmented_files->[0][0]) {
+    my ($filenames, $directories) = $self->visit($directory);
 
-        shift(@$augmented_files) if @$augmented_files >= $limit;
-        push(@$augmented_files, [$stats[9], $filename]);
+    # Add file to list of recent files if modified more recently than others
+
+    foreach my $filename (@$filenames) {
+        my @stats = stat($filename);
+        my $limit = $self->{news_index_length};
         
-        @$augmented_files = sort {$a->[0] <=> $b->[0]} @$augmented_files;
+        if (@$augmented_files < $limit || $stats[9] > $augmented_files->[0][0]) {
+    
+            shift(@$augmented_files) if @$augmented_files >= $limit;
+            push(@$augmented_files, [$stats[9], $filename]);
+            
+            @$augmented_files = sort {$a->[0] <=> $b->[0]} @$augmented_files;
+        }
+    }
+    
+    # Call recursively for subdirectories
+
+    foreach my $directory (@$directories) {
+        $augmented_files =
+            $self->more_recent_files($directory, $augmented_files);
     }
 
     return $augmented_files;
@@ -205,7 +209,7 @@ sub more_recent_files {
 sub recent_data {
     my ($self, $recent_files, $directory, $news_file) = @_;
     
-    my @recent_data;
+   my @recent_data;
     for my $file (@$recent_files) {
         push(@recent_data, $self->set_fields($directory, $file));        
     }
@@ -221,40 +225,13 @@ sub recent_data {
 sub recent_files {
     my ($self, $directory) = @_;
     
-    my ($visit_folder, $visit_file) = $self->visit($directory);
-
     my $augmented_files = [];
-    while (my $dir = &$visit_folder) {
-        while (my $file = &$visit_file) {
-            next if -d $file;
-            $augmented_files =
-                $self->more_recent_files($dir, $file, $augmented_files);
-        }
-    }
+    $augmented_files = $self->more_recent_files($directory, $augmented_files);
 
     my @recent_files = map {$_->[1]} @$augmented_files;
     @recent_files = reverse @recent_files if @recent_files > 1;
 
     return \@recent_files;
-}
-
-#----------------------------------------------------------------------
-# Sort a list of files so that directories are first
-
-sub sort_files {
-    my ($self, $pending_files) = @_;
-
-    my @augmented_files;
-    foreach my $filename (@$pending_files) {
-        my $dir = -d $filename ? 1 : 0;
-        push(@augmented_files, [$filename, $dir]);
-    }
-
-    @augmented_files = sort {$b->[1] <=> $a->[1] ||
-                             $a->[0] cmp $b->[0]   } @augmented_files;
-    
-    @$pending_files = map {$_->[0]} @augmented_files;
-    return $pending_files;
 }
 
 1;

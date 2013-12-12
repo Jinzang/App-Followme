@@ -165,17 +165,12 @@ EOQ
     }
 
     $idx = App::Followme::CreateNews->new($configuration);
-
-    chdir($archive_dir);
-    my($visit_dir, $visit_file) = $idx->visit($archive_dir);
-    &$visit_dir;
-    my $data = $idx->index_data($visit_file, $archive_dir);
+    my $data = $idx->index_data($archive_dir);
 
     is($data->[2]{url}, 'three.html', 'Archive news url'); # test 2
     is($data->[2]{body}, $body_ok, "Archive news body"); #test 3
 
-    my $index_name = $idx->full_file_name($archive_dir, $idx->{news_file});
-    $idx->create_recent_news($index_name);
+    $idx->create_recent_news($archive_dir);
     $page = $idx->read_page(catfile($test_dir,"blog.html"));
 
     like($page, qr/All about two/, 'Archive news content'); # test 4
@@ -213,7 +208,7 @@ EOQ
     $idx->write_page('news_index_template.htm', $index_template);
     
     my $archive_dir = catfile($test_dir, 'archive');
-    $idx->create_all_indexes();
+    $idx->create_all_indexes($archive_dir);
     
     my $page = $idx->read_page(catfile($archive_dir,"index.html"));
 
