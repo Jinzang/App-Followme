@@ -6,7 +6,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 15;
+use Test::More tests => 19;
 
 #----------------------------------------------------------------------
 # Load package
@@ -19,7 +19,6 @@ my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
 require App::Followme;
-require App::Followme::TopDirectory;
 
 my $test_dir = catdir(@path, 'test');
 
@@ -34,11 +33,11 @@ do {
     my $app = App::Followme->new({});
     is(ref $app, 'App::Followme', 'Create Followme'); # test 1
    
-    my $configuration = {module => ['App::Followme']};
+    my $configuration = {module => ['App::Followme::Mock']};
     $configuration = $app->load_modules($test_dir, $configuration);
     my $module = $configuration->{module}[0];
     
-    is(ref $module, 'App::Followme', 'Load modules'); # test 2
+    is(ref $module, 'App::Followme::Mock', 'Load modules'); # test 2
 };
 
 #----------------------------------------------------------------------
@@ -92,50 +91,54 @@ EOQ
 
 do {
     chdir($test_dir);
-    my $user = 'Bieber';
+    my $update = 'yes';
     my $fd = IO::File->new('followme.cfg', 'w');
-    print $fd "module = App::Followme::Mock\nuser = $user\n";
+    print $fd "module = App::Followme::Mock\nquick_update = $update\n";
     close($fd);
     
-    foreach my $i (1..5) {
-        my $dir = "level$i";
-        mkdir $dir;
-        chdir($dir);
-    }
-    
-    my $path = getcwd();
     my $app = App::Followme->new();
-    my $configuration = $app->initialize_configuration($path);
-
-    my $top_dir = App::Followme::TopDirectory->name;
-    is($top_dir, $test_dir, 'Set top directory'); # test 9
-    
-    is($configuration->{user}, $user,
-       'Initialize configuration variable'); # test 10
+    my $configuration = $app->initialize_configuration($test_dir);
+    is($app->{top_directory}, $test_dir, 'Set top directory'); # test 9
+    is($app->{base_directory}, $test_dir, 'Set base directory'); # test 10
 };
 
 #----------------------------------------------------------------------
-# Test update folder
+# Test run
 
 do {
-    my $configuration = {module => ['App::Followme::Mock'], user => 'She'};
-    my $app = App::Followme->new($configuration);
-    $app->load_modules($test_dir, $configuration);
-    my $mock = $app->{module}[0];
-    
+    my $app = App::Followme->new({});
+
     chdir($test_dir);
-    $app->update_folder(catfile($test_dir,"level1"), $configuration);
-
-    my $path = $test_dir;
-    foreach my $i (1..5) {
-        $path = catfile($path, "level$i");
-        my $filename = catfile($path, 'mock.txt');
-
-        my $fd = IO::File->new($filename, 'r');
-        my $text = <$fd>;
-        close $fd;
+    my $config = 'followme.cfg';
+    $app->write_page($config, "subdir = 1\nextension = txt\n");
+    
+    foreach my $dir (qw(one two three)) {
+        mkdir($dir);
+        chdir ($dir);
         
-        my $text_ok = "$mock->{user} is here: $path\n";
-        is($text, $text_ok, "Update folder level$i"); # tests 11-15
+        $app->write_page($config, "module = App::Followme::Mock\n");
+        foreach my $file (qw(first.txt second.txt third.txt)) {
+            $app->write_page($file, "Fake data\n")
+        }
+    }
+
+    $app->run($test_dir);
+
+    my $count = 9;
+    chdir($test_dir);
+    foreach my $dir (qw(one two three)) {
+        chdir ($dir);
+
+        my $filename = rel2abs('index.dat');
+        ok($filename, 'Ran mock'); # test 11, 14, 17
+
+        my $page = $app->read_page($filename);
+        is(index($page, "first.txt\nsecond.txt\nthird.txt"), 0,
+           'Generated results'); # test 12, 15, 18
+
+        my @lines = split(/\n/, $page);
+        is(@lines, $count, 'Right number'); # test 13, 16, 19
+        
+        $count -= 3;
     }
 };

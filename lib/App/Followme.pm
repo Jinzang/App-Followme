@@ -6,12 +6,11 @@ use warnings;
 
 use lib '..';
 
-use base qw(App::Followme::PageHandler);
+use base qw(App::Followme::HandleSite);
 
 use Cwd;
 use IO::File;
 use File::Spec::Functions qw(rel2abs splitdir catfile no_upwards rootdir updir);
-use App::Followme::TopDirectory;
 
 our $VERSION = "0.93";
 
@@ -22,8 +21,8 @@ sub parameters {
     my ($pkg) = @_;
     
     my %parameters = (
+                      quick_update => 0,
                       configuration_file => 'followme.cfg',
-                      exclude_folders => 'templates',
                      );
 
     my %base_params = $pkg->SUPER::parameters();
@@ -75,22 +74,6 @@ sub copy_config {
 }
 
 #----------------------------------------------------------------------
-# Get the list of excluded files
-
-sub get_excluded_files {
-    my ($self) = @_;
-    return $self->{exclude_folders};
-}
-
-#----------------------------------------------------------------------
-# Get the list of included files
-
-sub get_included_files {
-    my ($self) = @_;
-    return '*';
-}
-
-#----------------------------------------------------------------------
 # Find the configuration files above a directory
 
 sub find_configuration {
@@ -125,15 +108,16 @@ sub initialize_configuration {
     my $top_dir;
     foreach my $filename ($self->find_configuration($directory)) {
         my ($dir, $file) = $self->split_filename($filename);
-        $top_dir ||= $dir;
+        $top_dir = $dir unless defined $top_dir;
         
         $configuration = $self->update_configuration($filename, $configuration);
         $configuration = $self->load_modules($dir, $configuration);
     }
 
     $top_dir ||= $directory;
-    App::Followme::TopDirectory->name($top_dir);
-    $self->{base_dir} = $top_dir;
+    $self->{top_directory} = $top_dir;
+    $self->{base_directory} = $top_dir;
+    $configuration->{top_directory} = $top_dir;
     
     return $configuration;
 }
@@ -152,21 +136,11 @@ sub load_modules {
             eval "require $module" or die "Module not found: $module\n";
 
             $configuration->{base_directory} = $directory;
-            my %parameters = $self->update_parameters($module, $configuration);
-            $_ = $module->new(\%parameters);
+            $_ = $module->new($configuration);
         }
     }
     
     return $configuration;
-}
-
-#----------------------------------------------------------------------
-# Return 1 if filename passes test
-
-sub match_file {
-    my ($self, $path) = @_;
-    
-    return -d $path && $self->include_file($path);
 }
 
 #----------------------------------------------------------------------
@@ -235,47 +209,28 @@ sub update_folder {
     if (-e $configuration_file) {
         $configuration = $self->update_configuration($configuration_file,
                                                      $configuration);
+
         $configuration = $self->load_modules($directory, $configuration);
     }
     
     # Run the modules mentioned in the configuration
-    # Run any that return true on the subdirectories
-    
-    my @modules;
+   
     foreach my $module (@{$configuration->{module}}) {
-        push(@modules, $module) if $module->run($directory);
+        $module->run($directory);
     }
 
     # Recurse on the subdirectories running the filtered list of modules
     
-    if (@modules) {
-        $configuration->{module} = \@modules;
-        $self->visit($directory);
+    unless ($self->{quick_update}) {
+        $configuration->{module} = [];
+        my ($filenames, $directories) = $self->visit($directory);
         
-        while (defined(my $subdirectory = $self->next)) {
+        foreach my $subdirectory (@$directories) {
             $self->update_folder($subdirectory, $configuration);
         }
     }
 
     return;
-}
-
-#----------------------------------------------------------------------
-# Update a module's parameters
-
-sub update_parameters {
-    my ($self, $module, $configuration) = @_;
-    
-    $configuration = {} unless defined $configuration;
-    return %$configuration unless $module->can('parameters');
-        
-    my %parameters = $module->parameters();
-    foreach my $field (keys %parameters) {
-        $parameters{$field} = $configuration->{$field}
-            if exists $configuration->{$field};
-    }
-    
-    return %parameters;
 }
 
 1;
