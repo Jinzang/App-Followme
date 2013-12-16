@@ -18,7 +18,6 @@ my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
 require App::Followme::CreateIndex;
-require App::Followme::TopDirectory;
 
 my $test_dir = catdir(@path, 'test');
 
@@ -26,8 +25,6 @@ rmtree($test_dir);
 mkdir $test_dir;
 mkdir catfile($test_dir, "sub");
 chdir $test_dir;
-
-App::Followme::TopDirectory->name($test_dir);
 
 #----------------------------------------------------------------------
 # Create indexes
