@@ -37,7 +37,7 @@ do {
     
     my @files_ok = qw(followme.cfg archive/followme.cfg 
                       templates/page.htm templates/news.htm
-                      templates/index.htm);
+                      templates/news_index.htm templates/index.htm);
 
     foreach (@files_ok) {
         my @dirs = split('/', $_);
@@ -47,7 +47,7 @@ do {
     is_deeply(\@files, \@files_ok, "Next file name"); # test 1
     
     my @long = grep {length($_) > 50} @texts;
-    is(@long, 5, "Next file"); # test 2
+    is(@long, 6, "Next file"); # test 2
     
     my $file = shift @files;
     my $text = shift @texts;
