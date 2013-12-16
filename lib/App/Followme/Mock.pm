@@ -4,13 +4,10 @@ use 5.008005;
 use strict;
 use warnings;
 
-use Cwd;
-use IO::File;
-
 use lib '../..';
 
-use File::Spec::Functions qw(abs2rel);
-use base qw(App::Followme::EveryFile);
+use File::Spec::Functions qw(abs2rel catfile);
+use base qw(App::Followme::HandleSite);
 
 our $VERSION = "0.93";
 
@@ -32,24 +29,40 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Return all the files in a subtree (example)
+# Return a list of all files in a directory
 
 sub run {
     my ($self, $directory) = @_;
-    chdir($directory);
 
-    my @files;
-    my ($visit_folder, $visit_file) = $self->visit($directory);
-
-    while (my $directory = &$visit_folder) {
-        while (my $filename = &$visit_file) {
-            push(@files, $filename);
-        }
-        
-        last if $self->{subdir};
-    }
+    my @list = $self->list_files($directory);
+    my $page = join("\n", @list);
     
-    return \@files;
+    my $filename = catfile($directory, 'index.dat');
+    $self->write_page($filename, $page);
+   
+    return;
+}
+
+#----------------------------------------------------------------------
+# Return a list of all files in a directory
+
+sub list_files {
+    my ($self, $directory) = @_;
+
+    my @list;
+    my ($filenames, $directories) =  $self->visit($directory);
+    foreach my $filename (@$filenames) {
+        $filename = abs2rel($filename, $self->{base_directory});
+        push(@list, $filename);
+    }
+
+    if ($self->{subdir}) {
+        foreach my $subdirectory (@$directories) {
+            push(@list, $self->list_files($subdirectory));
+        }
+    }
+   
+    return @list;
 }
 
 #----------------------------------------------------------------------
@@ -58,18 +71,6 @@ sub run {
 sub get_included_files {
     my ($self) = @_;
     return "*.$self->{extension}";
-}
-
-#----------------------------------------------------------------------
-# Do processing needed for a file (stub)
-
-sub handle_file {
-    my ($self, $dir, $filename) = @_;
-
-    $filename = abs2rel($filename);
-    push(@{$self->{files}}, $filename);
-
-    return;
 }
 
 1;
@@ -85,7 +86,7 @@ App::Followme::Mock - Mock object for unit tests
 
     use App::Followme::Mock;
     my $mock = App::Followme::Mock->new();
-    $mock->run($directory);
+    my @list = $mock->run($directory);
 
 =head1 DESCRIPTION
 
