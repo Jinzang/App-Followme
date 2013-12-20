@@ -36,9 +36,12 @@ sub parameters {
 
 sub run {
     my ($self, $directory) = @_;
-
+ 
     my $index_name = $self->full_file_name($directory, $self->{index_file});
-    return if $self->is_newer($directory, $index_name);
+    my $template_name = $self->get_template_name($directory,
+                                                 $self->{index_template});
+    
+    return if $self->is_newer($index_name, $template_name, $directory);
 
     eval {$self->create_an_index($directory, $index_name)};
     warn "$index_name: $@" if $@;
