@@ -246,11 +246,10 @@ sub full_file_name {
 sub get_template_name {
     my ($self, $template_file) = @_;
 
-    my @directories = ($self->{base_directory},
-                       catfile($self->{top_directory},
-                               $self->{template_directory})
-                      );
-    
+    my @directories = ($self->{base_directory});
+    push(@directories, $self->full_file_name($self->{top_directory},
+                                             $self->{template_directory}));
+
     foreach my $directory (@directories) {
         my $template_name = $self->full_file_name($directory,
                                                   $template_file);
@@ -276,28 +275,26 @@ sub internal_fields {
 }
 
 #----------------------------------------------------------------------
-# Is the source file newer than the target?
+# Is the target newer than any source file?
 
 sub is_newer {
-    my ($self, $source, $target) = @_;
+    my ($self, $target, @sources) = @_;
     
-    my $newer;
+    my $target_date = 0;   
     if (-e $target) {
-        if (-e $source) {
-            my @stats = stat($target);  
-            my $target_date = $stats[9];
-            
-            @stats = stat($source);  
-            my $source_date = $stats[9];
-            
-            $newer = $source_date >= $target_date;
-        }
-
-    } else {
-        $newer = -e $source;
+        my @stats = stat($target);  
+        $target_date = $stats[9];
     }
     
-    return $newer;
+    foreach my $source (@sources) {
+        next unless -e $source;
+
+        my @stats = stat($source);  
+        my $source_date = $stats[9];
+        return if $source_date >= $target_date;
+    }
+
+    return 1;
 }
 
 #----------------------------------------------------------------------

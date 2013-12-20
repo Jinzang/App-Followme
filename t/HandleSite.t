@@ -258,17 +258,17 @@ do {
 do {
     my $hs = App::Followme::HandleSite->new;
 
-    my $newer = $hs->is_newer('one.html', 'two.html');
-    is($newer, 1, 'Is newer file'); # test 21
+    my $newer = $hs->is_newer('three.html', 'two.html', 'one.html');
+    is($newer, undef, 'Source is  newer'); # test 21
     
-    $newer = $hs->is_newer('two.html', 'one.html');
-    is($newer, '', "Is not newer file"); # test 22
+    $newer = $hs->is_newer('one.html', 'two.html', 'three.html');
+    is($newer, 1, "Target is newer"); # test 22
     
-    $newer = $hs->is_newer('one.html', 'five.html');
-    is($newer, 1, 'Is newer than undefined'); # test 23
+    $newer = $hs->is_newer('five.html', 'one.html');
+    is($newer, undef, 'Target is undefined'); # test 23
     
-    $newer = $hs->is_newer('five.html', 'six.html');
-    is($newer, undef, 'Is newer with both undefined'); # test 24
+    $newer = $hs->is_newer('six.html', 'five.html');
+    is($newer, 1, 'Source and target undefined'); # test 24
 };
 
 #----------------------------------------------------------------------
