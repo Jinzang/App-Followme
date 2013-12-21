@@ -96,10 +96,8 @@ module = App::Followme::FormatPages
 module = App::Followme::ConvertPage
 #--%X--%X archive/followme.cfg
 module = App::Followme::CreateNews
-module = App::Followme::CreateIndex
-index_file = index.html
+news_index_file = index.html
 news_file = ../blog.html
-exclude_files = index.html
 #--%X--%X templates/page.htm
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
