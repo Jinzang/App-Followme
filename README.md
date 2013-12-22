@@ -6,7 +6,7 @@ App::Followme - Update a static website
 
     use App::Followme;
     my $app = App::Followme->new($configuration);
-    $app->run(shift @ARGV);
+    $app->run($directory);
 
 # DESCRIPTION
 
