@@ -19,6 +19,7 @@ sub parameters {
     my ($pkg) = @_;
     
     my %parameters = (
+            quick_update => 0,
             text_extension => 'txt',
             page_template => 'page.htm',
            );
@@ -45,6 +46,8 @@ sub run {
         warn "$filename: $@" if $@;
     }
 
+    return if $self->{quick_update};
+    
     foreach my $directory (@$directories) {
         $self->run($directory);
     }
