@@ -497,17 +497,17 @@ __END__
 
 =head1 NAME
 
-App::Followme::PageHandler - Base class fo
+App::Followme::HandleSite - Supplies common methods for App::Followme modules 
 
 =head1 SYNOPSIS
 
-    use App::Followme::PageHandler;
-    $handler = App::Followme::PageHandler($configuration);
+    use App::Followme::HandleSite;
+    $handler = App::Followme::HandleSite($configuration);
     $handler->run();
 
 =head1 DESCRIPTION
 
-App::Followme::PageHandler is the base class for all the modules that
+App::Followme::HandleSite is the base class for all the modules that
 App::Followme uses to process a website. It is not called directly, it just
 contains the common methods used by modules, which access them by subclassing
 it.
