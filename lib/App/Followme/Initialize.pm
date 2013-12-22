@@ -7,7 +7,7 @@ use Cwd;
 use IO::File;
 use File::Spec::Functions qw(splitdir catfile);
 
-our $VERSION = "0.92";
+our $VERSION = "0.93";
 our $modeline;
 
 require Exporter;
@@ -92,7 +92,7 @@ sub next_file {
 1;
 __DATA__
 #--%X--%X followme.cfg
-module = App::Followme::FormatPages
+module = App::Followme::FormatPage
 module = App::Followme::ConvertPage
 #--%X--%X archive/followme.cfg
 module = App::Followme::CreateNews
