@@ -42,7 +42,8 @@
       },
       "runtime" : {
          "requires" : {
-            "perl" : "5.008005"
+            "perl" : "5.008005",
+            "Text::Markdown" : "1.000031",
          }
       },
       "test" : {
