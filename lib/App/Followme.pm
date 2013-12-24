@@ -102,7 +102,10 @@ sub initialize_configuration {
 sub load_and_run_modules {
     my ($self, $directory, %configuration) = @_;
 
-    foreach my $module (@{$configuration{module}}) {
+    my @modules = @{$configuration{module}};
+    delete $configuration{module};
+
+    foreach my $module (@modules) {
         eval "require $module" or die "Module not found: $module\n";
 
         $configuration{base_directory} = $directory;
@@ -110,7 +113,6 @@ sub load_and_run_modules {
         $object->run($directory);
     }
     
-    delete $configuration{module};
     return %configuration;
 }
 
