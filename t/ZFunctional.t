@@ -43,14 +43,15 @@ do {
     my $followme = App::Followme->new();
 
     my $text = "This is the top page\n";
-    $followme->write_page('index.txt', $text);
+    $followme->write_page('index.md', $text);
     $followme->run($test_dir);
     
     ok(-e 'index.html', 'Index file created'); #test 4
-    ok(! -e 'index.txt', 'Text file deleted'); #test 5
+    ok(! -e 'index.md', 'Text file deleted'); #test 5
     
+    chomp($text);
     my $page = $followme->read_page('index.html');
-    ok(index($page, '<h2>Test</h2>') > 0, 'Generated ttile'); # test 6
+    ok(index($page, '<h2>Test</h2>') > 0, 'Generated title'); # test 6
     ok(index($page, "<p>$text</p>") > 0, 'Generated body'); # test 7
 
 };
@@ -68,15 +69,16 @@ do {
     }
 
     foreach my $count (qw(first second third)) {
-        my $file = "$count.txt";
+        my $file = "$count.md";
         $file = catfile($path, $file);
         
         my $text = "$count blog post.\n";
         $followme->write_page($file, $text);
         
         $followme->run($path);
-        $file =~ s/txt$/html/;
+        $file =~ s/md$/html/;
         
+        chomp($text);
         my $page = $followme->read_page($file);
         ok(index($page, "<p>$text</p>") > 0,
            "Generated $count blog post"); # test 8-10
