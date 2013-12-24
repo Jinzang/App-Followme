@@ -144,13 +144,8 @@ The variables that are calculated for a text file are:
 
 =item body
 
-All the content of the text file. The content is passed through a subroutine
-before being stored in this variable. The subroutine takes one input, the
-content stored as a string, and returns it as a string containing html. The
-default subroutine, add_tags in this module, only surrounds paragraphs with
-p tags, where paragraphs are separated by a blank line. You can supply a
-different subroutine by changing the value of the configuration variable
-page_converter.
+All the content of the text file. Markdown is called on the file's content to
+generate html before being stored in the body variable. 
 
 =item title
 
