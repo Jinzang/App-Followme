@@ -69,12 +69,16 @@ EOQ
 
    my $text = <<'EOQ';
 Page %%
+--------
 
 This is a paragraph
 
-<pre>
-This is preformatted text.
-</pre>
+
+    This is preformatted text.
+
+* first %%
+* second %%
+* third %%
 EOQ
 
     my $configuration = {page_template => 'template.htm'};
@@ -88,7 +92,7 @@ EOQ
         my $output = $text;
         $output =~ s/%%/$count/g;
         
-        my $filename = "$count.txt";
+        my $filename = "$count.md";
         $cvt->write_page($filename, $output);
     }
 
@@ -101,24 +105,18 @@ EOQ
     like($source, qr/<ul>/, 'Make template links'); # test 2
     like($source, qr/{{body}}/, 'Make template body'); # test 3
 
-    my $page = $cvt->read_page('three.txt');
-    my $tagged_text = $cvt->convert_text($page);
-    my $tagged_text_ok = $text;
-    
-    $tagged_text_ok =~ s/Page %%/<p>Page three<\/p>/;
-    $tagged_text_ok =~ s/This is a paragraph/<p>This is a paragraph<\/p>/;
-    
-    is($tagged_text, $tagged_text_ok, 'Convert Text'); # test 4
+    my $data = $cvt->internal_fields({}, 'three.md');
+    ok(index($data->{body}, "<li>third three</li>") > 0,'Convert Text'); # test 4
 
     my $render = $cvt->compile_template($template);    
-    $cvt->convert_a_file($render, $test_dir, 'four.txt');
+    $cvt->convert_a_file($render, $test_dir, 'four.md');
     
-    $page = $cvt->read_page('four.html');
+    my $page = $cvt->read_page('four.html');
     like($page, qr/<h1>Four<\/h1>/, 'Convert a file'); # test 5
 
     $cvt->run($test_dir);
     $page = $cvt->read_page('one.html');
-    like($page, qr/<h1>One<\/h1>/, 'Convert text file one'); # test 6
+    like($page, qr/<h2>Page one<\/h2>/, 'Convert text file one'); # test 6
     $page = $cvt->read_page('two.html');
-    like($page, qr/<h1>Two<\/h1>/, 'Convert text file two'); # test 7
+    like($page, qr/<h2>Page two<\/h2>/, 'Convert text file two'); # test 7
 };
