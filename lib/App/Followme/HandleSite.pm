@@ -304,14 +304,18 @@ sub get_template_name {
 sub internal_fields {
     my ($self, $data, $filename) = @_;   
 
-    if (-d $filename) {
-        my $index_name = "index.$self->{web_extension}";
-        $filename = catfile($filename, $index_name);
-    }
+    my ($ext) = $filename =~ /\.([^\.])$/;
 
-    $data->{body} = $self->read_page($filename);
-    $data->{summary} = $self->build_summary($data);
-    $data = $self->build_title_from_header($data);
+    if ($ext eq $self->{web_extension}) {
+        if (-d $filename) {
+            my $index_name = "index.$self->{web_extension}";
+            $filename = catfile($filename, $index_name);
+        }
+    
+        $data->{body} = $self->read_page($filename);
+        $data->{summary} = $self->build_summary($data);
+        $data = $self->build_title_from_header($data);
+    }
     
     return $data;
 }
@@ -472,10 +476,7 @@ sub set_fields {
     
     my $data = {};
     $data = $self->external_fields($data, $directory, $filename);
-
-    my ($ext) = $filename =~ /\.([^\.])$/;
-    $data = $self->internal_fields($data, $filename)
-        if $ext eq $self->{web_extension};
+    $data = $self->internal_fields($data, $filename);
 
     return $data;
 }
