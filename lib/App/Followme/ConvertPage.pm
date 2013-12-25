@@ -94,6 +94,8 @@ sub internal_fields {
     die "Couldn't read\n" unless defined $text;
 
     $data->{body} = $self->{md}->markdown($text);
+    $data = $self->build_title_from_header($data);
+
     return $data;
 }
 
