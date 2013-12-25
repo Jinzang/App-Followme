@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 35;
+use Test::More tests => 37;
 
 #----------------------------------------------------------------------
 # Load package
@@ -371,4 +371,18 @@ do {
     my @keys = sort keys %$data;
     my @keys_ok = sort(@date_ok, 'absolute_url', 'title', 'url');
     is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 35
+    
+    my $body = <<'EOQ';
+    <h2>The title</h2>
+    
+    <p>The body
+</p>
+EOQ
+
+    $data = {body => $body};
+    $data = $hs->build_title_from_header($data);
+    is($data->{title}, 'The title', 'Get title from header'); # test 36
+    
+    my $summary = $hs->build_summary($data);
+    is($summary, "The body\n", 'Get summary'); # test 37
 };

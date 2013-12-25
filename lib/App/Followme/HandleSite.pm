@@ -102,6 +102,37 @@ sub build_title_from_filename {
 }
 
 #----------------------------------------------------------------------
+# Get the title from the first paragraph of the page
+
+sub build_summary {
+    my ($self, $data) = @_;
+    
+    my $summary = '';
+    if (exists $data->{body}) {
+        if ($data->{body} =~ m!<p[^>]*>(.*?)</p[^>]*>!si) {
+            $summary = $1;
+        }
+    }
+    
+    return $summary;
+}
+
+#----------------------------------------------------------------------
+# Get the title from the page header
+
+sub build_title_from_header {
+    my ($self, $data) = @_;
+    
+    if (exists $data->{body}) {
+        if ($data->{body} =~ s!^\s*<h(\d)[^>]*>(.*?)</h\1[^>]*>!!si) {
+            $data->{title} = $2;
+        }
+    }
+    
+    return $data;
+}
+
+#----------------------------------------------------------------------
 # Build a url from a filename
 
 sub build_url {
@@ -279,6 +310,9 @@ sub internal_fields {
     }
 
     $data->{body} = $self->read_page($filename);
+    $data->{summary} = $self->build_summary($data);
+    $data = $self->build_title_from_header($data);
+    
     return $data;
 }
 
@@ -438,7 +472,10 @@ sub set_fields {
     
     my $data = {};
     $data = $self->external_fields($data, $directory, $filename);
-    $data = $self->internal_fields($data, $filename);
+
+    my ($ext) = $filename =~ /\.([^\.])$/;
+    $data = $self->internal_fields($data, $filename)
+        if $ext eq $self->{web_extension};
 
     return $data;
 }
