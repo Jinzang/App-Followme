@@ -25,7 +25,6 @@ sub parameters {
     my ($pkg) = @_;
     
     my %parameters = (
-            absolute => 0,
             top_directory => getcwd(),
             template_directory => 'templates',
            );
@@ -108,20 +107,9 @@ sub build_title {
 sub build_url {
     my ($self, $data, $directory, $filename) = @_;
 
-    my $is_dir = -d $filename;
-    $directory = $self->{top_directory} if $self->{absolute};
-
-    $filename = rel2abs($filename);
-    $filename = abs2rel($filename, $directory);
-    $filename = "/$filename" if $self->{absolute};
-    
-    my @path = splitdir($filename);
-    push(@path, 'index.html') if $is_dir;
-    
-    my $url = join('/', @path);
-    $url =~ s/\.[^\.]*$/.$self->{web_extension}/;
-
-    $data->{url} = $url;
+    $data->{url} = $self->filename_to_url($directory, $filename);
+    $data->{absolute_url} = '/' . $self->filename_to_url($self->{top_directory},
+                                                         $filename);
     return $data;
 }
 
@@ -181,6 +169,26 @@ sub external_fields {
     $data = $self->build_url($data, $directory, $filename);
 
     return $data;
+}
+
+#----------------------------------------------------------------------
+# Convert filename to url
+
+sub filename_to_url {
+    my ($self, $directory, $filename) = @_;    
+
+    my $is_dir = -d $filename;
+    $filename = rel2abs($filename);
+    $filename = abs2rel($filename, $directory);
+    $filename = "/$filename" if $self->{absolute};
+    
+    my @path = splitdir($filename);
+    push(@path, 'index.html') if $is_dir;
+    
+    my $url = join('/', @path);
+    $url =~ s/\.[^\.]*$/.$self->{web_extension}/;
+
+    return $url;
 }
 
 #----------------------------------------------------------------------
@@ -531,7 +539,7 @@ capitalizing the first character of each word.
 
 =item $data = $self->build_url($data, $filename);
 
-Build the url that of a web page from its filename.
+Build the relative and absolute urls of a web page from a filename.
 
 =item my $sub = $self->compile_template($template, $variable);
 

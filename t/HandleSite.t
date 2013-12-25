@@ -350,15 +350,14 @@ do {
     
     $data = $hs->build_url($data, $test_dir, $text_name);
     my $url_ok = 'watch/this-is-only-a-test.html';
-    is($data->{url}, $url_ok, 'Build relative file url'); # test 31
-    $hs->{absolute} = 1;
-    $data = $hs->build_url($data, $test_dir, $text_name);
-    $url_ok = '/watch/this-is-only-a-test.html';
-    is($data->{url}, $url_ok, 'Build absolute file url'); # test 32
+    is($data->{url}, $url_ok, 'Build a relative file url'); # test 31
+
+    $url_ok = '/' . $url_ok;
+    is($data->{absolute_url}, $url_ok, 'Build an absolute file url'); # test 32
 
     mkdir('watch');
     $data = $hs->build_url($data, $test_dir, 'watch');
-    is($data->{url}, '/watch/index.html', 'Build directory url'); #test 33
+    is($data->{url}, 'watch/index.html', 'Build directory url'); #test 33
        
     $data = {};
     my $date = $hs->build_date($data, 'two.html');
@@ -370,6 +369,6 @@ do {
     $data = {};
     $data = $hs->external_fields($data, $test_dir, 'two.html');
     my @keys = sort keys %$data;
-    my @keys_ok = sort(@date_ok, 'title', 'url');
+    my @keys_ok = sort(@date_ok, 'absolute_url', 'title', 'url');
     is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 35
 };
