@@ -37,25 +37,24 @@ sub initialize {
 sub copy_file {
     my ($file, $text) = @_;
 
-    my @dirs = split(/\//, $file);
+    my $current_directory = getcwd();
+    my @dirs = splitdir($file);
     my $base = pop(@dirs);
     
-    my $path = '.';
     foreach my $dir (@dirs) {
-        $path .= "/$dir";
-
-        if (! -d $path) {
-            mkdir ($path) or die "Couldn't create $path: $!\n";
+        if (! -d $dir) {
+            mkdir ($dir) or die "Couldn't create $dir: $!\n";
         }
+        chdir($dir);
     }
     
-    $path .= "/$base";
-    return if -e $path;    
+    return if -e $base;    
 
-    my $out = IO::File->new($path, 'w') or die "Can't write $path";
+    my $out = IO::File->new($base, 'w') or die "Can't write $file";
     print $out $text;        
     close($out);
     
+    chdir($current_directory);
     return;
 }
 
