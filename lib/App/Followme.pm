@@ -88,9 +88,14 @@ sub initialize_configuration {
     my %configuration = %$self;
 
     foreach my $filename (@configuration_files) {
-        my ($dir, $file) = $self->split_filename($filename);        
-        %configuration = $self->update_configuration($filename, %configuration);
-        %configuration = $self->load_and_run_modules($dir, %configuration);
+        my ($base_directory, $config_file) = $self->split_filename($filename);
+        
+        %configuration = $self->update_configuration($filename,
+                                                     %configuration);
+
+        %configuration = $self->load_and_run_modules($base_directory,
+                                                     $directory,
+                                                     %configuration);
     }
 
     return %configuration;
@@ -100,7 +105,7 @@ sub initialize_configuration {
 # Load a modeule and then run it
 
 sub load_and_run_modules {
-    my ($self, $directory, %configuration) = @_;
+    my ($self, $base_directory, $directory, %configuration) = @_;
 
     my @modules = @{$configuration{module}};
     delete $configuration{module};
@@ -108,7 +113,7 @@ sub load_and_run_modules {
     foreach my $module (@modules) {
         eval "require $module" or die "Module not found: $module\n";
 
-        $configuration{base_directory} = $directory;
+        $configuration{base_directory} = $base_directory;
         my $object = $module->new(\%configuration);
         $object->run($directory);
     }
@@ -180,7 +185,9 @@ sub update_folder {
     if (-e $configuration_file) {
         %configuration = $self->update_configuration($configuration_file,
                                                      %configuration);
+
         %configuration = $self->load_and_run_modules($directory,
+                                                     $directory,
                                                      %configuration);
     }
 
