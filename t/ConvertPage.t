@@ -112,11 +112,11 @@ EOQ
     $cvt->convert_a_file($render, $test_dir, 'four.md');
     
     my $page = $cvt->read_page('four.html');
-    like($page, qr/<h1>Four<\/h1>/, 'Convert a file'); # test 5
+    like($page, qr/<h1>Page four<\/h1>/, 'Convert a file'); # test 5
 
     $cvt->run($test_dir);
     $page = $cvt->read_page('one.html');
-    like($page, qr/<h2>Page one<\/h2>/, 'Convert text file one'); # test 6
+    like($page, qr/<h1>Page one<\/h1>/, 'Convert text file one'); # test 6
     $page = $cvt->read_page('two.html');
-    like($page, qr/<h2>Page two<\/h2>/, 'Convert text file two'); # test 7
+    like($page, qr/<h1>Page two<\/h1>/, 'Convert text file two'); # test 7
 };
