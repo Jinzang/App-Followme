@@ -25,6 +25,7 @@ my $test_dir = catdir(@path, 'test');
 rmtree($test_dir);
 mkdir $test_dir;
 chdir $test_dir;
+$test_dir = getcwd();
 
 #----------------------------------------------------------------------
 # Test set directory
@@ -76,8 +77,8 @@ do {
     my $app = App::Followme->new({});
 
     chdir($test_dir);
-    my $config = catfile ($test_dir, 'followme.cfg');
-    my @config_files_ok = ($config);
+    my $config = 'followme.cfg';
+    my @config_files_ok = (rel2abs($config));
     
     $app->write_page($config, "subdir = 1\nextension = txt\n");
     
