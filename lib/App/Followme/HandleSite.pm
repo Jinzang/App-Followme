@@ -83,7 +83,7 @@ sub build_date {
 #----------------------------------------------------------------------
 # Get the title from the filename root
 
-sub build_title {
+sub build_title_from_filename {
     my ($self, $data, $filename) = @_;
     
     my ($dir, $file) = $self->split_filename($filename);
@@ -165,7 +165,7 @@ sub external_fields {
     my ($self, $data, $directory, $filename) = @_;
 
     $data = $self->build_date($data, $filename);
-    $data = $self->build_title($data, $filename);
+    $data = $self->build_title_from_filename($data, $filename);
     $data = $self->build_url($data, $directory, $filename);
 
     return $data;
@@ -531,7 +531,7 @@ Some of the common methods are:
 The variables calculated from the modification time are: C<weekday, month,>
 C<monthnum, day, year, hour24, hour, ampm, minute,> and C<second.>
 
-=item my $data = $self->build_title($data, $filename);
+=item my $data = $self->build_title_from_filename($data, $filename);
 
 The title of the page is derived from the file name by removing the filename
 extension, removing any leading digits,replacing dashes with spaces, and

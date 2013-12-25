@@ -339,12 +339,12 @@ do {
     my $hs = App::Followme::HandleSite->new;
     my $text_name = catfile('watch','this-is-only-a-test.txt');
     
-    $data = $hs->build_title($data, $text_name);
+    $data = $hs->build_title_from_filename($data, $text_name);
     my $title_ok = 'This Is Only A Test';
     is($data->{title}, $title_ok, 'Build file title'); # test 29
 
     my $index_name = catfile('watch','index.html');
-    $data = $hs->build_title($data, $index_name);
+    $data = $hs->build_title_from_filename($data, $index_name);
     $title_ok = 'Watch';
     is($data->{title}, $title_ok, 'Build directory title'); # test 30
     
