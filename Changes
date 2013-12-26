@@ -1,6 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+
+0.94 2013-12-26T00:54:19Z
     - Text files are now converted to html by Markdown
     - Compute title from header where possible, compute summary
     - Fixed some OS dependencies
