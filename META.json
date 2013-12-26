@@ -42,8 +42,8 @@
       },
       "runtime" : {
          "requires" : {
-            "perl" : "5.008005",
             "Text::Markdown" : "1.000031",
+            "perl" : "5.008005"
          }
       },
       "test" : {
@@ -63,5 +63,5 @@
          "web" : "https://github.com/Jinzang/App-Followme"
       }
    },
-   "version" : "0.93"
+   "version" : "0.94"
 }
