@@ -151,9 +151,8 @@ generate html before being stored in the body variable.
 
 =item title
 
-The title of the page is derived from the file name by removing the filename
-extension, removing any leading digits,replacing dashes with spaces, and
-capitalizing the first character of each word.
+The title of the page is derived from the header, if one is at the front of the
+file content, or the filename, if it is not.
 
 =item time fields
 
