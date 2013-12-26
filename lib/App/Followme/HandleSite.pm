@@ -304,7 +304,7 @@ sub get_template_name {
 sub internal_fields {
     my ($self, $data, $filename) = @_;   
 
-    my ($ext) = $filename =~ /\.([^\.])$/;
+    my ($ext) = $filename =~ /\.([^\.]*)$/;
 
     if ($ext eq $self->{web_extension}) {
         if (-d $filename) {
@@ -312,7 +312,8 @@ sub internal_fields {
             $filename = catfile($filename, $index_name);
         }
     
-        $data->{body} = $self->read_page($filename);
+        my $body = $self->read_page($filename);
+        $data->{body} = $body if defined $body;
         $data->{summary} = $self->build_summary($data);
         $data = $self->build_title_from_header($data);
     }
