@@ -148,6 +148,7 @@ news_file = ../blog.html
 <div id="content">
 <!-- section content -->
 <!-- loop -->
+<h2>{{title}}</h2>
 {{body}}
 <p><a href="{{url}}">Written on {{month}} {{day}}, {{year}}</a></p>
 <!-- endloop -->
