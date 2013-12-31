@@ -49,21 +49,17 @@ sub run {
 sub find_configuration {
     my ($self, $directory) = @_;
 
-    chdir($directory);
-    my @configuration_files;
-    my ($new_dir, $old_dir);
-
-    do {
-        push(@configuration_files, rel2abs($self->{configuration_file}))
-            if -e $self->{configuration_file};
-
-        $old_dir = getcwd();
-        chdir(updir());
-        $new_dir = getcwd();
-
-    } while $new_dir ne $old_dir;
+    # Find configuration files in and above directory
     
-    chdir($directory);
+    my @configuration_files;
+    my @dirs = splitdir($directory);
+
+    while (@dirs) {
+        my $config_file = catfile(@dirs, $self->{configuration_file});
+        push(@configuration_files, $config_file) if -e $config_file;
+        pop(@dirs);
+    }
+
     @configuration_files = reverse @configuration_files;
 
     # The topmost configuration file is the top and base directory
