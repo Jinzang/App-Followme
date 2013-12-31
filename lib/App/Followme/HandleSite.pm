@@ -227,30 +227,26 @@ sub filename_to_url {
 
 sub find_prototype {
     my ($self, $directory, $uplevel) = @_;
+
     $uplevel = 0 unless defined $uplevel;
-    
-    my $current_directory = getcwd();
-    chdir($directory);
-    my $filename;
+    my @path = splitdir(abs2rel($directory, $self->{top_directory}));
 
     for (;;) {
-        my $dir = getcwd();
+        my $dir = catfile($self->{top_directory}, @path);
 
         if ($uplevel) {
             $uplevel -= 1;
-
         } else {
             my $mrf = App::Followme::MostRecentFile->new($self);
-            $filename = $mrf->run($dir);
-            last if $filename;
+            my $filename = $mrf->run($dir);
+            return $filename if $filename;
         }
 
-        last if $dir eq $self->{top_directory};
-        chdir(updir());
+        last unless @path;
+        pop(@path);
     }
 
-    chdir($current_directory);
-    return $filename;
+    return;
 }
 
 #----------------------------------------------------------------------
@@ -258,7 +254,6 @@ sub find_prototype {
 
 sub full_file_name {
     my ($self, @directories) = @_;
-
 
     return $directories[-1] if file_name_is_absolute($directories[-1]);
    
