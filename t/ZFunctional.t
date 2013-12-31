@@ -25,6 +25,7 @@ my $test_dir = catdir(@path, 'test');
 rmtree($test_dir);
 mkdir $test_dir;
 chdir $test_dir;
+$test_dir = cwd();
 
 #----------------------------------------------------------------------
 # Initialize web site
@@ -40,6 +41,7 @@ do {
 # Create index page
 
 do {
+    chdir($test_dir);
     my $followme = App::Followme->new();
 
     my $text = "This is the top page\n";
@@ -60,6 +62,7 @@ do {
 # Create archive pages
 
 do {
+    chdir($test_dir);
     my $followme = App::Followme->new();
 
     my $path = catfile($test_dir, 'archive');
