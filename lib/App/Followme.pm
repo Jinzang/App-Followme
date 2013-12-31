@@ -12,7 +12,7 @@ use Cwd;
 use IO::File;
 use File::Spec::Functions qw(rel2abs splitdir catfile no_upwards rootdir updir);
 
-our $VERSION = "0.94";
+our $VERSION = "0.95";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
