@@ -50,17 +50,18 @@ sub find_configuration {
     my ($self, $directory) = @_;
 
     chdir($directory);
-    my $root_dir = rootdir();
     my @configuration_files;
+    my ($new_dir, $old_dir);
 
-    for (;;) {
-        last if getcwd() eq $root_dir;
-
+    do {
         push(@configuration_files, rel2abs($self->{configuration_file}))
             if -e $self->{configuration_file};
 
+        $old_dir = getcwd();
         chdir(updir());
-    }
+        $new_dir = getcwd();
+
+    } while $new_dir ne $old_dir;
     
     chdir($directory);
     @configuration_files = reverse @configuration_files;
