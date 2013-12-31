@@ -44,7 +44,10 @@ do {
     my $file_ok = 'index.html';
     my $filename = catfile($dir_ok, $file_ok);
     my ($dir, $file) = $ef->split_filename($filename);
-    is($dir, $dir_ok, 'Split directory'); # test 3
+
+    my @dir = splitdir($dir);
+    my @dir_ok = splitdir($dir_ok);
+    is_deeply(\@dir, \@dir_ok, 'Split directory'); # test 3
     is($file, $file_ok, 'Split filename'); # test 4
 };
 
