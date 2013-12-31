@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
+use Cwd;
 use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catfile catdir rel2abs splitdir);
