@@ -284,7 +284,7 @@ created:
 Edit the existing pages in your site to have all the section comments in this
 template.
 
-The configuration file for followme is followme.cfg in thr top directory of
+The configuration file for followme is followme.cfg in the top directory of
 your site. It contains the names of the Perl modules that are run when the
 followme command is run:
 

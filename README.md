@@ -37,9 +37,9 @@ init option in that directory
     followme --init
 
 It will install the initial templates and configuration files. The initial
-setup is configured to update pages to maintain a consistant look for the site
+setup is configured to update pages to maintain a consistent look for the site
 and to create a weblog from files placed in the archive directory. If you do not
-want a weblog, just delete the arcive directory and its contents.
+want a weblog, just delete the archive directory and its contents.
 
 To start creating your site, create the index page as a Markdown file, run
 followme again, and edit the resulting page:
@@ -75,22 +75,22 @@ created:
 
     cat templates/page.htm
 
-Edit the existing pages in your site to heve all the section comments in this
+Edit the existing pages in your site to have all the section comments in this
 template.
 
 The configuration file for followme is followme.cfg in thr top directory of
-your site. It contains the names of the Perl modlues that are run when the
+your site. It contains the names of the Perl modules that are run when the
 followme command is run:
 
     module = App::Followme::FormatPages
     module = App::Followme::ConvertPages
 
 FormatPages runs the code that keeps the pages consistent with the prototype.
-ConvertPages changes text files to html pages using a template and the
+ConvertPages changes Markdown files to html pages using a template and the
 prototype. The modules are run in the order that they appear in the,
 configuration file. If you want to change or add to the behavior of followme,
 write another module and add it to the file. Other lines in the configuration
-file modify the default behavior of the modules by over ridding their default
+file modify the default behavior of the modules by overriding their default
 parameter values. For more information on these parameters, see the
 documentation for each of the modules.
 
@@ -107,7 +107,7 @@ html page, edit the template. Only blocks inside the section comments will be in
 the resulting page, editing the text outside it will have no effect on the
 resulting page.
 
-A larger website will be spread acrss several folders. Each folder can have its
+A larger website will be spread across several folders. Each folder can have its
 own configuration file. If they contain modules, they will be run on that folder
 and all the subfolders below it. After initialization, the website is configured
 with an archive folder containing a configuration file. This file contains to
