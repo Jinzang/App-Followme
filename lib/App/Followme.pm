@@ -10,7 +10,7 @@ use base qw(App::Followme::HandleSite);
 
 use Cwd;
 use IO::File;
-use File::Spec::Functions qw(rel2abs splitdir catfile no_upwards rootdir updir);
+use File::Spec::Functions qw(splitdir catfile);
 
 our $VERSION = "0.95";
 
