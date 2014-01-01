@@ -1,6 +1,7 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+    - Changes to make filename handling OS independent
 
 0.94 2013-12-26T00:54:19Z
     - Text files are now converted to html by Markdown
