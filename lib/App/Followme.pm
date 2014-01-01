@@ -51,8 +51,9 @@ sub find_configuration {
 
     # Find configuration files in and above directory
     
-    my @configuration_files;
     my @dirs = splitdir($directory);
+    $directory = catfile(@dirs);
+    my @configuration_files;
 
     while (@dirs) {
         my $config_file = catfile(@dirs, $self->{configuration_file});
