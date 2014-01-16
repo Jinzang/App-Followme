@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 #----------------------------------------------------------------------
 # Load package
@@ -77,6 +77,8 @@ EOQ
 <h1>{{title}}</h1>
 
 <!-- loop -->
+<h2>{{title}}</h2>
+
 {{body}}
 <p>{{month}} {{day}} {{year}}<a href="{{url}}">Permalink</a></p>
 <!-- endloop -->
@@ -133,7 +135,7 @@ do {
    
     my $page = $idx->read_page(catfile($archive_dir,"index.html"));
 
-    like($page, qr/>One<\/a><\/li>/, 'Archive index content'); # test 1
+    like($page, qr/>Post one<\/a><\/li>/, 'Archive index content'); # test 1
     like($page, qr/<a href="one.html">/, 'Archive index link'); # test 2
 };
 
@@ -159,7 +161,6 @@ do {
 do {
 my $body_ok = <<'EOQ';
 
-<h1>Post three</h1>
 
 <p>All about three.</p>
 EOQ
@@ -175,5 +176,6 @@ EOQ
     my $page = $idx->read_page(catfile($test_dir,"blog.html"));
 
     like($page, qr/All about two/, 'Archive news content'); # test 6
-    like($page, qr/<a href="archive\/one.html">/, 'Archive news link'); # test 7
+    like($page, qr/<h2>Post two/, 'Archive news title'); # test 7
+    like($page, qr/<a href="archive\/one.html">/, 'Archive news link'); # test 8
 };
