@@ -2,6 +2,9 @@ Revision history for Perl extension App::Followme
 
 {{$NEXT}}
 
+0.96 2014-01-17T00:13:48Z
+    - Get title from body and create summary in App::Followme::CreateNews
+
 0.95 2014-01-01T14:31:16Z
     - Changes to make filename handling OS independent
 
