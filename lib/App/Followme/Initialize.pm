@@ -103,7 +103,7 @@ news_file = ../blog.html
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <!-- section meta -->
-<title>{{title}}</title>
+<title>$title</title>
 <!-- endsection meta -->
 </head>
 <body>
@@ -118,9 +118,8 @@ news_file = ../blog.html
 </div>
 <div id="content">
 <!-- section content -->
-<h2>{{title}}</h2>
-
-{{body}}    
+<h2>$title</h2>
+$body    
 <!-- endsection content-->
 </div>
 </body>
@@ -132,7 +131,7 @@ news_file = ../blog.html
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <!-- section meta -->
-<title>{{title}}</title>
+<title>$title</title>
 <!-- endsection meta -->
 </head>
 <body>
@@ -147,11 +146,11 @@ news_file = ../blog.html
 </div>
 <div id="content">
 <!-- section content -->
-<!-- loop -->
-<h2>{{title}}</h2>
-{{body}}
-<p><a href="{{url}}">Written on {{month}} {{day}}, {{year}}</a></p>
-<!-- endloop -->
+<!-- for @loop -->
+<h2>$title</h2>
+$body
+<p><a href="$url">Written on $month $day, $year</a></p>
+<!-- endfor -->
 <!-- endsection content-->
 </div>
 </body>
@@ -162,7 +161,7 @@ news_file = ../blog.html
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <!-- section meta -->
-<title>{{title}}</title>
+<title>$title</title>
 <!-- endsection meta -->
 </head>
 <body>
@@ -177,11 +176,12 @@ news_file = ../blog.html
 </div>
 <div id="content">
 <!-- section content -->
-<h2>{{title}}</h2>
+<h2>$title</h2>
 
 <ul>
-<!-- loop --><li><a href="{{url}}">{{title}}</a></li>
-<!-- endloop -->
+<!-- for @loop -->
+<li><a href="$url">$title</a></li>
+<!-- endfor -->
 </ul>
 <!-- endsection content-->
 </div>
@@ -193,7 +193,7 @@ news_file = ../blog.html
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <!-- section meta -->
-<title>{{title}}</title>
+<title>$title</title>
 <!-- endsection meta -->
 </head>
 <body>
@@ -208,11 +208,12 @@ news_file = ../blog.html
 </div>
 <div id="content">
 <!-- section content -->
-<h2>{{title}}</h2>
+<h2>$title</h2>
 
 <ul>
-<!-- loop --><li><a href="{{url}}">{{title}}</a></li>
-<!-- endloop -->
+<!-- for @loop -->
+<li><a href="$url">$title</a></li>
+<!-- endfor -->
 </ul>
 <!-- endsection content-->
 </div>
