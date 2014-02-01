@@ -69,6 +69,24 @@ sub get_prototype_path {
 }
 
 #----------------------------------------------------------------------
+# Parse fields out of section tag
+
+sub parse_blockname {
+    my ($self, $str) = @_;
+    
+    my ($blockname, $in, $locality) = split(/\s+/, $str);
+    
+    if ($in) {
+        die "Syntax error in block ($str)"
+            unless $in eq 'in' && defined $locality;
+    } else {
+        $locality = '';
+    }
+    
+    return ($blockname, $locality);
+}
+
+#----------------------------------------------------------------------
 # This code considers the surrounding tags to be part of the block
 
 sub parse_blocks {
@@ -108,6 +126,30 @@ sub parse_blocks {
  
     die "Unmatched block (<!-- section $blockname -->)\n" if $blockname;
     return;
+}
+
+#----------------------------------------------------------------------
+# Extract named blocks from a page
+
+sub parse_page {
+    my ($self, $page) = @_;
+    
+    my $blocks = {};
+    my $block_handler = sub {
+        my ($blockname, $locality, $blocktext) = @_;
+        if (exists $blocks->{$blockname}) {
+            die "Duplicate block name ($blockname)\n";
+        }
+        $blocks->{$blockname} = $blocktext;
+        return;
+    };
+    
+    my $prototype_handler = sub {
+        return;
+    };
+
+    $self->parse_blocks($page, $block_handler, $prototype_handler);    
+    return $blocks;
 }
 
 #----------------------------------------------------------------------
@@ -221,6 +263,47 @@ sub update_directory {
     return; 
 }
 
+#----------------------------------------------------------------------
+# Parse prototype and page and combine them
+
+sub update_page {
+    my ($self, $prototype, $page, $prototype_path) = @_;
+    $prototype_path = {} unless defined $prototype_path;
+    
+    my $output = [];
+    my $blocks = $self->parse_page($page);
+    
+    my $block_handler = sub {
+        my ($blockname, $locality, $blocktext) = @_;
+        if (exists $blocks->{$blockname}) {
+            if (exists $prototype_path->{$locality}) {
+                push(@$output, $blocktext);          
+            } else {
+                push(@$output, $blocks->{$blockname});
+            }
+            delete $blocks->{$blockname};
+        } else {
+            push(@$output, $blocktext);
+        }
+        return;
+    };
+
+    my $prototype_handler = sub {
+        my ($blocktext) = @_;
+        push(@$output, $blocktext);
+        return;
+    };
+
+    $self->parse_blocks($prototype, $block_handler, $prototype_handler);
+
+    if (%$blocks) {
+        my $names = join(' ', sort keys %$blocks);
+        die "Unused blocks ($names)\n";
+    }
+    
+    return join('', @$output);
+}
+
 1;
 __END__
 
@@ -252,6 +335,21 @@ other pages on the site are also changed to match the page that has changed.
 Each page updated by substituting all its named blocks into corresponding block
 in the changed page. The effect is that all the text outside the named blocks
 are updated to be the same across all the web pages.
+
+Updates to the named block can also be made conditional by adding an in after
+the section name. If the folder name after the "in" is included in the
+prototype_path hash, then the block tags are ignored, it is as if the block does
+not exist. The block is considered as part of the constant portion of the
+prototype. If the folder is not in the prototype_path, the block is treated as
+any other block and varies from page to page.
+
+    <!-- section name in folder -->
+    <!-- endsection name -->
+
+Text in conditional blocks can be used for navigation or other sections of the
+page that are constant, but not constant across the entire site.
+
+=back
 
 =head1 CONFIGURATION
 
