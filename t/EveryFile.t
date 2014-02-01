@@ -6,7 +6,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 11;
+use Test::More tests => 15;
 
 #----------------------------------------------------------------------
 # Load package
@@ -99,12 +99,12 @@ EOQ
             $ef->write_page($filename, $output);
 
             my $input = $ef->read_page($filename);
-            is($input, $output, "Read and write page $filename"); #tests 1-9
+            is($input, $output, "Read and write page $filename"); #tests 5-13
         }
     }
     
     my ($files, $folders) = $ef->visit($test_dir);
-    is_deeply($folders, \@ok_folders, 'get list of folders'); # test 10
-    is_deeply($files, \@ok_filenames, 'get list of files'); # test 11
+    is_deeply($folders, \@ok_folders, 'get list of folders'); # test 14
+    is_deeply($files, \@ok_filenames, 'get list of files'); # test 15
 };
 
