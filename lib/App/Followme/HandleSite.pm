@@ -457,6 +457,19 @@ sub parse_command {
 }
 
 #----------------------------------------------------------------------
+# Return a hash of the sections in a page
+
+sub parse_sections {
+    my ($self, $page) = @_;
+    
+    my $sections = {};
+    my @lines = split(/\n/, $page);
+    $self->parse_block($sections, \@lines, '');
+
+    return $sections;    
+}
+
+#----------------------------------------------------------------------
 # Remove hash pushed on the stack
 
 sub pop_stack {
