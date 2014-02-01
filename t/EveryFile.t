@@ -6,7 +6,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 6;
+use Test::More tests => 11;
 
 #----------------------------------------------------------------------
 # Load package
@@ -52,7 +52,7 @@ do {
 };
 
 #----------------------------------------------------------------------
-# Create test files and test run method and its submethods
+# Test read and write page
 
 do {
    my $code = <<'EOQ';
@@ -68,36 +68,43 @@ do {
 <h1>%%</h1>
 <!-- endsection content -->
 <!-- section navigation in folder -->
-<p><a href="">%%</a></p>
+<p><a href="">&&</a></p>
 <!-- endsection navigation -->
 </body>
 </html>
 EOQ
 
-    my @ok_filenames;
-    foreach my $count (qw(first second third)) {
-        my $output = $code;
-        $output =~ s/%%/Page $count/g;
-
-        my $filename = catfile($test_dir, "$count.html");
-        push(@ok_filenames, $filename) ;
-        
-        my $fd = IO::File->new($filename, 'w');
-        print $fd $output;
-        close $fd;
-    }
-
     my @ok_folders;
-    foreach my $folder (qw(sub-one sub-two)) {
-        my $dir = catfile($test_dir, $folder);
-        push(@ok_folders, $dir);
-        mkdir($dir);
+    my @ok_filenames;
+    my $ef = App::Followme::EveryFile->new;
+    
+    foreach my $dir (('', 'sub-one', 'sub-two')) {
+        if ($dir ne '') {
+            mkdir $dir;
+            push(@ok_folders, catfile($test_dir, $dir));
+        }
+        
+        foreach my $count (qw(first second third)) {
+            my $output = $code;
+            $output =~ s/%%/Page $count/g;
+            $output =~ s/&&/$dir link/g;
+
+            my @dirs;
+            push(@dirs, $test_dir);
+            push(@dirs, $dir) if $dir;
+
+            my $filename = catfile(@dirs, "$count.html");
+            push(@ok_filenames, $filename) if $dir eq '';
+        
+            $ef->write_page($filename, $output);
+
+            my $input = $ef->read_page($filename);
+            is($input, $output, "Read and write page $filename"); #tests 1-9
+        }
     }
     
-    my $ef = App::Followme::EveryFile->new();
     my ($files, $folders) = $ef->visit($test_dir);
-   
-    is_deeply($folders, \@ok_folders, 'get list of folders'); # test 5
-    is_deeply($files, \@ok_filenames, 'get list of files'); # test 6
+    is_deeply($folders, \@ok_folders, 'get list of folders'); # test 10
+    is_deeply($files, \@ok_filenames, 'get list of files'); # test 11
 };
 

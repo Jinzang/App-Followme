@@ -131,6 +131,23 @@ sub match_file {
 }
 
 #----------------------------------------------------------------------
+# Read a file into a string
+
+sub read_page {
+    my ($self, $filename) = @_;
+    return unless defined $filename;
+    
+    local $/;
+    my $fd = IO::File->new($filename, 'r');
+    return unless $fd;
+    
+    my $page = <$fd>;
+    close($fd);
+    
+    return $page;
+}
+
+#----------------------------------------------------------------------
 # Set up object fields (stub)
 
 sub setup {
@@ -209,6 +226,21 @@ sub visit {
     return ($filenames, $directories);   
 }
 
+#----------------------------------------------------------------------
+# Write the page back to the file
+
+sub write_page {
+    my ($self, $filename, $page) = @_;
+
+    my $fd = IO::File->new($filename, 'w');
+    die "Couldn't write $filename" unless $fd;
+    
+    print $fd $page;
+    close($fd);
+        
+    return;
+}
+
 1;
 __END__
 
@@ -221,18 +253,39 @@ App::Followme::EveryFile - Base class for App::Followme classes
 =head1 SYNOPSIS
 
     use App::Followme::EveryFile;
-    my @files;
     my $ef = App::Followme::EveryFiles->new();
-    while (defined (my $file = $ef->next)) {
-        push(@files, $file)
+    my ($filenames, $directories) = $ef->visit($top_directory);
+    foreach my $filename (@$filenames) {
+        my $page = $ef->read_file($filename);
+        # other stuff
+        $ef->write_file($filename, $page);
     }
 
 =head1 DESCRIPTION
 
-This class loops over all files in a directory and its subdirectories. It calls
-methods when it starts and finishes, when each folder starts and finishes, and
-for each file in each folder. All modules used by followme subclass this class
-and perform their functions by overriding these methods.
+This class contains methods that do the file handling for App::Followme.
+
+=over 4
+
+=item ($filenames, $directories) = $self->visit($top_directory);
+
+Return a list of filenames and directories in a directory, The filenames are
+filtered by the two methods get_included_files and get_excluded_files. By
+default, it returns all files with the web extension.
+
+=item $str = $self->read_page($filename);
+
+Read a fie into a string. An the entire file is read from a string, there is no
+line at a time IO. This is because files are typically small and the parsing
+done is not line oriented. 
+
+=item $self->write_page($filename, $str);
+
+Write a file from a string. An the entire file is read to or written from a
+string, there is no line at a time IO. This is because files are typically small
+and the parsing done is not line oriented. 
+
+=back
 
 =head1 CONFIGURATION
 
