@@ -69,19 +69,19 @@ EOQ
 <head>
 <meta name="robots" content="noarchive,follow">
 <!-- section meta -->
-<title>{{title}}</title>
+<title>$title</title>
 <!-- endsection meta -->
 </head>
 <body>
 <!-- section content -->
-<h1>{{title}}</h1>
+<h1>$title</h1>
 
-<!-- loop -->
-<h2>{{title}}</h2>
+<!-- for @loop -->
+<h2>$title</h2>
 
-{{body}}
-<p>{{month}} {{day}} {{year}}<a href="{{url}}">Permalink</a></p>
-<!-- endloop -->
+$body
+<p>$month $day $year<a href="$url">Permalink</a></p>
+<!-- endfor -->
 <!-- endsection content -->
 </body>
 </html>
@@ -92,16 +92,16 @@ EOQ
 <head>
 <meta name="robots" content="noarchive,follow">
 <!-- section meta -->
-<title>{{title}}</title>
+<title>$title</title>
 <!-- endsection meta -->
 </head>
 <body>
 <!-- section content -->
-<h1>{{title}}</h1>
+<h1>$title</h1>
 <ul>
-<!-- loop -->
-<li><a href="{{url}}">{{title}}</a></li>
-<!-- endloop -->
+<!-- for @loop -->
+<li><a href="$url">$title</a></li>
+<!-- endfor -->
 </ul>
 <!-- endsection content -->
 </body>

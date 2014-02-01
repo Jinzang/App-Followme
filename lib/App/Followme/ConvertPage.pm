@@ -39,9 +39,7 @@ sub parameters {
 sub run {
     my ($self, $directory) = @_;
 
-    my $template = $self->make_template($directory, $self->{page_template});
-    my $render = $self->compile_template($template);
-
+    my $render = $self->make_template($directory, $self->{page_template});
     my ($filenames, $directories) = $self->visit($directory);
 
     foreach my $filename (@$filenames) {
@@ -112,6 +110,8 @@ sub setup {
     }
 
     $self->{md} = Text::Markdown->new(%params);
+    $self->SUPER::setup();
+
     return $self;
 }
 

@@ -4,7 +4,7 @@ use strict;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 7;
+use Test::More tests => 5;
 
 #----------------------------------------------------------------------
 # Load package
@@ -54,14 +54,14 @@ EOQ
 <head>
 <meta name="robots" content="archive">
 <!-- section meta -->
-<title>{{title}}</title>
+<title>$title</title>
 <!-- endsection meta -->
 </head>
 <body>
 <!-- section content -->
-<h1>{{title}}</h1>
+<h1>$title</h1>
 
-{{body}}
+$body
 <!-- endsection content -->
 </body>
 </html>
@@ -100,23 +100,18 @@ EOQ
     my $prototype_file_ok = catfile($test_dir, 'index.html');
     is($prototype_file, $prototype_file_ok, 'Find page template'); # test 1
 
-    my $source = $cvt->make_template($test_dir, 'template.htm');
-
-    like($source, qr/<ul>/, 'Make template links'); # test 2
-    like($source, qr/{{body}}/, 'Make template body'); # test 3
+    my $render = $cvt->make_template($test_dir, 'template.htm');
 
     my $data = $cvt->internal_fields({}, 'three.md');
-    ok(index($data->{body}, "<li>third three</li>") > 0,'Convert Text'); # test 4
-
-    my $render = $cvt->compile_template($template);    
+    ok(index($data->{body}, "<li>third three</li>") > 0,'Convert Text'); # test 2
     $cvt->convert_a_file($render, $test_dir, 'four.md');
     
     my $page = $cvt->read_page('four.html');
-    like($page, qr/<h1>Page four<\/h1>/, 'Convert a file'); # test 5
+    like($page, qr/<h1>Page four<\/h1>/, 'Convert a file'); # test 3
 
     $cvt->run($test_dir);
     $page = $cvt->read_page('one.html');
-    like($page, qr/<h1>Page one<\/h1>/, 'Convert text file one'); # test 6
+    like($page, qr/<h1>Page one<\/h1>/, 'Convert text file one'); # test 4
     $page = $cvt->read_page('two.html');
-    like($page, qr/<h1>Page two<\/h1>/, 'Convert text file two'); # test 7
+    like($page, qr/<h1>Page two<\/h1>/, 'Convert text file two'); # test 5
 };

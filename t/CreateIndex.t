@@ -53,7 +53,7 @@ EOQ
 <head>
 <meta name="robots" content="noarchive,follow">
 <!-- section meta -->
-<title>{{title}}</title>
+<title>$title</title>
 <!-- endsection meta -->
 </head>
 <body>
@@ -61,9 +61,9 @@ EOQ
 <h1>$title</h1>
 
 <ul>
-<!-- loop -->
-<li><a href="{{url}}">{{title}}</a></li>
-<!-- endloop -->
+<!-- for @loop -->
+<li><a href="$url">$title</a></li>
+<!-- endfor -->
 </ul>
 <!-- endsection content -->
 </body>

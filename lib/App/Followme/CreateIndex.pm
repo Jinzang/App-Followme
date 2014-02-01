@@ -58,8 +58,7 @@ sub create_an_index {
     my $data = $self->set_fields($directory, $index_name);
     $data->{loop} = $self->index_data($directory);
 
-    my $template = $self->make_template($directory, $self->{index_template});
-    my $render = $self->compile_template($template);
+    my $render = $self->make_template($directory, $self->{index_template});
     my $page = $render->($data);
 
     $self->write_page($index_name, $page);
