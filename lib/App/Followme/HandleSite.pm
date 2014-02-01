@@ -25,7 +25,6 @@ sub parameters {
     my ($pkg) = @_;
 
     my %parameters = (
-                      escaped_chars => '<>',
                       template_directory => 'templates',
                      );
 
@@ -166,16 +165,6 @@ sub encode_text {
     }
 
     return $value;
-}
-
-#----------------------------------------------------------------------
-# Escape a set of characters
-
-sub escape {
-    my ($self, $data) = @_;
-
-    $data =~ s/($self->{escaped_chars_pattern})/'&#' . ord($1) . ';'/ge;
-    return $data;
 }
 
 #----------------------------------------------------------------------
@@ -507,7 +496,7 @@ sub render {
     my $ref = ref $data;
 
     if ($ref eq 'SCALAR') {
-        $result = defined $$data ? $self->escape($$data) : '';
+        $result = defined $$data ? $$data : '';
 
     } elsif ($ref eq 'ARRAY') {
         my @result;
@@ -528,7 +517,7 @@ sub render {
         $result = join("\n", '<dl>', @result, '</dl>');
 
     } else  {
-        $result = $self->escape("$data");
+        $result = "$data";
     }
 
 
@@ -554,11 +543,7 @@ sub setup {
     my ($self) = @_;
 
     $self->{command_start_pattern} = '^\s*' . quotemeta(COMMAND_START);
- 
     $self->{command_end_pattern} = '\s*' . quotemeta(COMMAND_END) . '\s*$';
-
-    $self->{escaped_chars_pattern} =
-        '[' . quotemeta($self->{escaped_chars}) . ']';
             
     return $self;
 }
@@ -711,13 +696,11 @@ interpolating them. This is done recursively, so arbitrary structures can be
 rendered. This is mostly intended for debugging, as it does not provide fine
 control over how the structures are rendered. For finer control, use the
 commands described below so that the scalar fields in the structures can be
-accessed. Scalar fields have the characters '<' and '>' escaped before
-interpolating them. This set of characters can be changed by setting the
-configuration parameter escaped chars. Undefined fields are replaced with the
-empty string when rendering. If the type of data passed to the subroutine
-differs from the sigil on the variable the variable is coerced to the type of
-the sigil. This works the same as an assignment. If an array is referenced as a
-scalar, the length of the array is output.
+accessed. Undefined fields are replaced with the empty string when rendering. If
+the type of data passed to the subroutine differs from the sigil on the variable
+the variable is coerced to the type of the sigil. This works the same as an
+assignment. If an array is referenced as a scalar, the length of the array is
+output.
 
 The following commands are supported in templates:
 

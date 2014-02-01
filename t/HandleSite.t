@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 46;
+use Test::More tests => 45;
 
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
@@ -31,69 +31,63 @@ isa_ok($pp, "App::Followme::HandleSite"); # test 1
 can_ok($pp, qw(new make_template)); # test 2
 
 #----------------------------------------------------------------------
-# Test escaping
-
-my $result = $pp->escape('< & >');
-is($result, '&#60; & &#62;', "Escape"); # test 3
-
-#----------------------------------------------------------------------
 # Test render
 
 my $data;
-$result = $pp->render(\$data);
-is($result, '', "Rendar undef"); # test 4
+my $result = $pp->render(\$data);
+is($result, '', "Rendar undef"); # test 3
 
-$data = \'<>';
+$data = \'foobar';
 $result = $pp->render($data);
-is($result, '&#60;&#62;', "Rendar scalar"); # test 5
+is($result, 'foobar', "Rendar scalar"); # test 4
 
 $data = [1, 2];
 $result = $pp->render($data);
-is($result, "<ul>\n<li>1</li>\n<li>2</li>\n</ul>", "Render array"); # test 6
+is($result, "<ul>\n<li>1</li>\n<li>2</li>\n</ul>", "Render array"); # test 5
 
 $data = {a => 1, b => 2};
 $result = $pp->render($data);
 is($result, "<dl>\n<dt>a</dt>\n<dd>1</dd>\n<dt>b</dt>\n<dd>2</dd>\n</dl>",
-   "Render hash"); # test 7
+   "Render hash"); # test 6
 
 #----------------------------------------------------------------------
 # Test type coercion
 
 $data = $pp->coerce('$', 2);
-is($$data, 2, "Coerce scalar to scalar"); # test 8
+is($$data, 2, "Coerce scalar to scalar"); # test 7
 
 $data = $pp->coerce('@', 2);
-is_deeply($data, [2], "Coerce scalar to array"); # test 9
+is_deeply($data, [2], "Coerce scalar to array"); # test 8
 
 $data = $pp->coerce('%', 2);
-is($data, undef, "Coerce scalar to hash"); # test 10
+is($data, undef, "Coerce scalar to hash"); # test 9
 
 $data = $pp->coerce('$');
-is($$data, undef, "Coerce undef to scalar"); # test 11
+is($$data, undef, "Coerce undef to scalar"); # test 10
 
 $data = $pp->coerce('@');
-is($data, undef, "Coerce undef to array"); # test 12
+is($data, undef, "Coerce undef to array"); # test 11
 
 $data = $pp->coerce('%');
-is($data, undef, "Coerce undef to hash"); # test 13
+is($data, undef, "Coerce undef to hash"); # test 12
 
 $data = $pp->coerce('$', [1, 3]);
-is($$data, 2, "Coerce array to scalar"); # test 14
+is($$data, 2, "Coerce array to scalar"); # test 13
 
 $data = $pp->coerce('@', [1, 3]);
-is_deeply($data, [1, 3], "Coerce array to array"); # test 15
+is_deeply($data, [1, 3], "Coerce array to array"); # test 14
 
 $data = $pp->coerce('%', [1, 3]);
-is_deeply($data, {1 => 3}, "Coerce array to hash"); # test 16
+is_deeply($data, {1 => 3}, "Coerce array to hash"); # test 15
 
 $data = $pp->coerce('$', {1 => 3});
-is($$data, 2, "Coerce hash to scalar"); # test 17
+is($$data, 2, "Coerce hash to scalar"); # test 16
 
 $data = $pp->coerce('@', {1 => 3});
-is_deeply($data, [1, 3], "Coerce hash to array"); # test 18
+is_deeply($data, [1, 3], "Coerce hash to array"); # test 17
 
 $data = $pp->coerce('%', {1 => 3});
-is_deeply($data, {1 => 3}, "Coerce hash to hash"); # test 19
+is_deeply($data, {1 => 3}, "Coerce hash to hash"); # test 18
 
 #----------------------------------------------------------------------
 # Test parse_block
@@ -123,11 +117,11 @@ my @ok = map {"$_\n"} @lines;
 my @block = $pp->parse_block($sections, \@lines, '');
 my @sections = sort keys %$sections;
 
-is_deeply(\@block, \@ok, "All lines returned from parse_block"); # test 20
+is_deeply(\@block, \@ok, "All lines returned from parse_block"); # test 19
 is_deeply(\@sections, [qw(footer header)],
-          "All sections returned from parse_block"); #test 21
+          "All sections returned from parse_block"); #test 20
 is_deeply($sections->{footer}, ["Footer\n"],
-          "Right value in footer from parse_block"); # test 22
+          "Right value in footer from parse_block"); # test 21
 
 my $subtemplate = <<'EOQ';
 <!-- section header -->
@@ -149,9 +143,9 @@ $sections = {};
 @block = $pp->parse_block($sections, \@sublines, '');
 @block = $pp->parse_block($sections, \@lines, '');
 
-is_deeply(\@block, \@ok, "Template and subtemplate with parse_block"); # test 23
+is_deeply(\@block, \@ok, "Template and subtemplate with parse_block"); # test 22
 is_deeply($sections->{header}, ["Another Header\n"],
-          "Right value in header for template & subtemplate"); # test 24
+          "Right value in header for template & subtemplate"); # test 23
 
 #----------------------------------------------------------------------
 # Test read and write page
@@ -161,14 +155,14 @@ my $subtemplate_name = catfile($test_dir, 'subtemplate.htm');
 
 $pp->write_page($template_name, $template);
 my $test_template = $pp->read_page($template_name);
-is($test_template, $template, 'Read and write template'); # test 25
+is($test_template, $template, 'Read and write template'); # test 24
 
 $pp->write_page($subtemplate_name, $subtemplate);
 my $test_subtemplate = $pp->read_page($subtemplate_name);
-is($test_subtemplate, $subtemplate, 'Read and write subtemplate'); # test 26
+is($test_subtemplate, $subtemplate, 'Read and write subtemplate'); # test 25
 
 my $sub = $pp->compile($template_name, $subtemplate_name);
-is(ref $sub, 'CODE', "compiled template"); # test 27
+is(ref $sub, 'CODE', "compiled template"); # test 26
 
 my $text = $sub->([1, 2]);
 my $text_ok = <<'EOQ';
@@ -182,7 +176,7 @@ Another Footer
 <!-- endsection footer -->
 EOQ
 
-is($text, $text_ok, "Run compiled template"); # test 28
+is($text, $text_ok, "Run compiled template"); # test 27
 
 $pp->{keep_sections} = 1;
 @lines = split(/\n/, $template);
@@ -191,11 +185,11 @@ $pp->{keep_sections} = 1;
 @block = $pp->parse_block($sections, \@sublines, '');
 @block = $pp->parse_block($sections, \@lines, '');
 
-is($block[0], "<!-- section header extra -->\n", "Section start teag"); # test 29
-is($block[2], "<!-- endsection header -->\n", "Section end teag"); # test 30
+is($block[0], "<!-- section header extra -->\n", "Section start teag"); # test 28
+is($block[2], "<!-- endsection header -->\n", "Section end teag"); # test 29
 
 $sub = $pp->compile($template_name, $subtemplate_name);
-is(ref $sub, 'CODE', "compiled template"); # test 31
+is(ref $sub, 'CODE', "compiled template"); # test 30
 
 $text = $sub->([1, 2]);
 $text_ok = <<'EOQ';
@@ -209,7 +203,7 @@ Another Footer
 <!-- endsection footer -->
 EOQ
 
-is($text, $text_ok, "Run compiled template"); # test 32
+is($text, $text_ok, "Run compiled template"); # test 31
 
 #----------------------------------------------------------------------
 # Test is newer?
@@ -246,20 +240,20 @@ EOQ
         $hs->write_page($filename, $output);
 
         my $input = $hs->read_page($filename);
-        is($input, $output, "Read and write page $filename"); #tests 33-36
+        is($input, $output, "Read and write page $filename"); #tests 32-35
     }
 
     my $newer = $hs->is_newer('three.html', 'two.html', 'one.html');
-    is($newer, undef, 'Source is  newer'); # test 37
+    is($newer, undef, 'Source is  newer'); # test 36
     
     $newer = $hs->is_newer('one.html', 'two.html', 'three.html');
-    is($newer, 1, "Target is newer"); # test 38
+    is($newer, 1, "Target is newer"); # test 37
     
     $newer = $hs->is_newer('five.html', 'one.html');
-    is($newer, undef, 'Target is undefined'); # test 39
+    is($newer, undef, 'Target is undefined'); # test 38
     
     $newer = $hs->is_newer('six.html', 'five.html');
-    is($newer, 1, 'Source and target undefined'); # test 40
+    is($newer, 1, 'Source and target undefined'); # test 39
 };
 
 #----------------------------------------------------------------------
@@ -284,7 +278,7 @@ Ann : 4444
 Joe : 5555
 EOQ
 
-is($text, $text_ok, "For loop"); # test 41
+is($text, $text_ok, "For loop"); # test 40
 
 #----------------------------------------------------------------------
 # Test with block
@@ -310,7 +304,7 @@ $text_ok = <<'EOQ';
 2
 EOQ
 
-is($text, $text_ok, "With block"); # test 42
+is($text, $text_ok, "With block"); # test 41
 
 #----------------------------------------------------------------------
 # Test while loop
@@ -336,7 +330,7 @@ $text_ok = <<'EOQ';
 go
 EOQ
 
-is($text, $text_ok, "While loop"); # test 43
+is($text, $text_ok, "While loop"); # test 42
 
 #----------------------------------------------------------------------
 # Test if blocks
@@ -356,13 +350,13 @@ $sub = App::Followme::HandleSite->compile($template_name);
 
 $data = {x => 1};
 $text = $sub->($data);
-is($text, "\$x is 1 (one)\n", "If block"); # test 44
+is($text, "\$x is 1 (one)\n", "If block"); # test 43
 
 $data = {x => 2};
 $text = $sub->($data);
-is($text, "\$x is 2 (two)\n", "Elsif block"); # test 45
+is($text, "\$x is 2 (two)\n", "Elsif block"); # test 44
 
 $data = {x => 3};
 $text = $sub->($data);
-is($text, "\$x is unknown\n", "Else block"); # test 46
+is($text, "\$x is unknown\n", "Else block"); # test 45
 
