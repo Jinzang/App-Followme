@@ -1,11 +1,10 @@
 #!/usr/bin/env perl
 use strict;
 
-use IO::File;
+use Test::More tests => 46;
+
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
-
-use Test::More tests => 37;
 
 #----------------------------------------------------------------------
 # Load package
@@ -23,177 +22,197 @@ my $test_dir = catdir(@path, 'test');
 
 rmtree($test_dir);
 mkdir $test_dir;
-mkdir catfile($test_dir, 'sub');
-chdir $test_dir;
 
 #----------------------------------------------------------------------
-# Test parse_blocks
+# Create object
 
-do {
-    my $blocks = {};
-    my $block_handler = sub {
-        my ($blockname, $in, $blocktext) = @_;
-        $blocks->{$blockname} = $blocktext;
-        return;
-    };
-    
-    my $prototype = [];
-    my $template_handler = sub {
-        my ($blocktext) = @_;
-        push(@$prototype, $blocktext);
-        return;
-    };
-    
-    my @page = (
-                "Top line",
-                "<!-- section first in folder -->",
-                "First block",
-                "<!-- endsection first -->",
-                "Middle line",
-                "<!-- section second -->",
-                "Second block",
-                "<!-- endsection second -->",
-                "Last line",
-               );
-
-    my $page = join("\n", @page) . "\n";
-    
-    my $hs = App::Followme::HandleSite->new;
-    $hs->parse_blocks($page, $block_handler, $template_handler);
-
-    my $ok_blocks = {
-        first => "\nFirst block\n",
-        second => "\nSecond block\n",
-    };
-
-    my $ok_prototype = [
-                        "Top line\n",
-                        "<!-- section first in folder -->",
-                        "<!-- endsection first -->",
-                        "\nMiddle line\n",
-                        "<!-- section second -->",
-                        "<!-- endsection second -->",
-                        "\nLast line\n",
-                           ];
-
-    is_deeply($blocks, $ok_blocks, 'Parse blocks'); # test 1
-    is_deeply($prototype, $ok_prototype, 'Parse prototype'); # test 2
-    
-    $blocks = {};
-    $prototype = [];
-    my @bad_page = @page;
-    pop(@bad_page); pop(@bad_page);
-    $page =join("\n", @bad_page) . "\n";
-
-    eval {
-        $hs->parse_blocks($page, $block_handler, $template_handler);
-    };
-    is($@, "Unmatched block (<!-- section second -->)\n", 'Missing end'); # test 3
-
-    @bad_page = @page;
-    shift(@bad_page); shift(@bad_page);
-    $page =join("\n", @bad_page) . "\n";
-
-    eval {
-        $hs->parse_blocks($page, $block_handler, $template_handler);
-    };
-    is($@, "Unmatched (<!-- endsection first -->)\n", 'Missing begin'); # test 4
-
-    @bad_page = @page;
-    splice(@bad_page, 3, 1);
-    $page =join("\n", @bad_page) . "\n";
-
-    eval {
-        $hs->parse_blocks($page, $block_handler, $template_handler);
-    };
-    is($@, "Improperly nested block (<!-- section second -->)\n",
-       'Begin inside of begin'); # test 5
-
-    @bad_page = @page;
-    splice(@bad_page, 3, 3);
-    $page =join("\n", @bad_page) . "\n";
-
-    eval {
-        $hs->parse_blocks($page, $block_handler, $template_handler);
-    };
-    is($@, "Unmatched (<!-- endsection second -->)\n",
-       'Begin does not match end'); # test 6
-};
+my $pp = App::Followme::HandleSite->new();
+isa_ok($pp, "App::Followme::HandleSite"); # test 1
+can_ok($pp, qw(new make_template)); # test 2
 
 #----------------------------------------------------------------------
-# Test parse_page
+# Test escaping
 
-do {
-    my @page = (
-                "Top line",
-                "<!-- section first -->",
-                "First block",
-                "<!-- endsection first -->",
-                "Middle line",
-                "<!-- section second -->",
-                "Second block",
-                "<!-- endsection second -->",
-                "Last line",
-               );
-
-    my $page = join("\n", @page) . "\n";
-    my $hs = App::Followme::HandleSite->new;
-    my $blocks = $hs->parse_page($page);
-
-    my $ok_blocks = {
-        first => "\nFirst block\n",
-        second => "\nSecond block\n",
-    };
-    
-    is_deeply($blocks, $ok_blocks, 'Parse undecorated blocks'); # test 7
-
-    my $bad_page = $page;
-    $bad_page =~ s/second/first/g;
-    $blocks = eval {$hs->parse_page($bad_page)};
-    
-    is($@, "Duplicate block name (first)\n", 'Duplicate block names'); # test 8
-};
+my $result = $pp->escape('< & >');
+is($result, '&#60; & &#62;', "Escape"); # test 3
 
 #----------------------------------------------------------------------
-# Test update_page
+# Test render
 
-do {
-    my @prototype = (
-                "Top line",
-                "<!-- section first in folder -->",
-                "First block",
-                "<!-- endsection first -->",
-                "Middle line",
-                "<!-- section second -->",
-                "Second block",
-                "<!-- endsection second -->",
-                "Last line",
-               );
+my $data;
+$result = $pp->render(\$data);
+is($result, '', "Rendar undef"); # test 4
 
-    my $prototype = join("\n", @prototype) . "\n";
+$data = \'<>';
+$result = $pp->render($data);
+is($result, '&#60;&#62;', "Rendar scalar"); # test 5
 
-    my $page = $prototype;
-    $page =~ s/line/portion/g;
-    $page =~ s/block/section/g;
-    
-    my $prototype_path = {folder => 1};
-    my $hs = App::Followme::HandleSite->new;
-    my $output = $hs->update_page($prototype, $page, $prototype_path);
-    my @output = split(/\n/, $output);
-    
-    my @output_ok = @prototype;
-    $output_ok[6] =~ s/block/section/;
+$data = [1, 2];
+$result = $pp->render($data);
+is($result, "<ul>\n<li>1</li>\n<li>2</li>\n</ul>", "Render array"); # test 6
 
-    is_deeply(\@output, \@output_ok, 'Update page'); # test 9
-    my $bad_page = $page;
-    $bad_page =~ s/second/third/g;
+$data = {a => 1, b => 2};
+$result = $pp->render($data);
+is($result, "<dl>\n<dt>a</dt>\n<dd>1</dd>\n<dt>b</dt>\n<dd>2</dd>\n</dl>",
+   "Render hash"); # test 7
 
-    $output = eval{$hs->update_page($prototype, $bad_page, $prototype_path)};
-    is($@, "Unused blocks (third)\n", 'Update page bad block'); # test 10
-};
+#----------------------------------------------------------------------
+# Test type coercion
+
+$data = $pp->coerce('$', 2);
+is($$data, 2, "Coerce scalar to scalar"); # test 8
+
+$data = $pp->coerce('@', 2);
+is_deeply($data, [2], "Coerce scalar to array"); # test 9
+
+$data = $pp->coerce('%', 2);
+is($data, undef, "Coerce scalar to hash"); # test 10
+
+$data = $pp->coerce('$');
+is($$data, undef, "Coerce undef to scalar"); # test 11
+
+$data = $pp->coerce('@');
+is($data, undef, "Coerce undef to array"); # test 12
+
+$data = $pp->coerce('%');
+is($data, undef, "Coerce undef to hash"); # test 13
+
+$data = $pp->coerce('$', [1, 3]);
+is($$data, 2, "Coerce array to scalar"); # test 14
+
+$data = $pp->coerce('@', [1, 3]);
+is_deeply($data, [1, 3], "Coerce array to array"); # test 15
+
+$data = $pp->coerce('%', [1, 3]);
+is_deeply($data, {1 => 3}, "Coerce array to hash"); # test 16
+
+$data = $pp->coerce('$', {1 => 3});
+is($$data, 2, "Coerce hash to scalar"); # test 17
+
+$data = $pp->coerce('@', {1 => 3});
+is_deeply($data, [1, 3], "Coerce hash to array"); # test 18
+
+$data = $pp->coerce('%', {1 => 3});
+is_deeply($data, {1 => 3}, "Coerce hash to hash"); # test 19
+
+#----------------------------------------------------------------------
+# Test parse_block
+
+my $template = <<'EOQ';
+<!-- section header extra -->
+Header
+<!-- endsection header -->
+<!-- set $i = 0 -->
+<!-- for @data -->
+  <!-- set $i = $i + 1 -->
+  <!-- if $i % 2 -->
+Even line
+  <!-- else -->
+Odd line
+  <!-- endif -->
+<!-- endfor -->
+<!-- section footer -->
+Footer
+<!-- endsection footer -->
+EOQ
+
+my $sections = {};
+my @lines = split(/\n/, $template);
+my @ok = map {"$_\n"} @lines;
+
+my @block = $pp->parse_block($sections, \@lines, '');
+my @sections = sort keys %$sections;
+
+is_deeply(\@block, \@ok, "All lines returned from parse_block"); # test 20
+is_deeply(\@sections, [qw(footer header)],
+          "All sections returned from parse_block"); #test 21
+is_deeply($sections->{footer}, ["Footer\n"],
+          "Right value in footer from parse_block"); # test 22
+
+my $subtemplate = <<'EOQ';
+<!-- section header -->
+Another Header
+<!-- endsection -->
+Another Body
+<!-- section footer -->
+Another Footer
+<!-- endsection -->
+EOQ
+
+@lines = split(/\n/, $template);
+my @sublines = split(/\n/, $subtemplate);
+@ok = map {"$_\n"} @lines;
+$ok[1] = "Another Header\n";
+$ok[-2] = "Another Footer\n";
+
+$sections = {};
+@block = $pp->parse_block($sections, \@sublines, '');
+@block = $pp->parse_block($sections, \@lines, '');
+
+is_deeply(\@block, \@ok, "Template and subtemplate with parse_block"); # test 23
+is_deeply($sections->{header}, ["Another Header\n"],
+          "Right value in header for template & subtemplate"); # test 24
 
 #----------------------------------------------------------------------
 # Test read and write page
+
+my $template_name = catfile($test_dir, 'template.htm');
+my $subtemplate_name = catfile($test_dir, 'subtemplate.htm');
+
+$pp->write_page($template_name, $template);
+my $test_template = $pp->read_page($template_name);
+is($test_template, $template, 'Read and write template'); # test 25
+
+$pp->write_page($subtemplate_name, $subtemplate);
+my $test_subtemplate = $pp->read_page($subtemplate_name);
+is($test_subtemplate, $subtemplate, 'Read and write subtemplate'); # test 26
+
+my $sub = $pp->compile($template_name, $subtemplate_name);
+is(ref $sub, 'CODE', "compiled template"); # test 27
+
+my $text = $sub->([1, 2]);
+my $text_ok = <<'EOQ';
+<!-- section header extra -->
+Another Header
+<!-- endsection header -->
+Even line
+Odd line
+<!-- section footer -->
+Another Footer
+<!-- endsection footer -->
+EOQ
+
+is($text, $text_ok, "Run compiled template"); # test 28
+
+$pp->{keep_sections} = 1;
+@lines = split(/\n/, $template);
+@sublines = split(/\n/, $subtemplate);
+
+@block = $pp->parse_block($sections, \@sublines, '');
+@block = $pp->parse_block($sections, \@lines, '');
+
+is($block[0], "<!-- section header extra -->\n", "Section start teag"); # test 29
+is($block[2], "<!-- endsection header -->\n", "Section end teag"); # test 30
+
+$sub = $pp->compile($template_name, $subtemplate_name);
+is(ref $sub, 'CODE', "compiled template"); # test 31
+
+$text = $sub->([1, 2]);
+$text_ok = <<'EOQ';
+<!-- section header extra -->
+Another Header
+<!-- endsection header -->
+Even line
+Odd line
+<!-- section footer -->
+Another Footer
+<!-- endsection footer -->
+EOQ
+
+is($text, $text_ok, "Run compiled template"); # test 32
+
+#----------------------------------------------------------------------
+# Test is newer?
 
 do {
    my $code = <<'EOQ';
@@ -209,180 +228,141 @@ do {
 <h1>%%</h1>
 <!-- endsection content -->
 <!-- section navigation in folder -->
-<p><a href="">&&</a></p>
+<p><a href="">Link</a></p>
 <!-- endsection navigation -->
 </body>
 </html>
 EOQ
 
+    chdir($test_dir);
     my $hs = App::Followme::HandleSite->new;
-    foreach my $dir (('sub', '')) {
-        foreach my $count (qw(four three two one)) {
-            sleep(1);
-            my $output = $code;
-            $output =~ s/%%/Page $count/g;
-            $output =~ s/&&/$dir link/g;
-
-            my @dirs;
-            push(@dirs, $test_dir);
-            push(@dirs, $dir) if $dir;
-
-            my $filename = catfile(@dirs, "$count.html");
-            $hs->write_page($filename, $output);
-
-            my $input = $hs->read_page($filename);
-            is($input, $output, "Read and write page $filename"); #tests 11-18
-        }
-    }
-};
-
-#----------------------------------------------------------------------
-# Test file name conversion
-
-do {
-    my $hs = App::Followme::HandleSite->new;
-
-    my $filename = 'foobar.txt';
-    my $filename_ok = catfile($test_dir, $filename);
-    my $test_filename = $hs->full_file_name($test_dir, $filename);
-    is($test_filename, $filename_ok, 'Full file name relative path'); # test 19
     
-    $filename = $filename_ok;
-    $test_filename = $hs->full_file_name($test_dir, $filename);
-    is($test_filename, $filename_ok, 'Full file name absolute path'); # test 20
-};
+    foreach my $count (qw(four three two one)) {
+        sleep(1);
+        my $output = $code;
+        $output =~ s/%%/Page $count/g;
 
-#----------------------------------------------------------------------
-# Test is newer?
+        my $filename = catfile($test_dir, "$count.html");
+        $hs->write_page($filename, $output);
 
-do {
-    my $hs = App::Followme::HandleSite->new;
+        my $input = $hs->read_page($filename);
+        is($input, $output, "Read and write page $filename"); #tests 33-36
+    }
 
     my $newer = $hs->is_newer('three.html', 'two.html', 'one.html');
-    is($newer, undef, 'Source is  newer'); # test 21
+    is($newer, undef, 'Source is  newer'); # test 37
     
     $newer = $hs->is_newer('one.html', 'two.html', 'three.html');
-    is($newer, 1, "Target is newer"); # test 22
+    is($newer, 1, "Target is newer"); # test 38
     
     $newer = $hs->is_newer('five.html', 'one.html');
-    is($newer, undef, 'Target is undefined'); # test 23
+    is($newer, undef, 'Target is undefined'); # test 39
     
     $newer = $hs->is_newer('six.html', 'five.html');
-    is($newer, 1, 'Source and target undefined'); # test 24
+    is($newer, 1, 'Source and target undefined'); # test 40
 };
 
 #----------------------------------------------------------------------
-# Test converters
+# Test for loop
 
-do {
-   my $text = <<'EOQ';
-<p>This is a paragraph</p>
-
-<pre>
-This is preformatted text.
-</pre>
+$template = <<'EOQ';
+<!-- for @list -->
+$name $sep $phone
+<!-- endfor -->
 EOQ
 
-   my $template = <<'EOQ';
-<html>
-<head>
-<meta name="robots" content="archive">
-<!-- section meta -->
-<title>{{title}}</title>
-<!-- endsection meta -->
-</head>
-<body>
-<!-- section content -->
-<h1>{{title}}</h1>
+$pp->write_page($template_name, $template);
 
-{{body}}
+$sub = App::Followme::HandleSite->compile($template_name);
+$data = {sep => ':', list => [{name => 'Ann', phone => '4444'},
+                              {name => 'Joe', phone => '5555'}]};
 
-<ul>
-<!-- loop -->
-<li>{{count}} {{item}}</li>
-<!-- endloop -->
-</ul>
-<!-- endsection content -->
-</body>
-</html>
+$text = $sub->($data);
+
+$text_ok = <<'EOQ';
+Ann : 4444
+Joe : 5555
 EOQ
 
-    my @loop;
-    my $i = 0;
-    foreach my $word (qw(one two three four)) {
-        $i = $i + 1;
-        push(@loop, {count => $i, item => $word});
-    }
-    
-    my $data = {title =>'Three', body => $text, loop => \@loop};
-
-    my $hs = App::Followme::HandleSite->new;
-    my $sub = $hs->compile_template($template);
-    my $page = $sub->($data);
-
-    ok($page =~ /<h1>Three<\/h1>/, 'Apply template to title'); # test 25
-    ok($page =~ /<p>This is a paragraph<\/p>/,
-       'Apply template to body'); # test 26
-
-    my @li = $page =~ /(<li>)/g;
-    is(@li, 4, 'Loop over data items'); # test 27
-    ok($page =~ /<li>2 two<\/li>/, 'Substitute in loop'); # test 28
-};
+is($text, $text_ok, "For loop"); # test 41
 
 #----------------------------------------------------------------------
-# Test builders
+# Test with block
 
-do {
-    chdir($test_dir);
-    
-    my $data = {};
-    my $hs = App::Followme::HandleSite->new;
-    my $text_name = catfile('watch','this-is-only-a-test.txt');
-    
-    $data = $hs->build_title_from_filename($data, $text_name);
-    my $title_ok = 'This Is Only A Test';
-    is($data->{title}, $title_ok, 'Build file title'); # test 29
-
-    my $index_name = catfile('watch','index.html');
-    $data = $hs->build_title_from_filename($data, $index_name);
-    $title_ok = 'Watch';
-    is($data->{title}, $title_ok, 'Build directory title'); # test 30
-    
-    $data = $hs->build_url($data, $test_dir, $text_name);
-    my $url_ok = 'watch/this-is-only-a-test.html';
-    is($data->{url}, $url_ok, 'Build a relative file url'); # test 31
-
-    $url_ok = '/' . $url_ok;
-    is($data->{absolute_url}, $url_ok, 'Build an absolute file url'); # test 32
-
-    mkdir('watch');
-    $data = $hs->build_url($data, $test_dir, 'watch');
-    is($data->{url}, 'watch/index.html', 'Build directory url'); #test 33
-       
-    $data = {};
-    my $date = $hs->build_date($data, 'two.html');
-    my @date_fields = grep {/\S/} sort keys %$date;
-    my @date_ok = sort qw(day month monthnum  weekday hour24 hour 
-                   minute second year ampm);
-    is_deeply(\@date_fields, \@date_ok, 'Build date'); # test 34
-    
-    $data = {};
-    $data = $hs->external_fields($data, $test_dir, 'two.html');
-    my @keys = sort keys %$data;
-    my @keys_ok = sort(@date_ok, 'absolute_url', 'title', 'url');
-    is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 35
-    
-    my $body = <<'EOQ';
-    <h2>The title</h2>
-    
-    <p>The body
-</p>
+$template = <<'EOQ';
+$a
+<!-- with %hash -->
+$a $b
+<!-- endwith -->
+$b
 EOQ
 
-    $data = {body => $body};
-    $data = $hs->build_title_from_header($data);
-    is($data->{title}, 'The title', 'Get title from header'); # test 36
-    
-    my $summary = $hs->build_summary($data);
-    is($summary, "The body\n", 'Get summary'); # test 37
-};
+$pp->write_page($template_name, $template);
+
+$sub = App::Followme::HandleSite->compile($template_name);
+$data = {a=> 1, b => 2, hash => {a => 10, b => 20}};
+
+$text = $sub->($data);
+
+$text_ok = <<'EOQ';
+1
+10 20
+2
+EOQ
+
+is($text, $text_ok, "With block"); # test 42
+
+#----------------------------------------------------------------------
+# Test while loop
+
+$template = <<'EOQ';
+<!-- while $count -->
+$count
+<!-- set $count = $count - 1 -->
+<!-- endwhile -->
+go
+EOQ
+
+$pp->write_page($template_name, $template);
+$sub = App::Followme::HandleSite->compile($template_name);
+$data = {count => 3};
+
+$text = $sub->($data);
+
+$text_ok = <<'EOQ';
+3
+2
+1
+go
+EOQ
+
+is($text, $text_ok, "While loop"); # test 43
+
+#----------------------------------------------------------------------
+# Test if blocks
+
+$template = <<'EOQ';
+<!-- if $x == 1 -->
+\$x is $x (one)
+<!-- elsif $x  == 2 -->
+\$x is $x (two)
+<!-- else -->
+\$x is unknown
+<!-- endif -->
+EOQ
+
+$pp->write_page($template_name, $template);
+$sub = App::Followme::HandleSite->compile($template_name);
+
+$data = {x => 1};
+$text = $sub->($data);
+is($text, "\$x is 1 (one)\n", "If block"); # test 44
+
+$data = {x => 2};
+$text = $sub->($data);
+is($text, "\$x is 2 (two)\n", "Elsif block"); # test 45
+
+$data = {x => 3};
+$text = $sub->($data);
+is($text, "\$x is unknown\n", "Else block"); # test 46
+

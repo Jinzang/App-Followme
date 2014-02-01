@@ -1,33 +1,33 @@
 package App::Followme::HandleSite;
+
 use 5.008005;
 use strict;
 use warnings;
+use integer;
+
+use Carp;
+use IO::File;
+use File::Spec::Functions qw(abs2rel catfile rel2abs splitdir);
 
 use lib '../..';
 
-use Cwd;
-use IO::File;
-use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
-                             no_upwards rel2abs splitdir updir);
-
-use App::Followme::MostRecentFile;
-use base qw(App::Followme::EveryFile);
+use base qw(App::Followme::Variables);
 
 our $VERSION = "0.96";
 
-use constant MONTHS => [qw(January February March April May June July
-                           August September October November December)];
+use constant COMMAND_START => '<!-- ';
+use constant COMMAND_END => '-->';
 
 #----------------------------------------------------------------------
-# Read the default parameter values
+# Set default parameters for package
 
 sub parameters {
     my ($pkg) = @_;
-    
+
     my %parameters = (
-            top_directory => getcwd(),
-            template_directory => 'templates',
-           );
+                      escaped_chars => '<>',
+                      template_directory => 'templates',
+                     );
 
     my %base_params = $pkg->SUPER::parameters();
     %parameters = (%base_params, %parameters);
@@ -36,190 +36,178 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Build date fields from time, based on Blosxom 3
+# Coerce a value to the type indicated by the sigil
 
-sub build_date {
-    my ($self, $data, $filename) = @_;
+sub coerce {
+    my ($self, $sigil, $value) = @_;
+
+    my $data;
+    if (defined $value) {
+        my $ref = ref $value;
     
-    my $num = '01';
-    my $months = MONTHS;
-    my %month2num = map {substr($_, 0, 3) => $num ++} @$months;
-
-    my $time;
-    if (-e $filename) {
-        my @stats = stat($filename);
-        $time = $stats[9];
-    } else {
-        $time = time();
-    }
+        if ($sigil eq '$') {
+            if (! $ref) {
+                $data = \$value;
+            } elsif ($ref eq 'ARRAY') {
+                my $val = @$value;
+                $data = \$val;
+            } elsif ($ref eq 'HASH') {
+                my @data = %$value;
+                my $val = @data;
+                $data = \$val;
+            }
     
-    my $ctime = localtime($time);
-    my @names = qw(weekday month day hour24 minute second year);
-    my @values = split(/\W+/, $ctime);
-
-    while (@names) {
-        my $name = shift @names;
-        my $value = shift @values;
-        $data->{$name} = $value;
-    }
-
-    $data->{day} = sprintf("%02d", $data->{day});
-    $data->{monthnum} = $month2num{$data->{month}};
-
-    my $hr = $data->{hour24};
-    if ($hr < 12) {
-        $data->{ampm} = 'am';
-    } else {
-        $data->{ampm} = 'pm';
-        $hr -= 12;
-    }
-
-    $hr = 12 if $hr == 0;
-    $data->{hour} = sprintf("%02d", $hr);
-
-    return $data;
-}
-
-#----------------------------------------------------------------------
-# Get the title from the filename root
-
-sub build_title_from_filename {
-    my ($self, $data, $filename) = @_;
+        } elsif ($sigil eq '@') {
+            if (! $ref) {
+                $data = [$value];
+            } elsif ($ref eq 'ARRAY') {
+                $data = $value;
+            } elsif ($ref eq 'HASH') {
+                my @data = %$value;
+                $data = \@data;
+            }
     
-    my ($dir, $file) = $self->split_filename($filename);
-    my ($root, $ext) = split(/\./, $file);
-    
-    if ($root eq 'index') {
-        my @dirs = splitdir($dir);
-        $root = pop(@dirs) || '';
-    }
-    
-    $root =~ s/^\d+// unless $root =~ /^\d+$/;
-    my @words = map {ucfirst $_} split(/\-/, $root);
-    $data->{title} = join(' ', @words);
-    
-    return $data;
-}
-
-#----------------------------------------------------------------------
-# Get the title from the first paragraph of the page
-
-sub build_summary {
-    my ($self, $data) = @_;
-    
-    my $summary = '';
-    if (exists $data->{body}) {
-        if ($data->{body} =~ m!<p[^>]*>(.*?)</p[^>]*>!si) {
-            $summary = $1;
+        } elsif ($sigil eq '%') {
+            if ($ref eq 'ARRAY' && @$value % 2 == 0) {
+                my %data = @$value;
+                $data = \%data;
+            } elsif ($ref eq 'HASH') {
+                $data = $value;
+            }
         }
-    }
-    
-    return $summary;
-}
 
-#----------------------------------------------------------------------
-# Get the title from the page header
-
-sub build_title_from_header {
-    my ($self, $data) = @_;
-    
-    if (exists $data->{body}) {
-        if ($data->{body} =~ s!^\s*<h(\d)[^>]*>(.*?)</h\1[^>]*>!!si) {
-            $data->{title} = $2;
-        }
+    } elsif ($sigil eq '$') {
+        $data = \$value;
     }
     
     return $data;
 }
 
 #----------------------------------------------------------------------
-# Build a url from a filename
+# Compile a template into a subroutine which when called fills itself
 
-sub build_url {
-    my ($self, $data, $directory, $filename) = @_;
+sub compile {
+    my ($pkg, @templates) = @_;
+    my $self = ref $pkg ? $pkg : $pkg->new();
 
-    $data->{url} = $self->filename_to_url($directory, $filename);
-    $data->{absolute_url} = '/' . $self->filename_to_url($self->{top_directory},
-                                                         $filename);
-    return $data;
+    # Template precedes subtemplate, which precedes subsubtemplate
+
+    my @block;
+    my $sections = {};
+    while (my $template = pop(@templates)) {
+        my $page = $self->read_page($template);
+        my @lines = split(/\n/, $page);
+        @block = $self->parse_block($sections, \@lines, '');
+    }
+
+    return $self->construct_code(\@block);
 }
 
 #----------------------------------------------------------------------
-# Compile a template into a subroutine
+# Construct a subroutine from the code embedded in the template
 
-sub compile_template {
-    my ($self, $template, $variable) = @_;
-    $variable = '{{*}}' unless $variable;
-    
-    my ($left, $right) = split(/\*/, $variable);
-    $left = quotemeta($left);
-    $right = quotemeta($right);
-    
+sub construct_code {
+    my ($self, $lines) = @_;
+
     my $code = <<'EOQ';
 sub {
-my ($data) = @_;
-my ($block, @blocks);
+$self->init_stack();
+$self->push_stack(@_);
+my $text = '';
 EOQ
 
-    my @tokens = split(/(<!--\s*(?:loop|endloop).*?-->)/, $template);
-    
-    foreach my $token (@tokens) {
-        if ($token =~ /^<!--\s*loop/) {
-            $code .= 'foreach my $data (@{$data->{loop}}) {' . "\n";
+    push(@$lines, "\n");
+    $code .= $self->parse_code($lines);
 
-        } elsif ($token =~ /^<!--\s*endloop/) {
-            $code .= "}\n";
-
-        } else {
-            $code .= "\$block = <<'EOQ';\n";
-            $code .= "${token}\nEOQ\n";
-            $code .= "chomp \$block;\n";
-            $code .= "\$block =~ s/$left(\\w+)$right/\$data->{\$1}/g;\n";
-            $code .= "push(\@blocks,\$block);\n";
-        }
-    }
-    
     $code .= <<'EOQ';
-return join('', @blocks);
+chomp $text;
+return $text;
 }
 EOQ
 
     my $sub = eval ($code);
-    die $@ unless $sub;
+    croak $@ unless $sub;
     return $sub;
 }
 
 #----------------------------------------------------------------------
-# Get fields external to file content
+# Replace variable references with hashlist fetches
 
-sub external_fields {
-    my ($self, $data, $directory, $filename) = @_;
+sub encode_expression {
+    my ($self, $value) = @_;
 
-    $data = $self->build_date($data, $filename);
-    $data = $self->build_title_from_filename($data, $filename);
-    $data = $self->build_url($data, $directory, $filename);
+    if (defined $value) {
+        my $pre = '{$self->fetch_stack(\'';
+        my $mid = '\',\'';
+        my $post = '\')}';
+        $value =~ s/(?<!\\)([\$\@\%])(\w+)/$1$pre$1$mid$2$post/g;
 
+    } else {
+        $value = '';
+    }
+
+    return $value;
+}
+
+#----------------------------------------------------------------------
+# Replace variable references with hashlist fetches
+
+sub encode_text {
+    my ($self, $value) = @_;
+
+    if (defined $value) {
+        my $pre = '${$self->fill_in(\'';
+        my $mid = '\',\'';
+        my $post = '\')}';
+        $value =~ s/(?<!\\)([\$\@\%])(\w+)/$pre$1$mid$2$post/g;
+
+    } else {
+        $value = '';
+    }
+
+    return $value;
+}
+
+#----------------------------------------------------------------------
+# Escape a set of characters
+
+sub escape {
+    my ($self, $data) = @_;
+
+    $data =~ s/($self->{escaped_chars_pattern})/'&#' . ord($1) . ';'/ge;
     return $data;
 }
 
 #----------------------------------------------------------------------
-# Convert filename to url
+# Find and retrieve a value from the hash stack
 
-sub filename_to_url {
-    my ($self, $directory, $filename) = @_;    
+sub fetch_stack {
+    my ($self, $sigil, $name) = @_;
 
-    my $is_dir = -d $filename;
-    $filename = rel2abs($filename);
-    $filename = abs2rel($filename, $directory);
-    $filename = "/$filename" if $self->{absolute};
-    
-    my @path = splitdir($filename);
-    push(@path, 'index.html') if $is_dir;
-    
-    my $url = join('/', @path);
-    $url =~ s/\.[^\.]*$/.$self->{web_extension}/;
+    my $value;
+    for my $hash (@{$self->{stack}}) {
+        if (exists $hash->{$name}) {
+            $value = $hash->{$name};
+            last;
+        }
+    }
 
-    return $url;
+    $value = $self->coerce($sigil, $value);
+    croak "Illegal type conversion: $sigil$name" unless defined $value;
+
+    return $value;
+}
+
+#----------------------------------------------------------------------
+# Return a value to fill in a template
+
+sub fill_in {
+    my ($self, $sigil, $name) = @_;
+
+    my $data = $self->fetch_stack($sigil, $name);
+    my $result = $self->render($data);
+
+    return \$result;
 }
 
 #----------------------------------------------------------------------
@@ -250,28 +238,27 @@ sub find_prototype {
 }
 
 #----------------------------------------------------------------------
-# Construct the full file name from a relative file name
+# Get the translation of a template command
 
-sub full_file_name {
-    my ($self, @directories) = @_;
+sub get_command {
+    my ($self, $cmd) = @_;
 
-    return $directories[-1] if file_name_is_absolute($directories[-1]);
-   
-    my @dirs;
-    foreach my $dir (@directories) {
-        push(@dirs, splitdir($dir));
-    }
-    
-    my @new_dirs;
-    foreach my $dir (@dirs) {
-        if (no_upwards($dir)) {
-            push(@new_dirs, $dir);
-        } else {
-            pop(@new_dirs) unless $dir eq '.';
-        }
-    }
-    
-    return catfile(@new_dirs);  
+    my $commands = {
+                    do => "%%;",
+                    for => "foreach (%%) {\n\$self->push_stack(\$_);",
+                	endfor => "\$self->pop_stack();\n}",
+                    if => "if (%%) {",
+                    elsif => "} elsif (%%) {",
+                    else => "} else {",
+                    endif => "}",
+                    set => \&set_command,
+                    while => "while (%%) {",
+                    endwhile => "}",
+                	with => "\$self->push_stack(\\%%);",
+                    endwith => "\$self->pop_stack();",
+                    };
+
+    return $commands->{$cmd};
 }
 
 #----------------------------------------------------------------------
@@ -294,26 +281,13 @@ sub get_template_name {
 }
 
 #----------------------------------------------------------------------
-# Get fields from reading the file (stub)
+# Initialize the data stack
 
-sub internal_fields {
-    my ($self, $data, $filename) = @_;   
+sub init_stack {
+    my ($self) = @_;
 
-    my ($ext) = $filename =~ /\.([^\.]*)$/;
-
-    if ($ext eq $self->{web_extension}) {
-        if (-d $filename) {
-            my $index_name = "index.$self->{web_extension}";
-            $filename = catfile($filename, $index_name);
-        }
-    
-        my $body = $self->read_page($filename);
-        $data->{body} = $body if defined $body;
-        $data->{summary} = $self->build_summary($data);
-        $data = $self->build_title_from_header($data);
-    }
-    
-    return $data;
+    $self->{stack} = [];
+    return;
 }
 
 #----------------------------------------------------------------------
@@ -340,321 +314,529 @@ sub is_newer {
 }
 
 #----------------------------------------------------------------------
-# Combine template with prototype
+# Is a command a singleton command?
+
+sub is_singleton {
+    my ($self, $cmd) = @_;
+
+    return ! ($cmd eq 'section' || $self->get_command("end$cmd"));
+}
+
+#----------------------------------------------------------------------
+# Combine template with prototype and compile to subroutine
 
 sub make_template {
     my ($self, $directory, $template_file) = @_;
 
     my $template_name = $self->get_template_name($template_file);
-    my $template = $self->read_page($template_name);
-
     my $prototype_name = $self->find_prototype($directory);
-    my $final_template;
 
+    my $sub;
     if (defined $prototype_name) {
-        my $prototype = $self->read_page($prototype_name); 
-        $final_template = $self->update_page($prototype, $template);
-        
+        $sub = $self->compile($prototype_name, $template_name);
     } else {
-        $final_template = $template;
+        $sub = $self->compile($template_name);
     }
 
-    return $final_template;
+    return $sub;
 }
 
 #----------------------------------------------------------------------
-# Parse fields out of section tag
+# Read and check the template files
 
-sub parse_blockname {
-    my ($self, $str) = @_;
-    
-    my ($blockname, $in, $locality) = split(/\s+/, $str);
-    
-    if ($in) {
-        die "Syntax error in block ($str)"
-            unless $in eq 'in' && defined $locality;
-    } else {
-        $locality = '';
-    }
-    
-    return ($blockname, $locality);
-}
+sub parse_block {
+    my ($self, $sections, $lines, $command) = @_;
 
-#----------------------------------------------------------------------
-# Break page into blocks
+    my @block;
+    while (defined (my $line = shift @$lines)) {
+        $line .= "\n";
 
-sub parse_blocks {
-    my ($self, $page, $block_handler, $prototype_handler) = @_;
-    
-    my $locality;
-    my $block = '';
-    my $blockname = '';
-    my @tokens = split(/(<!--\s*(?:section|endsection)\s+.*?-->)/, $page);
-    
-    foreach my $token (@tokens) {
-        if ($token =~ /^<!--\s*section\s+(.*?)-->/) {
-            die "Improperly nested block ($token)\n" if $blockname;
-                
-            ($blockname, $locality) = $self->parse_blockname($1);
-            $prototype_handler->($token);
+        my ($cmd, $arg) = $self->parse_command($line);
 
-            
-        } elsif ($token =~ /^<!--\s*endsection\s+(.*?)-->/) {
-            my ($endname) = $self->parse_blockname($1);
-            die "Unmatched ($token)\n"
-                if $blockname eq '' || $blockname ne $endname;
-                
-            $block_handler->($blockname, $locality, $block);
-            $prototype_handler->($token);
+        if (defined $cmd) {
+            if (substr($cmd, 0, 3) eq 'end') {
+                $arg = substr($cmd, 3);
+                croak "Mismatched block end ($command/$arg)"
+                      if defined $arg && $arg ne $command;
 
-            $block = '';
-            $blockname = '';
+                push(@block, $line);
+                return @block;
+
+            } elsif ($self->is_singleton($cmd)) {
+                push(@block, $line);
+
+            } else {
+                my @sub_block = $self->parse_block($sections, $lines, $cmd);
+
+                if ($cmd eq 'section') {
+                    my $endline = pop(@sub_block);
+                    my ($name, $rest) = split(' ', $arg, 2);
+
+                    $sections->{$name} = \@sub_block
+                        unless exists $sections->{$name};
+
+                    push(@block, $line, @{$sections->{$name}}, $endline); 
+
+                } else {
+                    push(@block, $line, @sub_block);
+                }
+            }
 
         } else {
-            if ($blockname) {
-                $block .= $token;
-            } else {
-                $prototype_handler->($token);
-            }            
+            push(@block, $line);
         }
     }
- 
-    die "Unmatched block (<!-- section $blockname -->)\n" if $blockname;
+
+    croak "Missing end" if $command;
+    return @block;
+}
+
+#----------------------------------------------------------------------
+# Parse the templace source
+
+sub parse_code {
+    my ($self, $lines) = @_;
+
+    my $code = '';
+    my $stash = '';
+
+    while (defined (my $line = shift @$lines)) {
+        my ($cmd, $arg) = $self->parse_command($line);
+
+        if (defined $cmd) {
+            if (length $stash) {
+                $code .= "\$text .= <<\"EOQ\";\n";
+                $code .= "${stash}EOQ\n";
+                $stash = '';
+            }
+
+            my $command = $self->get_command($cmd);
+            if (defined $command) {
+                my $ref = ref ($command);
+                if (! $ref) {
+                    $arg = $self->encode_expression($arg);
+                    $command =~ s/%%/$arg/;
+                    $code .= "$command\n";
+    
+                } elsif ($ref eq 'CODE') {
+                    $code .= $command->($self, $arg);
+    
+                } else {
+                    die "I don't know how to handle a $ref: $cmd";
+                }
+            
+            } else {
+                $stash .=  $self->encode_text($line);
+            }
+
+        } else {
+            $stash .= $self->encode_text($line);
+        }
+    }
+
+    if (length $stash) {
+        $code .= "\$text .= <<\"EOQ\";\n";
+        $code .= "${stash}EOQ\n";
+    }
+
+    return $code;
+}
+
+#----------------------------------------------------------------------
+# Parse a command and its argument
+
+sub parse_command {
+    my ($self, $line) = @_;
+
+    if ($line =~ s/$self->{command_start_pattern}//) {
+        $line =~ s/$self->{command_end_pattern}//;
+        return split(' ', $line, 2)
+    }
+
     return;
 }
 
 #----------------------------------------------------------------------
-# Extract named blocks from a page
+# Remove hash pushed on the stack
 
-sub parse_page {
-    my ($self, $page) = @_;
-    
-    my $blocks = {};
-    my $block_handler = sub {
-        my ($blockname, $locality, $blocktext) = @_;
-        if (exists $blocks->{$blockname}) {
-            die "Duplicate block name ($blockname)\n";
-        }
-        $blocks->{$blockname} = $blocktext;
-        return;
-    };
-    
-    my $prototype_handler = sub {
-        return;
-    };
-
-    $self->parse_blocks($page, $block_handler, $prototype_handler);    
-    return $blocks;
+sub pop_stack {
+    my ($self) = @_;
+    return shift (@{$self->{stack}});
 }
 
 #----------------------------------------------------------------------
-# Read a file into a string
+# Push one or more hashes on the stack
 
-sub read_page {
-    my ($self, $filename) = @_;
-    return unless defined $filename;
-    
-    local $/;
-    my $fd = IO::File->new($filename, 'r');
-    return unless $fd;
-    
-    my $page = <$fd>;
-    close($fd);
-    
-    return $page;
-}
+sub push_stack {
+    my ($self, @hash) = @_;
 
-#----------------------------------------------------------------------
-# Set the data fields for a file
-
-sub set_fields {
-    my ($self, $directory, $filename) = @_;
-    
-    my $data = {};
-    $data = $self->external_fields($data, $directory, $filename);
-    $data = $self->internal_fields($data, $filename);
-
-    return $data;
-}
-
-#----------------------------------------------------------------------
-# Parse prototype and page and combine them
-
-sub update_page {
-    my ($self, $prototype, $page, $prototype_path) = @_;
-    $prototype_path = {} unless defined $prototype_path;
-    
-    my $output = [];
-    my $blocks = $self->parse_page($page);
-    
-    my $block_handler = sub {
-        my ($blockname, $locality, $blocktext) = @_;
-        if (exists $blocks->{$blockname}) {
-            if (exists $prototype_path->{$locality}) {
-                push(@$output, $blocktext);          
-            } else {
-                push(@$output, $blocks->{$blockname});
-            }
-            delete $blocks->{$blockname};
+    foreach my $hash (@hash) {
+        my $newhash;
+        if (ref $hash eq 'HASH') {
+            $newhash = $hash;
         } else {
-            push(@$output, $blocktext);
+            $newhash = {data => $hash};
         }
-        return;
-    };
 
-    my $prototype_handler = sub {
-        my ($blocktext) = @_;
-        push(@$output, $blocktext);
-        return;
-    };
-
-    $self->parse_blocks($prototype, $block_handler, $prototype_handler);
-
-    if (%$blocks) {
-        my $names = join(' ', sort keys %$blocks);
-        die "Unused blocks ($names)\n";
+        unshift (@{$self->{stack}}, $newhash);
     }
-    
-    return join('', @$output);
+
+    return;
 }
 
 #----------------------------------------------------------------------
-# Write the page back to the file
+# Render a data structure as html
 
-sub write_page {
-    my ($self, $filename, $page) = @_;
+sub render {
+    my ($self, $data) = @_;
 
-    my $fd = IO::File->new($filename, 'w');
-    die "Couldn't write $filename" unless $fd;
-    
-    print $fd $page;
-    close($fd);
-        
+    my $result;
+    my $ref = ref $data;
+
+    if ($ref eq 'SCALAR') {
+        $result = defined $$data ? $self->escape($$data) : '';
+
+    } elsif ($ref eq 'ARRAY') {
+        my @result;
+        foreach my $datum (@$data) {
+            my $val = $self->render($datum);
+            push(@result, "<li>$val</li>");
+        }
+
+        $result = join("\n", '<ul>', @result, '</ul>');
+
+    } elsif ($ref eq 'HASH') {
+        my @result;
+        foreach my $key (sort keys %$data) {
+            my $val = $self->render($data->{$key});
+            push(@result, "<dt>$key</dt>", "<dd>$val</dd>");
+        }
+
+        $result = join("\n", '<dl>', @result, '</dl>');
+
+    } else  {
+        $result = $self->escape("$data");
+    }
+
+
+    return $result;
+}
+
+#----------------------------------------------------------------------
+# Generate code for the set command, which stores results in the hashlist
+
+sub set_command {
+    my ($self, $arg) = @_;
+
+    my ($var, $expr) = split (/\s*=\s*/, $arg, 2);
+    $expr = $self->encode_expression($expr);
+
+    return "\$self->store_stack(\'$var\', ($expr));\n";
+}
+
+#----------------------------------------------------------------------
+# Set the regular expression patterns used to match a command
+
+sub setup {
+    my ($self) = @_;
+
+    $self->{command_start_pattern} = '^\s*' . quotemeta(COMMAND_START);
+ 
+    $self->{command_end_pattern} = '\s*' . quotemeta(COMMAND_END) . '\s*$';
+
+    $self->{escaped_chars_pattern} =
+        '[' . quotemeta($self->{escaped_chars}) . ']';
+            
+    return $self;
+}
+
+#----------------------------------------------------------------------
+# Store a variable in the hashlist, used by set
+
+sub store_stack {
+    my ($self, $var, @val) = @_;
+
+    my ($sigil, $name) = $var =~ /([\$\@\%])(\w+)/;
+    die "Unrecognized variable type: $name" unless defined $sigil;
+
+    my $i;
+    for ($i = 0; $i < @{$self->{stack}}; $i ++) {
+        last if exists $self->{stack}[$i]{$name};
+    }
+
+    $i = 0 unless $i < @{$self->{stack}};
+
+    if ($sigil eq '$') {
+        my $val = @val == 1 ? $val[0] : @val;
+        $self->{stack}[$i]{$name} = $val;
+
+    } elsif ($sigil eq '@') {
+        $self->{stack}[$i]{$name} = \@val;
+
+    } elsif ($sigil eq '%') {
+        my %val = @val;
+        $self->{stack}[$i]{$name} = \%val;
+    }
+
     return;
 }
 
 1;
-__END__
+
+=pod
+
 =encoding utf-8
 
 =head1 NAME
 
-App::Followme::HandleSite - Supplies common methods for App::Followme modules 
+App::Followme::HandleSite - Handle templates and prototype files
 
 =head1 SYNOPSIS
 
     use App::Followme::HandleSite;
-    $handler = App::Followme::HandleSite($configuration);
-    $handler->run();
+    my $hs = App::Followme::new->new;
+    my $render = $hs->make_template($directory, $template_file);
+    my $output = $render->($hash);
+    my $prototype = $hs->find_prototype($directory, 0);
+    my $test = $hs->is_newer($prototype, @filenames);
 
 =head1 DESCRIPTION
 
-App::Followme::HandleSite is the base class for all the modules that
-App::Followme uses to process a website. It is not called directly, it just
-contains the common methods used by modules, which access them by subclassing
-it.
+This module contains the methods that perform template and prototype handling.
+A Template is a file containing commands and variables for making a web page.
+First, the template is compiled into a subroutine and then the subroutine is
+called with a hash as an argument to fill in the variables and produce a web
+page. A prototype is the most recently modified web page in a directory. It is
+combined with the template so that the web page has the same look as the other
+pages in the directory.
 
-=head1 FUNCTIONS
 
-Some of the common methods are:
+=head1 METHODS
+
+This module has three public methods.
 
 =over 4
 
-=item my $data = $self->build_date($data, $filename);
+=item $test = $self->is_newer($target, @sources);
 
-The variables calculated from the modification time are: C<weekday, month,>
-C<monthnum, day, year, hour24, hour, ampm, minute,> and C<second.>
+Compare the modification date of the target file to the modification dates of
+the source files. If the target file is newer than all of the sources, return
+1 (true).
 
-=item my $data = $self->build_title_from_filename($data, $filename);
+=item $filename = $self->find_prototype($directory, $uplevel);
 
-The title of the page is derived from the file name by removing the filename
-extension, removing any leading digits,replacing dashes with spaces, and
-capitalizing the first character of each word.
+Return the name of the most recently modified web page in a directory. If
+$uplevel is defined, search that many directory levels up from the directory
+passed as the first argument.
 
-=item $data = $self->build_url($data, $filename);
+=item $sub = $self->make_template($directory, $template_name);
 
-Build the relative and absolute urls of a web page from a filename.
+Combine a prototype and template, compile them, and return the compiled
+subroutine. The prototype is the most recently modified file in the directory
+passed as the first argument. The method searches for the template file first
+in the directory and if it is not found there, in the templates folder, which
+is an object parameter,
 
-=item my $sub = $self->compile_template($template, $variable);
-
-Compile_template compiles a template contained in a string into a subroutine.
-Then the subroutine can be called with one argument, a hash containing the data
-to be interpolated into the subroutine. The output is a page containing the
-template with the interpolated data. The data supplied to the subroutine should
+The data supplied to the subroutine should
 be a hash reference. fields in the hash are substituted into variables in the
-template. Variables in the template are surrounded by double braces, so that a
+template. Variables in the template are preceded by Perl sigils, so that a
 link would look like:
 
-    <li><a href="{{url}}">{{title}}</a></li>
+    <li><a href="$url">$title</a></li>
 
-The string which indicates a variable is passed as an optional second argument
-to compile_template. If not present or blank,double braces are used. If present,
-the string should contain an asterisk to indicate where the variable name is
-placed.
+The data hash may contain a list of hashes, which the modules in App::Followme
+name loop. Text in between for and endfor comments will be repeated for each
+hash in the list and each hash will be interpolated into the text. For comments
+look like
 
-The data hash may contain a list of hashes, which should be named loop. Text
-in between loop comments will be repeated for each hash in the list and each
-hash will be interpolated into the text. Loop comments look like
-
-    <!-- loop -->
+    <!-- for @loop -->
     <!-- endloop -->
 
-There should be only one pair of loop comments in the template. 
+=back
 
-=item $blocks = $self->parse_page($page);
+=head1 TEMPLATE SYNTAX
 
-Extract blocks from a web page. Page is a string containing the web page.
+Templates support the control structures in Perl: "for" and "while" loops,
+"if-else" blocks, and some others. Creating output is a two step process. First
+you generate a subroutine from one or more templates, then you call the
+subroutine with your data to generate the output.
 
-=item $str = $self->read_page($filename);
+The template format is line oriented. Commands are enclosed in html comments
+(<!-- -->). A command may be preceded by white space. If a command is a block
+command, it is terminated by the word "end" followed by the command name. For
+example, the "for" command is terminated by an "endfor" command and the "if"
+command by an "endif" command.
 
-Read a fie into a string. An the entire file is read from a string, there is no
-line at a time IO. This is because files are typically small and the parsing
-done is not line oriented. 
+All lines may contain variables. As in Perl, variables are a sigil character
+('$,' '@,' or '%') followed by one or more word characters. For example,
+C<$name> or C<@names>. To indicate a literal character instead of a variable,
+precede the sigil with a backslash. When you run the subroutine that this module
+generates, you pass it a reference, usually a reference to a hash, containing
+some data. The subroutine replaces variables in the template with the value in
+the field of the same name in the hash. If the types of the two disagree, the
+code will coerce the data to the type of the sigil. You can pass a reference to
+an array instead of a hash to the subroutine this module generates. If you do,
+the template will use C<@data> to refer to the array.
 
-=item $data = $self->set_fields($directory, $filename);
+If the first non-white characters on a line are the command start string, the
+line is interpreted as a command. The command name continues up to the first
+white space character. The text following the initial span of white space is the
+command argument. The argument continues up to the command end string, or if
+this is empty, to the end of the line.
 
-Create title, url, and date variables from the filename and the modification date
-of the file. Calculate the body variable from the contents of the file.
+Variables in the template have the same format as ordinary Perl variables,
+a string of word characters starting with a sigil character. for example,
 
-=item $page = $self->update_page($prototype, $page, $prototype_path);
+    $SUMMARY @data %dictionary
 
-This function combines the contents of a prototype and page to create a new
-page. Update_page updates the constant portions of a web page from a prototype. 
-Each html page has sections that are different from other pages and other
-sections that are the same. The sections that differ are enclosed in html
-comments that look like
+are examples of variables. The subroutine this module generates will substitute
+values in the data it is passed for the variables in the template. New variables
+can be added with the "set" command.
 
-    <!-- section name-->
-    <!-- endsection name -->
+Arrays and hashes are rendered as unordered lists and definition lists when
+interpolating them. This is done recursively, so arbitrary structures can be
+rendered. This is mostly intended for debugging, as it does not provide fine
+control over how the structures are rendered. For finer control, use the
+commands described below so that the scalar fields in the structures can be
+accessed. Scalar fields have the characters '<' and '>' escaped before
+interpolating them. This set of characters can be changed by setting the
+configuration parameter escaped chars. Undefined fields are replaced with the
+empty string when rendering. If the type of data passed to the subroutine
+differs from the sigil on the variable the variable is coerced to the type of
+the sigil. This works the same as an assignment. If an array is referenced as a
+scalar, the length of the array is output.
 
-and indicate where the section begins and ends. A page is
-updated by substituting all its named blocks into corresponding block in the
-prototype. The effect is that all the text outside the named blocks are
-updated to be same as the text in the prototype.
+The following commands are supported in templates:
 
-Updates to the named block can also be made conditional by adding an in after
-the section name. If the folder name after the "in" is included in the
-prototype_path hash, then the block tags are ignored, it is as if the block does
-not exist. The block is considered as part of the constant portion of the
-prototype. If the folder is not in the prototype_path, the block is treated as
-any other block and varies from page to page.
+=over 4
 
-    <!-- section name in folder -->
-    <!-- endsection name -->
+=item do
 
-Text in conditional blocks can be used for navigation or other sections of the
-page that are constant, but not constant across the entire site.
+The remainder of the line is interpreted as Perl code. For assignments, use
+the set command.
 
-Both prototype and page are strings, not filenames. Template_path is a hash
-containing the directories from the base directory of the web site down to the
-directory containing the prototype. The hash is treated as a set, that is, the
-directory names are the keys and the values of the keys are one/
+=item if
 
-=item $self->write_page($filename, $str);
+The text until the matching C<endif> is included only if the expression in the
+"if" command is true. If false, the text is skipped. The "if" command can contain
+an C<else>, in which case the text before the "else" is included if the
+expression in the "if" command is true and the text after the "else" is included
+if it is false. You can also place an "elsif" command in the "if" block, which
+includes the following text if its expression is true.
 
-Write a file from a string. An the entire file is read to or written from a
-string, there is no line at a time IO. This is because files are typically small
-and the parsing done is not line oriented. 
+    <!-- if $highlight eq 'y' -->
+    <em>$text</em>
+    <!-- else -->
+    $text
+    <!-- endif -->
+
+=item for
+
+Expand the text between the "for" and "endfor" commands several times. The
+"for" command takes a name of a field in a hash as its argument. The value of this
+name should be a reference to a list. It will expand the text in the for block
+once for each element in the list. Within the "for" block, any element of the list
+is accessible. This is especially useful for displaying lists of hashes. For
+example, suppose the data field name PHONELIST points to an array. This array is
+a list of hashes, and each hash has two entries, NAME and PHONE. Then the code
+
+    <!-- for @PHONELIST -->
+    <p>$NAME<br>
+    $PHONE</p>
+    <!-- endfor -->
+
+displays the entire phone list.
+
+=item section
+
+If a template contains a section, the text until the endsection command will be
+replaced by the section block with the same name in one the subtemplates. For
+example, if the main template has the code
+
+    <!-- section footer -->
+    <div></div>
+    <!-- endsection -->
+
+and the subtemplate has the lines
+
+    <!-- section footer -->
+    <div>This template is copyright with a Creative Commons License.</div>
+    <!-- endsection -->
+
+The text will be copied from a section in the subtemplate into a section of the
+same name in the template. If there is no block with the same name in the
+subtemplate, the text is used unchanged.
+
+=item set
+
+Adds a new variable or updates the value of an existing variable. The argument
+following the command name looks like any Perl assignment statement minus the
+trailing semicolon. For example,
+
+    <!-- set $link = "<a href=\"$url\">$title</a>" -->
+
+=item while
+
+Expand the text between the C<while> and C<endwhile> as long as the
+expression following the C<while> is true.
+
+    <!-- set $i = 10 -->
+    <p>Countdown ...<br>
+    <!-- while $i >= 0 -->
+    $i<br>
+    <!-- set $i = $i - 1 -->
+    <!-- endwhile -->
+
+=item with
+
+Lists within a hash can be accessed using the "for" command. Hashes within a
+hash are accessed using the "with" command. For example:
+
+    <!-- with %address -->
+    <p><i>$street<br />
+    $city, $state $zip</i></p.
+    <!-- endwith -->
+
+=back
+
+=head1 ERRORS
+
+What to check when this module throws an error
+
+=over 4
+
+=item Couldn't read template
+
+The template is in a file and the file could not be opened. Check the filename
+and permissions on the file. Relative filenames can cause problems and the web
+server is probably running another account than yours.
+
+=item Illegal type conversion
+
+The sigil on a variable differs from the data passed to the subroutine and
+conversion. between the two would not be legal. Or you forgot to escape the '@'
+in an email address by preceding it with a backslash.
+
+=item Unknown command
+
+Either a command was spelled incorrectly or a line that is not a command
+begins with the command start string.
+
+=item Missing end
+
+The template contains a command for the start of a block, but
+not the command for the end of the block. For example  an "if" command
+is missing an "endif" command.
+
+=item Mismatched block end
+
+The parser found a different end command than the begin command for the block
+it was parsing. Either an end command is missing, or block commands are nested
+incorrectly.
+
+=item Syntax error
+
+The expression used in a command is not valid Perl.
 
 =back
 
@@ -670,4 +852,3 @@ it under the same terms as Perl itself.
 Bernie Simon E<lt>bernie.simon@gmail.comE<gt>
 
 =cut
-
