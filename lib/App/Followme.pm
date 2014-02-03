@@ -291,14 +291,14 @@ followme command is run:
     module = App::Followme::FormatPages
     module = App::Followme::ConvertPages
 
-FormatPages runs the code that keeps the pages consistent with the prototype.
-ConvertPages changes Markdown files to html pages using a template and the
-prototype. The modules are run in the order that they appear in the,
-configuration file. If you want to change or add to the behavior of followme,
-write another module and add it to the file. Other lines in the configuration
-file modify the default behavior of the modules by overriding their default
-parameter values. For more information on these parameters, see the
-documentation for each of the modules.
+L<App::Followme::FormatPages> runs the code that keeps the pages consistent with
+the prototype. L<App::Followme::ConvertPages> changes Markdown files to html
+pages using a template and the prototype. The modules are run in the order that
+they appear in the, configuration file. If you want to change or add to the
+behavior of followme, write another module and add it to the file. Other lines
+in the configuration file modify the default behavior of the modules by
+overriding their default parameter values. For more information on these
+parameters, see the documentation for each of the modules.
 
 ConvertPages changes Markdown files into html files. It builds several variables
 and substitutes them into the page template. The most significant variable is
@@ -322,17 +322,18 @@ modules that implement a weblog:
     module = App::Followme::CreateNews
     module = App::Followme::CreateIndexes
 
-CreateNews generates an html file from the most recently updated files in the
-archive directory. CreateIndexes builds an index file for each directory with
-links for all the subdirectories and html contained in it. Templates are used to
-build the html files, just as with individual pages, and the same variables are
-available. The template to build the html for each file in the index is
-contained between
+L<App::Followme::CreateNews> generates an html file from the most recently
+updated files in the archive directory. L<App::Followme::CreateIndexes> builds
+an index file for each directory with links for all the subdirectories and html
+contained in it. Templates are used to build the html files, just as with
+individual pages, and the same variables are available. The template to build
+the html for each file in the index is contained between
 
-    <!-- loop -->
-    <!--endloop -->
+    <!-- for @loop -->
+    <!--endfor -->
 
-comments. 
+comments. More information on the syntax of template is in the documentation of
+the L<App::Followme::HandleSite> module.
 
 In addition to normal section blocks, there are per folder section blocks.
 The contents of these blocks is kept constant across all files in a folder and
