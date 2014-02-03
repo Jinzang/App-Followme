@@ -80,6 +80,21 @@ sub build_date {
 }
 
 #----------------------------------------------------------------------
+# Set a flag indicating if the the filename is the index file
+
+sub build_is_index {
+    my ($self, $data, $filename) = @_;
+    
+    my ($directory, $file) = $self->split_filename($filename);
+    my ($root, $ext) = split(/\./, $file);
+    
+    my $is_index = $root eq 'index' && $ext eq $self->{web_extension};
+    $data->{is_index} = $is_index ? 1 : 0;
+    
+    return $data;
+}
+
+#----------------------------------------------------------------------
 # Get the title from the filename root
 
 sub build_title_from_filename {
@@ -151,6 +166,7 @@ sub external_fields {
 
     $data = $self->build_date($data, $filename);
     $data = $self->build_title_from_filename($data, $filename);
+    $data = $self->build_is_index($data, $filename);
     $data = $self->build_url($data, $directory, $filename);
 
     return $data;
@@ -250,26 +266,38 @@ App::Followme::Variables - Supplies common methods for App::Followme modules
 =head1 SYNOPSIS
 
     use App::Followme::Variables;
-    $handler = App::Followme::Variables($configuration);
-    $handler->run();
+    my $var = App::Followme::Variables($configuration);
+    my $data = $var->set_fields($directory, $filename);
 
 =head1 DESCRIPTION
 
-App::Followme::Variables is the base class for all the modules that
-App::Followme uses to process a website. It is not called directly, it just
-contains the methods used to create variables, and the other classes access
-them by subclassing it.
+App::Followme::Variables is a base class for all the modules that App::Followme
+uses to process a website. It is not called directly, App::Followme::HandleSite
+subclasses it, so all its methods are called through it. Subclasses can create
+other variables or override the methods in this class that create variables.
 
 =head1 FUNCTIONS
 
-Some of the common methods are:
+The methods which calculate the variables are:
 
 =over 4
+
+=item $data = $self->set_fields($directory, $filename);
+
+The main method for getting variables. This method calls the other methods
+mentioned here. Filename is the file that the variables are being computed for.
+Directory is used to compute the relative url. The url computed is relative
+to it.
 
 =item my $data = $self->build_date($data, $filename);
 
 The variables calculated from the modification time are: C<weekday, month,>
 C<monthnum, day, year, hour24, hour, ampm, minute,> and C<second.>
+
+=item my $data = $self->build_is_index($data, $filename);
+
+The variable C<is_flag> is one of the filename is an index file and zero if
+it is not. 
 
 =item my $data = $self->build_title_from_filename($data, $filename);
 
@@ -281,10 +309,10 @@ capitalizing the first character of each word.
 
 Build the relative and absolute urls of a web page from a filename.
 
-=item $data = $self->set_fields($directory, $filename);
+=item my $data = $self->internal_fields($data, $filename);
 
-Create title, url, and date variables from the filename and the modification date
-of the file. Calculate the body and summary variables from the contents of the file.
+Compute the fields that you must read the file to calculate: title, body,
+and summary
 
 =back
 

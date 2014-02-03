@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 11;
+use Test::More tests => 13;
 
 #----------------------------------------------------------------------
 # Load package
@@ -61,29 +61,35 @@ do {
     $title_ok = 'Watch';
     is($data->{title}, $title_ok, 'Build directory title'); # test 4
     
+    $data = $var->build_is_index($data, $text_name);
+    is($data->{is_index}, 0, 'Regular file in not index'); # test 5
+    
+    $data = $var->build_is_index($data, $index_name);
+    is($data->{is_index}, 1, 'Index file is index'); # test 6
+    
     $data = $var->build_url($data, $test_dir, $text_name);
     my $url_ok = 'watch/this-is-only-a-test.html';
-    is($data->{url}, $url_ok, 'Build a relative file url'); # test 5
+    is($data->{url}, $url_ok, 'Build a relative file url'); # test 7
 
     $url_ok = '/' . $url_ok;
-    is($data->{absolute_url}, $url_ok, 'Build an absolute file url'); # test 6
+    is($data->{absolute_url}, $url_ok, 'Build an absolute file url'); # test 8
 
     mkdir('watch');
     $data = $var->build_url($data, $test_dir, 'watch');
-    is($data->{url}, 'watch/index.html', 'Build directory url'); #test 7
+    is($data->{url}, 'watch/index.html', 'Build directory url'); #test 9
        
     $data = {};
     my $date = $var->build_date($data, 'two.html');
     my @date_fields = grep {/\S/} sort keys %$date;
-    my @date_ok = sort qw(day month monthnum  weekday hour24 hour 
-                   minute second year ampm);
-    is_deeply(\@date_fields, \@date_ok, 'Build date'); # test 8
+    my @date_ok = sort qw(day month monthnum  weekday  
+                          hour24 hour minute second year ampm);
+    is_deeply(\@date_fields, \@date_ok, 'Build date'); # test 10
     
     $data = {};
     $data = $var->external_fields($data, $test_dir, 'two.html');
     my @keys = sort keys %$data;
-    my @keys_ok = sort(@date_ok, 'absolute_url', 'title', 'url');
-    is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 9
+    my @keys_ok = sort(@date_ok, 'absolute_url', 'title', 'url', 'is_index');
+    is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 11
     
     my $body = <<'EOQ';
     <h2>The title</h2>
@@ -94,8 +100,8 @@ EOQ
 
     $data = {body => $body};
     $data = $var->build_title_from_header($data);
-    is($data->{title}, 'The title', 'Get title from header'); # test 10
+    is($data->{title}, 'The title', 'Get title from header'); # test 12
     
     my $summary = $var->build_summary($data);
-    is($summary, "The body\n", 'Get summary'); # test 11
+    is($summary, "The body\n", 'Get summary'); # test 13
 };
