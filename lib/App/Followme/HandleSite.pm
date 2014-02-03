@@ -451,10 +451,19 @@ sub parse_command {
 sub parse_sections {
     my ($self, $page) = @_;
     
+    # Extract sections from page
+    
     my $sections = {};
     my @lines = split(/\n/, $page);
     $self->parse_block($sections, \@lines, '');
 
+    # Combine lines in each section into a single string
+    
+    foreach my $name (keys %$sections) {
+        my $section = join('', @{$sections->{$name}});
+        $sections->{$name} = $section;
+    }
+    
     return $sections;    
 }
 

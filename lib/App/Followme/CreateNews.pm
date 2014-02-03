@@ -148,7 +148,7 @@ sub internal_fields {
     
     if ($page) {
         my $sections = $self->parse_sections($page);
-        $data->{body} = join('', @{$sections->{$self->{body_tag}}});
+        $data->{body} = $sections->{$self->{body_tag}};
         $data->{summary} = $self->build_summary($data);
         $data = $self->build_title_from_header($data);
     }
