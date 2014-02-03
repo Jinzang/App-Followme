@@ -10,7 +10,7 @@ use Text::Markdown;
 use File::Spec::Functions qw(catfile);
 use App::Followme::MostRecentFile;
 
-our $VERSION = "0.96";
+our $VERSION = "0.97";
 
 #----------------------------------------------------------------------
 # Read the default parameter values

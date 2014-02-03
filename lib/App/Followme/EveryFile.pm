@@ -9,7 +9,7 @@ use Cwd;
 use IO::Dir;
 use File::Spec::Functions qw(rel2abs catfile splitdir no_upwards);
 
-our $VERSION = "0.96";
+our $VERSION = "0.97";
 
 #----------------------------------------------------------------------
 # Create object that returns files in a directory tree
