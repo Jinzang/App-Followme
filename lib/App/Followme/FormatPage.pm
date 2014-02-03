@@ -349,8 +349,6 @@ any other block and varies from page to page.
 Text in conditional blocks can be used for navigation or other sections of the
 page that are constant, but not constant across the entire site.
 
-=back
-
 =head1 CONFIGURATION
 
 The following parameters are used from the configuration:
