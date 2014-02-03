@@ -156,6 +156,23 @@ sub setup {
 }
 
 #----------------------------------------------------------------------
+# Cehck if two filenames are the same in an os independent way
+
+sub same_file {
+    my ($self, $filename1, $filename2) = @_;
+    
+    my @path1 = splitdir(rel2abs($filename1));
+    my @path2 = splitdir(rel2abs($filename2));
+    return unless @path1 == @path2;
+
+    while(@path1) {
+        return unless shift(@path1) eq shift(@path2);
+    }
+    
+    return 1;
+}
+
+#----------------------------------------------------------------------
 # Sort pending filenames
 
 sub sort_files {

@@ -71,7 +71,8 @@ sub find_configuration {
 
     my $config_file = pop(@configuration_files);
     my ($dir, $file) = $self->split_filename($config_file);
-    push(@configuration_files, $config_file) if $dir ne $directory;
+    push(@configuration_files, $config_file)
+        unless $self->same_file($dir, $directory);
     
     return @configuration_files;
 }
