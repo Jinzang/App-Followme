@@ -1,6 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+
+0.97 2014-02-04T00:00:20Z
     - Replaced templating code and reorganized classes
     
 0.96 2014-01-17T00:13:48Z
