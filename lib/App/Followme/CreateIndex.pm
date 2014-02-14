@@ -50,6 +50,23 @@ sub run {
 }
 
 #----------------------------------------------------------------------
+# Build a url from a filename
+
+sub build_url {
+    my ($self, $data, $directory, $filename) = @_;
+
+    $data->{url} = $self->filename_to_url($directory,
+                                          $filename,
+                                        );
+    
+    $data->{absolute_url} = '/' . $self->filename_to_url($self->{top_directory},
+                                                         $filename,
+                                                        );
+
+    return $data;
+}
+
+#----------------------------------------------------------------------
 # Create the index file for a directory
 
 sub create_an_index {
@@ -98,6 +115,7 @@ sub index_data {
 
     return \@index_data;
 }
+
 
 1;
 __END__

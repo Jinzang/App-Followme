@@ -152,9 +152,16 @@ sub build_title_from_header {
 sub build_url {
     my ($self, $data, $directory, $filename) = @_;
 
-    $data->{url} = $self->filename_to_url($directory, $filename);
+    $data->{url} = $self->filename_to_url($directory,
+                                          $filename,
+                                          $self->{web_extension}
+                                        );
+    
     $data->{absolute_url} = '/' . $self->filename_to_url($self->{top_directory},
-                                                         $filename);
+                                                         $filename,
+                                                         $self->{web_extension}
+                                                        );
+
     return $data;
 }
 
@@ -176,7 +183,7 @@ sub external_fields {
 # Convert filename to url
 
 sub filename_to_url {
-    my ($self, $directory, $filename) = @_;    
+    my ($self, $directory, $filename, $ext) = @_;    
 
     my $is_dir = -d $filename;
     $filename = rel2abs($filename);
@@ -186,7 +193,7 @@ sub filename_to_url {
     push(@path, 'index.html') if $is_dir;
     
     my $url = join('/', @path);
-    $url =~ s/\.[^\.]*$/.$self->{web_extension}/;
+    $url =~ s/\.[^\.]*$/.$ext/ if defined $ext;
 
     return $url;
 }
