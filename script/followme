@@ -35,7 +35,7 @@ if ($help) {
 # Construct configuration file name
 
 sub configuration_file {
-    my @path = split(/\//, $0);
+    my @path = splitdir($0);
     my $basename = pop(@path);
     $basename .= '.cfg';
     
