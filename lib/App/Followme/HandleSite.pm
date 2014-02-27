@@ -549,7 +549,7 @@ sub set_command {
 # Set the regular expression patterns used to match a command
 
 sub setup {
-    my ($self) = @_;
+    my ($self, $configuration) = @_;
 
     $self->{command_start_pattern} = '^\s*' . quotemeta(COMMAND_START);
     $self->{command_end_pattern} = '\s*' . quotemeta(COMMAND_END) . '\s*$';
