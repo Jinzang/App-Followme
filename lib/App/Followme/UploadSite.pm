@@ -6,7 +6,7 @@ use warnings;
 
 use lib '..';
 
-use base qw(App::Followme::EveryFile);
+use base qw(App::Followme::HandleSite);
 
 use Cwd;
 use IO::File;
@@ -15,6 +15,8 @@ use File::Spec::Functions qw(abs2rel splitdir catfile);
 
 our $VERSION = "0.97";
 
+use constant SEED => 96;
+
 #----------------------------------------------------------------------
 # Read the default parameter values
 
@@ -22,12 +24,12 @@ sub parameters {
     my ($pkg) = @_;
     
     my %parameters = (
-                      hash_file => 'uploadme.hash',
-                      state_dir => 'state',
-                      target_date => 0,
-                      no_ftp => 0,
-                      ftp_url => '',
-                      ftp_directory => '',
+                      verbose => 0,
+                      no_upload => 0,
+                      max_errors => 5,
+                      hash_file => 'upload.hash',
+                      credentials => 'upload.cred',
+                      upload_pkg => 'App::Followme::UploadFtp',
                      );
 
     my %base_params = $pkg->SUPER::parameters();
@@ -42,17 +44,41 @@ sub parameters {
 sub run {
     my ($self, $directory) = @_;
 
-    $self->ftp_open();
-    
-    my $remote = {};
+    my $updates = [];
     my ($hash, $local) = $self->get_state();
-    $self->update_folder($self->{top_dir}, $hash, $local, $remote);
-    $self->ftp_delete($local);
+
+    my ($user, $pass) = $self->get_word();
+    $self->{uploader}->open($user, $pass);
+
+    eval {
+        $self->update_folder($self->{top_directory}, $updates, $hash, $local);
+        $self->clean_files($updates, $hash, $local);    
+        $self->{uploader}->close();
+    };
     
+    my $error = $@;
     $self->write_hash_file($hash);
-    $self->ftp_close();
-    
+    $self->report_updates($updates);
+
+    die $error if $error;    
     return;
+}
+
+#----------------------------------------------------------------------
+# ASK_WORD -- Ask for user name and password if file not found
+
+sub ask_word {
+    my ($self) = @_;
+
+    print "\nUser name: ";
+    my $user = <STDIN>;
+    chomp ($user);
+
+    print "Password: ";
+    my $pass = <STDIN>;
+    chomp ($pass);
+
+    return ($user, $pass);
 }
 
 #----------------------------------------------------------------------
@@ -61,104 +87,62 @@ sub run {
 sub checksum_file {
     my ($self, $filename) = @_;    
 
-    my $md5 = Digest::MD5->new;
-    
     my $fd = IO::File->new($filename, 'r');
     return '' unless $fd;
     
+    my $md5 = Digest::MD5->new;
     foreach my $line (<$fd>) {
         $md5->add($line);        
     }
 
     close($fd);
-
     return $md5->hexdigest;
-}
-
-#----------------------------------------------------------------------
-# Close the ftp connection
-
-sub ftp_close {
-    my ($self) = @_;    
-    return if $self->{no_ftp};
-
-    $self->{ftp}->quit();
-    undef $self->{ftp};
-    
-    return;
 }
 
 #----------------------------------------------------------------------
 # Write a file to the remote site, creating any directories needed
 
-sub ftp_delete {
-    my ($self, $local) = @_;
-    return if $self->{no_ftp};
+sub clean_files {
+    my ($self, $updates, $hash, $local) = @_;
     
-    foreach my $filename (keys %$local) {
-        $filename = abs2rel($filename, $self->{top_dir});
-        my @path = splitdir($filename);
-        $filename = join('/', @path);
-        $self->{ftp}->delete($filename);
+    my @filenames = sort {length($b) <=> length($a)} keys(%$local);
+    
+    foreach my $filename (@filenames) {
+        my $flag;
+        if ($hash->{$filename} eq 'dir') {
+            $flag = $self->{uplader}->delete_directory($filename);            
+        } else {
+            $flag = $self->{uplader}->delete_file($filename);                        
+        }
+
+        if ($flag) {
+            delete $hash->{$filename};
+            push(@$updates, ['delete', $filename]);
+        } else {
+            die "Too many upload errors\n" if $self->{max_errors} == 0;
+            $self->{max_errors} --;
+        }
     }
     
     return;    
 }
 
 #----------------------------------------------------------------------
-# Open the ftp connection
+# Get the list of excluded files
 
-sub ftp_open {
+sub get_excluded_files {
     my ($self) = @_;
-    return if $self->{no_ftp};
 
-    my $ftp = Net::FTP->new($self->{ftp_url})
-        or die "Cannot connect to $self->{ftp_url}: $@";
- 
-    my ($user, $word) = $self->read_word(); #TODO
-    $ftp->login($user, $word)
-        or die "Cannot login ", $ftp->message;
- 
-    $ftp->cwd($self->{ftp_directory})
-        or die "Cannot change working directory ", $ftp->message;
-
-    $self->{ftp} = $ftp;
-    return;
+    return '*.cfg';
 }
 
 #----------------------------------------------------------------------
-# Write a file to the remote site, creating any directories needed
+# Get the list of included files
 
-sub ftp_write {
-    my ($self, $filename, $remote) = @_;
-    return if $self->{no_ftp};
+sub get_included_files {
+    my ($self) = @_;
 
-    $filename = abs2rel($filename, $self->{top_dir});
-    my @path = splitdir($filename);
-    $filename = join('/', @path);
-    pop(@path);
-    
-    if ($self->{ftp}->size($filename)) {
-        $self->{ftp}->delete($filename);
-
-    } else {
-        my $dir = join('/', @path);
-        if (! $remote->{$dir}) {
-            if (! $self->{ftp}->size($dir)) {
-                $self->{ftp}->mkdir($dir, 1);
-            }
-        }
-    }
-    
-    $self->{ftp}->put($filename);
-    
-    while (@path) {
-        my $dir = join('/', @path);
-        $remote->{$dir} = 1;
-        pop(@path);
-    }
-
-    return;
+    return '*';
 }
 
 #----------------------------------------------------------------------
@@ -167,8 +151,8 @@ sub ftp_write {
 sub get_state {
     my ($self) = @_;
 
-    my $hash_file = catfile($self->{top_dir},
-                            $self->{state_dir},
+    my $hash_file = catfile($self->{top_directory},
+                            $self->{template_directory},
                             $self->{hash_file});
 
     if (-e $hash_file) {
@@ -180,6 +164,60 @@ sub get_state {
     my %local = map {$_ => 1} keys %$hash;
     
     return ($hash, \%local);
+}
+
+#----------------------------------------------------------------------
+# GET_WORD -- Say the secret word, the duck comes down and you win $100
+
+sub get_word {
+    my ($self) = @_;
+
+    my $filename = catfile(
+                            $self->{top_directory},
+                            $self->{template_directory},
+                            $self->{credentials}
+                           );
+
+    my ($user, $pass);
+    if (-e $filename) {
+        ($user, $pass) = $self->read_word($filename);
+    } else {
+        ($user, $pass) = $self->ask_word();
+        $self->write_word($filename, $user, $pass);
+    }
+
+    return ($user, $pass);
+}
+
+#----------------------------------------------------------------------
+# Add obfuscation to string
+
+sub obfuscate {
+    my ($self, $user, $pass) = @_;
+
+    my $obstr = '';
+    my $seed = SEED;
+    my $str = "$user:$pass";
+
+    for (my $i = 0; $i < length($str); $i += 1) {
+        my $val = ord(substr($str, $i, 1));
+        $seed = $val ^ $seed;
+        $obstr .= sprintf("%02x", $seed);
+    }
+
+    return $obstr;
+}
+
+#----------------------------------------------------------------------
+# PROTECTED -- Check to see if file is protected
+
+sub protected {
+    my ($self, $file) = @_;
+
+    my @info = stat($file);
+    return 0 unless @info;
+
+    return ($info[2] & 022) == 0;
 }
 
 #----------------------------------------------------------------------
@@ -199,7 +237,6 @@ sub read_hash_file {
 
             $hash{$name} = $value;
         }
-        
         close($fd);
     }
 
@@ -207,33 +244,143 @@ sub read_hash_file {
 }
 
 #----------------------------------------------------------------------
+# Read the user name and password from a file
+
+sub read_word {
+    my ($self, $filename) = @_;
+    
+    die "$filename is unprotected\n" unless $self->protected ($filename);
+    my $fd = IO::File->new ($filename, 'r') || die "Cannot read $filename\n";
+
+    my $obstr = <$fd>;
+    chomp($obstr);
+    close($fd);
+
+    my ($user, $pass) = $self->unobfuscate($obstr);
+    return ($user, $pass);
+}
+
+#----------------------------------------------------------------------
+# Report on added and deleted files
+
+sub report_updates {
+    my ($self, $updates) = @_;
+    return unless $self->{verbose};
+
+    foreach my $update (@$updates) {
+        print join(' ', @$update), "\n";
+    }
+
+    return;
+}
+
+#----------------------------------------------------------------------
+# Load the modules that will upload the file and convert the filename
+
+sub setup {
+    my ($self, $configuration) = @_;
+
+    # Add the remote user name and password to the configuration
+    # They are not stored in the configuration, so they will not
+    #  be in the clear
+
+    my $upload_pkg = $self->{no_upload} ? 'App::Followme::UploadNone'
+                                 : $self->{upload_pkg};
+
+    eval "require $upload_pkg" or die "Module not found: $upload_pkg\n";
+    $self->{uploader} = $upload_pkg->new($configuration);
+    
+    # Turn off messages when in quick mode
+    $self->{verbose} = 0 if $self->{quick_mode};
+    
+    # The target date is the date of the hash file, used in quick mode
+    # to select which files to test
+    
+    $self->{target_date} = 0;
+    return $self;
+}
+
+#----------------------------------------------------------------------
+# Remove obfuscation from string
+
+sub unobfuscate {
+    my ($self, $obstr) = @_;
+
+    my $str = '';
+    my $seed = SEED;
+    
+    for (my $i = 0; $i < length($obstr); $i += 2) {
+        my $val = hex(substr($obstr, $i, 2));
+        $str .= chr($val ^ $seed);
+        $seed = $val;
+    }
+
+    return split(/:/, $str, 2);
+}
+
+#----------------------------------------------------------------------
 # Update files in one folder
 
 sub update_folder {
-    my ($self, $directory, $hash, $local, $remote) = @_;
+    my ($self, $directory, $updates, $hash, $local) = @_;
     
     my ($filenames, $directories) = $self->visit($directory);
         
-    foreach my $filename (@$filenames) {
-        my $name = abs2rel($filename, $self->{top_dir});
-        $name = join('/', splitdir($name));                
-        delete $local->{$name} if exists $local->{$name};
+    # Check if folder is new
 
+    if ($directory ne $self->{top_directory}) {
+        $directory = abs2rel($directory, $self->{top_directory});
+        delete $local->{$directory} if exists $local->{$directory};
+        
+        if (! exists $hash->{$directory} ||
+            $hash->{$directory} ne 'dir') {
+            
+            if ($self->{uploader}->add_directory($directory)) {
+                $hash->{$directory} = 'dir';
+                push(@$updates, ['add', $directory]);
+            } else {
+                die "Too many upload errors\n" if $self->{max_errors} == 0;
+                $self->{max_errors} --;
+            }
+        }
+    }
+
+    # Check each of the files in the directory
+    
+    foreach my $filename (@$filenames) {
+        # Skip check if in quick mode and modification date is old
+        
         if ($self->{quick_update}) {
             my @stats = stat($filename);  
             next if $self->{target_date} > $stats[9];
         }
 
+        $filename = abs2rel($filename, $self->{top_directory});
+        delete $local->{$filename} if exists $local->{$filename};
+
         my $value = $self->checksum_file($filename);
 
-        if (! exists $hash->{$name} || $hash->{$name} eq $value) {
-            $hash->{$name} = $value;
-            $self->ftp_write($filename, $remote);
+        # Add file if new or changed
+        
+        if (! exists $hash->{$filename} || $hash->{$filename} ne $value) {
+            if ($self->{uploader}->add_file($filename)) {
+                $hash->{$filename} = $value;
+                push(@$updates, ['add', $filename]);
+            } else {
+                die "Too many upload errors\n" if $self->{max_errors} == 0;
+                $self->{max_errors} --;
+            }
         }
     }
     
+    my $template_directory = $self->full_file_name($self->{top_directory},
+                                                   $self->{template_directory});
+
+    # Recursively check each of the subdirectories
+    
     foreach my $subdirectory (@$directories) {
-        $self->update_folder($subdirectory, $hash, $local, $remote);
+        next if $subdirectory eq $template_directory;
+        $self->update_folder($subdirectory, $updates, $hash, $local);
     }
 
     return;
@@ -245,8 +392,11 @@ sub update_folder {
 sub write_hash_file {
     my ($self, $hash) = @_;
 
-    my $filename = catfile($self->{top_dir}, $self->{hash_file});
-    my $fd = IO::File->new($filename, 'r');
+    my $filename = catfile($self->{top_directory},
+                           $self->{template_directory},
+                           $self->{hash_file});
+    
+    my $fd = IO::File->new($filename, 'w');
     die "Couldn't write hash file: $filename" unless $fd;
     
     while (my ($name, $value) = each(%$hash)) {
@@ -254,6 +404,22 @@ sub write_hash_file {
     }
     
     close($fd);
+    return;
+}
+
+#----------------------------------------------------------------------
+# WRITE_WORD -- Write the secret word to a file
+
+sub write_word {
+    my ($self, $filename, $user, $pass) = @_;
+
+    my $obstr = $self->obfuscate ($user, $pass);
+
+    my $fd = IO::File->new ($filename, 'w') || die "Cannot write $filename: $!";
+    print $fd $obstr, "\n";
+    close($fd);
+
+    chmod (0600, $filename);
     return;
 }
 
@@ -268,170 +434,64 @@ App::Followme::Uploadme - Upload changed and new files
 
 =head1 SYNOPSIS
 
-    my $app = App::Followme->new(\%configuration);
+    my $app = App::Followme::UploadSite->new(\%configuration);
     $app->run($directory);
 
 =head1 DESCRIPTION
 
-Updates a static website after changes. Constant portions of each page are
-updated to match, text files are converted to html, and indexes are created
-for new files in the archive.
+This module uploads changed files to a remote site. The default method to do the
+uploads is ftp, but that can be changed by changing the parameter upload_pkg.
+This package computes a checksum for every file in the site. If the checksum has
+changed since the last time it was run, the file is uploaded to the remote site.
+If there is a checksum, but no local file, the file is deleted from the remote
+site. If this module is run in quick mode, only files whose modification date is
+later then the last time it was run are checked.
 
-The followme script is run on the directory or file passed as its argument. If
-no argument is given, it is run on the current directory.
+=head1 CONFIGURATION
 
-If a file is passed, the script is run on the directory the file is in. In
-addition, the script is run in quick mode, meaning that only the directory
-the file is in is checked for changes. Otherwise not only that directory, but
-all directories below it are checked.
+The following fields in the configuration file are used:
 
-=head1 INSTALLATION
+=over 4
 
-First, install the App::Followme script from cpan. It will copy the
-followme script to /usr/local/bin, so it will be on your search path.
+=item credentials
 
-    sudo cpanm App::Followme
+The name of the file which holds the user name and password for the remote site
+in obfuscated form. It is in the templates directory and the default name is
+'upload.cred'.
 
-Then create a folder to contain the new website. Run followme with the
-init option in that directory
+=item hash_file
 
-    mkdir website
-    cd website
-    followme --init
+The name of the file containing all the checksums for files on the site. It
+is in the templates directory and the default name is 'upload.hash'.
 
-It will install the initial templates and configuration files. The initial
-setup is configured to update pages to maintain a consistent look for the site
-and to create a weblog from files placed in the archive directory. If you do not
-want a weblog, just delete the archive directory and its contents.
+=item max_errors
 
-To start creating your site, create the index page as a Markdown file, run
-followme again, and edit the resulting page:
+The number of upload errors the module tolerate before quitting. The default
+value is 5.
 
-    vi index.md
-    followme
-    vi index.html
-    
-The first page will serve as a prototype for the rest of your site. When you
-look at the html page, you will see that it contains comments looking like
+=item no_upload
 
-   <!-- section content -->
-   <!-- endsection content -->
+If the site has been uploaded by another program and is up to date, set this
+variable to 1. It will recompute the hash file, but not upload any files.
 
-These comments mark the parts of the prototype that will change from page to
-page from the parts that are constant across the entire site. Everything
-outside the comments is the constant portion of the prototype. When you have
-more than one html page in the folder, you can edit any page, run followme,
-and the other pages will be updated to match it.
+=item remote_pkg
 
-So you should edit your first page and add any other files you need to create
-the look of your site.
+The package containing methods to manipulate file names on the remote site,
+which may differ from those on your machine.The default value is
+L<File::Spec::Unix>.
 
-You can also use followme on an existing site. Run the command
+=item upload_pkg
 
-   followme --init
-   
-in the top directory of your site. The init option will not overwrite any
-existing files in your site. Then look at the page template it has
-created:
+The name of the package with methods that add and delete files on the remote
+site. The default is L<App::Followme::UploadFtp>. Other packages can be
+written, the methods a package must support can be found in
+L<App::Followme::None>.
 
-   cat templates/page.htm
+=item verbose
 
-Edit the existing pages in your site to have all the section comments in this
-template.
+Print names of uploaded files when not in quick mode
 
-The configuration file for followme is followme.cfg in the top directory of
-your site. It contains the names of the Perl modules that are run when the
-followme command is run:
-
-    module = App::Followme::FormatPages
-    module = App::Followme::ConvertPages
-
-L<App::Followme::FormatPages> runs the code that keeps the pages consistent with
-the prototype. L<App::Followme::ConvertPages> changes Markdown files to html
-pages using a template and the prototype. The modules are run in the order that
-they appear in the, configuration file. If you want to change or add to the
-behavior of followme, write another module and add it to the file. Other lines
-in the configuration file modify the default behavior of the modules by
-overriding their default parameter values. For more information on these
-parameters, see the documentation for each of the modules.
-
-ConvertPages changes Markdown files into html files. It builds several variables
-and substitutes them into the page template. The most significant variable is
-body, which is the text contained in the text file after it has been converted
-by Markdown. The title is built from the title of the Markdown file if one is
-put at the top of the file. If the file has no title, it is built form the file
-name, replacing dashes with blanks and capitalizing each word, The url and
-absolute_url are built from the html file name. A number of time variables are
-built from the modification date of the text file: weekday, month, monthnum,
-day, year, hour24, hour, ampm, minute, and second. To change the look of the
-html page, edit the template. Only blocks inside the section comments will be in
-the resulting page, editing the text outside it will have no effect on the
-resulting page.
-
-A larger website will be spread across several folders. Each folder can have its
-own configuration file. If they contain modules, they will be run on that folder
-and all the subfolders below it. After initialization, the website is configured
-with an archive folder containing a configuration file. This file contains to
-modules that implement a weblog:
-
-    module = App::Followme::CreateNews
-    module = App::Followme::CreateIndexes
-
-L<App::Followme::CreateNews> generates an html file from the most recently
-updated files in the archive directory. L<App::Followme::CreateIndexes> builds
-an index file for each directory with links for all the subdirectories and html
-contained in it. Templates are used to build the html files, just as with
-individual pages, and the same variables are available. The template to build
-the html for each file in the index is contained between
-
-    <!-- for @loop -->
-    <!--endfor -->
-
-comments. More information on the syntax of template is in the documentation of
-the L<App::Followme::HandleSite> module.
-
-In addition to normal section blocks, there are per folder section blocks.
-The contents of these blocks is kept constant across all files in a folder and
-all subfolders of it. If the block is changed in one file in the folder, it will
-be updated in all the other files. Per folder section blocks look like
-
-    <!-- section in folder_name -->
-    <!-- endsection -->
-
-where folder_name is the the folder the content is kept constant across. The
-folder name is not a full path, it is the last folder in the path.
-
-Followme is run from the folder it is invoked from if it is called with no
-arguments, or if it is run with arguments, it will run on the folder passed as
-an argument or the folder the file passed as an argument is contained in.
-Followme looks for its configuration files in all the directories above the
-directory it is run from and runs all the modules it finds in them. But they are
-are only run on the folder it is run from and subfolders of it. Followme
-only looks at the folder it is run from to determine if other files in the
-folder need to be updated. So after changing a file, it should be run from the
-directory containing the file.
-
-When followme is run, it searches the directories above it for configuration
-files. The topmost file defines the top directory of the website. It reads each
-configuration file it finds and then starts updating the directory passed as an
-argument to run, or if no directory is passed, the directory the followme script
-is run from.
-
-Configuration file lines are organized as lines containing
-
-    NAME = VALUE
-
-and may contain blank lines or comment lines starting with a C<#>. Values in
-configuration files are combined with those set in the files in directories
-above it.
-
-The module parameter contains the name of a module to be run on the directory
-containing the configuration file and possibly its subdirectories. There may be
-more than one module parameter in a module file. They are run in order, starting
-with the module in the topmost configuration file. The module to be run must
-have new and run methods. The object is created by calling the new method with
-the configuration. The run method is then called with the directory as an
-argument.
+=back
 
 =head1 LICENSE
 
