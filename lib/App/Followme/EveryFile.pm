@@ -22,7 +22,7 @@ sub new {
     
     $self->{included_files} = $self->glob_patterns($self->get_included_files());
     $self->{excluded_files} = $self->glob_patterns($self->get_excluded_files());
-    $self = $self->setup();
+    $self = $self->setup($configuration);
     
     return $self;
 }
@@ -148,14 +148,6 @@ sub read_page {
 }
 
 #----------------------------------------------------------------------
-# Set up object fields (stub)
-
-sub setup {
-    my ($self) = @_;
-    return $self;
-}
-
-#----------------------------------------------------------------------
 # Cehck if two filenames are the same in an os independent way
 
 sub same_file {
@@ -170,6 +162,14 @@ sub same_file {
     }
     
     return 1;
+}
+
+#----------------------------------------------------------------------
+# Set up object fields (stub)
+
+sub setup {
+    my ($self, $configuration) = @_;
+    return $self;
 }
 
 #----------------------------------------------------------------------
