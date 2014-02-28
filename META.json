@@ -43,6 +43,7 @@
       "runtime" : {
          "requires" : {
             "Text::Markdown" : "1.000031",
+            "Net::FTP" : "0",
             "perl" : "5.008005"
          }
       },
