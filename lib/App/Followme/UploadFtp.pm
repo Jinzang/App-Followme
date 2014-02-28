@@ -150,6 +150,7 @@ App::Followme::UploadFtp - Upload files using ftp
 =head1 SYNOPSIS
 
     my $ftp = App::Followme::UploadNone->new(\%configuration);
+    $ftp->open($user, $password);
     $ftp->add_directory($dir);
     $ftp->add_file($filename);
     $ftp->delete_file($filename);

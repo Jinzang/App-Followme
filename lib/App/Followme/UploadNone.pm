@@ -101,7 +101,7 @@ into a separate package, so it can support more than one method. This is the
 null method, that does no upload, which is invoked when the user only wants to
 update the checksums without doing any uploads. In addition, this package
 serves as a template for other packages, because it has all the necessary
-methods, with the correct interfaces.
+methods with the correct interfaces.
 
 =head1 METHODS
 
