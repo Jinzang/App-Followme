@@ -57,7 +57,7 @@ do {
 three = 3
 four = 4
 
-module = App::Followme::Mock
+run_before = App::Followme::Mock
 
 EOQ
 
@@ -68,7 +68,8 @@ EOQ
     
     %configuration = $app->update_configuration($filename, %configuration);
     my %configuration_ok = (one => 1, two => 2, three => 3, four => 4,
-                            module => ['App::Followme::Mock']);
+                            run_before => ['App::Followme::Mock'],
+                            run_after => []);
     
     is_deeply(\%configuration, \%configuration_ok,
               'Update configuration'); # test 3
@@ -95,16 +96,15 @@ do {
         $config = catfile($directory, 'followme.cfg');
         push(@config_files_ok, $config);
 
-        $app->write_page($config, "module = App::Followme::Mock\n");
+        $app->write_page($config, "run_before = App::Followme::Mock\n");
 
         foreach my $file (qw(first.txt second.txt third.txt)) {
             $app->write_page($file, "Fake data\n")
         }
     }
 
-    pop(@config_files_ok);
-    my @config_files = $app->find_configuration($directory);
-    is_deeply(\@config_files, \@config_files_ok, 'Find configuration'); # test 4
+    my $config_files = $app->find_configuration($directory);
+    is_deeply($config_files, \@config_files_ok, 'Find configuration'); # test 4
     $app->run($test_dir);
 
     my $count = 9;

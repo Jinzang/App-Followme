@@ -37,8 +37,12 @@ sub parameters {
 sub run {
     my ($self, $directory) = @_;
 
-    my %configuration = $self->initialize_configuration($directory);
-    $self->update_folder($directory, %configuration);
+    my %configuration = %$self;
+    my $configuration_files = $self->find_configuration($directory);
+
+    $self->update_folder($directory,
+                         $configuration_files,
+                         %configuration);
 
     return;
 }
@@ -65,51 +69,17 @@ sub find_configuration {
 
     # The topmost configuration file is the top and base directory
     $self->set_directories(@configuration_files);
-
-    # Pop the last directory if equal to the current directory
-    # so it won't be double processed when we call update_folder
-
-    my $config_file = pop(@configuration_files);
-    my ($dir, $file) = $self->split_filename($config_file);
-    push(@configuration_files, $config_file)
-        unless $self->same_file($dir, $directory);
     
-    return @configuration_files;
-}
-
-#----------------------------------------------------------------------
-# Find and read the configuration files
-
-sub initialize_configuration {
-    my ($self, $directory) = @_;
-
-    my @configuration_files = $self->find_configuration($directory);
-    my %configuration = %$self;
-
-    foreach my $filename (@configuration_files) {
-        my ($base_directory, $config_file) = $self->split_filename($filename);
-        
-        %configuration = $self->update_configuration($filename,
-                                                     %configuration);
-
-        %configuration = $self->load_and_run_modules($base_directory,
-                                                     $directory,
-                                                     %configuration);
-    }
-
-    return %configuration;
+    return \@configuration_files;
 }
 
 #----------------------------------------------------------------------
 # Load a modeule and then run it
 
 sub load_and_run_modules {
-    my ($self, $base_directory, $directory, %configuration) = @_;
+    my ($self, $modules, $base_directory, $directory, %configuration) = @_;
 
-    my @modules = @{$configuration{module}};
-    delete $configuration{module};
-
-    foreach my $module (@modules) {
+    foreach my $module (@$modules) {
         eval "require $module" or die "Module not found: $module\n";
 
         $configuration{base_directory} = $base_directory;
@@ -117,7 +87,7 @@ sub load_and_run_modules {
         $object->run($directory);
     }
     
-    return %configuration;
+    return;
 }
 
 #----------------------------------------------------------------------
@@ -141,6 +111,9 @@ sub update_configuration {
     my ($self, $filename, %configuration) = @_;
 
     my @modules;
+    $configuration{run_before} = [];
+    $configuration{run_after} = [];
+    
     my $fd = IO::File->new($filename, 'r');
     
     if ($fd) {
@@ -158,8 +131,12 @@ sub update_configuration {
 
             # Insert the name and value into the hash
 
-            if ($name eq 'module') {
-                push(@modules, $value);
+            if ($name eq 'run_before') {
+                push(@{$configuration{run_before}}, $value);
+
+            } elsif ($name eq 'run_after') {
+                push(@{$configuration{run_after}}, $value);
+
             } else {
                 $configuration{$name} = $value;
             }
@@ -168,7 +145,6 @@ sub update_configuration {
         close($fd);
     }
 
-    $configuration{module} = \@modules;
     return %configuration;
 }
 
@@ -176,29 +152,50 @@ sub update_configuration {
 # Update files in one folder
 
 sub update_folder {
-    my ($self, $directory, %configuration) = @_;
-    
-    # Read any configuration found in this directory
-    my $configuration_file = catfile($directory, $self->{configuration_file});
+    my ($self, $directory, $configuration_files, %configuration) = @_;
 
+    my $configuration_file = shift(@$configuration_files) ||
+                             catfile($directory, $self->{configuration_file});
+
+    my ($base_directory, $filename) = $self->split_filename($configuration_file);
+
+    my ($run_before, $run_after);
     if (-e $configuration_file) {
         %configuration = $self->update_configuration($configuration_file,
                                                      %configuration);
-
-        %configuration = $self->load_and_run_modules($directory,
-                                                     $directory,
-                                                     %configuration);
+ 
+        $run_before = $configuration{run_before};
+        delete $configuration{run_before};
+    
+        $run_after = $configuration{run_before};
+        delete $configuration{run_after};
     }
+    
+    $self->load_and_run_modules($run_before,
+                                $base_directory,
+                                $directory, 
+                                %configuration);
 
-    # Recurse on the subdirectories
-    unless ($self->{quick_update}) {
+    
+    if (@$configuration_files) {
+        $self->update_folder($directory,
+                             $configuration_files,
+                             %configuration);
+
+    } elsif (! $self->{quick_update}) {
         my ($filenames, $directories) = $self->visit($directory);
         
         foreach my $subdirectory (@$directories) {
-            $self->update_folder($subdirectory, %configuration);
+            $self->update_folder($subdirectory,
+                                 $configuration_files,
+                                 %configuration);
         }
     }
-
+    
+    $self->load_and_run_modules($run_after,
+                                $base_directory,
+                                $directory, 
+                                %configuration);
     return;
 }
 
