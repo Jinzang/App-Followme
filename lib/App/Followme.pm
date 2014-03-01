@@ -12,7 +12,7 @@ use Cwd;
 use IO::File;
 use File::Spec::Functions qw(splitdir catfile);
 
-our $VERSION = "0.97";
+our $VERSION = "0.98";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
@@ -131,7 +131,7 @@ sub update_configuration {
 
             # Insert the name and value into the hash
 
-            if ($name eq 'run_before') {
+            if ($name eq 'run_before' || $name eq 'module') {
                 push(@{$configuration{run_before}}, $value);
 
             } elsif ($name eq 'run_after') {
