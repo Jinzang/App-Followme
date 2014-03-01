@@ -58,6 +58,14 @@ sub run {
 #----------------------------------------------------------------------
 # Get the list of excluded files
 
+sub get_excluded_directories {
+    my ($self) = @_;
+    return [];
+}
+
+#----------------------------------------------------------------------
+# Get the list of excluded files
+
 sub get_excluded_files {
     my ($self) = @_;
     return '';
@@ -165,6 +173,21 @@ sub same_file {
 }
 
 #----------------------------------------------------------------------
+# Check if directory should be searched
+
+sub search_directory {
+    my ($self, $directory) = @_;
+    
+    my $excluded_dirs = $self->get_excluded_directories();
+    
+    foreach my $excluded (@$excluded_dirs) {
+        return if $self->same_file($directory, $excluded);
+    }
+    
+    return 1;
+}
+
+#----------------------------------------------------------------------
 # Set up object fields (stub)
 
 sub setup {
@@ -229,7 +252,7 @@ sub visit {
         my $path = catfile($directory, $file);
     
         if (-d $path) {
-            push(@directories, $path);
+            push(@directories, $path) if $self->search_directory($path);
         } else {
             push(@filenames, $path) if $self->match_file($path);
         }

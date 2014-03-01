@@ -280,6 +280,10 @@ sub report_updates {
 sub setup {
     my ($self, $configuration) = @_;
 
+    # Perform setup in parent class
+    
+    $self->SUPER::setup($configuration);
+    
     # Add the remote user name and password to the configuration
     # They are not stored in the configuration, so they will not
     #  be in the clear
@@ -295,8 +299,8 @@ sub setup {
     
     # The target date is the date of the hash file, used in quick mode
     # to select which files to test
-    
     $self->{target_date} = 0;
+
     return $self;
 }
 
@@ -373,13 +377,9 @@ sub update_folder {
         }
     }
     
-    my $template_directory = $self->full_file_name($self->{top_directory},
-                                                   $self->{template_directory});
-
     # Recursively check each of the subdirectories
     
     foreach my $subdirectory (@$directories) {
-        next if $subdirectory eq $template_directory;
         $self->update_folder($subdirectory, $updates, $hash, $local);
     }
 

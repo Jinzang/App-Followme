@@ -251,6 +251,14 @@ sub get_command {
 }
 
 #----------------------------------------------------------------------
+# Get the list of excluded files
+
+sub get_excluded_directories {
+    my ($self) = @_;
+    return [$self->{excluded_directory}];
+}
+
+#----------------------------------------------------------------------
 # Get the full template name (stub)
 
 sub get_template_name {
@@ -553,7 +561,10 @@ sub setup {
 
     $self->{command_start_pattern} = '^\s*' . quotemeta(COMMAND_START);
     $self->{command_end_pattern} = '\s*' . quotemeta(COMMAND_END) . '\s*$';
-            
+
+    $self->{excluded_directory} = catfile($self->{top_directory},
+                                          $self->{template_directory});
+
     return $self;
 }
 

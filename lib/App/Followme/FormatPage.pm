@@ -252,11 +252,7 @@ sub update_directory {
     utime($modtime, $modtime, $directory);
     return unless $changes;
 
-    my $template_directory = $self->full_file_name($self->{top_directory},
-                                                   $self->{template_directory});
-    
     for my $subdirectory (@$directories) {
-        next if $subdirectory eq $template_directory;
         $self->update_directory($subdirectory, $prototype, $prototype_path);
     }
 
