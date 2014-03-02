@@ -1,6 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+
+0.99 2014-03-02T23:26:27Z
     - Bug fix in calculating topmost configuration parameters
     
 0.98 2014-03-02T00:52:26Z
