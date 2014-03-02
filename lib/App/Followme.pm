@@ -37,12 +37,11 @@ sub parameters {
 sub run {
     my ($self, $directory) = @_;
 
-    my %configuration = %$self;
     my $configuration_files = $self->find_configuration($directory);
 
     $self->update_folder($directory,
                          $configuration_files,
-                         %configuration);
+                         %$self);
 
     return;
 }
