@@ -194,6 +194,29 @@ Close the ftp connection to the remote site.
 Open the ftp connection. The configuration is a reference to
 a hash, which includes the user name and password used in the connection.
 
+=head1 CONFIGURATION
+
+The follow parameters are used from the configuration. In addition, the package
+will prompt for and save the user name and password.
+
+=over 4
+
+=item ftp_url
+
+The url of the remote ftp site.
+
+=item ftp_directory
+
+The top directory of the remote site
+
+=item remote_pkg
+
+The name of the package that manipulates filenames for the remote system. The
+default value is 'File::Spec::Unix'. Other possible values are
+'File::Spec::Win32' and 'File::Spec::VMS'. Consult the Perl documentation for
+
+=back
+
 =head1 LICENSE
 
 Copyright (C) Bernie Simon.

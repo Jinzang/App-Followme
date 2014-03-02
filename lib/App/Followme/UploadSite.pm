@@ -474,12 +474,6 @@ value is 5.
 If the site has been uploaded by another program and is up to date, set this
 variable to 1. It will recompute the hash file, but not upload any files.
 
-=item remote_pkg
-
-The package containing methods to manipulate file names on the remote site,
-which may differ from those on your machine.The default value is
-L<File::Spec::Unix>.
-
 =item upload_pkg
 
 The name of the package with methods that add and delete files on the remote
