@@ -82,8 +82,13 @@ The configuration file for followme is followme.cfg in the top directory of
 your site. It contains the names of the Perl modules that are run when the
 followme command is run:
 
-    module = App::Followme::FormatPages
-    module = App::Followme::ConvertPages
+    run_before = App::Followme::FormatPages
+    run_before = App::Followme::ConvertPages
+
+Perl modules are run in the order they appear in the configuration file. If they
+are named run\_before then they are run before modules in configuration files in
+subdirectories. If they are named run\_after, they are run after modules in
+configuration files in subdirectories.
 
 [App::Followme::FormatPages](http://search.cpan.org/perldoc?App::Followme::FormatPages) runs the code that keeps the pages consistent with
 the prototype. [App::Followme::ConvertPages](http://search.cpan.org/perldoc?App::Followme::ConvertPages) changes Markdown files to html

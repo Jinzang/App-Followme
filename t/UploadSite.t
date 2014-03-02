@@ -68,7 +68,7 @@ do {
     is_deeply($hash, $hash_ok, 'read and write hash file'); # test 3
 
     my $local;
-    my %local_ok = map {$_ => 1} keys($hash_ok);
+    my %local_ok = map {$_ => 1} keys(%$hash_ok);
 
     ($hash, $local) = $up->get_state();
     is_deeply($local, \%local_ok, 'compute local hash'); # test 4
@@ -104,7 +104,9 @@ EOQ
 
     my $local = {};
     my $hash_ok = {};
-    foreach my $dir ('', 'before', 'after') {
+    my @dirs = ('', 'before', 'after');
+    
+    foreach my $dir (@dirs) {
         if ($dir) {
             mkdir $dir;
             $local->{$dir} = 1;

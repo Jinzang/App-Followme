@@ -167,7 +167,7 @@ uploads files using good old ftp.
 
 The following are the public methods of the interface
 
-=over =back
+=over 4
 
 =item $flag = $self->add_directory($dir);
 
@@ -193,6 +193,8 @@ Close the ftp connection to the remote site.
 
 Open the ftp connection. The configuration is a reference to
 a hash, which includes the user name and password used in the connection.
+
+=back
 
 =head1 CONFIGURATION
 

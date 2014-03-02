@@ -108,7 +108,7 @@ methods with the correct interfaces.
 The following are the public methods of the interface. The return value
 indicates if the operation was successful.
 
-=over =back
+=over 4
 
 =item $flag = $self->add_directory($dir);
 
@@ -137,6 +137,8 @@ Open the connection to the remote site
 =item $self = $self->setup();
 
 Set up computed fields in the new object
+
+=back
 
 =head1 LICENSE
 

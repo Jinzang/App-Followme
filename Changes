@@ -1,6 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+
+0.98 2014-03-02T00:52:26Z
     - Added UploadSite module and UploadFtp and UploadNone submodules
     - Changed configuration parameter module to run_before and run_after
     
