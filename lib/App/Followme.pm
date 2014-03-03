@@ -166,7 +166,7 @@ sub update_folder {
         $run_before = $configuration{run_before};
         delete $configuration{run_before};
     
-        $run_after = $configuration{run_before};
+        $run_after = $configuration{run_after};
         delete $configuration{run_after};
     }
     
