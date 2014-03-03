@@ -9,7 +9,7 @@ use lib '..';
 use base qw(App::Followme::EveryFile);
 
 
-our $VERSION = "0.99";
+our $VERSION = "1.00";
 
 #----------------------------------------------------------------------
 # Read the default parameter values

@@ -13,7 +13,7 @@ use lib '../..';
 
 use base qw(App::Followme::Variables);
 
-our $VERSION = "0.99";
+our $VERSION = "1.00";
 
 use constant COMMAND_START => '<!-- ';
 use constant COMMAND_END => '-->';
