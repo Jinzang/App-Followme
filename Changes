@@ -1,9 +1,10 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+    - Add a config file for current directory to list of config files 
 
 1.00 2014-03-03T02:27:05Z
-    - Fixed typo uin update_folder run_after vs run_before
+    - Fixed typo in update_folder run_after vs run_before
 
 0.99 2014-03-02T23:26:27Z
     - Bug fix in calculating topmost configuration parameters

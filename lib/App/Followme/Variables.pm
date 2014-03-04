@@ -13,7 +13,7 @@ use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
 use App::Followme::MostRecentFile;
 use base qw(App::Followme::EveryFile);
 
-our $VERSION = "1.00";
+our $VERSION = "1.01";
 
 use constant MONTHS => [qw(January February March April May June July
                            August September October November December)];

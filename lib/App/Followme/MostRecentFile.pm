@@ -5,7 +5,7 @@ use warnings;
 
 use lib '../..';
 
-our $VERSION = "1.00";
+our $VERSION = "1.01";
 
 use base qw(App::Followme::EveryFile);
 
