@@ -1,6 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+
+1.01 2014-03-04T00:32:07Z
     - Add a config file for current directory to list of config files 
 
 1.00 2014-03-03T02:27:05Z
