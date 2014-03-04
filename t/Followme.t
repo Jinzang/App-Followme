@@ -103,6 +103,7 @@ do {
         }
     }
 
+
     my $config_files = $app->find_configuration($directory);
     is_deeply($config_files, \@config_files_ok, 'Find configuration'); # test 4
     $app->run($test_dir);

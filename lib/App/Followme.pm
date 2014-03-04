@@ -52,14 +52,19 @@ sub run {
 sub find_configuration {
     my ($self, $directory) = @_;
 
+    # Push a possibly non-existent configuration file in the current
+    # directory onto the list of configuration files
+    
+    my $config_file = catfile($directory, $self->{configuration_file});
+    my @configuration_files = ($config_file);
+
+    my @dirs = splitdir($directory);
+    pop(@dirs);
+
     # Find configuration files in and above directory
     
-    my @dirs = splitdir($directory);
-    $directory = catfile(@dirs);
-    my @configuration_files;
-
     while (@dirs) {
-        my $config_file = catfile(@dirs, $self->{configuration_file});
+        $config_file = catfile(@dirs, $self->{configuration_file});
         push(@configuration_files, $config_file) if -e $config_file;
         pop(@dirs);
     }
@@ -94,8 +99,6 @@ sub load_and_run_modules {
 
 sub set_directories {
     my ($self, @configuration_files) = @_;
-
-    die "No configuration file found\n" unless @configuration_files;
 
     my ($directory, $file) = $self->split_filename($configuration_files[0]);
     $self->{base_directory} = $directory;
