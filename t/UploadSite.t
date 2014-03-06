@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 8;
+use Test::More tests => 7;
 
 #----------------------------------------------------------------------
 # Load package
@@ -127,15 +127,9 @@ EOQ
     }
     
     my $hash = {};
-    my $updates = [];
     my %saved_local = %$local;
-    $up->update_folder($up->{top_directory}, $updates, $hash, $local);
+    $up->update_folder($up->{top_directory}, $hash, $local);
 
     is_deeply($local, {}, 'Find local files'); # test 6
     is_deeply($hash, $hash_ok, 'Compute hash'); # test 7
-    
-    %$local = %saved_local;
-    my @saved_updates = @$updates;
-    $up->update_folder($up->{top_directory}, $updates, $hash, $local);
-    is_deeply($updates, \@saved_updates, 'Rerun update'); # test 8
 };

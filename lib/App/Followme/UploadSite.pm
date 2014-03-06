@@ -44,21 +44,19 @@ sub parameters {
 sub run {
     my ($self, $directory) = @_;
 
-    my $updates = [];
     my ($hash, $local) = $self->get_state();
 
     my ($user, $pass) = $self->get_word();
     $self->{uploader}->open($user, $pass);
 
     eval {
-        $self->update_folder($self->{top_directory}, $updates, $hash, $local);
-        $self->clean_files($updates, $hash, $local);    
+        $self->update_folder($self->{top_directory}, $hash, $local);
+        $self->clean_files($hash, $local);    
         $self->{uploader}->close();
     };
     
     my $error = $@;
     $self->write_hash_file($hash);
-    $self->report_updates($updates);
 
     die $error if $error;    
     return;
@@ -103,7 +101,7 @@ sub checksum_file {
 # Write a file to the remote site, creating any directories needed
 
 sub clean_files {
-    my ($self, $updates, $hash, $local) = @_;
+    my ($self, $hash, $local) = @_;
     
     my @filenames = sort {length($b) <=> length($a)} keys(%$local);
     
@@ -117,7 +115,8 @@ sub clean_files {
 
         if ($flag) {
             delete $hash->{$filename};
-            push(@$updates, ['delete', $filename]);
+            print "delete $filename\n" if $self->{verbose};
+
         } else {
             die "Too many upload errors\n" if $self->{max_errors} == 0;
             $self->{max_errors} --;
@@ -209,18 +208,6 @@ sub obfuscate {
 }
 
 #----------------------------------------------------------------------
-# PROTECTED -- Check to see if file is protected
-
-sub protected {
-    my ($self, $file) = @_;
-
-    my @info = stat($file);
-    return 0 unless @info;
-
-    return ($info[2] & 022) == 0;
-}
-
-#----------------------------------------------------------------------
 # Read the hash for each file on the site from a file
 
 sub read_hash_file {
@@ -249,7 +236,6 @@ sub read_hash_file {
 sub read_word {
     my ($self, $filename) = @_;
     
-    die "$filename is unprotected\n" unless $self->protected ($filename);
     my $fd = IO::File->new ($filename, 'r') || die "Cannot read $filename\n";
 
     my $obstr = <$fd>;
@@ -258,20 +244,6 @@ sub read_word {
 
     my ($user, $pass) = $self->unobfuscate($obstr);
     return ($user, $pass);
-}
-
-#----------------------------------------------------------------------
-# Report on added and deleted files
-
-sub report_updates {
-    my ($self, $updates) = @_;
-    return unless $self->{verbose};
-
-    foreach my $update (@$updates) {
-        print join(' ', @$update), "\n";
-    }
-
-    return;
 }
 
 #----------------------------------------------------------------------
@@ -326,7 +298,7 @@ sub unobfuscate {
 # Update files in one folder
 
 sub update_folder {
-    my ($self, $directory, $updates, $hash, $local) = @_;
+    my ($self, $directory, $hash, $local) = @_;
     
     my ($filenames, $directories) = $self->visit($directory);
         
@@ -341,7 +313,8 @@ sub update_folder {
             
             if ($self->{uploader}->add_directory($directory)) {
                 $hash->{$directory} = 'dir';
-                push(@$updates, ['add', $directory]);
+                print "add $directory\n" if $self->{verbose};
+
             } else {
                 die "Too many upload errors\n" if $self->{max_errors} == 0;
                 $self->{max_errors} --;
@@ -369,7 +342,8 @@ sub update_folder {
         if (! exists $hash->{$filename} || $hash->{$filename} ne $value) {
             if ($self->{uploader}->add_file($filename)) {
                 $hash->{$filename} = $value;
-                push(@$updates, ['add', $filename]);
+                print "add $filename\n" if $self->{verbose};
+
             } else {
                 die "Too many upload errors\n" if $self->{max_errors} == 0;
                 $self->{max_errors} --;
@@ -380,7 +354,7 @@ sub update_folder {
     # Recursively check each of the subdirectories
     
     foreach my $subdirectory (@$directories) {
-        $self->update_folder($subdirectory, $updates, $hash, $local);
+        $self->update_folder($subdirectory, $hash, $local);
     }
 
     return;
