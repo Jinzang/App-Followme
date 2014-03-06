@@ -22,6 +22,7 @@ sub parameters {
     my %parameters = (
                       ftp_url => '',
                       ftp_directory => '',
+                      ftp_debug => 0,
                       remote_pkg => 'File::Spec::Unix',
                      );
 
@@ -37,13 +38,16 @@ sub parameters {
 sub add_directory {
     my ($self, $dir) = @_;
 
+    my $status;
     $dir = $self->remote_name($dir);
 
-    if ($self->{ftp}->size($dir)) {
-        $self->{ftp}->delete($dir);
+    if ($self->{ftp}->ls($dir)) {
+        $status = 1;
+    } elsif ($self->{ftp}->mkdir($dir)) {
+        $status = 1;
     }
-    
-    return $self->{ftp}->mkdir($dir);
+
+    return $status;
 }
 
 #----------------------------------------------------------------------
@@ -52,13 +56,32 @@ sub add_directory {
 sub add_file {
     my ($self, $filename) = @_;
     
-    $filename = $self->remote_name($filename);
+    my $status;
+    my $remote_filename = $self->remote_name($filename);
     
-    if ($self->{ftp}->size($filename)) {
-        $self->{ftp}->delete($filename);
+    # Delete file if already there
+    if ($self->{ftp}->mdtm($remote_filename)) {
+        $self->{ftp}->delete($remote_filename);
     }
-    
-    return $self->{ftp}->put($filename);
+
+    # Change upload mode if necessary
+    if (-B $filename) {
+        if ($self->{ascii}) {
+            $self->{ftp}->binary();
+            $self->{ascii} = 0;
+        }
+
+    } elsif (! $self->{ascii}) {
+        $self->{ftp}->ascii();
+        $self->{ascii} = 1;
+    }
+
+    # Upload the file
+    if ($self->{ftp}->put($filename, $remote_filename)) {
+        $status = 1;
+    }
+
+    return $status;
 }
 
 #----------------------------------------------------------------------
@@ -79,8 +102,19 @@ sub close {
 sub delete_directory {
     my ($self, $dir) = @_;
     
+    my $status;
     $dir = $self->remote_name($dir);
-    return $self->{ftp}->rmdir($dir, 1);
+
+    if ($self->{ftp}->ls($dir)) {
+        if ($self->{ftp}->rmdir($dir)) {
+            $status = 1;
+        }
+
+    } else {
+        $status = 1;
+    }
+
+    return $status;
 }
 
 #----------------------------------------------------------------------
@@ -89,8 +123,19 @@ sub delete_directory {
 sub delete_file {
     my ($self, $filename) = @_;
     
+    my $status;
     $filename = $self->remote_name($filename);
-    return $self->{ftp}->delete($filename);    
+
+    if ($self->{ftp}->mdtm($filename)) {
+        if ($self->{ftp}->delete($filename)) {
+            $status = 1;
+        }
+
+    } else {
+        $status = 1;
+    }
+
+    return 1;
 }
 
 #----------------------------------------------------------------------
@@ -101,7 +146,7 @@ sub open {
 
     # Open the ftp connection
     
-    my $ftp = Net::FTP->new($self->{ftp_url})
+    my $ftp = Net::FTP->new($self->{ftp_url}, Debug => $self->{ftp_debug})
         or die "Cannot connect to $self->{ftp_url}: $@";
  
     $ftp->login($user, $password) or die "Cannot login ", $ftp->message;
@@ -109,7 +154,11 @@ sub open {
     $ftp->cwd($self->{ftp_directory})
         or die "Cannot change remote directory ", $ftp->message;
 
+    $ftp->binary();
+
     $self->{ftp} = $ftp;
+    $self->{ascii} = 0;
+
     return;
 }
 
@@ -203,13 +252,18 @@ will prompt for and save the user name and password.
 
 =over 4
 
-=item ftp_url
+=item ftp_debug
 
-The url of the remote ftp site.
+Set to one to trace the ftp commands issued. Useful to diagnose problems 
+with ftp uploads. The default value is zero.
 
 =item ftp_directory
 
 The top directory of the remote site
+
+=item ftp_url
+
+The url of the remote ftp site.
 
 =item remote_pkg
 

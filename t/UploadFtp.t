@@ -69,13 +69,13 @@ EOQ
 
     $up->open($user, $password);
     my $flag =$up->add_directory($dir);
-    is($flag, $dir, 'Add directory'); # test 1
+    is($flag, 1, 'Add directory'); # test 1
 
     $flag = $up->add_file($filename);
-    is($flag, $filename, 'Add file'); # test 2
+    is($flag, 1, 'Add file'); # test 2
 
     $flag = $up->add_file($filename);
-    is($flag, $filename, 'Add file again'); # test 3
+    is($flag, 1, 'Add file again'); # test 3
 
     $flag = $up->delete_file($filename);
     is($flag, 1, 'Delete file'); # test 4
