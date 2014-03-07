@@ -2,6 +2,9 @@ Revision history for Perl extension App::Followme
 
 {{$NEXT}}
 
+1.02 2014-03-07T00:02:15Z
+    - Rewrote UpdateFtp and modified UpdateSite
+
 1.01 2014-03-04T00:32:07Z
     - Add a config file for current directory to list of config files 
 
