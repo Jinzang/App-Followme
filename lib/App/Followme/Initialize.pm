@@ -93,12 +93,12 @@ __DATA__
 #--%X--%X followme.cfg
 run_before = App::Followme::FormatPage
 run_before = App::Followme::ConvertPage
+
 #--%X--%X archive/followme.cfg
 run_before = App::Followme::CreateNews
 news_index_file = index.html
 news_file = ../blog.html
 #--%X--%X templates/page.htm
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -109,12 +109,6 @@ news_file = ../blog.html
 <body>
 <div id="header">
 <h1>Site Title</h1>
-</div>
-<div id="sidebar">
-<!-- section navigation -->
-<!-- endsection navigation -->
-<!-- section sidebar -->
-<!-- endsection sidebar -->
 </div>
 <div id="content">
 <!-- section content -->
@@ -126,7 +120,6 @@ $body
 </html>
 
 #--%X--%X templates/news.htm
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -137,12 +130,6 @@ $body
 <body>
 <div id="header">
 <h1>Site Title</h1>
-</div>
-<div id="sidebar">
-<!-- section navigation -->
-<!-- endsection navigation -->
-<!-- section sidebar -->
-<!-- endsection sidebar -->
 </div>
 <div id="content">
 <!-- section content -->
@@ -167,12 +154,6 @@ $body
 <body>
 <div id="header">
 <h1>Site Title</h1>
-</div>
-<div id="sidebar">
-<!-- section navigation -->
-<!-- endsection navigation -->
-<!-- section sidebar -->
-<!-- endsection sidebar -->
 </div>
 <div id="content">
 <!-- section content -->
@@ -200,12 +181,6 @@ $body
 <div id="header">
 <h1>Site Title</h1>
 </div>
-<div id="sidebar">
-<!-- section navigation -->
-<!-- endsection navigation -->
-<!-- section sidebar -->
-<!-- endsection sidebar -->
-</div>
 <div id="content">
 <!-- section content -->
 <h2>$title</h2>
@@ -219,4 +194,3 @@ $body
 </div>
 </body>
 </html>
-
