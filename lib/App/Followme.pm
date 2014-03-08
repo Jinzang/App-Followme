@@ -324,8 +324,8 @@ and all the subfolders below it. After initialization, the website is configured
 with an archive folder containing a configuration file. This file contains to
 modules that implement a weblog:
 
-    module = App::Followme::CreateNews
-    module = App::Followme::CreateIndexes
+    run_bedore = App::Followme::CreateNews
+    run_before = App::Followme::CreateIndexes
 
 L<App::Followme::CreateNews> generates an html file from the most recently
 updated files in the archive directory. L<App::Followme::CreateIndexes> builds
@@ -375,13 +375,14 @@ and may contain blank lines or comment lines starting with a C<#>. Values in
 configuration files are combined with those set in the files in directories
 above it.
 
-The module parameter contains the name of a module to be run on the directory
-containing the configuration file and possibly its subdirectories. There may be
-more than one module parameter in a module file. They are run in order, starting
-with the module in the topmost configuration file. The module to be run must
-have new and run methods. The object is created by calling the new method with
-the configuration. The run method is then called with the directory as an
-argument.
+The run_before and run_after parameters contain the names of modules to be run
+on the directory containing the configuration file and possibly its
+subdirectories. There may be more than one run_before or run_after parameter in
+a configurationfile. They are run in order, starting with the modules in the
+topmost configuration file. Each module to be run must have new and run methods.
+An object of the module's class is created by calling the new method with the a
+reference to a hash containing the configuration parameters. The run method is
+then called with the directory as its argument.
 
 =head1 LICENSE
 
