@@ -6,7 +6,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 13;
+use Test::More tests => 10;
 
 #----------------------------------------------------------------------
 # Load package
@@ -57,7 +57,7 @@ do {
 three = 3
 four = 4
 
-run_before = App::Followme::Mock
+run_after = App::Followme::CreateSitemap
 
 EOQ
 
@@ -68,8 +68,8 @@ EOQ
     
     %configuration = $app->update_configuration($filename, %configuration);
     my %configuration_ok = (one => 1, two => 2, three => 3, four => 4,
-                            run_before => ['App::Followme::Mock'],
-                            run_after => []);
+                            run_before => [],
+                            run_after => ['App::Followme::CreateSitemap']);
     
     is_deeply(\%configuration, \%configuration_ok,
               'Update configuration'); # test 3
@@ -85,8 +85,8 @@ do {
     my $config = 'followme.cfg';
     my @config_files_ok = (rel2abs($config));
     
-    $app->write_page($config, "subdir = 1\nextension = txt\n");
-    
+    $app->write_page($config, "site_url = http://www.example.com\n");
+
     my $directory;
     foreach my $dir (qw(one two three)) {
         mkdir($dir);
@@ -96,13 +96,12 @@ do {
         $config = catfile($directory, 'followme.cfg');
         push(@config_files_ok, $config);
 
-        $app->write_page($config, "run_before = App::Followme::Mock\n");
+        $app->write_page($config, "run_after = App::Followme::CreateSitemap\n");
 
-        foreach my $file (qw(first.txt second.txt third.txt)) {
-            $app->write_page($file, "Fake data\n")
+        foreach my $file (qw(first.html second.html third.html)) {
+            $app->write_page($file, "Fake data\n");
         }
     }
-
 
     my $config_files = $app->find_configuration($directory);
     is_deeply($config_files, \@config_files_ok, 'Find configuration'); # test 4
@@ -113,15 +112,13 @@ do {
     foreach my $dir (qw(one two three)) {
         chdir ($dir);
 
-        my $filename = rel2abs('index.dat');
-        ok($filename, 'Ran mock'); # test 5, 8, 11
+        my $filename = rel2abs('sitemap.txt');
+        ok(-e $filename, 'Ran create sitemap'); # test 5, 7, 9
 
         my $page = $app->read_page($filename);
-        is(index($page, "first.txt\nsecond.txt\nthird.txt"), 0,
-           'Generated results'); # test 6, 9, 12
 
         my @lines = split(/\n/, $page);
-        is(@lines, $count, 'Right number'); # test 7, 10, 13
+        is(@lines, $count, 'Right number of urls'); # test 6, 8, 10
         
         $count -= 3;
     }
