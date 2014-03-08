@@ -255,7 +255,7 @@ sub get_command {
 
 sub get_excluded_directories {
     my ($self) = @_;
-    return [$self->{excluded_directory}];
+    return [$self->{template_directory}];
 }
 
 #----------------------------------------------------------------------
