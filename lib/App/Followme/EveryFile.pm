@@ -161,6 +161,8 @@ sub read_page {
 sub same_file {
     my ($self, $filename1, $filename2) = @_;
     
+    return unless defined $filename1 && defined $filename2;
+    
     my @path1 = splitdir(rel2abs($filename1));
     my @path2 = splitdir(rel2abs($filename2));
     return unless @path1 == @path2;
