@@ -378,7 +378,7 @@ above it.
 The run_before and run_after parameters contain the names of modules to be run
 on the directory containing the configuration file and possibly its
 subdirectories. There may be more than one run_before or run_after parameter in
-a configurationfile. They are run in order, starting with the modules in the
+a configuration file. They are run in order, starting with the modules in the
 topmost configuration file. Each module to be run must have new and run methods.
 An object of the module's class is created by calling the new method with the a
 reference to a hash containing the configuration parameters. The run method is
