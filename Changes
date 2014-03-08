@@ -1,6 +1,11 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+    - Check for undefined names in same_file, return false if found
+    - Fixed bug in get_excluded_directories, wrong parameter used
+    - Removed the Mock package
+    - New module to replace Mock, CreateSitemap
+    - Simplify templates produced by --init flag        
 
 1.02 2014-03-07T00:02:15Z
     - Rewrote UpdateFtp and modified UpdateSite

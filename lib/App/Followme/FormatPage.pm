@@ -10,7 +10,7 @@ use base qw(App::Followme::HandleSite);
 use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
 
-our $VERSION = "1.02";
+our $VERSION = "1.03";
 
 #----------------------------------------------------------------------
 # Return all the files in a subtree (example)
