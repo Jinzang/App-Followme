@@ -25,6 +25,7 @@ sub parameters {
     my ($pkg) = @_;
     
     my %parameters = (
+            quick_update => 0,
             top_directory => getcwd(),
             template_directory => 'templates',
             template_pkg => 'App::Followme::Template',
