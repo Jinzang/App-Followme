@@ -19,7 +19,6 @@ sub parameters {
     my ($pkg) = @_;
     
     my %parameters = (
-            quick_update => 0,
             text_extension => 'md',
             page_template => 'page.htm',
             empty_element_suffix => '/>',
@@ -122,7 +121,7 @@ __END__
 
 =head1 NAME
 
-App::Followme - Simple static web site maintenance
+App::Followme::ConvertPage - Convert Markdown files to html
 
 =head1 SYNOPSIS
 
@@ -132,22 +131,26 @@ App::Followme - Simple static web site maintenance
 
 =head1 DESCRIPTION
 
-If there are any text files in the directory, they are converted into html files
-by substituting the content into a template. After the conversion the original
-file is deleted. Along with the content, other variables are calculated from the
-file name and modification date. Variables in the template are surrounded by
-double braces, so that a link would look like:
+If there are any markdown files in the directory, they are converted into html
+files by substituting the content into a template. After the conversion the
+original file is deleted. Markdown files are identified by their extension,
+which by default is 'md'.
 
-    <li><a href="{{url}}">{{title}}</a></li>
+Along with the content, other variables are calculated from the file name and
+modification date. Variables in the template are preceded by a sigil, most usually
+a doolar sign. Thus a link would look like:
 
-The variables that are calculated for a text file are:
+    <li><a href="$url">$title</a></li>
+
+The variables that are calculated for each markdown file are:
 
 =over 4
 
 =item body
 
-All the content of the text file. Markdown is called on the file's content to
-generate html before being stored in the body variable. 
+All the contents of the file, minus the title if there is one. Markdown is
+called on the file's content to generate html before being stored in the body
+variable. 
 
 =item title
 
@@ -169,11 +172,16 @@ The following parameters are used from the configuration:
 
 =item page_template
 
-The path to the template used to create a page, relative to the top directory.
+The name of the template file. The template file is either in the same
+directory as the configuration file used to invoke this method, or if not
+there, in the templates subdirectory.
 
 =item text_extension 
 
 The extension of files that are converted to web pages.
+
+The remaining parameters are passed unchanged to L<Text::Markdown>. You
+should not need to change them.
 
 =back
 
