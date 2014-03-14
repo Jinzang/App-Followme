@@ -21,10 +21,10 @@ unshift(@INC, $lib);
 require App::Followme;
 
 my $test_dir = catdir(@path, 'test');
-
 rmtree($test_dir);
 mkdir $test_dir;
 chdir $test_dir;
+
 $test_dir = cwd();
 
 #----------------------------------------------------------------------
@@ -83,7 +83,7 @@ do {
 
     chdir($test_dir);
     my $config = 'followme.cfg';
-    my @config_files_ok = (rel2abs($config));
+    my @config_files_ok = (catfile($test_dir, $config));
     
     $app->write_page($config, "site_url = http://www.example.com\n");
 
