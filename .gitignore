@@ -20,6 +20,7 @@ test/
 *.swp
 *.o
 *.obj
+*.toml
 
 !LICENSE
 
