@@ -70,6 +70,7 @@ sub list_urls {
 
 sub setup {
     my ($self, $configuration) = @_;
+    $self = $self->SUPER::setup($configuration);
     
     # Remove any trailing slash
     $self->{site_url} =~ s/\/$//;

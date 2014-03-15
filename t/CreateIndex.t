@@ -105,15 +105,15 @@ EOQ
     }
 
     my $data = $idx->index_data($archive_dir);
-    is($data->[0]{title}, 'Four', 'Index first page title'); # test 1
-    is($data->[3]{title}, 'Two', 'Index last page title'); # test 2
+    is($data->[0]{title}, 'Post four', 'Index first page title'); # test 1
+    is($data->[3]{title}, 'Post two', 'Index last page title'); # test 2
     
     my $index_name = $idx->full_file_name($archive_dir, $idx->{index_file});
     $idx->create_an_index($archive_dir, $index_name);
     $page = $idx->read_page($index_name);
     
     like($page, qr/<title>Archive<\/title>/, 'Write index title'); # test 3
-    like($page, qr/<li><a href="two.html">Two<\/a><\/li>/,
+    like($page, qr/<li><a href="two.html">Post two<\/a><\/li>/,
        'Write index link'); #test 4
 
     my $pos = index($page, $index_name);

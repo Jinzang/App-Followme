@@ -20,6 +20,7 @@ sub parameters {
     my ($pkg) = @_;
     
     my %parameters = (
+                      body_tag => 'content',
                       index_file => 'index.html',
                       index_include => '*.html',
                       index_template => 'index.htm',
@@ -135,10 +136,10 @@ App::Followme::CreateIndex - Create index file for a directory
 =head1 DESCRIPTION
 
 This package builds an index for a directory containing links to all the files 
-and directories contained in it. template. The variables described below are
+contained in it with the specified extensions. The variables described below are
 substituted into a template to produce the index. Loop comments that look like
 
-    <!-- loop -->
+    <!-- loop @loop -->
     <!-- endloop -->
 
 indicate the section of the template that is repeated for each file contained
@@ -146,21 +147,22 @@ in the index.
 
 =over 4
 
+=item absolute_url
+
+The absolute_url of the web page.
+
 =item body
 
-All the content of the text file. The content is passed through a subroutine
-before being stored in this variable. The subroutine takes one input, the
-content stored as a string, and returns it as a string containing html. The
-default subroutine, add_tags in this module, only surrounds paragraphs with
-p tags, where paragraphs are separated by a blank line. You can supply a
-different subroutine by changing the value of the configuration variable
-page_converter.
+If a file is a web (html) file, the body is all the text inside the content tags
+in an page.
 
 =item title
 
-The title of the page is derived from the file name by removing the filename
-extension, removing any leading digits,replacing dashes with spaces, and
-capitalizing the first character of each word.
+If the file is a web (html) file, the title is the text contained in the header
+tags at the top of the page. if not, the title of the page is derived from the
+file name by removing the filename extension, removing any leading
+digits,replacing dashes with spaces, and capitalizing the first character of
+each word.
 
 =item url
 
@@ -179,25 +181,19 @@ The following fields in the configuration file are used:
 
 =over 4
 
-=item absolute
+=item index_file
 
-If true, urls in a page will be absolute
-
-=item include_directories
-
-If true, subdirectories will be included in the index
+Name of the index file to be created
 
 =item index_include
 
 A comma separated list of filename patterns used to create the index
 
-=item index_file
-
-Name of the index file to be created
-
 =item index_template
 
-The path to the template file, relative to the base directory.
+The name of the template file. The template file is either in the same
+directory as the configuration file used to invoke this method, or if not
+there, in the templates subdirectory.
 
 =back
 

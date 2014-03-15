@@ -26,6 +26,7 @@ sub parameters {
     
     my %parameters = (
             quick_update => 0,
+            body_tag => 'content',
             top_directory => getcwd(),
             template_directory => 'templates',
             template_pkg => 'App::Followme::Template',
@@ -125,7 +126,7 @@ sub build_summary {
     my ($self, $data) = @_;
     
     my $summary = '';
-    if (exists $data->{body}) {
+    if ($data->{body}) {
         if ($data->{body} =~ m!<p[^>]*>(.*?)</p[^>]*>!si) {
             $summary = $1;
         }
@@ -140,7 +141,7 @@ sub build_summary {
 sub build_title_from_header {
     my ($self, $data) = @_;
     
-    if (exists $data->{body}) {
+    if ($data->{body}) {
         if ($data->{body} =~ s!^\s*<h(\d)[^>]*>(.*?)</h\1[^>]*>!!si) {
             $data->{title} = $2;
         }
@@ -294,10 +295,14 @@ sub internal_fields {
             $filename = catfile($filename, $index_name);
         }
     
-        my $body = $self->read_page($filename);
-        $data->{body} = $body if defined $body;
-        $data->{summary} = $self->build_summary($data);
-        $data = $self->build_title_from_header($data);
+        my $page = $self->read_page($filename);
+
+        if ($page) {
+            my $sections = $self->parse_sections($page);
+            $data->{body} = $sections->{$self->{body_tag}};
+            $data->{summary} = $self->build_summary($data);
+            $data = $self->build_title_from_header($data);
+        }
     }
     
     return $data;
