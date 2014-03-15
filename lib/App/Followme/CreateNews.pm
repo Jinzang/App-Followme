@@ -21,7 +21,6 @@ sub parameters {
                       news_file => '../blog.html',
                       news_index_file => 'index.html',
                       news_index_length => 5,
-                      body_tag => 'content',
                       news_template => 'news.htm',
                       news_index_template => 'news_index.htm',
                      );
@@ -136,24 +135,6 @@ sub index_data {
     }
 
     return \@index_data;
-}
-
-#----------------------------------------------------------------------
-# Get the body field from the file
-
-sub internal_fields {
-    my ($self, $data, $filename) = @_;   
-    
-    my $page = $self->read_page($filename);
-    
-    if ($page) {
-        my $sections = $self->parse_sections($page);
-        $data->{body} = $sections->{$self->{body_tag}};
-        $data->{summary} = $self->build_summary($data);
-        $data = $self->build_title_from_header($data);
-    }
-    
-    return $data;
 }
 
 #----------------------------------------------------------------------
