@@ -287,24 +287,26 @@ sub get_template_name {
 sub internal_fields {
     my ($self, $data, $filename) = @_;   
 
+    if (-d $filename) {
+        my $index_name = "index.$self->{web_extension}";
+        $filename = catfile($filename, $index_name);
+    }
+
     my ($ext) = $filename =~ /\.([^\.]*)$/;
 
-    if ($ext eq $self->{web_extension}) {
-        if (-d $filename) {
-            my $index_name = "index.$self->{web_extension}";
-            $filename = catfile($filename, $index_name);
-        }
+    if (defined $ext) {       
+        if (defined $ext && $ext eq $self->{web_extension}) {   
+            my $page = $self->read_page($filename);
     
-        my $page = $self->read_page($filename);
-
-        if ($page) {
-            my $sections = $self->parse_sections($page);
-            $data->{body} = $sections->{$self->{body_tag}};
-            $data->{summary} = $self->build_summary($data);
-            $data = $self->build_title_from_header($data);
+            if ($page) {
+                my $sections = $self->{template}->parse_sections($page);
+                $data->{body} = $sections->{$self->{body_tag}};
+                $data->{summary} = $self->build_summary($data);
+                $data = $self->build_title_from_header($data);
+            }
         }
     }
-    
+
     return $data;
 }
 
@@ -348,15 +350,6 @@ sub make_template {
     }
 
     return $sub;
-}
-
-#----------------------------------------------------------------------
-# Return a hash of the sections in a page
-
-sub parse_sections {
-    my ($self, $page) = @_;
-        
-    return $self->{template}->parse_sections($page);  
 }
 
 #----------------------------------------------------------------------
