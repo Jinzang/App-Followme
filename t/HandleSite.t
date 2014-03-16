@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 21;
+use Test::More tests => 23;
 
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
@@ -112,16 +112,15 @@ do {
 <head>
 <meta name="robots" content="archive">
 <!-- section meta -->
-<title>%%</title>
+<title>Page %%</title>
 <!-- endsection meta -->
 </head>
 <body>
 <!-- section content -->
-<h1>%%</h1>
+<h1>Page %%</h1>
+
+<p><a href="%%.html">Link %%</a></p>
 <!-- endsection content -->
-<!-- section navigation in folder -->
-<p><a href="">Link</a></p>
-<!-- endsection navigation -->
 </body>
 </html>
 EOQ
@@ -129,6 +128,12 @@ EOQ
     chdir($test_dir);
     my $hs = App::Followme::HandleSite->new;
     
+    my $template = $code;
+    $template =~ s/%%/Page \$count/g;
+
+    my $template_name = 'template.htm';
+    $hs->write_page(catfile($test_dir, $template_name), $template);
+
     foreach my $count (qw(four three two one)) {
         sleep(1);
         my $output = $code;
@@ -152,4 +157,13 @@ EOQ
     
     $newer = $hs->is_newer('six.html', 'five.html');
     is($newer, 1, 'Source and target undefined'); # test 21
+    
+    my $index_name = catfile($test_dir, 'index.html');
+    $newer = $hs->index_is_newer($index_name, $template_name, $test_dir);
+    is($newer, undef, 'Index is undefined'); # test 22
+
+    sleep(1);
+    $hs->write_page($index_name, $template);
+    $newer = $hs->index_is_newer($index_name, $template_name, $test_dir);
+    is($newer, 1, 'Index is defined'); # test 23
 };

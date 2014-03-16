@@ -302,13 +302,13 @@ sub get_template_name {
 sub index_is_newer {
     my ($self, $index_name, $template_name, $directory) = @_;
     
-    $template_name = $self->get_template_name($directory, $template_name);
+    $template_name = $self->get_template_name($template_name);
     return unless $self->is_newer($index_name, $template_name);
 
     my $mrf = App::Followme::MostRecentFile->new($self);
     my $filename = $mrf->run($directory);
     
-    return $self->is_newer($index_name, $filename);
+    return $self->same_file($index_name, $filename);
 }
 
 #----------------------------------------------------------------------
