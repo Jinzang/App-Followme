@@ -50,10 +50,11 @@ sub list_urls {
     my ($self, $directory) = @_;
 
     my @urls;
+    my $data = {};
     my ($filenames, $directories) =  $self->visit($directory);
 
     foreach my $filename (@$filenames) {
-        my $data = $self->set_fields($directory, $filename);
+        $data = $self->build_url($data, $directory, $filename);
         my $url = $self->{site_url} . $data->{absolute_url};
         push(@urls, $url);
     }
