@@ -54,12 +54,13 @@ sub run {
 sub create_an_index {
     my ($self, $directory, $directories, $filenames) = @_;
     
-    my $index_name = $self->full_file_name($directory, $self->{news_index_file});
-    my $template_name = $self->get_template_name($self->{news_index_template});
-
     # Don't re-create index if directory and template haven't changed
     
-    return if $self->is_newer($index_name, $template_name, $directory);
+    my $index_name = $self->full_file_name($directory, $self->{news_index_file});
+
+    return if $self->index_is_newer($index_name,
+                                    $self->{news_index_template},
+                                    $directory);
     
     my $data = $self->set_fields($directory, $index_name);    
     $data->{loop} = $self->index_data($directory, $directories, $filenames);

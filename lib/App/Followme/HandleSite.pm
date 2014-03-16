@@ -297,6 +297,21 @@ sub get_template_name {
 }
 
 #----------------------------------------------------------------------
+# Check if index file for directory is newer than other files
+
+sub index_is_newer {
+    my ($self, $index_name, $template_name, $directory) = @_;
+    
+    $template_name = $self->get_template_name($directory, $template_name);
+    return unless $self->is_newer($index_name, $template_name);
+
+    my $mrf = App::Followme::MostRecentFile->new($self);
+    my $filename = $mrf->run($directory);
+    
+    return $self->is_newer($index_name, $filename);
+}
+
+#----------------------------------------------------------------------
 # Get fields from reading the file (stub)
 
 sub internal_fields {
