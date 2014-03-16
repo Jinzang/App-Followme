@@ -41,6 +41,22 @@ sub parameters {
 #----------------------------------------------------------------------
 # Build date fields from time, based on Blosxom 3
 
+sub build_body {
+    my ($self, $data, $filename) = @_;
+
+    my $page = $self->read_page($filename);
+
+    if ($page) {
+        my $sections = $self->{template}->parse_sections($page);
+        $data->{body} = $sections->{$self->{body_tag}};
+    }
+            
+    return $data;
+}
+
+#----------------------------------------------------------------------
+# Build date fields from time, based on Blosxom 3
+
 sub build_date {
     my ($self, $data, $filename) = @_;
     
@@ -125,14 +141,13 @@ sub build_title_from_filename {
 sub build_summary {
     my ($self, $data) = @_;
     
-    my $summary = '';
     if ($data->{body}) {
         if ($data->{body} =~ m!<p[^>]*>(.*?)</p[^>]*>!si) {
-            $summary = $1;
+            $data->{summary} = $1;
         }
     }
-    
-    return $summary;
+
+    return $data;
 }
 
 #----------------------------------------------------------------------
@@ -287,23 +302,20 @@ sub get_template_name {
 sub internal_fields {
     my ($self, $data, $filename) = @_;   
 
+    my $ext;
     if (-d $filename) {
-        my $index_name = "index.$self->{web_extension}";
-        $filename = catfile($filename, $index_name);
+        $ext = $self->{web_extension};
+        $filename = catfile($filename, "index.$ext");
+
+    } else {
+        ($ext) = $filename =~ /\.([^\.]*)$/;
     }
 
-    my ($ext) = $filename =~ /\.([^\.]*)$/;
-
     if (defined $ext) {       
-        if (defined $ext && $ext eq $self->{web_extension}) {   
-            my $page = $self->read_page($filename);
-    
-            if ($page) {
-                my $sections = $self->{template}->parse_sections($page);
-                $data->{body} = $sections->{$self->{body_tag}};
-                $data->{summary} = $self->build_summary($data);
-                $data = $self->build_title_from_header($data);
-            }
+        if ($ext eq $self->{web_extension}) {   
+            $data = $self->build_body($data, $filename);
+            $data = $self->build_summary($data);
+            $data = $self->build_title_from_header($data);
         }
     }
 

@@ -99,8 +99,8 @@ EOQ
     $data = $hs->build_title_from_header($data);
     is($data->{title}, 'The title', 'Get title from header'); # test 12
     
-    my $summary = $hs->build_summary($data);
-    is($summary, "The body\n", 'Get summary'); # test 13
+    $data = $hs->build_summary($data);
+    is($data->{summary}, "The body\n", 'Get summary'); # test 13
 };
 
 #----------------------------------------------------------------------
