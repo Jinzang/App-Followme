@@ -6,9 +6,9 @@ use warnings;
 use lib '../..';
 
 use base qw(App::Followme::HandleSite);
+
 use Text::Markdown;
 use File::Spec::Functions qw(catfile);
-use App::Followme::MostRecentFile;
 
 our $VERSION = "1.03";
 

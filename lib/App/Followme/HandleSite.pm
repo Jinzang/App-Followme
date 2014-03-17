@@ -10,7 +10,6 @@ use IO::File;
 use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
                              no_upwards rel2abs splitdir updir);
 
-use App::Followme::MostRecentFile;
 use base qw(App::Followme::EveryFile);
 
 our $VERSION = "1.03";
@@ -232,9 +231,8 @@ sub find_prototype {
         if ($uplevel) {
             $uplevel -= 1;
         } else {
-            my $mrf = App::Followme::MostRecentFile->new($self);
-            my $filename = $mrf->run($dir);
-            return $filename if $filename;
+            my $file = $self->most_recent_file($dir, $self->{web_extension});
+            return $file if $file;
         }
 
         last unless @path;
@@ -305,10 +303,8 @@ sub index_is_newer {
     $template_name = $self->get_template_name($template_name);
     return unless $self->is_newer($index_name, $template_name);
 
-    my $mrf = App::Followme::MostRecentFile->new($self);
-    my $filename = $mrf->run($directory);
-    
-    return $self->same_file($index_name, $filename);
+    my $filename = $self->most_recent_file($directory);
+    return $self->is_newer($index_name, $filename);
 }
 
 #----------------------------------------------------------------------
@@ -351,6 +347,7 @@ sub is_newer {
     
     foreach my $source (@sources) {
         next unless -e $source;
+        next if $self->same_file($target, $source);
 
         my @stats = stat($source);  
         my $source_date = $stats[9];

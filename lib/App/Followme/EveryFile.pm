@@ -122,7 +122,7 @@ sub glob_patterns {
 # Return true if this is an included file
 
 sub match_file {
-    my ($self, $filename) = @_;
+    my ($self, $filename, $ext) = @_;
     
     my $dir;
     ($dir, $filename) = $self->split_filename($filename);
@@ -131,11 +131,39 @@ sub match_file {
         return if $filename =~ /$pattern/;
     }
     
-    foreach my $pattern (@{$self->{included_files}}) {
-        return 1 if $filename =~ /$pattern/;
+    if (defined $ext) {
+        return 1 if $filename =~ /\.$ext$/;
+        
+    } else {
+        foreach my $pattern (@{$self->{included_files}}) {
+            return 1 if $filename =~ /$pattern/;
+        }
     }
 
     return;
+}
+
+#----------------------------------------------------------------------
+# Get the most recently modified  file in a directory
+
+sub most_recent_file {
+    my ($self, $directory, $ext) = @_;
+
+    my ($filenames, $directories) = $self->visit($directory, $ext);
+
+    my $newest_file;
+    my $newest_date = 0;    
+    foreach my $filename (@$filenames) {
+        my @stats = stat($filename);  
+        my $file_date = $stats[9];
+    
+        if ($file_date > $newest_date) {
+            $newest_date = $file_date;
+            $newest_file = $filename;
+        }
+    }
+
+    return $newest_file;    
 }
 
 #----------------------------------------------------------------------
@@ -241,7 +269,7 @@ sub update_parameters {
 # Return two closures that will visit a directory tree
 
 sub visit {
-    my ($self, $directory) = @_;
+    my ($self, $directory, $ext) = @_;
 
     my @filenames;
     my @directories;
@@ -256,7 +284,7 @@ sub visit {
         if (-d $path) {
             push(@directories, $path) if $self->search_directory($path);
         } else {
-            push(@filenames, $path) if $self->match_file($path);
+            push(@filenames, $path) if $self->match_file($path, $ext);
         }
     }
 
