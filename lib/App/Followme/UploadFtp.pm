@@ -4,9 +4,9 @@ use 5.008005;
 use strict;
 use warnings;
 
-use lib '..';
+use lib '../..';
 
-use base qw(App::Followme::EveryFile);
+use base qw(App::Followme::ConfiguredObject);
 
 use Net::FTP;
 use File::Spec::Functions qw(abs2rel splitdir catfile);

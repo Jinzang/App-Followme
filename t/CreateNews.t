@@ -159,11 +159,7 @@ do {
 # Create news file
 
 do {
-my $body_ok = <<'EOQ';
-
-
-<p>All about three.</p>
-EOQ
+    my $body_ok = '<p>All about three.</p>';
 
     my $idx = App::Followme::CreateNews->new($configuration);
     my ($directories, $filenames) = $idx->visit($archive_dir);

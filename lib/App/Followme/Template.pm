@@ -11,7 +11,7 @@ use File::Spec::Functions qw(abs2rel catfile rel2abs splitdir);
 
 use lib '../..';
 
-use base qw(App::Followme::EveryFile);
+use base qw(App::Followme::ConfiguredObject);
 
 our $VERSION = "1.03";
 
@@ -93,8 +93,12 @@ sub compile {
     my @block;
     my $sections = {};
     while (my $template = pop(@templates)) {
-        my $page = $self->read_page($template);
-        my @lines = split(/\n/, $page);
+        my $fd = IO::File->new($template, 'r');
+        die "Cannot read $template: $!\n" unless $fd;
+    
+        my @lines = <$fd>;
+        close($fd);
+
         @block = $self->parse_block($sections, \@lines, '');
     }
 
@@ -249,8 +253,6 @@ sub parse_block {
 
     my @block;
     while (defined (my $line = shift @$lines)) {
-        $line .= "\n";
-
         my ($cmd, $arg) = $self->parse_command($line);
 
         if (defined $cmd) {

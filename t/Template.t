@@ -17,6 +17,7 @@ my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
 require App::Followme::Template;
+require App::Followme::HandleSite;
 
 my $test_dir = catdir(@path, 'test');
 
@@ -112,7 +113,8 @@ EOQ
 
 my $sections = {};
 my @lines = split(/\n/, $template);
-my @ok = map {"$_\n"} @lines;
+@lines = map {"$_\n"} @lines;
+my @ok = @lines;
 
 my @block = $pp->parse_block($sections, \@lines, '');
 my @sections = sort keys %$sections;
@@ -134,8 +136,12 @@ Another Footer
 EOQ
 
 @lines = split(/\n/, $template);
+@lines = map {"$_\n"} @lines;
+
 my @sublines = split(/\n/, $subtemplate);
-@ok = map {"$_\n"} @lines;
+@sublines = map {"$_\n"} @sublines;
+
+@ok = @lines;
 $ok[1] = "Another Header\n";
 $ok[-2] = "Another Footer\n";
 
@@ -153,12 +159,13 @@ is_deeply($sections->{header}, ["Another Header\n"],
 my $template_name = catfile($test_dir, 'template.htm');
 my $subtemplate_name = catfile($test_dir, 'subtemplate.htm');
 
-$pp->write_page($template_name, $template);
-my $test_template = $pp->read_page($template_name);
+my $hs = App::Followme::HandleSite->new();
+$hs->write_page($template_name, $template);
+my $test_template = $hs->read_page($template_name);
 is($test_template, $template, 'Read and write template'); # test 24
 
-$pp->write_page($subtemplate_name, $subtemplate);
-my $test_subtemplate = $pp->read_page($subtemplate_name);
+$hs->write_page($subtemplate_name, $subtemplate);
+my $test_subtemplate = $hs->read_page($subtemplate_name);
 is($test_subtemplate, $subtemplate, 'Read and write subtemplate'); # test 25
 
 my $sub = $pp->compile($template_name, $subtemplate_name);
@@ -185,8 +192,8 @@ $pp->{keep_sections} = 1;
 @block = $pp->parse_block($sections, \@sublines, '');
 @block = $pp->parse_block($sections, \@lines, '');
 
-is($block[0], "<!-- section header extra -->\n", "Section start teag"); # test 28
-is($block[2], "<!-- endsection header -->\n", "Section end teag"); # test 29
+is($block[0], "<!-- section header extra -->", "Section start teag"); # test 28
+is($block[2], "<!-- endsection header -->", "Section end teag"); # test 29
 
 $sub = $pp->compile($template_name, $subtemplate_name);
 is(ref $sub, 'CODE', "compiled template"); # test 30
@@ -214,7 +221,7 @@ $name $sep $phone
 <!-- endfor -->
 EOQ
 
-$pp->write_page($template_name, $template);
+$hs->write_page($template_name, $template);
 
 $sub = App::Followme::Template->compile($template_name);
 $data = {sep => ':', list => [{name => 'Ann', phone => '4444'},
@@ -240,7 +247,7 @@ $a $b
 $b
 EOQ
 
-$pp->write_page($template_name, $template);
+$hs->write_page($template_name, $template);
 
 $sub = App::Followme::Template->compile($template_name);
 $data = {a=> 1, b => 2, hash => {a => 10, b => 20}};
@@ -266,7 +273,7 @@ $count
 go
 EOQ
 
-$pp->write_page($template_name, $template);
+$hs->write_page($template_name, $template);
 $sub = App::Followme::Template->compile($template_name);
 $data = {count => 3};
 
@@ -294,7 +301,7 @@ $template = <<'EOQ';
 <!-- endif -->
 EOQ
 
-$pp->write_page($template_name, $template);
+$hs->write_page($template_name, $template);
 $sub = App::Followme::Template->compile($template_name);
 
 $data = {x => 1};
