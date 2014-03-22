@@ -560,7 +560,7 @@ sub setup {
     eval "require $template_pkg" or die "Module not found: $template_pkg\n";
     $self->{template} = $template_pkg->new($configuration);
 
-    return $self;
+    return;
 }
 
 #----------------------------------------------------------------------

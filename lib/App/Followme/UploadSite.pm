@@ -273,7 +273,7 @@ sub setup {
     # to select which files to test
     $self->{target_date} = 0;
 
-    return $self;
+    return;
 }
 
 #----------------------------------------------------------------------

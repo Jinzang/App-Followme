@@ -455,7 +455,7 @@ sub setup {
     $self->{command_start_pattern} = '^\s*' . quotemeta(COMMAND_START);
     $self->{command_end_pattern} = '\s*' . quotemeta(COMMAND_END) . '\s*$';
 
-    return $self;
+    return;
 }
 
 #----------------------------------------------------------------------

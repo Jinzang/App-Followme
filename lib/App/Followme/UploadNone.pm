@@ -73,7 +73,7 @@ sub open {
 
 sub setup {
     my ($self, $configuration) = @_;
-    return $self;
+    return;
 }
 
 1;
@@ -134,7 +134,7 @@ Delete a file on the remote site.
 
 Open the connection to the remote site
 
-=item $self = $self->setup();
+=item $self->setup();
 
 Set up computed fields in the new object
 

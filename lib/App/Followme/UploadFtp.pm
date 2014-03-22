@@ -185,7 +185,7 @@ sub setup {
     my $remote_pkg = $self->{remote_pkg};
     eval "require $remote_pkg" or die "Module not found: $remote_pkg\n";
     
-    return $self;
+    return;
 }
 
 1;
@@ -238,7 +238,7 @@ Delete a file on the remote site. .
 
 Close the ftp connection to the remote site.
 
-=item $self = $self->setup($configuration);
+=item $self->setup($configuration);
 
 Open the ftp connection. The configuration is a reference to
 a hash, which includes the user name and password used in the connection.

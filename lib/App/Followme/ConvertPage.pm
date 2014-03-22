@@ -111,7 +111,7 @@ sub setup {
     $self->{md} = Text::Markdown->new(%params);
     $self->SUPER::setup();
 
-    return $self;
+    return;
 }
 
 1;

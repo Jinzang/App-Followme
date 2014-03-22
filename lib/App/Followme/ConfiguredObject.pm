@@ -16,7 +16,7 @@ sub new {
     my %self = $pkg->update_parameters($configuration);
     my $self = bless(\%self, $pkg);
     
-    $self = $self->setup($configuration);    
+    $self->setup($configuration);    
     return $self;
 }
 
@@ -46,7 +46,7 @@ sub run {
 
 sub setup {
     my ($self, $configuration) = @_;
-    return $self;
+    return;
 }
 
 #----------------------------------------------------------------------
@@ -100,7 +100,7 @@ Returns a hash of the default values of the object's parameters
 
 Run the object on a directory.
 
-=item $self = $self->setup($configuration);
+=item $self->setup($configuration);
 
 Sets computed object parameters.
 
