@@ -128,10 +128,12 @@ sub index_data {
     
     my @index_data;
     foreach my $filename (@$directories) {
+        next unless $self->search_directory($filename);
         push(@index_data, $self->set_fields($directory, $filename));
     }
 
     foreach my $filename (@$filenames) {
+        next unless $self->match_file($filename);
         push(@index_data, $self->set_fields($directory, $filename));
     }
 
@@ -153,6 +155,8 @@ sub more_recent_files {
     # Add file to list of recent files if modified more recently than others
 
     foreach my $filename (@$filenames) {
+        next unless $self->match_file($filename);
+
         my @stats = stat($filename);        
         if (@$augmented_files < $limit || $stats[9] > $augmented_files->[0][0]) {
     

@@ -54,12 +54,15 @@ sub list_urls {
     my ($filenames, $directories) =  $self->visit($directory);
 
     foreach my $filename (@$filenames) {
+        next unless $self->match_file($filename);
+
         $data = $self->build_url($data, $directory, $filename);
         my $url = $self->{site_url} . $data->{absolute_url};
         push(@urls, $url);
     }
 
     foreach my $subdirectory (@$directories) {
+        next unless $self->search_directory($directory);
         push(@urls, $self->list_urls($subdirectory));
     }
    

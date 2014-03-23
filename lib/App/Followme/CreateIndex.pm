@@ -22,7 +22,7 @@ sub parameters {
     my %parameters = (
                       body_tag => 'content',
                       index_file => 'index.html',
-                      index_include => '*.html',
+                      index_include => 'html',
                       index_template => 'index.htm',
                      );
 
@@ -108,15 +108,15 @@ sub index_data {
     my ($self, $directory) = @_;
     
     my ($filenames, $directories) = $self->visit($directory);
-
+    
     my @index_data;
     foreach my $filename (@$filenames) {
+        next unless $self->match_file($filename);        
         push(@index_data, $self->set_fields($directory, $filename));
     }
 
     return \@index_data;
 }
-
 
 1;
 __END__

@@ -325,6 +325,8 @@ sub update_folder {
     # Check each of the files in the directory
     
     foreach my $filename (@$filenames) {
+        next unless $self->match_file($filename);
+
         # Skip check if in quick mode and modification date is old
         
         if ($self->{quick_update}) {
@@ -354,6 +356,7 @@ sub update_folder {
     # Recursively check each of the subdirectories
     
     foreach my $subdirectory (@$directories) {
+        next unless $self->search_directory($subdirectory);
         $self->update_folder($subdirectory, $hash, $local);
     }
 

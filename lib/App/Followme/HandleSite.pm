@@ -28,10 +28,7 @@ sub new {
     my %self = $pkg->update_parameters($configuration);
     my $self = bless(\%self, $pkg);
     
-    $self->{included_files} = $self->glob_patterns($self->get_included_files());
-    $self->{excluded_files} = $self->glob_patterns($self->get_excluded_files());
-    $self = $self->setup($configuration);
-    
+    $self->setup($configuration);
     return $self;
 }
 
@@ -248,7 +245,7 @@ sub find_prototype {
         if ($uplevel) {
             $uplevel -= 1;
         } else {
-            my $file = $self->most_recent_file($dir, $self->{web_extension});
+            my $file = $self->most_recent_file($dir);
             return $file if $file;
         }
 
@@ -375,7 +372,8 @@ sub index_is_newer {
     $template_name = $self->get_template_name($template_name);
     return unless $self->is_newer($index_name, $template_name);
 
-    my $filename = $self->most_recent_file($directory);
+    my $ext = $self->get_included_files();
+    my $filename = $self->most_recent_file($directory, $ext);
     return $self->is_newer($index_name, $filename);
 }
 
@@ -454,38 +452,33 @@ sub make_template {
 # Return true if this is an included file
 
 sub match_file {
-    my ($self, $filename, $ext) = @_;
+    my ($self, $filename) = @_;
     
-    my $dir;
-    ($dir, $filename) = $self->split_filename($filename);
-    
-    foreach my $pattern (@{$self->{excluded_files}}) {
-        return if $filename =~ /$pattern/;
+    my ($dir, $file) = $self->split_filename($filename);
+    foreach my $pattern (@{$self->{exclude_patterns}}) {
+        return if $file =~ /$pattern/;
     }
-    
-    if (defined $ext) {
-        return 1 if $filename =~ /\.$ext$/;
-        
-    } else {
-        foreach my $pattern (@{$self->{included_files}}) {
-            return 1 if $filename =~ /$pattern/;
-        }
+
+    foreach my $pattern (@{$self->{include_patterns}}) {
+        return 1 if $file =~ /$pattern/;
     }
 
     return;
 }
 
 #----------------------------------------------------------------------
-# Get the most recently modified  file in a directory
+# Get the most recently modified web file in a directory
 
 sub most_recent_file {
-    my ($self, $directory, $ext) = @_;
-
-    my ($filenames, $directories) = $self->visit($directory, $ext);
+    my ($self, $directory) = @_;
+    
+    my ($filenames, $directories) = $self->visit($directory);
 
     my $newest_file;
     my $newest_date = 0;    
     foreach my $filename (@$filenames) {
+        next unless $filename =~ /\.$self->{web_extension}$/;
+
         my @stats = stat($filename);  
         my $file_date = $stats[9];
     
@@ -555,8 +548,10 @@ sub search_directory {
 sub setup {
     my ($self, $configuration) = @_;
 
+    $self->{include_patterns} = $self->glob_patterns($self->get_included_files());
+    $self->{exclude_patterns} = $self->glob_patterns($self->get_excluded_files());
+    
     my $template_pkg = $self->{template_pkg};
-
     eval "require $template_pkg" or die "Module not found: $template_pkg\n";
     $self->{template} = $template_pkg->new($configuration);
 
@@ -601,26 +596,10 @@ sub split_filename {
 }
 
 #----------------------------------------------------------------------
-# Update a module's parameters
-
-sub update_parameters {
-    my ($pkg, $configuration) = @_;
-    $configuration = {} unless defined $configuration;
-        
-    my %parameters = $pkg->parameters();
-    foreach my $field (keys %parameters) {
-        $parameters{$field} = $configuration->{$field}
-            if exists $configuration->{$field};
-    }
-    
-    return %parameters;
-}
-
-#----------------------------------------------------------------------
 # Return two closures that will visit a directory tree
 
 sub visit {
-    my ($self, $directory, $ext) = @_;
+    my ($self, $directory) = @_;
 
     my @filenames;
     my @directories;
@@ -633,9 +612,9 @@ sub visit {
         my $path = catfile($directory, $file);
     
         if (-d $path) {
-            push(@directories, $path) if $self->search_directory($path);
+            push(@directories, $path);
         } else {
-            push(@filenames, $path) if $self->match_file($path, $ext);
+            push(@filenames, $path);
         }
     }
 
@@ -782,9 +761,7 @@ and the parsing done is not line oriented.
 
 =item ($filenames, $directories) = $self->visit($top_directory);
 
-Return a list of filenames and directories in a directory, The filenames are
-filtered by the two methods get_included_files and get_excluded_files. By
-default, it returns all files with the web extension.
+Return a list of filenames and directories in a directory,
 
 =back
 

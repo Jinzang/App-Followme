@@ -130,7 +130,7 @@ do {
     my $idx = App::Followme::CreateNews->new($configuration);
     
     my $archive_dir = catfile($test_dir, 'archive');
-    my ($directories, $filenames) = $idx->visit($archive_dir);
+    my ($filenames, $directories) = $idx->visit($archive_dir);
     $idx->create_an_index($archive_dir, $directories, $filenames);
    
     my $page = $idx->read_page(catfile($archive_dir,"index.html"));
@@ -162,7 +162,7 @@ do {
     my $body_ok = '<p>All about three.</p>';
 
     my $idx = App::Followme::CreateNews->new($configuration);
-    my ($directories, $filenames) = $idx->visit($archive_dir);
+    my ($filenames, $directories) = $idx->visit($archive_dir);
     my $data = $idx->index_data($archive_dir, $directories, $filenames);
 
     is($data->[2]{url}, 'three.html', 'Archive news url'); # test 4

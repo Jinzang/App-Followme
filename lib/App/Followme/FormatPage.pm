@@ -206,10 +206,11 @@ sub update_directory {
     # The first update uses a file from the directory above
     # as a prototype, if one is found
 
+    my $prototype_file;
     unless (defined $prototype) {
-        my $prototype_file = shift(@$filenames);  
+        $prototype_file = $self->most_recent_file($directory);
 
-        if (defined $prototype_file) {
+        if ($prototype_file) {
             $prototype_path = $self->get_prototype_path($prototype_file);
             $prototype = $self->read_page($prototype_file);
         }
@@ -218,6 +219,9 @@ sub update_directory {
     my $count = 0;
     my $changes = 0;
     foreach my $filename (@$filenames) {
+        next unless $self->match_file($filename);
+        next if defined $prototype_file && $filename eq $prototype_file;
+
         my $page = $self->read_page($filename);
         die "Couldn't read $filename" unless defined $page;
 
@@ -253,6 +257,7 @@ sub update_directory {
     return unless $changes;
 
     for my $subdirectory (@$directories) {
+        next unless $self->search_directory($directory);
         $self->update_directory($subdirectory, $prototype, $prototype_path);
     }
 

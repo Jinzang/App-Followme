@@ -40,8 +40,10 @@ sub run {
 
     my $render = $self->make_template($directory, $self->{page_template});
     my ($filenames, $directories) = $self->visit($directory);
-
+    
     foreach my $filename (@$filenames) {
+        next unless $self->match_file($filename);
+
         eval {$self->convert_a_file($render, $directory, $filename)};
         warn "$filename: $@" if $@;
     }
@@ -49,6 +51,7 @@ sub run {
     return if $self->{quick_update};
     
     foreach my $directory (@$directories) {
+        next unless $self->search_directory($directory);
         $self->run($directory);
     }
     
