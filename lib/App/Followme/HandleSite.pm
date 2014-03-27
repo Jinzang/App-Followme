@@ -20,35 +20,17 @@ use constant MONTHS => [qw(January February March April May June July
                            August September October November December)];
 
 #----------------------------------------------------------------------
-# Create object that returns files in a directory tree
-
-sub new {
-    my ($pkg, $configuration) = @_;
-
-    my %self = $pkg->update_parameters($configuration);
-    my $self = bless(\%self, $pkg);
-    
-    $self->setup($configuration);
-    return $self;
-}
-
-#----------------------------------------------------------------------
 # Read the default parameter values
 
 sub parameters {
-    my ($pkg) = @_;
+    my ($self) = @_;
     
-    my %parameters = (
+    return (
             body_tag => 'content',
             web_extension => 'html',
             template_directory => 'templates',
             template_pkg => 'App::Followme::Template',
            );
-
-    my %base_params = $pkg->SUPER::parameters();
-    %parameters = (%base_params, %parameters);
-
-    return %parameters;
 }
 
 #----------------------------------------------------------------------
@@ -245,7 +227,8 @@ sub find_prototype {
         if ($uplevel) {
             $uplevel -= 1;
         } else {
-            my $file = $self->most_recent_file($dir);
+            my $pattern = "*.$self->{web_extension}";
+            my $file = $self->most_recent_file($dir, $pattern);
             return $file if $file;
         }
 
@@ -302,6 +285,7 @@ sub get_excluded_files {
 
 sub get_included_files {
     my ($self) = @_;
+
     return "*.$self->{web_extension}";
 }
 
@@ -372,8 +356,8 @@ sub index_is_newer {
     $template_name = $self->get_template_name($template_name);
     return unless $self->is_newer($index_name, $template_name);
 
-    my $ext = $self->get_included_files();
-    my $filename = $self->most_recent_file($directory, $ext);
+    my $pattern = $self->get_included_files();
+    my $filename = $self->most_recent_file($directory, $pattern);
     return $self->is_newer($index_name, $filename);
 }
 
@@ -455,11 +439,20 @@ sub match_file {
     my ($self, $filename) = @_;
     
     my ($dir, $file) = $self->split_filename($filename);
-    foreach my $pattern (@{$self->{exclude_patterns}}) {
-        return if $file =~ /$pattern/;
-    }
 
-    foreach my $pattern (@{$self->{include_patterns}}) {
+    return if $self->match_patterns($file, $self->{exclude_patterns});
+    return unless $self->match_patterns($file, $self->{include_patterns});
+
+    return 1;
+}
+
+#----------------------------------------------------------------------
+# Return true if filename matches pattern
+
+sub match_patterns {
+    my ($self, $file, $patterns) = @_;
+    
+    foreach my $pattern (@$patterns) {
         return 1 if $file =~ /$pattern/;
     }
 
@@ -470,14 +463,17 @@ sub match_file {
 # Get the most recently modified web file in a directory
 
 sub most_recent_file {
-    my ($self, $directory) = @_;
+    my ($self, $directory, $pattern) = @_;
     
     my ($filenames, $directories) = $self->visit($directory);
 
     my $newest_file;
-    my $newest_date = 0;    
+    my $newest_date = 0;
+    my $globs = $self->glob_patterns($pattern);
+    
     foreach my $filename (@$filenames) {
-        next unless $filename =~ /\.$self->{web_extension}$/;
+        my ($dir, $file) = $self->split_filename($filename);
+        next unless $self->match_patterns($file, $globs);
 
         my @stats = stat($filename);  
         my $file_date = $stats[9];
@@ -548,8 +544,11 @@ sub search_directory {
 sub setup {
     my ($self, $configuration) = @_;
 
-    $self->{include_patterns} = $self->glob_patterns($self->get_included_files());
-    $self->{exclude_patterns} = $self->glob_patterns($self->get_excluded_files());
+    $self->{include_patterns} =
+        $self->glob_patterns($self->get_included_files());
+        
+    $self->{exclude_patterns} =
+        $self->glob_patterns($self->get_excluded_files());
     
     my $template_pkg = $self->{template_pkg};
     eval "require $template_pkg" or die "Module not found: $template_pkg\n";
@@ -713,7 +712,7 @@ hash in the list and each hash will be interpolated into the text. For comments
 look like
 
     <!-- for @loop -->
-    <!-- endloop -->
+    <!-- endfor -->
 
 =item $data = $self->set_fields($directory, $filename);
 

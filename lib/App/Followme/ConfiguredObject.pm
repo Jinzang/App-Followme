@@ -11,12 +11,19 @@ our $VERSION = "1.03";
 # Create object that returns files in a directory tree
 
 sub new {
-    my ($pkg, $configuration) = @_;
+    my ($package, $configuration) = @_;
+    no strict 'refs';
 
-    my %self = $pkg->update_parameters($configuration);
-    my $self = bless(\%self, $pkg);
-    
-    $self->setup($configuration);    
+    my $self = {};
+    my @pkgs = ($package, @{"${package}::ISA"});
+    $configuration = {} unless defined $configuration;
+
+    foreach my $pkg (reverse @pkgs) {
+        $self = bless($self, $pkg);
+        $self->update_parameters($configuration);    
+        $self->setup($configuration);    
+    }
+
     return $self;
 }
 
@@ -24,7 +31,7 @@ sub new {
 # Read the default parameter values
 
 sub parameters {
-    my ($pkg) = @_;
+    my ($self) = @_;
     
     return (
             quick_update => 0,
@@ -53,16 +60,18 @@ sub setup {
 # Update a module's parameters
 
 sub update_parameters {
-    my ($pkg, $configuration) = @_;
-    $configuration = {} unless defined $configuration;
+    my ($self, $configuration) = @_;
         
-    my %parameters = $pkg->parameters();
+    my %parameters = $self->parameters();
     foreach my $field (keys %parameters) {
-        $parameters{$field} = $configuration->{$field}
-            if exists $configuration->{$field};
+        if (exists $configuration->{$field}) {
+            $self->{$field} = $configuration->{$field};
+        } else {
+            $self->{$field} = $parameters{$field};            
+        }
     }
     
-    return %parameters;
+    return;
 }
 
 1;
@@ -92,7 +101,7 @@ Create a new object from the configuration. The configuration is a reference to
 a hash containing fields with the same names as the object parameters. Fields
 in the configuration whose name does not match an object parameter are ignored.
 
-=item %parameters = ConfiguredObject->parameters();
+=item %parameters = $self->parameters();
 
 Returns a hash of the default values of the object's parameters
 
@@ -102,7 +111,7 @@ Run the object on a directory.
 
 =item $self->setup($configuration);
 
-Sets computed object parameters.
+Sets computed parameters of the object.
 
 =back
 
