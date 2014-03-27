@@ -5,7 +5,7 @@ use warnings;
 
 use lib '../..';
 
-use base qw(App::Followme::HandleSite);
+use base qw(App::Followme::Module);
 
 use Cwd;
 use IO::Dir;
@@ -17,19 +17,14 @@ our $VERSION = "1.03";
 # Read the default parameter values
 
 sub parameters {
-    my ($pkg) = @_;
+    my ($self) = @_;
     
-    my %parameters = (
-                      body_tag => 'content',
-                      index_file => 'index.html',
-                      index_include => 'html',
-                      index_template => 'index.htm',
-                     );
-
-    my %base_params = $pkg->SUPER::parameters();
-    %parameters = (%base_params, %parameters);
-
-    return %parameters;
+    return (
+            body_tag => 'content',
+            index_file => 'index.html',
+            index_include => 'html',
+            index_template => 'index.htm',
+           );
 }
 
 #----------------------------------------------------------------------

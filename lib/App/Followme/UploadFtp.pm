@@ -17,19 +17,14 @@ our $VERSION = "1.03";
 # Read the default parameter values
 
 sub parameters {
-    my ($pkg) = @_;
+    my ($self) = @_;
     
-    my %parameters = (
-                      ftp_url => '',
-                      ftp_directory => '',
-                      ftp_debug => 0,
-                      remote_pkg => 'File::Spec::Unix',
-                     );
-
-    my %base_params = $pkg->SUPER::parameters();
-    %parameters = (%base_params, %parameters);
-
-    return %parameters;
+    return (
+            ftp_url => '',
+            ftp_directory => '',
+            ftp_debug => 0,
+            remote_pkg => 'File::Spec::Unix',
+           );
 }
 
 #----------------------------------------------------------------------

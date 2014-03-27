@@ -376,7 +376,7 @@ where $configuration is a refererence to a hash containing the configuration
 parameters. $module name is the same as the name in the configuration file.
 
 All the modules distributed with App::Followme subclass
-App::Followme::HandleSite to access its methods, which provide consistent
+App::Followme::Module to access its methods, which provide consistent
 behavior, such as looping over files and template handling. It also supplies a
 new method, so if you subclass it, you will not need to supply a new method in
 your class.

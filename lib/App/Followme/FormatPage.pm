@@ -5,7 +5,7 @@ use warnings;
 
 use lib '../..';
 
-use base qw(App::Followme::HandleSite);
+use base qw(App::Followme::Module);
 
 use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);

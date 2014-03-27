@@ -17,7 +17,7 @@ my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
 require App::Followme::Template;
-require App::Followme::HandleSite;
+require App::Followme::Module;
 
 my $test_dir = catdir(@path, 'test');
 
@@ -159,7 +159,7 @@ is_deeply($sections->{header}, ["Another Header\n"],
 my $template_name = catfile($test_dir, 'template.htm');
 my $subtemplate_name = catfile($test_dir, 'subtemplate.htm');
 
-my $hs = App::Followme::HandleSite->new();
+my $hs = App::Followme::Module->new();
 $hs->write_page($template_name, $template);
 my $test_template = $hs->read_page($template_name);
 is($test_template, $template, 'Read and write template'); # test 24

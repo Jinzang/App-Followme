@@ -5,7 +5,7 @@ use warnings;
 
 use lib '../..';
 
-use base qw(App::Followme::HandleSite);
+use base qw(App::Followme::Module);
 
 use Text::Markdown;
 use File::Spec::Functions qw(catfile);
@@ -16,20 +16,15 @@ our $VERSION = "1.03";
 # Read the default parameter values
 
 sub parameters {
-    my ($pkg) = @_;
+    my ($self) = @_;
     
-    my %parameters = (
+    return (
             text_extension => 'md',
             page_template => 'page.htm',
             empty_element_suffix => '/>',
             tab_width => 4,
             trust_list_start_value => 0,
     );
-
-    my %base_params = $pkg->SUPER::parameters();
-    %parameters = (%base_params, %parameters);
-
-    return %parameters;
 }
 
 #----------------------------------------------------------------------
@@ -103,7 +98,7 @@ sub internal_fields {
 # Create markdown object and add it to self
 
 sub setup {
-    my ($self) = @_;
+    my ($self, $configuration) = @_;
 
     my %params;
     for my $field (qw(empty_element_suffix tab_width
@@ -112,7 +107,6 @@ sub setup {
     }
 
     $self->{md} = Text::Markdown->new(%params);
-    $self->SUPER::setup();
 
     return;
 }

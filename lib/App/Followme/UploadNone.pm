@@ -12,15 +12,6 @@ use base qw(App::Followme::ConfiguredObject);
 our $VERSION = "1.03";
 
 #----------------------------------------------------------------------
-# Read the default parameter values
-
-sub parameters {
-    my ($pkg) = @_;
-    
-    return $pkg->SUPER::parameters();
-}
-
-#----------------------------------------------------------------------
 # Add a directory to the remote site
 
 sub add_directory {
@@ -65,14 +56,6 @@ sub delete_file {
 
 sub open {
     my ($self, $user, $password) = @_;
-    return;
-}
-
-#----------------------------------------------------------------------
-# Open the ftp connection
-
-sub setup {
-    my ($self, $configuration) = @_;
     return;
 }
 

@@ -7,7 +7,7 @@ use warnings;
 use lib '../..';
 
 use File::Spec::Functions qw(catfile);
-use base qw(App::Followme::HandleSite);
+use base qw(App::Followme::Module);
 
 our $VERSION = "1.03";
 
@@ -15,17 +15,12 @@ our $VERSION = "1.03";
 # Read the default parameter values
 
 sub parameters {
-    my ($pkg) = @_;
+    my ($self) = @_;
     
-    my %parameters = (
+    return (
             site_url => '',
             sitemap => 'sitemap.txt',
            );
-
-    my %base_params = $pkg->SUPER::parameters();
-    %parameters = (%base_params, %parameters);
-
-    return %parameters;
 }
 
 #----------------------------------------------------------------------
@@ -74,7 +69,6 @@ sub list_urls {
 
 sub setup {
     my ($self, $configuration) = @_;
-    $self->SUPER::setup($configuration);
     
     # Remove any trailing slash
     $self->{site_url} =~ s/\/$//;

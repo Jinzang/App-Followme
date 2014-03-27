@@ -1,4 +1,4 @@
-package App::Followme::HandleSite;
+package App::Followme::Module;
 
 use 5.008005;
 use strict;
@@ -648,12 +648,12 @@ sub write_page {
 
 =head1 NAME
 
-App::Followme::HandleSite - Handle templates and prototype files
+App::Followme::Module - Handle templates and prototype files
 
 =head1 SYNOPSIS
 
-    use App::Followme::HandleSite;
-    my $hs = App::Followme::HandleSite->new($configuration);
+    use App::Followme::Module;
+    my $hs = App::Followme::Module->new($configuration);
     my $prototype = $hs->find_prototype($directory, 0);
     my $test = $hs->is_newer($filename, $prototype);
     if ($test) {

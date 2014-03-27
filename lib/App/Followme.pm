@@ -6,7 +6,7 @@ use warnings;
 
 use lib '..';
 
-use base qw(App::Followme::HandleSite);
+use base qw(App::Followme::Module);
 
 use Cwd;
 use IO::File;
@@ -20,15 +20,9 @@ our $VERSION = "1.03";
 sub parameters {
     my ($pkg) = @_;
     
-    my %parameters = (
-                      quick_update => 0,
-                      configuration_file => 'followme.cfg',
-                     );
-
-    my %base_params = $pkg->SUPER::parameters();
-    %parameters = (%base_params, %parameters);
-
-    return %parameters;
+    return (
+            configuration_file => 'followme.cfg',
+           );
 }
 
 #----------------------------------------------------------------------
@@ -338,7 +332,7 @@ the html for each file in the index is contained between
     <!--endfor -->
 
 comments. More information on the syntax of template is in the documentation of
-the L<App::Followme::HandleSite> module.
+the L<App::Followme::Module> module.
 
 In addition to normal section blocks, there are per folder section blocks.
 The contents of these blocks is kept constant across all files in a folder and

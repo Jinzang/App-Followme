@@ -4,9 +4,9 @@ use 5.008005;
 use strict;
 use warnings;
 
-use lib '..';
+use lib '../..';
 
-use base qw(App::Followme::HandleSite);
+use base qw(App::Followme::Module);
 
 use Cwd;
 use IO::File;
@@ -21,21 +21,17 @@ use constant SEED => 96;
 # Read the default parameter values
 
 sub parameters {
-    my ($pkg) = @_;
+    my ($self) = @_;
     
-    my %parameters = (
-                      verbose => 0,
-                      no_upload => 0,
-                      max_errors => 5,
-                      hash_file => 'upload.hash',
-                      credentials => 'upload.cred',
-                      upload_pkg => 'App::Followme::UploadFtp',
-                     );
+    return (
+            verbose => 0,
+            no_upload => 0,
+            max_errors => 5,
+            hash_file => 'upload.hash',
+            credentials => 'upload.cred',
+            upload_pkg => 'App::Followme::UploadFtp',
+           );
 
-    my %base_params = $pkg->SUPER::parameters();
-    %parameters = (%base_params, %parameters);
-
-    return %parameters;
 }
 
 #----------------------------------------------------------------------
@@ -252,10 +248,6 @@ sub read_word {
 sub setup {
     my ($self, $configuration) = @_;
 
-    # Perform setup in parent class
-    
-    $self->SUPER::setup($configuration);
-    
     # Add the remote user name and password to the configuration
     # They are not stored in the configuration, so they will not
     #  be in the clear

@@ -132,7 +132,7 @@ the html for each file in the index is contained between
     <!--endfor -->
 
 comments. More information on the syntax of template is in the documentation of
-the [App::Followme::HandleSite](http://search.cpan.org/perldoc?App::Followme::HandleSite) module.
+the [App::Followme::Module](http://search.cpan.org/perldoc?App::Followme::Module) module.
 
 In addition to normal section blocks, there are per folder section blocks.
 The contents of these blocks is kept constant across all files in a folder and
