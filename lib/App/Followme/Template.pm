@@ -19,14 +19,6 @@ use constant COMMAND_START => '<!-- ';
 use constant COMMAND_END => '-->';
 
 #----------------------------------------------------------------------
-# Set default parameters for package
-
-sub parameters {
-    my ($self) = @_;
-    return ();
-}
-
-#----------------------------------------------------------------------
 # Coerce a value to the type indicated by the sigil
 
 sub coerce {
