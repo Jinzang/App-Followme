@@ -319,7 +319,7 @@ sub glob_patterns {
 
     foreach my $pattern (@patterns) {
         if ($pattern eq '*') {
-            push(@globbed_patterns,  '.') if $pattern eq '*';
+            push(@globbed_patterns,  '.');
             
         } else {
             my $start;
