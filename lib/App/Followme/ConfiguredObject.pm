@@ -20,8 +20,12 @@ sub new {
 
     foreach my $pkg (reverse @pkgs) {
         $self = bless($self, $pkg);
-        $self->update_parameters($configuration);    
-        $self->setup($configuration);    
+
+        $self->update_parameters($configuration)
+            if defined &{"${pkg}::parameters"};    
+
+        $self->setup($configuration)   
+            if defined &{"${pkg}::setup"};    
     }
 
     return $self;
