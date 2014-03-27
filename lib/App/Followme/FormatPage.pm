@@ -208,7 +208,8 @@ sub update_directory {
 
     my $prototype_file;
     unless (defined $prototype) {
-        $prototype_file = $self->most_recent_file($directory);
+        my $pattern = $self->get_included_files();
+        $prototype_file = $self->most_recent_file($directory, $pattern);
 
         if ($prototype_file) {
             $prototype_path = $self->get_prototype_path($prototype_file);
