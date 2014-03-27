@@ -22,15 +22,8 @@ use constant COMMAND_END => '-->';
 # Set default parameters for package
 
 sub parameters {
-    my ($pkg) = @_;
-
-    my %parameters = (
-                     );
-
-    my %base_params = $pkg->SUPER::parameters();
-    %parameters = (%base_params, %parameters);
-
-    return %parameters;
+    my ($self) = @_;
+    return ();
 }
 
 #----------------------------------------------------------------------
