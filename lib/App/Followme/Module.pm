@@ -438,8 +438,13 @@ sub make_template {
 sub match_file {
     my ($self, $filename) = @_;
     
+    $self->{include_patterns} ||=
+        $self->glob_patterns($self->get_included_files());
+        
+    $self->{exclude_patterns} ||=
+        $self->glob_patterns($self->get_excluded_files());
+    
     my ($dir, $file) = $self->split_filename($filename);
-
     return if $self->match_patterns($file, $self->{exclude_patterns});
     return unless $self->match_patterns($file, $self->{include_patterns});
 
@@ -544,12 +549,6 @@ sub search_directory {
 sub setup {
     my ($self, $configuration) = @_;
 
-    $self->{include_patterns} =
-        $self->glob_patterns($self->get_included_files());
-        
-    $self->{exclude_patterns} =
-        $self->glob_patterns($self->get_excluded_files());
-    
     my $template_pkg = $self->{template_pkg};
     eval "require $template_pkg" or die "Module not found: $template_pkg\n";
     $self->{template} = $template_pkg->new($configuration);

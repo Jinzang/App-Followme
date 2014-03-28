@@ -11,22 +11,12 @@ our $VERSION = "1.03";
 # Create object that returns files in a directory tree
 
 sub new {
-    my ($package, $configuration) = @_;
+    my ($pkg, $configuration) = @_;
     no strict 'refs';
 
     my $self = {};
-    my @pkgs = ($package, @{"${package}::ISA"});
-    $configuration = {} unless defined $configuration;
-
-    foreach my $pkg (reverse @pkgs) {
-        $self = bless($self, $pkg);
-
-        $self->update_parameters($configuration)
-            if defined &{"${pkg}::parameters"};    
-
-        $self->setup($configuration)   
-            if defined &{"${pkg}::setup"};    
-    }
+    my $cycle = {};
+    initialize($pkg, $configuration, $self, $cycle);
 
     return $self;
 }
@@ -52,6 +42,27 @@ sub run {
     die "Run method not defined";
 }
 
+#----------------------------------------------------------------------
+# Initialize the object by populating its hash
+
+sub initialize {
+    my ($pkg, $configuration, $self, $cycle) = @_;
+    return if $cycle->{$pkg};
+    
+    no strict 'refs';
+    initialize($_, $configuration, $self, $cycle) foreach @{"${pkg}::ISA"};
+    $cycle->{$pkg} = 1;
+
+    $self = bless($self, $pkg);
+
+    $self->update_parameters($configuration)
+        if defined &{"${pkg}::parameters"};    
+
+    $self->setup($configuration)   
+        if defined &{"${pkg}::setup"};
+
+    return;    
+}
 #----------------------------------------------------------------------
 # Set up object fields (stub)
 
