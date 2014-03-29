@@ -12,7 +12,6 @@ our $VERSION = "1.03";
 
 sub new {
     my ($pkg, $configuration) = @_;
-    no strict 'refs';
 
     my $self = {};
     my $cycle = {};
@@ -105,8 +104,9 @@ App::Followme::ConfiguredObject - Base class for App::Followme classes
 
 =head1 DESCRIPTION
 
-This class contains the methods create a new configured object. The following
-methods are noteworthy:
+This class creates a new configured object. All classes in App::Followme are
+subclassed from it. The new method creates a new object and intiailizes the
+parameters from the configuration file. 
 
 =over 4
 
@@ -118,11 +118,11 @@ in the configuration whose name does not match an object parameter are ignored.
 
 =item %parameters = $self->parameters();
 
-Returns a hash of the default values of the object's parameters
+Returns a hash of the default values of the object's parameters.
 
 =item $self->run($directory);
 
-Run the object on a directory.
+Run the object on the files in a directory.
 
 =item $self->setup($configuration);
 
