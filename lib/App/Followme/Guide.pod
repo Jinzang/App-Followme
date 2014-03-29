@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-App::Followme::Readme - How to install, configure, and run followme
+App::Followme::Guide - How to install, configure, and run followme
 
 =head1 SYNOPSIS
 
@@ -12,7 +12,7 @@ App::Followme::Readme - How to install, configure, and run followme
 
 Updates a static website after changes. Constant portions of each page are
 updated to match, text files are converted to html, and indexes are created
-for new files in the archive.
+for files in the archive.
 
 The followme script is run on the directory or file passed as its argument. If
 no argument is given, it is run on the current directory.
@@ -24,7 +24,7 @@ all directories below it are checked.
 
 =head1 INSTALLATION
 
-First, install the App::Followme script from cpan. It will copy the
+First, install the App::Followme module from CPAN. It will copy the
 followme script to /usr/local/bin, so it will be on your search path.
 
     sudo cpanm App::Followme
@@ -196,7 +196,7 @@ later then the last time it was run are checked.
 
 =head1 RUNNING
 
-Followme script is run on the directory or file passed as its argument. If
+The followme script is run on the directory or file passed as its argument. If
 no argument is given, it is run on the current directory. If a file is passed,
 the script is run on the directory the file is in and followme is run in
 quick mode. Quick mode is an implicit promise that only the named file has
@@ -221,7 +221,7 @@ Templates support the control structures in Perl: "for" and "while" loops,
 followme generates a subroutine from one or more templates, then you call the
 subroutine with your data to generate the output.
 
-The template format is line oriented. Commands are enclosed in html comments
+The template format is line oriented. Commands are enclosed in an html comment
 (<!-- -->) on its own line. A command may be preceded or followed by white
 space. If a command is a block command, it is terminated by the word "end"
 followed by the command name. For example, the "for" command is terminated by an
@@ -236,9 +236,7 @@ examined by the module. By convention if more than one file is examined, the
 data is in an array referenced by a hash field named 'loop'. The subroutine
 replaces variables in the template with the value in the field of the same name
 in the hash. If the types of the two disagree, the code will coerce the data to
-the type of the sigil. You can pass a reference to an array instead of a hash to
-the subroutine this module generates. If you do, the template will use C<@data>
-to refer to the array.
+the type of the sigil.
 
 If the first non-white characters on a line are the comment start string, the
 line is interpreted as a command. The command name continues up to the first
@@ -386,7 +384,13 @@ The signature of the run method is
     $obj->run($directory);
 
 where $obj is the object created by the new method and $directory is the name
-of the directory the module is being run on.
+of the directory the module is being run on. All modules included in
+App::Followme use L<App::Followme::Module > as a base class, so they can use its
+methods, such as visiting all files in a directory and compiling a template. If
+you wish to write your own module, you can use L<App::Followme::Sitemap> as a
+guide. If you use App::Followme::Module as a base class, you should not supply
+your own new method, but rely on the new method in
+L<App::Followme::ConfiguredObject>, which you will inherit.
 
 =head1 LICENSE
 

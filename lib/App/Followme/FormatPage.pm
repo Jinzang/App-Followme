@@ -338,7 +338,7 @@ Each page updated by substituting all its named blocks into corresponding block
 in the changed page. The effect is that all the text outside the named blocks
 are updated to be the same across all the web pages.
 
-Updates to the named block can also be made conditional by adding an in after
+Updates to the named block can also be made conditional by adding an "in" after
 the section name. If the folder name after the "in" is included in the
 prototype_path hash, then the block tags are ignored, it is as if the block does
 not exist. The block is considered as part of the constant portion of the

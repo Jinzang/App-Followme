@@ -116,9 +116,9 @@ followme [file or directory]
 
 =head1 DESCRIPTION
 
-Update a static website after changes. Constant portions of each page are
+Updates a static website after changes. Constant portions of each page are
 updated to match, text files are converted to html, and indexes are created
-for new files in the archive.
+for files in the archive.
 
 The script is run on the directory or file passed as its argument. If no
 argument is given, it is run on the current directory.

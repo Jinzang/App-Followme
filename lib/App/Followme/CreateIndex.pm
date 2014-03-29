@@ -134,8 +134,8 @@ This package builds an index for a directory containing links to all the files
 contained in it with the specified extensions. The variables described below are
 substituted into a template to produce the index. Loop comments that look like
 
-    <!-- loop @loop -->
-    <!-- endloop -->
+    <!-- for @loop -->
+    <!-- endfor -->
 
 indicate the section of the template that is repeated for each file contained
 in the index. 

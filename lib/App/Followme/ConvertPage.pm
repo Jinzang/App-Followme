@@ -135,7 +135,7 @@ which by default is 'md'.
 
 Along with the content, other variables are calculated from the file name and
 modification date. Variables in the template are preceded by a sigil, most usually
-a doolar sign. Thus a link would look like:
+a dollar sign. Thus a link would look like:
 
     <li><a href="$url">$title</a></li>
 
@@ -159,6 +159,10 @@ file content, or the filename, if it is not.
 The variables calculated from the modification time are: C<weekday, month,>
 C<monthnum, day, year, hour24, hour, ampm, minute,> and C<second.>
 
+=item url
+
+The url of the html file built from the Markdown file.
+
 =back
 
 =head1 CONFIGURATION
@@ -175,7 +179,8 @@ there, in the templates subdirectory.
 
 =item text_extension 
 
-The extension of files that are converted to web pages.
+The extension of files that are converted to web pages. The default value
+is md.
 
 The remaining parameters are passed unchanged to L<Text::Markdown>. You
 should not need to change them.

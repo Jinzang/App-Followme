@@ -34,7 +34,7 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Build date fields from time, based on Blosxom 3
+# Extract a web page's body from between section tags
 
 sub build_body {
     my ($self, $data, $filename) = @_;
@@ -647,7 +647,7 @@ sub write_page {
 
 =head1 NAME
 
-App::Followme::Module - Handle templates and prototype files
+App::Followme::Module - Base class for modules invoked from configuration
 
 =head1 SYNOPSIS
 
@@ -664,7 +664,11 @@ App::Followme::Module - Handle templates and prototype files
 
 =head1 DESCRIPTION
 
-This module contains the methods that perform template and prototype handling.
+This module contains the methods that build variables and perform template
+and prototype handling. It serves as the basis of all the computations
+performed by App::Followme, and thus is used as the base class for all its
+modules.
+
 A Template is a file containing commands and variables for making a web page.
 First, the template is compiled into a subroutine and then the subroutine is
 called with a hash as an argument to fill in the variables and produce a web
@@ -715,10 +719,10 @@ look like
 
 =item $data = $self->set_fields($directory, $filename);
 
-The main method for getting variables. This method calls the other methods
-mentioned here. Filename is the file that the variables are being computed for.
-Directory is used to compute the relative url. The url computed is relative
-to it.
+The main method for getting variables. This method calls the build methods
+defined in this class. Filename is the file that the variables are being
+computed for. Directory is used to compute the relative url. The url computed is
+relative to it.
 
 =item my $data = $self->build_date($data, $filename);
 

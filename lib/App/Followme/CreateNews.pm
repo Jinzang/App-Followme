@@ -238,13 +238,17 @@ the text of the most recently modified files together with links to the files,
 It can be used to create a basic weblog. The index is built using a template.
 The template has Loop comments that look like
 
-    <!-- loop -->
-    <!-- endloop -->
+    <!-- for @loop -->
+    <!-- endfor -->
 
 and indicate the section of the template that is repeated for each file
 contained in the index. The following variables may be used in the template:
 
 =over 4
+
+=item absolute_url
+
+The absolute_url of the web page.
 
 =item body
 
@@ -258,7 +262,7 @@ capitalizing the first character of each word.
 
 =item url
 
-The relative url of an html page. 
+The relative url of a web page. 
 
 =item time fields
 
