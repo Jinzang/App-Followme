@@ -13,7 +13,7 @@ use lib '../..';
 
 use base qw(App::Followme::ConfiguredObject);
 
-our $VERSION = "1.03";
+our $VERSION = "1.04";
 
 use constant COMMAND_START => '<!-- ';
 use constant COMMAND_END => '-->';
@@ -521,7 +521,7 @@ This module has one public method:
 
 Combine a prototype file and a template, compile them, and return the compiled
 subroutine. The prototype is the most recently modified file in the directory. A
-template if a file containing commands and variables that descibe how data is to
+template if a file containing commands and variables that describe how data is to
 be represented. The method returns a subroutine reference, which when called
 with a reference to a hash, returns a web page containing the data in the hash.
 fields in the hash are substituted into variables in the template. Variables in

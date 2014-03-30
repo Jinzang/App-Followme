@@ -2,6 +2,15 @@ Revision history for Perl extension App::Followme
 
 {{$NEXT}}
 
+1.04 2014-03-30T22:42:16Z
+    - Revised and corrected documentation
+    - Rewrote object creation code
+    - Changed calling sequence to most_recent_file
+    - Moved match_file out of visit
+    - Replaced EveryFile with ConfiguredObject
+    - Renamed HandleSite to Module
+    - Revised code in index_is_newer
+    
 1.03 2014-03-08T23:46:39Z
     - Check for undefined names in same_file, return false if found
     - Fixed bug in get_excluded_directories, wrong parameter used

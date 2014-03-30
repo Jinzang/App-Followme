@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use Cwd;
-our $VERSION = "1.03";
+our $VERSION = "1.04";
 
 #----------------------------------------------------------------------
 # Create object that returns files in a directory tree
@@ -105,7 +105,7 @@ App::Followme::ConfiguredObject - Base class for App::Followme classes
 =head1 DESCRIPTION
 
 This class creates a new configured object. All classes in App::Followme are
-subclassed from it. The new method creates a new object and intiailizes the
+subclassed from it. The new method creates a new object and initializes the
 parameters from the configuration file. 
 
 =over 4

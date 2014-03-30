@@ -12,7 +12,7 @@ use Cwd;
 use IO::File;
 use File::Spec::Functions qw(splitdir catfile);
 
-our $VERSION = "1.03";
+our $VERSION = "1.04";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
@@ -281,7 +281,7 @@ followme.cfg. The followme script derives the value of this parameter from
 the name of the script, so by adding a link to the script, you can have
 different sets of configuration files.
 
-==back
+=back
 
 =head1 LICENSE
 

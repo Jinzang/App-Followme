@@ -102,7 +102,7 @@ are named run_before then they are run before modules in any configuration files
 contained in subdirectories. If they are named run_after, they are run after
 modules which are named in the configuration files in subdirectories. Other
 parameters in the configuration files are written to a hash. This hash is passed
-to the new method of each module as it ioaded, overriding the default values of
+to the new method of each module as it loaded, overriding the default values of
 the parameters when creating the new object.
 
 These modules are distributed with followme:
@@ -354,6 +354,8 @@ hash are accessed using the "with" command. For example:
     $city, $state $zip</i></p.
     <!-- endwith -->
 
+=back
+
 More information on the syntax of template is in the documentation of
 the L<App::Followme::Template> module.
 
@@ -370,7 +372,7 @@ The signature of the new method is
 
     $obj = $module_name->new($configuration);
     
-where $configuration is a refererence to a hash containing the configuration
+where $configuration is a reference to a hash containing the configuration
 parameters. $module name is the same as the name in the configuration file.
 
 All the modules distributed with App::Followme subclass
@@ -385,7 +387,7 @@ The signature of the run method is
 
 where $obj is the object created by the new method and $directory is the name
 of the directory the module is being run on. All modules included in
-App::Followme use L<App::Followme::Module > as a base class, so they can use its
+App::Followme use L<App::Followme::Module> as a base class, so they can use its
 methods, such as visiting all files in a directory and compiling a template. If
 you wish to write your own module, you can use L<App::Followme::Sitemap> as a
 guide. If you use App::Followme::Module as a base class, you should not supply
