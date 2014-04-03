@@ -13,7 +13,7 @@ use IO::File;
 use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel splitdir catfile);
 
-our $VERSION = "1.04";
+our $VERSION = "1.05";
 
 use constant SEED => 96;
 
