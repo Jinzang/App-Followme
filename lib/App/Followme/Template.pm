@@ -352,7 +352,7 @@ sub parse_sections {
     # Extract sections from page
     
     my $sections = {};
-    my @lines = split(/\n/, $page);
+    my @lines = map {"$_\n"} split(/\n/, $page);
     $self->parse_block($sections, \@lines, '');
 
     # Combine lines in each section into a single string
