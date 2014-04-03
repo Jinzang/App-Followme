@@ -34,10 +34,12 @@ sub run {
     my ($self, $directory) = @_;
  
     my $index_name = $self->full_file_name($directory, $self->{index_file});
+    my $template_name = $self->get_template_name($self->{index_template});
+
+    my $pattern = $self->get_included_files();
+    my $filename = $self->most_recent_file($directory, $pattern);
     
-    return if $self->index_is_newer($index_name,
-                                    $self->{index_template},
-                                    $directory);
+    return if $self->is_newer($index_name, $template_name, $filename);
 
     eval {$self->create_an_index($directory, $index_name)};
     warn "$index_name: $@" if $@;

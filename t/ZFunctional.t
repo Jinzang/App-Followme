@@ -81,6 +81,7 @@ do {
         
         $followme->run($path);
         $file =~ s/md$/html/;
+        sleep(1);
         
         chomp($text);
         my $page = $followme->read_page($file);

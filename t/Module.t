@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 36;
+use Test::More tests => 34;
 
 use Cwd;
 use IO::File;
@@ -253,13 +253,4 @@ EOQ
     
     $newer = $mo->is_newer('six.html', 'five.html');
     is($newer, 1, 'Source and target undefined'); # test 34
-    
-    my $index_name = catfile($test_dir, 'index.html');
-    $newer = $mo->index_is_newer($index_name, $template_name, $test_dir);
-    is($newer, undef, 'Index is undefined'); # test 35
-
-    sleep(1);
-    $mo->write_page($index_name, $template);
-    $newer = $mo->index_is_newer($index_name, $template_name, $test_dir);
-    is($newer, 1, 'Index is defined'); # test 36
 };

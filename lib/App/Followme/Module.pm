@@ -348,20 +348,6 @@ sub glob_patterns {
 }
 
 #----------------------------------------------------------------------
-# Check if index file for directory is newer than other files
-
-sub index_is_newer {
-    my ($self, $index_name, $template_name, $directory) = @_;
-    
-    $template_name = $self->get_template_name($template_name);
-    return unless $self->is_newer($index_name, $template_name);
-
-    my $pattern = $self->get_included_files();
-    my $filename = $self->most_recent_file($directory, $pattern);
-    return $self->is_newer($index_name, $filename);
-}
-
-#----------------------------------------------------------------------
 # Get fields from reading the file (stub)
 
 sub internal_fields {
@@ -403,6 +389,9 @@ sub is_newer {
         next unless defined $source;
         next unless -e $source;
         
+        $source = catfile($source, "index.$self->{web_extension}")
+            if -d $source;
+
         next if $self->same_file($target, $source);
 
         my @stats = stat($source);  
@@ -410,6 +399,7 @@ sub is_newer {
         return if $source_date >= $target_date;
     }
 
+    #print "target newer\n";
     return 1;
 }
 

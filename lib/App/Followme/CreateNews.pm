@@ -51,11 +51,13 @@ sub create_an_index {
     
     # Don't re-create index if directory and template haven't changed
     
+    my $template_name = $self->get_template_name($self->{news_index_template});
     my $index_name = $self->full_file_name($directory, $self->{news_index_file});
 
-    return if $self->index_is_newer($index_name,
-                                    $self->{news_index_template},
-                                    $directory);
+    return if $self->is_newer($index_name,
+                              $template_name,
+                              @$directories,
+                              @$filenames);
     
     my $data = $self->set_fields($directory, $index_name);    
     $data->{loop} = $self->index_data($directory, $directories, $filenames);
@@ -203,7 +205,6 @@ sub update_news {
     my ($self, $directory, $augmented_files) = @_;
     
     my ($filenames, $directories) = $self->visit($directory);
-    $self->create_an_index($directory, $directories, $filenames);
     
     $augmented_files = $self->more_recent_files($directory,
                                                 $filenames,
@@ -213,6 +214,7 @@ sub update_news {
         $augmented_files = $self->update_news($subdirectory, $augmented_files);
     }
 
+    $self->create_an_index($directory, $directories, $filenames);
     return $augmented_files;
 }
 
