@@ -2,6 +2,10 @@ Revision history for Perl extension App::Followme
 
 {{$NEXT}}
 
+1.05 2014-04-03T23:29:36Z
+    - Rewrote is_newer, deleted index_is_newer
+    - Added newlines to end of lines in parse_section
+
 1.04 2014-03-30T22:42:16Z
     - Revised and corrected documentation
     - Rewrote object creation code
