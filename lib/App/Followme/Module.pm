@@ -379,6 +379,7 @@ sub internal_fields {
 sub is_newer {
     my ($self, $target, @sources) = @_;
     
+    print "===\ntarget: $target\n";
     my $target_date = 0;   
     if (-e $target) {
         my @stats = stat($target);  
@@ -387,13 +388,14 @@ sub is_newer {
     
     foreach my $source (@sources) {
         next unless defined $source;
-        next unless -e $source;
         
         $source = catfile($source, "index.$self->{web_extension}")
             if -d $source;
 
+        next unless -e $source;
         next if $self->same_file($target, $source);
 
+        print "source: $source\n";
         my @stats = stat($source);  
         my $source_date = $stats[9];
         return if $source_date >= $target_date;
