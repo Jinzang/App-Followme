@@ -32,7 +32,10 @@ sub parameters {
 sub run {
     my ($self, $directory) = @_;
 
-    eval {$self->create_recent_news($self->{base_directory})};
+    eval {
+        $self->create_news_indexes($self->{base_directory});
+        $self->create_recent_news($self->{base_directory});
+        };
 
     if ($@) {
         my $news_file = $self->full_file_name($self->{base_directory},
@@ -66,6 +69,22 @@ sub create_an_index {
     my $page = $render->($data);
 
     $self->write_page($index_name, $page);
+    return;
+}
+
+#----------------------------------------------------------------------
+# Create news indexes for directory and its subdirectories
+
+sub create_news_indexes {
+    my ($self, $directory) = @_;
+    
+    my ($filenames, $directories) = $self->visit($directory);
+    
+    foreach my $subdirectory (@$directories) {
+        $self->create_news_indexes($subdirectory);
+    }
+
+    $self->create_an_index($directory, $directories, $filenames);
     return;
 }
 
@@ -190,7 +209,7 @@ sub recent_files {
     my ($self, $directory) = @_;
     
     my $augmented_files = [];
-    $augmented_files = $self->update_news($directory, $augmented_files);
+    $augmented_files = $self->update_filelist($directory, $augmented_files);
 
     my @recent_files = map {$_->[1]} @$augmented_files;
     @recent_files = reverse @recent_files if @recent_files > 1;
@@ -199,9 +218,9 @@ sub recent_files {
 }
 
 #----------------------------------------------------------------------
-# Update the news site indexes and return most recent files
+# Return most recent files
 
-sub update_news {
+sub update_filelist {
     my ($self, $directory, $augmented_files) = @_;
     
     my ($filenames, $directories) = $self->visit($directory);
@@ -211,10 +230,10 @@ sub update_news {
                                                 $augmented_files);
     
     foreach my $subdirectory (@$directories) {
-        $augmented_files = $self->update_news($subdirectory, $augmented_files);
+        $augmented_files = $self->update_filelist($subdirectory,
+                                                  $augmented_files);
     }
 
-    $self->create_an_index($directory, $directories, $filenames);
     return $augmented_files;
 }
 
