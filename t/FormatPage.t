@@ -220,7 +220,6 @@ EOQ
 
     foreach my $dir (('sub', '')) {
         foreach my $count (qw(four three two one)) {
-            sleep(1);
             my $output = $code;
             my $dir_name = $dir ? $dir : 'top';
             
@@ -234,6 +233,7 @@ EOQ
             my $filename = catfile(@dirs, "$count.html");
             
             $up->write_page($filename, $output);
+            sleep(2);
         }
     }
 };
