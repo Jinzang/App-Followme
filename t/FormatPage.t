@@ -271,22 +271,22 @@ do {
             my $filename = "$count.html";
             my $input = $up->read_page($filename);
 
-            ok($input =~ /Page $count/,
+            like($input, qr(Page $count),
                "Format block in $dir/$count"); # test 13, 17, 21, 25
             
-            ok($input =~ /top link/,
+            like($input, qr(top link),
                "Format prototype $dir/$count"); # test 14, 18, 22 26
 
             if ($dir) {
-                ok($input =~ /section nav in sub --/,
+                like($input, qr(section nav in sub --),
                    "Format section tag in $dir/$count"); # test 23, 27
-                ok($input =~ /link one/,
+                like($input, qr(link one),
                    "Format folder block $dir/$count"); # test 24, 28
                 
             } else {
-                ok($input =~ /section nav --/, 
+                like($input, qr(section nav --), 
                    "Format section tag in $dir/$count"); # test 15, 19
-                ok($input =~ /link $count/, 
+                like($input, qr(link $count), 
                    "Format folder block in $dir/$count"); # test 16, 22
             }
         }
