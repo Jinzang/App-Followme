@@ -313,7 +313,7 @@ __END__
 
 =head1 NAME
 
-App::Followme::FormatPages - Simple static web site maintenance
+App::Followme::FormatPages - Modify pages in a directory to match a prototype
 
 =head1 SYNOPSIS
 

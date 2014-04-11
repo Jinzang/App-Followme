@@ -100,7 +100,7 @@ App::Followme::ConfiguredObject - Base class for App::Followme classes
 =head1 SYNOPSIS
 
     use App::Followme::ConfiguredObject;
-    my $fo = App::Followme::ConfiguredObjects->new($configuration);
+    my $obj = App::Followme::ConfiguredObjects->new($configuration);
 
 =head1 DESCRIPTION
 
@@ -139,7 +139,8 @@ class based on it:
 
 =item base_directory
 
-The directory the class is loaded in. The default value is the current directory.
+The directory containing the configuration file that loads the class. The
+default value is the current directory.
 
 =item quick_mode
 
@@ -147,7 +148,7 @@ A flag indicating application is run in quick mode.
 
 =item top_directory
 
-The top directory of the website The default value is the current directory.
+The top directory of the website. The default value is the current directory.
 
 =back
 

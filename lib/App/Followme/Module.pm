@@ -641,12 +641,12 @@ App::Followme::Module - Base class for modules invoked from configuration
 =head1 SYNOPSIS
 
     use App::Followme::Module;
-    my $hs = App::Followme::Module->new($configuration);
-    my $prototype = $hs->find_prototype($directory, 0);
-    my $test = $hs->is_newer($filename, $prototype);
+    my $obj = App::Followme::Module->new($configuration);
+    my $prototype = $obj->find_prototype($directory, 0);
+    my $test = $obj->is_newer($filename, $prototype);
     if ($test) {
-        my $data = $hs->set_fields($directory, $filename);
-        my $sub = $self->make_template($directory, $template_name);
+        my $data = $obj->set_fields($directory, $filename);
+        my $sub = $obj->make_template($directory, $template_name);
         my $webppage = $sub->($data);
         print $webpage;
     }
@@ -658,60 +658,21 @@ and prototype handling. It serves as the basis of all the computations
 performed by App::Followme, and thus is used as the base class for all its
 modules.
 
-A Template is a file containing commands and variables for making a web page.
+=head1 METHODS
+
+Packages loaded as modules get a consistent behavior by subclassing
+App::Foolowme:Module. It is not invoked directly. It provides methods for i/o,
+handling templates, and prototypes, and building the variables that are inserted
+into templates. 
+
+A template is a file containing commands and variables for making a web page.
 First, the template is compiled into a subroutine and then the subroutine is
 called with a hash as an argument to fill in the variables and produce a web
 page. A prototype is the most recently modified web page in a directory. It is
 combined with the template so that the web page has the same look as the other
 pages in the directory.
 
-=head1 METHODS
-
-This module has three public methods.
-
 =over 4
-
-=item $test = $self->is_newer($target, @sources);
-
-Compare the modification date of the target file to the modification dates of
-the source files. If the target file is newer than all of the sources, return
-1 (true).
-
-=item $filename = $self->find_prototype($directory, $uplevel);
-
-Return the name of the most recently modified web page in a directory. If
-$uplevel is defined, search that many directory levels up from the directory
-passed as the first argument.
-
-=item $sub = $self->make_template($directory, $template_name);
-
-Combine a prototype and template, compile them, and return the compiled
-subroutine. The prototype is the most recently modified file in the directory
-passed as the first argument. The method searches for the template file first
-in the directory and if it is not found there, in the templates folder, which
-is an object parameter,
-
-The data supplied to the subroutine should
-be a hash reference. fields in the hash are substituted into variables in the
-template. Variables in the template are preceded by Perl sigils, so that a
-link would look like:
-
-    <li><a href="$url">$title</a></li>
-
-The data hash may contain a list of hashes, which the modules in App::Followme
-name loop. Text in between for and endfor comments will be repeated for each
-hash in the list and each hash will be interpolated into the text. For comments
-look like
-
-    <!-- for @loop -->
-    <!-- endfor -->
-
-=item $data = $self->set_fields($directory, $filename);
-
-The main method for getting variables. This method calls the build methods
-defined in this class. Filename is the file that the variables are being
-computed for. Directory is used to compute the relative url. The url computed is
-relative to it.
 
 =item my $data = $self->build_date($data, $filename);
 
@@ -733,10 +694,44 @@ capitalizing the first character of each word.
 
 Build the relative and absolute urls of a web page from a filename.
 
+=item $filename = $self->find_prototype($directory, $uplevel);
+
+Return the name of the most recently modified web page in a directory. If
+$uplevel is defined, search that many directory levels up from the directory
+passed as the first argument.
+
 =item my $data = $self->internal_fields($data, $filename);
 
 Compute the fields that you must read the file to calculate: title, body,
 and summary
+
+=item $test = $self->is_newer($target, @sources);
+
+Compare the modification date of the target file to the modification dates of
+the source files. If the target file is newer than all of the sources, return
+1 (true).
+
+=item $sub = $self->make_template($directory, $template_name);
+
+Combine a prototype and template, compile them, and return the compiled
+subroutine. The prototype is the most recently modified file in the directory
+passed as the first argument. The method first searches for the template file 
+in the directory and if it is not found there, in the templates folder, which
+is an object parameter,
+
+The data supplied to the subroutine should be a hash reference. fields in the
+hash are substituted into variables in the template. Variables in the template
+are preceded by Perl sigils, so that a link would look like:
+
+    <li><a href="$url">$title</a></li>
+
+The data hash may contain a list of hashes, which by convention the modules in
+App::Followme name loop. Text in between for and endfor comments will be
+repeated for each hash in the list and each hash will be interpolated into the
+text. For comments look like
+
+    <!-- for @loop -->
+    <!-- endfor -->
 
 =item $str = $self->read_page($filename);
 
@@ -744,11 +739,17 @@ Read a fie into a string. An the entire file is read from a string, there is no
 line at a time IO. This is because files are typically small and the parsing
 done is not line oriented. 
 
+=item $data = $self->set_fields($directory, $filename);
+
+The main method for getting variables. This method calls the build methods
+defined in this class. Filename is the file that the variables are being
+computed for. Directory is used to compute the relative url. The url computed is
+relative to it.
+
 =item $self->write_page($filename, $str);
 
-Write a file from a string. An the entire file is read to or written from a
-string, there is no line at a time IO. This is because files are typically small
-and the parsing done is not line oriented. 
+Write a file from a string. An the entire file is written from a string, there
+is no line at a time IO. This is because files are typically small.
 
 =item ($filenames, $directories) = $self->visit($top_directory);
 
