@@ -2,6 +2,10 @@ Revision history for Perl extension App::Followme
 
 {{$NEXT}}
 
+1.07 2014-04-11T23:06:54Z
+    - Updated documentation
+    - Changed tests for better error reporting
+
 1.06 2014-04-05T22:24:20Z
     - Bug fix, moved check for file existence in is_newer
     - Separated news index creation into its own method, create_news_indexes
