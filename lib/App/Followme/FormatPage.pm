@@ -10,7 +10,7 @@ use base qw(App::Followme::Module);
 use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
 
-our $VERSION = "1.06";
+our $VERSION = "1.07";
 
 #----------------------------------------------------------------------
 # Modify pages to match the most recently modified page

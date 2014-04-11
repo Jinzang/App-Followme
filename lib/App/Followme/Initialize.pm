@@ -6,7 +6,7 @@ use warnings;
 use Cwd;
 use IO::File;
 use File::Spec::Functions qw(splitdir catfile);
-our $VERSION = "1.06";
+our $VERSION = "1.07";
 our $modeline;
 
 require Exporter;
