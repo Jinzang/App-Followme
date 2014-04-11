@@ -233,11 +233,6 @@ Delete a file on the remote site. .
 
 Close the ftp connection to the remote site.
 
-=item $self->setup($configuration);
-
-Open the ftp connection. The configuration is a reference to
-a hash, which includes the user name and password used in the connection.
-
 =back
 
 =head1 CONFIGURATION

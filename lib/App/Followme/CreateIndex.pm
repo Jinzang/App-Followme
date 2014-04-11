@@ -28,7 +28,7 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Return all the files in a subtree (example)
+#  Create an index to all files in a directory with a specified extension
 
 sub run {
     my ($self, $directory) = @_;

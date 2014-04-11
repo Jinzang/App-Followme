@@ -24,7 +24,7 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Return a list of all files in a directory
+# Write a list of urls in a directory tress
 
 sub run {
     my ($self, $directory) = @_;

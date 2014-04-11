@@ -13,7 +13,7 @@ use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
 our $VERSION = "1.06";
 
 #----------------------------------------------------------------------
-# Return all the files in a subtree (example)
+# Modify pages to match the most recently modified page
 
 sub run {
     my ($self, $directory) = @_;

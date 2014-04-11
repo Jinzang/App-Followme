@@ -27,7 +27,7 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Return all the files in a subtree (example)
+# Create a page of recent news items and indexes in each subdirectory
 
 sub run {
     my ($self, $directory) = @_;
