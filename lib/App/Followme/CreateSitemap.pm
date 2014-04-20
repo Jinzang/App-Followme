@@ -24,7 +24,7 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Write a list of urls in a directory tress
+# Write a list of urls in a directory tree
 
 sub run {
     my ($self, $directory) = @_;
