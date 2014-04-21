@@ -53,7 +53,7 @@
          }
       }
    },
-   "release_status" : "unstable",
+   "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
          "web" : "https://github.com/Jinzang/App-Followme/issues"
@@ -64,5 +64,5 @@
          "web" : "https://github.com/Jinzang/App-Followme"
       }
    },
-   "version" : "1.07"
+   "version" : "1.08"
 }

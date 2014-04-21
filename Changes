@@ -1,6 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+
+1.08 2014-04-21T23:18:52Z
     - Fixed typos
     - added each command to Template
 
