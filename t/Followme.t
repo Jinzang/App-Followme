@@ -25,7 +25,7 @@ rmtree($test_dir);
 mkdir $test_dir;
 chdir $test_dir;
 
-$test_dir = cwd();
+$test_dir = getcwd();
 
 #----------------------------------------------------------------------
 # Test set directory
