@@ -9,7 +9,7 @@ use lib '../..';
 use base qw(App::Followme::ConfiguredObject);
 
 
-our $VERSION = "1.07";
+our $VERSION = "1.08";
 
 #----------------------------------------------------------------------
 # Add a directory to the remote site
