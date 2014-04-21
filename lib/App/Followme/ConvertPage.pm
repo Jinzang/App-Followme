@@ -10,7 +10,7 @@ use base qw(App::Followme::Module);
 use Text::Markdown;
 use File::Spec::Functions qw(catfile);
 
-our $VERSION = "1.08";
+our $VERSION = "1.09";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
