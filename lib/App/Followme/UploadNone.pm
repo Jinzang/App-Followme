@@ -69,7 +69,7 @@ App::Followme::UploadNone - Go through the motions of uploading files
 
 =head1 SYNOPSIS
 
-    my $uplader = App::Followme::UploadNone->new(\%configuration);
+    my $uploader = App::Followme::UploadNone->new(\%configuration);
     $uploader->open($user, $password);
     $uploader->add_directory($dir);
     $uploader->add_file($filename);

@@ -104,9 +104,9 @@ sub clean_files {
     foreach my $filename (@filenames) {
         my $flag;
         if ($hash->{$filename} eq 'dir') {
-            $flag = $self->{uplader}->delete_directory($filename);            
+            $flag = $self->{uploader}->delete_directory($filename);            
         } else {
-            $flag = $self->{uplader}->delete_file($filename);                        
+            $flag = $self->{uploader}->delete_file($filename);                        
         }
 
         if ($flag) {
