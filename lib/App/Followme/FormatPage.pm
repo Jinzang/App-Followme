@@ -227,14 +227,22 @@ sub update_directory {
         die "Couldn't read $filename" unless defined $page;
 
         # Check for changes before updating page
-        my $skip = $self->unchanged_prototype($prototype, $page, $prototype_path);
+        my $skip;
+        eval {
+            $skip = $self->unchanged_prototype($prototype, $page,
+                                               $prototype_path);
+        };
+        die "$filename: $@" if $@;
 
         if ($skip) {
             last if $count;
             
         } else {    
-            $page = $self->update_page($prototype, $page, $prototype_path);
-        
+            eval {
+                $page = $self->update_page($prototype, $page, $prototype_path);
+            };
+            die "$filename: $@" if $@;
+
             my @stats = stat($filename);
             my $modtime = $stats[9];
         
