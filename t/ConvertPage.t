@@ -100,11 +100,9 @@ EOQ
     my $prototype_file_ok = catfile($test_dir, 'index.html');
     is($prototype_file, $prototype_file_ok, 'Find page template'); # test 1
 
-    my $render = $cvt->make_template($test_dir, 'template.htm');
-
     my $data = $cvt->internal_fields({}, 'three.md');
     ok(index($data->{body}, "<li>third three</li>") > 0,'Convert Text'); # test 2
-    $cvt->convert_a_file($render, $test_dir, 'four.md');
+    $cvt->convert_a_file($test_dir, 'four.md');
     
     my $page = $cvt->read_page('four.html');
     like($page, qr/<h1>Page four<\/h1>/, 'Convert a file'); # test 3

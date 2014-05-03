@@ -65,10 +65,11 @@ sub create_an_index {
     my $data = $self->set_fields($directory, $index_name);    
     $data->{loop} = $self->index_data($directory, $directories, $filenames);
 
-    my $render = $self->make_template($directory, $self->{news_index_template});
+    my $render = $self->make_template($index_name, $self->{news_index_template});
+    
     my $page = $render->($data);
-
     $self->write_page($index_name, $page);
+
     return;
 }
 
@@ -114,10 +115,11 @@ sub create_recent_news {
     my $data = $self->recent_data($recent_files, $directory, $news_file);
 
     # Interpolate the data into the template and write the file
-    my $render = $self->make_template($directory, $self->{news_template});
+    
+    my $render = $self->make_template($news_file, $self->{news_template});
     my $page = $render->($data);
-
     $self->write_page($news_file, $page);
+
     return;
 }
 

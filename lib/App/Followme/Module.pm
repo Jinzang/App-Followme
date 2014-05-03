@@ -406,18 +406,18 @@ sub is_newer {
 # Combine template with prototype and compile to subroutine
 
 sub make_template {
-    my ($self, $directory, $template_file) = @_;
+    my ($self, $filename, $template_file) = @_;
 
+    my ($directory, $base) = $self->split_filename($filename);
+    undef $filename unless -e $filename;
+    
     my $template_name = $self->get_template_name($template_file);
     my $prototype_name = $self->find_prototype($directory);
 
-    my $sub;
-    if (defined $prototype_name) {
-        $sub = $self->{template}->compile($prototype_name, $template_name);
-    } else {
-        $sub = $self->{template}->compile($template_name);
-    }
-
+    my @filenames = grep {defined $_}
+        ($prototype_name, $filename, $template_name);
+    
+    my $sub = $self->{template}->compile(@filenames);
     return $sub;
 }
 
@@ -646,7 +646,7 @@ App::Followme::Module - Base class for modules invoked from configuration
     my $test = $obj->is_newer($filename, $prototype);
     if ($test) {
         my $data = $obj->set_fields($directory, $filename);
-        my $sub = $obj->make_template($directory, $template_name);
+        my $sub = $obj->make_template($filename, $template_name);
         my $webppage = $sub->($data);
         print $webpage;
     }
@@ -711,7 +711,9 @@ Compare the modification date of the target file to the modification dates of
 the source files. If the target file is newer than all of the sources, return
 1 (true).
 
-=item $sub = $self->make_template($directory, $template_name);
+=item $sub = $self->make_template($filename, $template_name);
+
+TODO fix this documentation
 
 Combine a prototype and template, compile them, and return the compiled
 subroutine. The prototype is the most recently modified file in the directory

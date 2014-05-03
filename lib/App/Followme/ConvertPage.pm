@@ -33,13 +33,12 @@ sub parameters {
 sub run {
     my ($self, $directory) = @_;
 
-    my $render = $self->make_template($directory, $self->{page_template});
     my ($filenames, $directories) = $self->visit($directory);
     
     foreach my $filename (@$filenames) {
         next unless $self->match_file($filename);
 
-        eval {$self->convert_a_file($render, $directory, $filename)};
+        eval {$self->convert_a_file($directory, $filename)};
         warn "$filename: $@" if $@;
     }
 
@@ -57,14 +56,15 @@ sub run {
 # Convert a single file
 
 sub convert_a_file {
-    my ($self, $render, $directory, $filename) = @_;
-    
-    my $data = $self->set_fields($directory, $filename);
-    my $page = $render->($data);
+    my ($self, $directory, $filename) = @_;
     
     my $new_file = $filename;
     $new_file =~ s/\.[^\.]*$/.$self->{web_extension}/;
 
+    my $render = $self->make_template($new_file, $self->{page_template});
+    my $data = $self->set_fields($directory, $filename);
+    my $page = $render->($data);
+    
     $self->write_page($new_file, $page);
     unlink($filename);
 

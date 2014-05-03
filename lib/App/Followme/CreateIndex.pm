@@ -20,7 +20,6 @@ sub parameters {
     my ($self) = @_;
     
     return (
-            body_tag => 'content',
             index_file => 'index.html',
             index_include => 'html',
             index_template => 'index.htm',
@@ -73,7 +72,7 @@ sub create_an_index {
     my $data = $self->set_fields($directory, $index_name);
     $data->{loop} = $self->index_data($directory);
 
-    my $render = $self->make_template($directory, $self->{index_template});
+    my $render = $self->make_template($index_name, $self->{index_template});
     my $page = $render->($data);
 
     $self->write_page($index_name, $page);
