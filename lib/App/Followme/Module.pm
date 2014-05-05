@@ -713,7 +713,7 @@ the source files. If the target file is newer than all of the sources, return
 
 =item $sub = $self->make_template($filename, $template_name);
 
-Generate a scompiled ubroutine to render a file by combining a prototype, the
+Generate a compiled subroutine to render a file by combining a prototype, the
 current version of the file, and template. The prototype is the most recently
 modified file in the directory containing the filename passed as the first
 argument. The method first searches for the template file in the directory
