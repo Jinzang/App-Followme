@@ -713,17 +713,16 @@ the source files. If the target file is newer than all of the sources, return
 
 =item $sub = $self->make_template($filename, $template_name);
 
-TODO fix this documentation
+Generate a scompiled ubroutine to render a file by combining a prototype, the
+current version of the file, and template. The prototype is the most recently
+modified file in the directory containing the filename passed as the first
+argument. The method first searches for the template file in the directory
+containing the filename and if it is not found there, in the templates folder,
+which is an object parameter,
 
-Combine a prototype and template, compile them, and return the compiled
-subroutine. The prototype is the most recently modified file in the directory
-passed as the first argument. The method first searches for the template file 
-in the directory containing the filename and if it is not found there, in the
-templates folder, which is an object parameter,
-
-The data supplied to the subroutine should be a hash reference. fields in the
-hash are substituted into variables in the template. Variables in the template
-are preceded by Perl sigils, so that a link would look like:
+The data supplied to the compiled subroutine should be a hash reference. fields
+in the hash are substituted into variables in the template. Variables in the
+template are preceded by Perl sigils, so that a link would look like:
 
     <li><a href="$url">$title</a></li>
 
