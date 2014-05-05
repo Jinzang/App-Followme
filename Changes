@@ -2,6 +2,10 @@ Revision history for Perl extension App::Followme
 
 {{$NEXT}}
 
+1.10 2014-05-05T15:26:10Z
+    - updated template handling code to match Template::Twostep
+    - change get_template to use current version of file to be rendered
+
 1.09 2014-04-21T23:40:09Z
     - Fixed typos
     - added each command to Template
