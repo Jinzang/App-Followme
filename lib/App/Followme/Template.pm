@@ -75,45 +75,45 @@ sub compile {
 
     # Template precedes subtemplate, which precedes subsubtemplate
 
-    my @block;
-    my $sections = {};
+    my $text;
+    my $section = {};
     while (my $template = pop(@templates)) {
-        my $fd = IO::File->new($template, 'r');
-        die "Cannot read $template: $!\n" unless $fd;
-    
-        my @lines = <$fd>;
-        close($fd);
+        # If a template contains a newline, it is a string,
+        # if not, it is a filename
 
-        @block = $self->parse_block($sections, \@lines, '');
+        $text = ($template =~ /\n/) ? $template : $self->slurp($template);
+        $text = $self->substitute_sections($text, $section);
     }
 
-    return $self->construct_code(\@block);
+    return $self->construct_code($text);
 }
 
 #----------------------------------------------------------------------
-# Construct a subroutine from the code embedded in the template
+# Compile a subroutine from the code embedded in the template
 
 sub construct_code {
-    my ($self, $lines) = @_;
+    my ($self, $text) = @_;
 
-    my $code = <<'EOQ';
+    my @lines = split(/\n/, $text);
+
+    my $start = <<'EOQ';
 sub {
 $self->init_stack();
 $self->push_stack(@_);
 my $text = '';
 EOQ
 
-    push(@$lines, "\n");
-    $code .= $self->parse_code($lines);
+    my @mid = $self->parse_code(\@lines);
 
-    $code .= <<'EOQ';
-chomp $text;
+    my $end .= <<'EOQ';
 return $text;
 }
 EOQ
 
+    my $code = join("\n", $start, @mid, $end);
     my $sub = eval ($code);
     croak $@ unless $sub;
+
     return $sub;
 }
 
@@ -225,111 +225,43 @@ sub init_stack {
 }
 
 #----------------------------------------------------------------------
-# Is a command a singleton command?
-
-sub is_singleton {
-    my ($self, $cmd) = @_;
-
-    return ! ($cmd eq 'section' || $self->get_command("end$cmd"));
-}
-
-#----------------------------------------------------------------------
-# Read and check the template files
-
-sub parse_block {
-    my ($self, $sections, $lines, $command) = @_;
-
-    my @block;
-    while (defined (my $line = shift @$lines)) {
-        my ($cmd, $arg) = $self->parse_command($line);
-
-        if (defined $cmd) {
-            if (substr($cmd, 0, 3) eq 'end') {
-                $arg = substr($cmd, 3);
-                croak "Mismatched block end ($command/$arg)"
-                      if defined $arg && $arg ne $command;
-
-                push(@block, $line);
-                return @block;
-
-            } elsif ($self->is_singleton($cmd)) {
-                push(@block, $line);
-
-            } else {
-                my @sub_block = $self->parse_block($sections, $lines, $cmd);
-
-                if ($cmd eq 'section') {
-                    my $endline = pop(@sub_block);
-                    my ($name, $rest) = split(' ', $arg, 2);
-
-                    $sections->{$name} = \@sub_block
-                        unless exists $sections->{$name};
-
-                    push(@block, $line, @{$sections->{$name}}, $endline); 
-
-                } else {
-                    push(@block, $line, @sub_block);
-                }
-            }
-
-        } else {
-            push(@block, $line);
-        }
-    }
-
-    croak "Missing end" if $command;
-    return @block;
-}
-
-#----------------------------------------------------------------------
 # Parse the templace source
 
 sub parse_code {
-    my ($self, $lines) = @_;
+    my ($self, $lines, $command) = @_;
 
-    my $code = '';
-    my $stash = '';
+    my @code;
+    my @stash;
 
     while (defined (my $line = shift @$lines)) {
-        my ($cmd, $arg) = $self->parse_command($line);
-
+        my ($cmd, $cmdline) = $self->parse_command($line);
+    
         if (defined $cmd) {
-            if (length $stash) {
-                $code .= "\$text .= <<\"EOQ\";\n";
-                $code .= "${stash}EOQ\n";
-                $stash = '';
+            if (@stash) {
+                push(@code, '$text .= <<"EOQ";', @stash, 'EOQ');
+                @stash = ();
             }
-
-            my $command = $self->get_command($cmd);
-            if (defined $command) {
-                my $ref = ref ($command);
-                if (! $ref) {
-                    $arg = $self->encode_expression($arg);
-                    $command =~ s/%%/$arg/;
-                    $code .= "$command\n";
-    
-                } elsif ($ref eq 'CODE') {
-                    $code .= $command->($self, $arg);
-    
-                } else {
-                    die "I don't know how to handle a $ref: $cmd";
-                }
+            push(@code, $cmdline);
             
-            } else {
-                $stash .=  $self->encode_text($line);
-            }
+            if (substr($cmd, 0, 3) eq 'end') {
+                my $startcmd = substr($cmd, 3);
+                die "Mismatched block end ($command/$cmd)"
+                      if defined $startcmd && $startcmd ne $command;
+                return @code;
 
+            } elsif ($self->get_command("end$cmd")) {
+                push(@code, $self->parse_code($lines, $cmd));
+            }
+        
         } else {
-            $stash .= $self->encode_text($line);
+            push(@stash, $self->encode_text($line));
         }
     }
 
-    if (length $stash) {
-        $code .= "\$text .= <<\"EOQ\";\n";
-        $code .= "${stash}EOQ\n";
-    }
+    die "Missing end (end$command)" if $command;
+    push(@code, '$text .= <<"EOQ";', @stash, 'EOQ') if @stash;
 
-    return $code;
+    return @code;
 }
 
 #----------------------------------------------------------------------
@@ -338,34 +270,67 @@ sub parse_code {
 sub parse_command {
     my ($self, $line) = @_;
 
-    if ($line =~ s/$self->{command_start_pattern}//) {
-        $line =~ s/$self->{command_end_pattern}//;
-        return split(' ', $line, 2)
+    my $command_start_pattern = COMMAND_START;
+    return unless $line =~ s/$command_start_pattern//;
+
+    my $command_end_pattern = COMMAND_END;
+    $line =~ s/$command_end_pattern//;
+    
+    my ($cmd, $arg) = split(' ', $line, 2);
+    $arg = '' unless defined $arg;
+    
+    my $cmdline = $self->get_command($cmd);
+    return unless $cmdline;
+    
+    my $ref = ref ($cmdline);
+
+    if (! $ref) {
+        $arg = $self->encode_expression($arg);
+        $cmdline =~ s/%%/$arg/;
+    
+    } elsif ($ref eq 'CODE') {
+        $cmdline = $cmdline->($self, $arg);
+    
+    } else {
+        die "I don't know how to handle a $ref: $cmd";
     }
 
-    return;
+    return ($cmd, $cmdline);
 }
 
 #----------------------------------------------------------------------
-# Return a hash of the sections in a page
+# Extract sections from file, store in hash
 
 sub parse_sections {
-    my ($self, $page) = @_;
-    
-    # Extract sections from page
-    
-    my $sections = {};
-    my @lines = map {"$_\n"} split(/\n/, $page);
-    $self->parse_block($sections, \@lines, '');
+    my ($self, $text) = @_;
 
-    # Combine lines in each section into a single string
+    my $name;
+    my %section;
+
+    # Extract sections from input
+
+    my @tokens = split (/(<!--\s*(?:section|endsection)\s+.*?-->)/, $text);
+
+    foreach my $token (@tokens) {
+        if ($token =~ /^<!--\s*section\s+(\w+).*?-->/) {
+            if (defined $name) {
+                die "Nested sections in input: $token\n";
+            }
+            $name = $1;
     
-    foreach my $name (keys %$sections) {
-        my $section = join('', @{$sections->{$name}});
-        $sections->{$name} = $section;
+        } elsif ($token =~ /^<!--\s*endsection\s+(\w+).*?-->/) {
+            if ($name ne $1) {
+                die "Nested sections in input: $token\n";
+            }
+            undef $name;
+    
+        } elsif (defined $name) {
+            $section{$name} = $token;
+        }
     }
     
-    return $sections;    
+    die "Unmatched section (<!-- section $name -->)\n" if $name;
+    return \%section;
 }
 
 #----------------------------------------------------------------------
@@ -459,6 +424,24 @@ sub set_command {
 }
 
 #----------------------------------------------------------------------
+# Read a file into a string
+
+sub slurp {
+    my ($self, $input) = @_;
+
+    my $in;
+    local $/;
+
+    $in = IO::File->new ($input, 'r');
+    return '' unless defined $in;
+
+    my $text = <$in>;
+    $in->close;
+
+    return $text;
+}
+
+#----------------------------------------------------------------------
 # Store a variable in the hashlist, used by set
 
 sub store_stack {
@@ -487,6 +470,46 @@ sub store_stack {
     }
 
     return;
+}
+
+#----------------------------------------------------------------------
+# Substitue comment delimeted sections for same blacks in template
+
+sub substitute_sections {
+    my ($self, $text, $section) = @_;
+
+    my $name; 
+    my @output;
+    
+    my @tokens = split (/(<!--\s*(?:section|endsection)\s+.*?-->)/, $text);
+
+    foreach my $token (@tokens) {
+        if ($token =~ /^<!--\s*section\s+(\w+).*?-->/) {
+            if (defined $name) {
+                die "Nested sections in template: $name\n";
+            }
+
+            $name = $1;
+            push(@output, $token);
+    
+        } elsif ($token =~ /^\s*<!--\s*endsection\s+(\w+).*?-->/) {
+            if ($name ne $1) {
+                die "Nested sections in template: $name\n";
+            }
+
+            undef $name;
+            push(@output, $token);
+    
+        } elsif (defined $name) {
+            $section->{$name} ||= $token;
+            push(@output, $section->{$name});
+            
+        } else {
+            push(@output, $token);
+        }
+    }
+    
+    return join('', @output);
 }
 
 1;
