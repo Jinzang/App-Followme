@@ -38,14 +38,15 @@ my $configuration = {
 do {
     my $up = App::Followme::UploadSite->new($configuration);
 
+    my $user_ok = 'gandalf';
+    my $password_ok = 'wizzard';
+
     my $cred_file = catfile(
                             $up->{top_directory},
                             $up->{template_directory},
-                            $up->{credentials}
+                            $up->{credentials},
                            );
 
-    my $user_ok = 'gandalf';
-    my $password_ok = 'wizzard';
     $up->write_word($cred_file, $user_ok, $password_ok);
 
     my ($user, $pass) = $up->read_word($cred_file);
