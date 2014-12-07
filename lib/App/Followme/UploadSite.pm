@@ -46,9 +46,15 @@ sub run {
     $self->{uploader}->open($user, $pass);
 
     eval {
+        my $old_directory = getcwd();
+        chdir($self->{top_directory})
+            or die "Can't cd to $self->{top_directory}";
+        
         $self->update_folder($self->{top_directory}, $hash, $local);
         $self->clean_files($hash, $local);    
         $self->{uploader}->close();
+        
+        chdir($old_directory);
     };
     
     my $error = $@;
