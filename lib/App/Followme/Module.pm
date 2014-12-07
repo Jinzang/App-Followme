@@ -14,7 +14,7 @@ use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
 
 use base qw(App::Followme::ConfiguredObject);
 
-our $VERSION = "1.10";
+our $VERSION = "1.11";
 
 use constant MONTHS => [qw(January February March April May June July
                            August September October November December)];
