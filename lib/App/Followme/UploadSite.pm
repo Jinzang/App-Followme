@@ -89,13 +89,12 @@ sub checksum_file {
 
     my $fd = IO::File->new($filename, 'r');
     return '' unless $fd;
+    binmode($fd, ':raw');
     
     my $md5 = Digest::MD5->new;
-    foreach my $line (<$fd>) {
-        $md5->add($line);        
-    }
-
+    $md5->addfile($fd);
     close($fd);
+
     return $md5->hexdigest;
 }
 
