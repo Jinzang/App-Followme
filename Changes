@@ -2,6 +2,10 @@ Revision history for Perl extension App::Followme
 
 {{$NEXT}}
 
+1.11 2014-12-08T00:04:05Z
+    - modified UploadSite: cd to top directory before run
+    - modified UploadSite: fix checksum computation
+
 1.10 2014-05-05T15:26:10Z
     - updated template handling code to match Template::Twostep
     - change get_template to use current version of file to be rendered

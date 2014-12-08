@@ -108,7 +108,7 @@ the parameters when creating the new object.
 
 These modules are distributed with followme:
 
-- [App::Followme::FormatPages](http://search.cpan.org/perldoc?App::Followme::FormatPages)
+- [App::Followme::FormatPages](https://metacpan.org/pod/App::Followme::FormatPages)
 
     This module updates the web pages in a folder to match the most recently
     modified page. Each web page has sections that are different from other pages
@@ -136,7 +136,7 @@ These modules are distributed with followme:
     where folder\_name is the the folder the content is kept constant across. The
     folder name is not a full path, it is the last folder in the path.
 
-- [App::Followme::ConvertPages](http://search.cpan.org/perldoc?App::Followme::ConvertPages)
+- [App::Followme::ConvertPages](https://metacpan.org/pod/App::Followme::ConvertPages)
 
     This module changes Markdown files to html files. Markdown format is described
     at:
@@ -155,7 +155,7 @@ These modules are distributed with followme:
     inside the section comments will be in the resulting page, editing the text
     outside it will have no effect on the resulting page.
 
-- [App::Followme::CreateIndex](http://search.cpan.org/perldoc?App::Followme::CreateIndex)
+- [App::Followme::CreateIndex](https://metacpan.org/pod/App::Followme::CreateIndex)
 
     This module builds an index for a directory containing links to all the files
     with the specified extension contained in it. The same variables mentioned above
@@ -167,21 +167,21 @@ These modules are distributed with followme:
     indicate the section of the template that is repeated for each file contained
     in the index. 
 
-- [App::Followme::CreateNews](http://search.cpan.org/perldoc?App::Followme::CreateNews)
+- [App::Followme::CreateNews](https://metacpan.org/pod/App::Followme::CreateNews)
 
     This module generates an html file from the most recently updated files in the
     news directory. It also creates index files in each directory and
     subdirectory in the news directory. The same variables mentioned under
-    [App::Followme::ConvertPages](http://search.cpan.org/perldoc?App::Followme::ConvertPages) are calculated for each file included in the
+    [App::Followme::ConvertPages](https://metacpan.org/pod/App::Followme::ConvertPages) are calculated for each file included in the
     indexes.
 
-- [App::Followme::CreateSitemap](http://search.cpan.org/perldoc?App::Followme::CreateSitemap)
+- [App::Followme::CreateSitemap](https://metacpan.org/pod/App::Followme::CreateSitemap)
 
     This module creates a sitemap file, which is a text file containing the url of
     every page on the site, one per line. It is also intended as a simple example of
     how to write a module that can be run by followme.
 
-- [App::Followme::UploadSite](http://search.cpan.org/perldoc?App::Followme::UploadSite)
+- [App::Followme::UploadSite](https://metacpan.org/pod/App::Followme::UploadSite)
 
     This module uploads changed files to a remote site. The default method to do the
     uploads is ftp, but that can be changed by changing the parameter upload\_pkg.
@@ -350,7 +350,7 @@ The following commands are supported in templates:
         <!-- endwith -->
 
 More information on the syntax of template is in the documentation of
-the [App::Followme::Template](http://search.cpan.org/perldoc?App::Followme::Template) module.
+the [App::Followme::Template](https://metacpan.org/pod/App::Followme::Template) module.
 
 # MODULES
 
@@ -381,12 +381,12 @@ The signature of the run method is
 
 where $obj is the object created by the new method and $directory is the name
 of the directory the module is being run on. All modules included in
-App::Followme use [App::Followme::Module](http://search.cpan.org/perldoc?App::Followme::Module) as a base class, so they can use its
+App::Followme use [App::Followme::Module](https://metacpan.org/pod/App::Followme::Module) as a base class, so they can use its
 methods, such as visiting all files in a directory and compiling a template. If
-you wish to write your own module, you can use [App::Followme::Sitemap](http://search.cpan.org/perldoc?App::Followme::Sitemap) as a
+you wish to write your own module, you can use [App::Followme::Sitemap](https://metacpan.org/pod/App::Followme::Sitemap) as a
 guide. If you use App::Followme::Module as a base class, you should not supply
 your own new method, but rely on the new method in
-[App::Followme::ConfiguredObject](http://search.cpan.org/perldoc?App::Followme::ConfiguredObject), which you will inherit.
+[App::Followme::ConfiguredObject](https://metacpan.org/pod/App::Followme::ConfiguredObject), which you will inherit.
 
 # LICENSE
 
