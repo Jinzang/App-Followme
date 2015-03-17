@@ -290,7 +290,7 @@ sub get_included_files {
 }
 
 #----------------------------------------------------------------------
-# Get the full template name (stub)
+# Get the full template name
 
 sub get_template_name {
     my ($self, $template_file) = @_;
@@ -348,7 +348,7 @@ sub glob_patterns {
 }
 
 #----------------------------------------------------------------------
-# Get fields from reading the file (stub)
+# Get fields from reading the file
 
 sub internal_fields {
     my ($self, $data, $filename) = @_;   
