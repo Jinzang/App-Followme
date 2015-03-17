@@ -19,7 +19,7 @@ our $VERSION = "1.11";
 
 sub parameters {
     my ($pkg) = @_;
-    
+
     return (
             configuration_file => 'followme.cfg',
            );
@@ -48,7 +48,7 @@ sub find_configuration {
 
     # Push a possibly non-existent configuration file in the current
     # directory onto the list of configuration files
-    
+
     my $config_file = catfile($directory, $self->{configuration_file});
     my @configuration_files = ($config_file);
 
@@ -56,7 +56,7 @@ sub find_configuration {
     pop(@dirs);
 
     # Find configuration files in and above directory
-    
+
     while (@dirs) {
         $config_file = catfile(@dirs, $self->{configuration_file});
         push(@configuration_files, $config_file) if -e $config_file;
@@ -67,7 +67,7 @@ sub find_configuration {
 
     # The topmost configuration file is the top and base directory
     $self->set_directories(@configuration_files);
-    
+
     return \@configuration_files;
 }
 
@@ -85,7 +85,7 @@ sub load_and_run_modules {
         my $object = $module->new(\%configuration);
         $object->run($directory);
     }
-    
+
     return;
 }
 
@@ -97,7 +97,7 @@ sub set_directories {
 
     my ($directory, $file) = $self->split_filename($configuration_files[0]);
     $self->{base_directory} = $directory;
-    $self->{top_directory} = $directory;    
+    $self->{top_directory} = $directory;
     return;
 }
 
@@ -110,9 +110,9 @@ sub update_configuration {
     my @modules;
     $configuration{run_before} = [];
     $configuration{run_after} = [];
-    
+
     my $fd = IO::File->new($filename, 'r');
-    
+
     if ($fd) {
         while (my $line = <$fd>) {
             # Ignore comments and blank lines
@@ -138,7 +138,7 @@ sub update_configuration {
                 $configuration{$name} = $value;
             }
         }
-        
+
         close($fd);
     }
 
@@ -160,20 +160,20 @@ sub update_folder {
     if (-e $configuration_file) {
         %configuration = $self->update_configuration($configuration_file,
                                                      %configuration);
- 
+
         $run_before = $configuration{run_before};
         delete $configuration{run_before};
-    
+
         $run_after = $configuration{run_after};
         delete $configuration{run_after};
     }
-    
+
     $self->load_and_run_modules($run_before,
                                 $base_directory,
-                                $directory, 
+                                $directory,
                                 %configuration);
 
-    
+
     if (@$configuration_files) {
         $self->update_folder($directory,
                              $configuration_files,
@@ -181,17 +181,17 @@ sub update_folder {
 
     } elsif (! $self->{quick_update}) {
         my ($filenames, $directories) = $self->visit($directory);
-        
+
         foreach my $subdirectory (@$directories) {
             $self->update_folder($subdirectory,
                                  $configuration_files,
                                  %configuration);
         }
     }
-    
+
     $self->load_and_run_modules($run_after,
                                 $base_directory,
-                                $directory, 
+                                $directory,
                                 %configuration);
     return;
 }
@@ -223,8 +223,8 @@ The configuration file for followme is followme.cfg in the top directory of
 your site. It contains the names of the Perl modules that are run when the
 followme command is run:
 
-    run_before = App::Followme::FormatPages
-    run_before = App::Followme::ConvertPages
+    run_before = App::Followme::FormatPage
+    run_before = App::Followme::ConvertPage
 
 Perl modules are run in the order they appear in the configuration file. If they
 are named run_before then they are run before modules in configuration files in
@@ -296,4 +296,3 @@ it under the same terms as Perl itself.
 Bernie Simon E<lt>bernie.simon@gmail.comE<gt>
 
 =cut
-
