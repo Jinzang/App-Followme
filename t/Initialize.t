@@ -30,12 +30,13 @@ chdir $test_dir;
 
 do {
     my (@files, @texts);
-    while(my ($file, $text) = App::Followme::Initialize::next_file()) {
+    my ($read, $unread) = App::Followme::Initialize::data_readers();
+    while(my ($file, $text) = App::Followme::Initialize::next_file($read, $unread)) {
         push(@files, $file);
         push(@texts, $text);
     }
-    
-    my @files_ok = qw(followme.cfg archive/followme.cfg 
+
+    my @files_ok = qw(followme.cfg archive/followme.cfg
                       templates/page.htm templates/news.htm
                       templates/news_index.htm templates/index.htm);
 
@@ -43,12 +44,12 @@ do {
         my @dirs = split('/', $_);
         $_ = catfile(@dirs);
     }
-    
+
     is_deeply(\@files, \@files_ok, "Next file name"); # test 1
-    
+
     my @long = grep {length($_) > 50} @texts;
     is(@long, 6, "Next file"); # test 2
-    
+
     my $file = shift @files;
     my $text = shift @texts;
     App::Followme::Initialize::copy_file($file, $text);
