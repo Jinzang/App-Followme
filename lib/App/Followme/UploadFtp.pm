@@ -11,14 +11,14 @@ use base qw(App::Followme::ConfiguredObject);
 use Net::FTP;
 use File::Spec::Functions qw(abs2rel splitdir catfile);
 
-our $VERSION = "1.11";
+our $VERSION = "1.12";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
 
 sub parameters {
     my ($self) = @_;
-    
+
     return (
             ftp_url => '',
             ftp_directory => '',
@@ -50,10 +50,10 @@ sub add_directory {
 
 sub add_file {
     my ($self, $filename) = @_;
-    
+
     my $status;
     my $remote_filename = $self->remote_name($filename);
-    
+
     # Delete file if already there
     if ($self->{ftp}->mdtm($remote_filename)) {
         $self->{ftp}->delete($remote_filename);
@@ -83,11 +83,11 @@ sub add_file {
 # Close the ftp connection
 
 sub close {
-    my ($self) = @_;    
+    my ($self) = @_;
 
     $self->{ftp}->quit();
     undef $self->{ftp};
-    
+
     return;
 }
 
@@ -96,7 +96,7 @@ sub close {
 
 sub delete_directory {
     my ($self, $dir) = @_;
-    
+
     my $status;
     $dir = $self->remote_name($dir);
 
@@ -117,7 +117,7 @@ sub delete_directory {
 
 sub delete_file {
     my ($self, $filename) = @_;
-    
+
     my $status;
     $filename = $self->remote_name($filename);
 
@@ -140,12 +140,12 @@ sub open {
     my ($self, $user, $password) = @_;
 
     # Open the ftp connection
-    
+
     my $ftp = Net::FTP->new($self->{ftp_url}, Debug => $self->{ftp_debug})
         or die "Cannot connect to $self->{ftp_url}: $@";
- 
+
     $ftp->login($user, $password) or die "Cannot login ", $ftp->message;
- 
+
     $ftp->cwd($self->{ftp_directory})
         or die "Cannot change remote directory ", $ftp->message;
 
@@ -176,10 +176,10 @@ sub setup {
 
     # Load the methods that build file names for the remote site,
     # which my be different than thos on this machine
-    
+
     my $remote_pkg = $self->{remote_pkg};
     eval "require $remote_pkg" or die "Module not found: $remote_pkg\n";
-    
+
     return;
 }
 
@@ -244,7 +244,7 @@ will prompt for and save the user name and password.
 
 =item ftp_debug
 
-Set to one to trace the ftp commands issued. Useful to diagnose problems 
+Set to one to trace the ftp commands issued. Useful to diagnose problems
 with ftp uploads. The default value is zero.
 
 =item ftp_directory
@@ -275,4 +275,3 @@ it under the same terms as Perl itself.
 Bernie Simon E<lt>bernie.simon@gmail.comE<gt>
 
 =cut
-

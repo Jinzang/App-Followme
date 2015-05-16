@@ -9,14 +9,14 @@ use base qw(App::Followme::Module);
 
 use File::Spec::Functions qw(abs2rel catfile no_upwards rel2abs splitdir);
 
-our $VERSION = "1.11";
+our $VERSION = "1.12";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
 
 sub parameters {
     my ($self) = @_;
-    
+
     return (
             news_file => '../blog.html',
             news_index_file => 'index.html',
@@ -51,9 +51,9 @@ sub run {
 
 sub create_an_index {
     my ($self, $directory, $directories, $filenames) = @_;
-    
+
     # Don't re-create index if directory and template haven't changed
-    
+
     my $template_name = $self->get_template_name($self->{news_index_template});
     my $index_name = $self->full_file_name($directory, $self->{news_index_file});
 
@@ -61,12 +61,12 @@ sub create_an_index {
                               $template_name,
                               @$directories,
                               @$filenames);
-    
-    my $data = $self->set_fields($directory, $index_name);    
+
+    my $data = $self->set_fields($directory, $index_name);
     $data->{loop} = $self->index_data($directory, $directories, $filenames);
 
     my $render = $self->make_template($index_name, $self->{news_index_template});
-    
+
     my $page = $render->($data);
     $self->write_page($index_name, $page);
 
@@ -78,9 +78,9 @@ sub create_an_index {
 
 sub create_news_indexes {
     my ($self, $directory) = @_;
-    
+
     my ($filenames, $directories) = $self->visit($directory);
-    
+
     foreach my $subdirectory (@$directories) {
         $self->create_news_indexes($subdirectory);
     }
@@ -94,28 +94,28 @@ sub create_news_indexes {
 
 sub create_recent_news {
     my ($self, $directory) = @_;
-    
+
     # Get the names of the more recent files
 
     my $file;
-    my $recent_files = $self->recent_files($directory); 
+    my $recent_files = $self->recent_files($directory);
 
     my $news_file = $self->full_file_name($directory, $self->{news_file});
     ($directory, $file) = $self->split_filename($news_file);
 
     my $template_name = $self->get_template_name($directory,
                                                  $self->{news_template});
-    
+
     # Don't create news if no files have changed
 
     return if $self->is_newer($news_file, $template_name, @$recent_files);
     return unless @$recent_files;
-    
+
     # Get the data for these files
     my $data = $self->recent_data($recent_files, $directory, $news_file);
 
     # Interpolate the data into the template and write the file
-    
+
     my $render = $self->make_template($news_file, $self->{news_template});
     my $page = $render->($data);
     $self->write_page($news_file, $page);
@@ -128,13 +128,13 @@ sub create_recent_news {
 
 sub get_excluded_files {
     my ($self) = @_;
-    
+
     my @excluded;
     foreach my $filename ($self->{news_file}, $self->{news_index_file}) {
         my ($dir, $file) = $self->split_filename($filename);
         push(@excluded, $file);
     }
-    
+
     return join(',', @excluded);
 }
 
@@ -143,7 +143,7 @@ sub get_excluded_files {
 
 sub index_data {
     my ($self, $directory, $directories, $filenames) = @_;
-    
+
     my @index_data;
     foreach my $filename (@$directories) {
         next unless $self->search_directory($filename);
@@ -163,10 +163,10 @@ sub index_data {
 
 sub more_recent_files {
     my ($self, $directory, $filenames, $augmented_files) = @_;
-           
+
     # Skip chcking the directory if it is older than the oldest recent file
 
-    my $limit = $self->{news_index_length};    
+    my $limit = $self->{news_index_length};
     return $augmented_files if @$augmented_files >= $limit &&
         $self->is_newer($augmented_files->[0][1], $directory);
 
@@ -175,16 +175,16 @@ sub more_recent_files {
     foreach my $filename (@$filenames) {
         next unless $self->match_file($filename);
 
-        my @stats = stat($filename);        
+        my @stats = stat($filename);
         if (@$augmented_files < $limit || $stats[9] > $augmented_files->[0][0]) {
-    
+
             shift(@$augmented_files) if @$augmented_files >= $limit;
             push(@$augmented_files, [$stats[9], $filename]);
-            
+
             @$augmented_files = sort {$a->[0] <=> $b->[0]} @$augmented_files;
         }
     }
-    
+
     return $augmented_files;
 }
 
@@ -193,10 +193,10 @@ sub more_recent_files {
 
 sub recent_data {
     my ($self, $recent_files, $directory, $news_file) = @_;
-    
+
    my @recent_data;
     for my $file (@$recent_files) {
-        push(@recent_data, $self->set_fields($directory, $file));        
+        push(@recent_data, $self->set_fields($directory, $file));
     }
 
     my $data = $self->set_fields($directory, $news_file);
@@ -209,7 +209,7 @@ sub recent_data {
 
 sub recent_files {
     my ($self, $directory) = @_;
-    
+
     my $augmented_files = [];
     $augmented_files = $self->update_filelist($directory, $augmented_files);
 
@@ -224,13 +224,13 @@ sub recent_files {
 
 sub update_filelist {
     my ($self, $directory, $augmented_files) = @_;
-    
+
     my ($filenames, $directories) = $self->visit($directory);
-    
+
     $augmented_files = $self->more_recent_files($directory,
                                                 $filenames,
                                                 $augmented_files);
-    
+
     foreach my $subdirectory (@$directories) {
         $augmented_files = $self->update_filelist($subdirectory,
                                                   $augmented_files);
@@ -285,7 +285,7 @@ capitalizing the first character of each word.
 
 =item url
 
-The relative url of a web page. 
+The relative url of a web page.
 
 =item time fields
 
@@ -330,4 +330,3 @@ it under the same terms as Perl itself.
 Bernie Simon E<lt>bernie.simon@gmail.comE<gt>
 
 =cut
-

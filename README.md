@@ -94,8 +94,8 @@ that directory and its subdirectories.
 Configuration files contain the names of the Perl modules to be run by followme
 in the parameters named run\_before and run\_after
 
-    run_before = App::Followme::FormatPages
-    run_before = App::Followme::ConvertPages
+    run_before = App::Followme::FormatPage
+    run_before = App::Followme::ConvertPage
     run_after = App::Followme::CreateSitemap
 
 Perl modules are run in the order they appear in the configuration file. If they
@@ -108,7 +108,7 @@ the parameters when creating the new object.
 
 These modules are distributed with followme:
 
-- [App::Followme::FormatPages](https://metacpan.org/pod/App::Followme::FormatPages)
+- [App::Followme::FormatPage](https://metacpan.org/pod/App::Followme::FormatPage)
 
     This module updates the web pages in a folder to match the most recently
     modified page. Each web page has sections that are different from other pages
@@ -136,7 +136,7 @@ These modules are distributed with followme:
     where folder\_name is the the folder the content is kept constant across. The
     folder name is not a full path, it is the last folder in the path.
 
-- [App::Followme::ConvertPages](https://metacpan.org/pod/App::Followme::ConvertPages)
+- [App::Followme::ConvertPage](https://metacpan.org/pod/App::Followme::ConvertPage)
 
     This module changes Markdown files to html files. Markdown format is described
     at:

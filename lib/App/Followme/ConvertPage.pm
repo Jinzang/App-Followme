@@ -10,14 +10,14 @@ use base qw(App::Followme::Module);
 use Text::Markdown;
 use File::Spec::Functions qw(catfile);
 
-our $VERSION = "1.11";
+our $VERSION = "1.12";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
 
 sub parameters {
     my ($self) = @_;
-    
+
     return (
             text_extension => 'md',
             page_template => 'page.htm',
@@ -34,7 +34,7 @@ sub run {
     my ($self, $directory) = @_;
 
     my ($filenames, $directories) = $self->visit($directory);
-    
+
     foreach my $filename (@$filenames) {
         next unless $self->match_file($filename);
 
@@ -43,12 +43,12 @@ sub run {
     }
 
     return if $self->{quick_update};
-    
+
     foreach my $directory (@$directories) {
         next unless $self->search_directory($directory);
         $self->run($directory);
     }
-    
+
     return;
 }
 
@@ -57,14 +57,14 @@ sub run {
 
 sub convert_a_file {
     my ($self, $directory, $filename) = @_;
-    
+
     my $new_file = $filename;
     $new_file =~ s/\.[^\.]*$/.$self->{web_extension}/;
 
     my $render = $self->make_template($new_file, $self->{page_template});
     my $data = $self->set_fields($directory, $filename);
     my $page = $render->($data);
-    
+
     $self->write_page($new_file, $page);
     unlink($filename);
 
@@ -83,7 +83,7 @@ sub get_included_files {
 # Get fields from reading the file
 
 sub internal_fields {
-    my ($self, $data, $filename) = @_;   
+    my ($self, $data, $filename) = @_;
 
     my $text = $self->read_page($filename);
     die "Couldn't read\n" unless defined $text;
@@ -147,7 +147,7 @@ The variables that are calculated for each markdown file are:
 
 All the contents of the file, minus the title if there is one. Markdown is
 called on the file's content to generate html before being stored in the body
-variable. 
+variable.
 
 =item title
 
@@ -177,7 +177,7 @@ The name of the template file. The template file is either in the same
 directory as the configuration file used to invoke this method, or if not
 there, in the templates subdirectory.
 
-=item text_extension 
+=item text_extension
 
 The extension of files that are converted to web pages. The default value
 is md.

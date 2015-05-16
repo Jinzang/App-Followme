@@ -13,7 +13,7 @@ use lib '../..';
 
 use base qw(App::Followme::ConfiguredObject);
 
-our $VERSION = "1.11";
+our $VERSION = "1.12";
 
 use constant COMMAND_START => '<!-- ';
 use constant COMMAND_END => '-->';
@@ -27,7 +27,7 @@ sub coerce {
     my $data;
     if (defined $value) {
         my $ref = ref $value;
-    
+
         if ($sigil eq '$') {
             if (! $ref) {
                 $data = \$value;
@@ -39,7 +39,7 @@ sub coerce {
                 my $val = @data;
                 $data = \$val;
             }
-    
+
         } elsif ($sigil eq '@') {
             if (! $ref) {
                 $data = [$value];
@@ -49,7 +49,7 @@ sub coerce {
                 my @data = %$value;
                 $data = \@data;
             }
-    
+
         } elsif ($sigil eq '%') {
             if ($ref eq 'ARRAY' && @$value % 2 == 0) {
                 my %data = @$value;
@@ -62,7 +62,7 @@ sub coerce {
     } elsif ($sigil eq '$') {
         $data = \$value;
     }
-    
+
     return $data;
 }
 
@@ -235,14 +235,14 @@ sub parse_code {
 
     while (defined (my $line = shift @$lines)) {
         my ($cmd, $cmdline) = $self->parse_command($line);
-    
+
         if (defined $cmd) {
             if (@stash) {
                 push(@code, '$text .= <<"EOQ";', @stash, 'EOQ');
                 @stash = ();
             }
             push(@code, $cmdline);
-            
+
             if (substr($cmd, 0, 3) eq 'end') {
                 my $startcmd = substr($cmd, 3);
                 die "Mismatched block end ($command/$cmd)"
@@ -252,7 +252,7 @@ sub parse_code {
             } elsif ($self->get_command("end$cmd")) {
                 push(@code, $self->parse_code($lines, $cmd));
             }
-        
+
         } else {
             push(@stash, $self->encode_text($line));
         }
@@ -275,22 +275,22 @@ sub parse_command {
 
     my $command_end_pattern = COMMAND_END;
     $line =~ s/$command_end_pattern//;
-    
+
     my ($cmd, $arg) = split(' ', $line, 2);
     $arg = '' unless defined $arg;
-    
+
     my $cmdline = $self->get_command($cmd);
     return unless $cmdline;
-    
+
     my $ref = ref ($cmdline);
 
     if (! $ref) {
         $arg = $self->encode_expression($arg);
         $cmdline =~ s/%%/$arg/;
-    
+
     } elsif ($ref eq 'CODE') {
         $cmdline = $cmdline->($self, $arg);
-    
+
     } else {
         die "I don't know how to handle a $ref: $cmd";
     }
@@ -317,18 +317,18 @@ sub parse_sections {
                 die "Nested sections in input: $token\n";
             }
             $name = $1;
-    
+
         } elsif ($token =~ /^<!--\s*endsection\s+(\w+).*?-->/) {
             if ($name ne $1) {
                 die "Nested sections in input: $token\n";
             }
             undef $name;
-    
+
         } elsif (defined $name) {
             $section{$name} = $token;
         }
     }
-    
+
     die "Unmatched section (<!-- section $name -->)\n" if $name;
     return \%section;
 }
@@ -478,9 +478,9 @@ sub store_stack {
 sub substitute_sections {
     my ($self, $text, $section) = @_;
 
-    my $name; 
+    my $name;
     my @output;
-    
+
     my @tokens = split (/(<!--\s*(?:section|endsection)\s+.*?-->)/, $text);
 
     foreach my $token (@tokens) {
@@ -491,7 +491,7 @@ sub substitute_sections {
 
             $name = $1;
             push(@output, $token);
-    
+
         } elsif ($token =~ /^\s*<!--\s*endsection\s+(\w+).*?-->/) {
             if ($name ne $1) {
                 die "Nested sections in template: $name\n";
@@ -499,16 +499,16 @@ sub substitute_sections {
 
             undef $name;
             push(@output, $token);
-    
+
         } elsif (defined $name) {
             $section->{$name} ||= $token;
             push(@output, $section->{$name});
-            
+
         } else {
             push(@output, $token);
         }
     }
-    
+
     return join('', @output);
 }
 

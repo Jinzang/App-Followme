@@ -9,29 +9,29 @@ use lib '../..';
 use base qw(App::Followme::ConfiguredObject);
 
 
-our $VERSION = "1.11";
+our $VERSION = "1.12";
 
 #----------------------------------------------------------------------
 # Add a directory to the remote site
 
 sub add_directory {
-    my ($self, $dir) = @_;  
-    return 1;    
+    my ($self, $dir) = @_;
+    return 1;
 }
 
 #----------------------------------------------------------------------
 # Add a file to the remote site
 
 sub add_file {
-    my ($self, $filename) = @_;  
-    return 1;    
+    my ($self, $filename) = @_;
+    return 1;
 }
 
 #----------------------------------------------------------------------
 # Close the ftp connection
 
 sub close {
-    my ($self) = @_;        
+    my ($self) = @_;
     return;
 }
 
@@ -39,16 +39,16 @@ sub close {
 # Delete a directory from the remote site
 
 sub delete_directory {
-    my ($self, $dir) = @_;  
-    return 1;    
+    my ($self, $dir) = @_;
+    return 1;
 }
 
 #----------------------------------------------------------------------
 # Delete a file from the remote site
 
 sub delete_file {
-    my ($self, $filename) = @_;  
-    return 1;    
+    my ($self, $filename) = @_;
+    return 1;
 }
 
 #----------------------------------------------------------------------
@@ -103,7 +103,7 @@ Upload a new file. If it already exists, delete it.
 
 =item $self->close();
 
-Close the connection to the remote site. 
+Close the connection to the remote site.
 
 =item $flag = $self->delete_directory($dir);
 
@@ -135,4 +135,3 @@ it under the same terms as Perl itself.
 Bernie Simon E<lt>bernie.simon@gmail.comE<gt>
 
 =cut
-

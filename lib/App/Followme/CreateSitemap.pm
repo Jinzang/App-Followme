@@ -9,14 +9,14 @@ use lib '../..';
 use File::Spec::Functions qw(catfile);
 use base qw(App::Followme::Module);
 
-our $VERSION = "1.11";
+our $VERSION = "1.12";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
 
 sub parameters {
     my ($self) = @_;
-    
+
     return (
             site_url => '',
             sitemap => 'sitemap.txt',
@@ -31,10 +31,10 @@ sub run {
 
     my @urls = $self->list_urls($directory);
     my $page = join("\n", @urls) . "\n";
-    
+
     my $filename = catfile($directory, $self->{sitemap});
     $self->write_page($filename, $page);
-   
+
     return;
 }
 
@@ -60,7 +60,7 @@ sub list_urls {
         next unless $self->search_directory($directory);
         push(@urls, $self->list_urls($subdirectory));
     }
-   
+
     return @urls;
 }
 
@@ -69,7 +69,7 @@ sub list_urls {
 
 sub setup {
     my ($self, $configuration) = @_;
-    
+
     # Remove any trailing slash
     $self->{site_url} =~ s/\/$//;
     return;
@@ -110,7 +110,7 @@ sitemap.txt.
 
 =item site_url
 
-The url of the website, e.g. http://www.example.com. 
+The url of the website, e.g. http://www.example.com.
 
 =back
 

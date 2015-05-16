@@ -11,14 +11,14 @@ use Cwd;
 use IO::Dir;
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile no_upwards);
 
-our $VERSION = "1.11";
+our $VERSION = "1.12";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
 
 sub parameters {
     my ($self) = @_;
-    
+
     return (
             index_file => 'index.html',
             index_include => 'html',
@@ -31,18 +31,18 @@ sub parameters {
 
 sub run {
     my ($self, $directory) = @_;
- 
+
     my $index_name = $self->full_file_name($directory, $self->{index_file});
     my $template_name = $self->get_template_name($self->{index_template});
 
     my $pattern = $self->get_included_files();
     my $filename = $self->most_recent_file($directory, $pattern);
-    
+
     return if $self->is_newer($index_name, $template_name, $filename);
 
     eval {$self->create_an_index($directory, $index_name)};
     warn "$index_name: $@" if $@;
-    
+
     return;
 }
 
@@ -55,7 +55,7 @@ sub build_url {
     $data->{url} = $self->filename_to_url($directory,
                                           $filename,
                                         );
-    
+
     $data->{absolute_url} = '/' . $self->filename_to_url($self->{top_directory},
                                                          $filename,
                                                         );
@@ -68,7 +68,7 @@ sub build_url {
 
 sub create_an_index {
     my ($self, $directory, $index_name) = @_;
-    
+
     my $data = $self->set_fields($directory, $index_name);
     $data->{loop} = $self->index_data($directory);
 
@@ -102,12 +102,12 @@ sub get_included_files {
 
 sub index_data {
     my ($self, $directory) = @_;
-    
+
     my ($filenames, $directories) = $self->visit($directory);
-    
+
     my @index_data;
     foreach my $filename (@$filenames) {
-        next unless $self->match_file($filename);        
+        next unless $self->match_file($filename);
         push(@index_data, $self->set_fields($directory, $filename));
     }
 
@@ -131,7 +131,7 @@ App::Followme::CreateIndex - Create index file for a directory
 
 =head1 DESCRIPTION
 
-This package builds an index for a directory containing links to all the files 
+This package builds an index for a directory containing links to all the files
 contained in it with the specified extensions. The variables described below are
 substituted into a template to produce the index. Loop comments that look like
 
@@ -139,7 +139,7 @@ substituted into a template to produce the index. Loop comments that look like
     <!-- endfor -->
 
 indicate the section of the template that is repeated for each file contained
-in the index. 
+in the index.
 
 =over 4
 
@@ -162,7 +162,7 @@ each word.
 
 =item url
 
-The relative url of each file. 
+The relative url of each file.
 
 =item time fields
 
@@ -205,4 +205,3 @@ it under the same terms as Perl itself.
 Bernie Simon E<lt>bernie.simon@gmail.comE<gt>
 
 =cut
-

@@ -13,7 +13,7 @@ use IO::File;
 use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel splitdir catfile);
 
-our $VERSION = "1.11";
+our $VERSION = "1.12";
 
 use constant SEED => 96;
 
@@ -22,7 +22,7 @@ use constant SEED => 96;
 
 sub parameters {
     my ($self) = @_;
-    
+
     return (
             verbose => 0,
             no_upload => 0,
@@ -49,18 +49,18 @@ sub run {
         my $old_directory = getcwd();
         chdir($self->{top_directory})
             or die "Can't cd to $self->{top_directory}";
-        
+
         $self->update_folder($self->{top_directory}, $hash, $local);
-        $self->clean_files($hash, $local);    
+        $self->clean_files($hash, $local);
         $self->{uploader}->close();
-        
+
         chdir($old_directory);
     };
-    
+
     my $error = $@;
     $self->write_hash_file($hash);
 
-    die $error if $error;    
+    die $error if $error;
     return;
 }
 
@@ -85,12 +85,12 @@ sub ask_word {
 # Compute checksum for a file
 
 sub checksum_file {
-    my ($self, $filename) = @_;    
+    my ($self, $filename) = @_;
 
     my $fd = IO::File->new($filename, 'r');
     return '' unless $fd;
     binmode($fd, ':raw');
-    
+
     my $md5 = Digest::MD5->new;
     $md5->addfile($fd);
     close($fd);
@@ -103,15 +103,15 @@ sub checksum_file {
 
 sub clean_files {
     my ($self, $hash, $local) = @_;
-    
+
     my @filenames = sort {length($b) <=> length($a)} keys(%$local);
-    
+
     foreach my $filename (@filenames) {
         my $flag;
         if ($hash->{$filename} eq 'dir') {
-            $flag = $self->{uploader}->delete_directory($filename);            
+            $flag = $self->{uploader}->delete_directory($filename);
         } else {
-            $flag = $self->{uploader}->delete_file($filename);                        
+            $flag = $self->{uploader}->delete_file($filename);
         }
 
         if ($flag) {
@@ -123,8 +123,8 @@ sub clean_files {
             $self->{max_errors} --;
         }
     }
-    
-    return;    
+
+    return;
 }
 
 #----------------------------------------------------------------------
@@ -156,13 +156,13 @@ sub get_state {
                             $self->{hash_file});
 
     if (-e $hash_file) {
-        my @stats = stat($hash_file);  
+        my @stats = stat($hash_file);
         $self->{target_date} = $stats[9];
     }
 
     my $hash = $self->read_hash_file($hash_file);
     my %local = map {$_ => 1} keys %$hash;
-    
+
     return ($hash, \%local);
 }
 
@@ -216,7 +216,7 @@ sub read_hash_file {
 
     my %hash;
     my $fd = IO::File->new($filename, 'r');
-    
+
     if ($fd) {
         while (my $line = <$fd>) {
             chomp $line;
@@ -236,7 +236,7 @@ sub read_hash_file {
 
 sub read_word {
     my ($self, $filename) = @_;
-    
+
     my $fd = IO::File->new ($filename, 'r') || die "Cannot read $filename\n";
 
     my $obstr = <$fd>;
@@ -262,10 +262,10 @@ sub setup {
 
     eval "require $upload_pkg" or die "Module not found: $upload_pkg\n";
     $self->{uploader} = $upload_pkg->new($configuration);
-    
+
     # Turn off messages when in quick mode
     $self->{verbose} = 0 if $self->{quick_mode};
-    
+
     # The target date is the date of the hash file, used in quick mode
     # to select which files to test
     $self->{target_date} = 0;
@@ -281,7 +281,7 @@ sub unobfuscate {
 
     my $str = '';
     my $seed = SEED;
-    
+
     for (my $i = 0; $i < length($obstr); $i += 2) {
         my $val = hex(substr($obstr, $i, 2));
         $str .= chr($val ^ $seed);
@@ -296,18 +296,18 @@ sub unobfuscate {
 
 sub update_folder {
     my ($self, $directory, $hash, $local) = @_;
-    
+
     my ($filenames, $directories) = $self->visit($directory);
-        
+
     # Check if folder is new
 
     if ($directory ne $self->{top_directory}) {
         $directory = abs2rel($directory, $self->{top_directory});
         delete $local->{$directory} if exists $local->{$directory};
-        
+
         if (! exists $hash->{$directory} ||
             $hash->{$directory} ne 'dir') {
-            
+
             if ($self->{uploader}->add_directory($directory)) {
                 $hash->{$directory} = 'dir';
                 print "add $directory\n" if $self->{verbose};
@@ -320,14 +320,14 @@ sub update_folder {
     }
 
     # Check each of the files in the directory
-    
+
     foreach my $filename (@$filenames) {
         next unless $self->match_file($filename);
 
         # Skip check if in quick mode and modification date is old
-        
+
         if ($self->{quick_update}) {
-            my @stats = stat($filename);  
+            my @stats = stat($filename);
             next if $self->{target_date} > $stats[9];
         }
 
@@ -337,7 +337,7 @@ sub update_folder {
         my $value = $self->checksum_file($filename);
 
         # Add file if new or changed
-        
+
         if (! exists $hash->{$filename} || $hash->{$filename} ne $value) {
             if ($self->{uploader}->add_file($filename)) {
                 $hash->{$filename} = $value;
@@ -349,9 +349,9 @@ sub update_folder {
             }
         }
     }
-    
+
     # Recursively check each of the subdirectories
-    
+
     foreach my $subdirectory (@$directories) {
         next unless $self->search_directory($subdirectory);
         $self->update_folder($subdirectory, $hash, $local);
@@ -369,14 +369,14 @@ sub write_hash_file {
     my $filename = catfile($self->{top_directory},
                            $self->{template_directory},
                            $self->{hash_file});
-    
+
     my $fd = IO::File->new($filename, 'w');
     die "Couldn't write hash file: $filename" unless $fd;
-    
+
     while (my ($name, $value) = each(%$hash)) {
         print $fd "$name\t$value\n";
     }
-    
+
     close($fd);
     return;
 }
@@ -473,4 +473,3 @@ it under the same terms as Perl itself.
 Bernie Simon E<lt>bernie.simon@gmail.comE<gt>
 
 =cut
-

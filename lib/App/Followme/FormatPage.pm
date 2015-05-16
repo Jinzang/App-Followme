@@ -10,7 +10,7 @@ use base qw(App::Followme::Module);
 use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
 
-our $VERSION = "1.11";
+our $VERSION = "1.12";
 
 #----------------------------------------------------------------------
 # Modify pages to match the most recently modified page
@@ -20,13 +20,13 @@ sub run {
 
     my ($prototype_file, $prototype_path, $prototype);
     $prototype_file = $self->find_prototype($directory, 1);
-    
+
     if (defined $prototype_file) {
         $prototype_path = $self->get_prototype_path($prototype_file);
         $prototype = $self->read_page($prototype_file);
     }
 
-    $self->update_directory($directory, $prototype, $prototype_path);    
+    $self->update_directory($directory, $prototype, $prototype_path);
     return;
 }
 
@@ -34,7 +34,7 @@ sub run {
 # Compute checksum for constant sections of page
 
 sub checksum_prototype {
-    my ($self, $prototype, $prototype_path) = @_;    
+    my ($self, $prototype, $prototype_path) = @_;
 
     my $md5 = Digest::MD5->new;
 
@@ -42,7 +42,7 @@ sub checksum_prototype {
         my ($blockname, $locality, $blocktext) = @_;
         $md5->add($blocktext) if exists $prototype_path->{$locality};
     };
-    
+
     my $prototype_handler = sub {
         my ($blocktext) = @_;
         $md5->add($blocktext);
@@ -58,14 +58,14 @@ sub checksum_prototype {
 
 sub get_prototype_path {
     my ($self, $filename) = @_;
-    
+
     $filename = rel2abs($filename);
     $filename = abs2rel($filename, $self->{top_directory});
     my @path = splitdir($filename);
     pop(@path);
-    
+
     my %prototype_path = map {$_ => 1} @path;
-    return \%prototype_path;    
+    return \%prototype_path;
 }
 
 #----------------------------------------------------------------------
@@ -73,16 +73,16 @@ sub get_prototype_path {
 
 sub parse_blockname {
     my ($self, $str) = @_;
-    
+
     my ($blockname, $in, $locality) = split(/\s+/, $str);
-    
+
     if ($in) {
         die "Syntax error in block ($str)"
             unless $in eq 'in' && defined $locality;
     } else {
         $locality = '';
     }
-    
+
     return ($blockname, $locality);
 }
 
@@ -91,24 +91,24 @@ sub parse_blockname {
 
 sub parse_blocks {
     my ($self, $page, $block_handler, $prototype_handler) = @_;
-    
+
     my $locality;
     my $block = '';
     my $blockname = '';
     my @tokens = split(/(<!--\s*(?:section|endsection)\s+.*?-->)/, $page);
-    
+
     foreach my $token (@tokens) {
         if ($token =~ /^<!--\s*section\s+(.*?)-->/) {
             die "Improperly nested block ($token)\n" if $blockname;
-                
+
             ($blockname, $locality) = $self->parse_blockname($1);
             $block .= $token
-            
+
         } elsif ($token =~ /^<!--\s*endsection\s+(.*?)-->/) {
             my ($endname) = $self->parse_blockname($1);
             die "Unmatched ($token)\n"
                 if $blockname eq '' || $blockname ne $endname;
-                
+
             $block .= $token;
             $block_handler->($blockname, $locality, $block);
 
@@ -120,10 +120,10 @@ sub parse_blocks {
                 $block .= $token;
             } else {
                 $prototype_handler->($token);
-            }            
+            }
         }
     }
- 
+
     die "Unmatched block (<!-- section $blockname -->)\n" if $blockname;
     return;
 }
@@ -133,7 +133,7 @@ sub parse_blocks {
 
 sub parse_page {
     my ($self, $page) = @_;
-    
+
     my $blocks = {};
     my $block_handler = sub {
         my ($blockname, $locality, $blocktext) = @_;
@@ -143,12 +143,12 @@ sub parse_page {
         $blocks->{$blockname} = $blocktext;
         return;
     };
-    
+
     my $prototype_handler = sub {
         return;
     };
 
-    $self->parse_blocks($page, $block_handler, $prototype_handler);    
+    $self->parse_blocks($page, $block_handler, $prototype_handler);
     return $blocks;
 }
 
@@ -157,13 +157,13 @@ sub parse_page {
 
 sub sort_files {
     my ($self, $filenames) = @_;
-       
+
     my @augmented_files;
     foreach my $filename (@$filenames) {
         my @stats = stat($filename);
         push(@augmented_files, [$stats[9], $filename]);
     }
-    
+
     @augmented_files = sort {$b->[0] <=> $a->[0]} @augmented_files;
     @$filenames = map {$_->[1]} @augmented_files;
 
@@ -175,10 +175,10 @@ sub sort_files {
 
 sub unchanged_prototype {
     my ($self, $prototype, $page, $prototype_path) = @_;
-    
+
     my $prototype_checksum =
         $self->checksum_prototype($prototype, $prototype_path);
-    
+
     my $page_checksum =
         $self->checksum_prototype($page, $prototype_path);
 
@@ -188,7 +188,7 @@ sub unchanged_prototype {
     } else {
         $unchanged = 0;
     }
-    
+
     return $unchanged;
 }
 
@@ -199,7 +199,7 @@ sub update_directory {
     my ($self, $directory, $prototype, $prototype_path) = @_;
 
     my ($filenames, $directories) = $self->visit($directory);
-    
+
     my @stats = stat($directory);
     my $modtime = $stats[9];
 
@@ -216,7 +216,7 @@ sub update_directory {
             $prototype = $self->read_page($prototype_file);
         }
     }
-    
+
     my $count = 0;
     my $changes = 0;
     foreach my $filename (@$filenames) {
@@ -236,8 +236,8 @@ sub update_directory {
 
         if ($skip) {
             last if $count;
-            
-        } else {    
+
+        } else {
             eval {
                 $page = $self->update_page($prototype, $page, $prototype_path);
             };
@@ -245,12 +245,12 @@ sub update_directory {
 
             my @stats = stat($filename);
             my $modtime = $stats[9];
-        
+
             $self->write_page($filename, $page);
             utime($modtime, $modtime, $filename);
             $changes += 1;
         }
-        
+
         if ($count == 0) {
             # The second and subsequent updates use the most recently
             # modified file in a directory as the prototype, so we
@@ -258,7 +258,7 @@ sub update_directory {
             $prototype = $page;
             $prototype_path = $self->get_prototype_path($filename);
         }
-        
+
         $count += 1;
     }
 
@@ -270,7 +270,7 @@ sub update_directory {
         $self->update_directory($subdirectory, $prototype, $prototype_path);
     }
 
-    return; 
+    return;
 }
 
 #----------------------------------------------------------------------
@@ -279,15 +279,15 @@ sub update_directory {
 sub update_page {
     my ($self, $prototype, $page, $prototype_path) = @_;
     $prototype_path = {} unless defined $prototype_path;
-    
+
     my $output = [];
     my $blocks = $self->parse_page($page);
-    
+
     my $block_handler = sub {
         my ($blockname, $locality, $blocktext) = @_;
         if (exists $blocks->{$blockname}) {
             if (exists $prototype_path->{$locality}) {
-                push(@$output, $blocktext);          
+                push(@$output, $blocktext);
             } else {
                 push(@$output, $blocks->{$blockname});
             }
@@ -310,7 +310,7 @@ sub update_page {
         my $names = join(' ', sort keys %$blocks);
         die "Unused blocks ($names)\n";
     }
-    
+
     return join('', @$output);
 }
 
@@ -328,7 +328,7 @@ App::Followme::FormatPages - Modify pages in a directory to match a prototype
     use App::Followme::FormatPages;
     my $formatter = App::Followme::FormatPages->new($configuration);
     $formatter->run($directory);
-    
+
 =head1 DESCRIPTION
 
 App::Followme::FormatPages updates the web pages in a folder to match the most
@@ -387,4 +387,3 @@ it under the same terms as Perl itself.
 Bernie Simon E<lt>bernie.simon@gmail.comE<gt>
 
 =cut
-

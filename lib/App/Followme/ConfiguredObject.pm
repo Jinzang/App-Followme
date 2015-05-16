@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use Cwd;
-our $VERSION = "1.11";
+our $VERSION = "1.12";
 
 #----------------------------------------------------------------------
 # Create object that returns files in a directory tree
@@ -25,7 +25,7 @@ sub new {
 
 sub parameters {
     my ($self) = @_;
-    
+
     return (
             quick_update => 0,
             top_directory => getcwd(),
@@ -37,7 +37,7 @@ sub parameters {
 # Run the object on a directory (stub)
 
 sub run {
-    my ($self, $directory) = @_;    
+    my ($self, $directory) = @_;
     die "Run method not defined";
 }
 
@@ -47,7 +47,7 @@ sub run {
 sub initialize {
     my ($pkg, $configuration, $self, $cycle) = @_;
     return if $cycle->{$pkg};
-    
+
     no strict 'refs';
     initialize($_, $configuration, $self, $cycle) foreach @{"${pkg}::ISA"};
     $cycle->{$pkg} = 1;
@@ -55,12 +55,12 @@ sub initialize {
     $self = bless($self, $pkg);
 
     $self->update_parameters($configuration)
-        if defined &{"${pkg}::parameters"};    
+        if defined &{"${pkg}::parameters"};
 
-    $self->setup($configuration)   
+    $self->setup($configuration)
         if defined &{"${pkg}::setup"};
 
-    return;    
+    return;
 }
 #----------------------------------------------------------------------
 # Set up object fields (stub)
@@ -75,16 +75,16 @@ sub setup {
 
 sub update_parameters {
     my ($self, $configuration) = @_;
-        
+
     my %parameters = $self->parameters();
     foreach my $field (keys %parameters) {
         if (exists $configuration->{$field}) {
             $self->{$field} = $configuration->{$field};
         } else {
-            $self->{$field} = $parameters{$field};            
+            $self->{$field} = $parameters{$field};
         }
     }
-    
+
     return;
 }
 
@@ -106,7 +106,7 @@ App::Followme::ConfiguredObject - Base class for App::Followme classes
 
 This class creates a new configured object. All classes in App::Followme are
 subclassed from it. The new method creates a new object and initializes the
-parameters from the configuration file. 
+parameters from the configuration file.
 
 =over 4
 

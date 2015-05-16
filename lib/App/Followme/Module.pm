@@ -14,7 +14,7 @@ use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
 
 use base qw(App::Followme::ConfiguredObject);
 
-our $VERSION = "1.11";
+our $VERSION = "1.12";
 
 use constant MONTHS => [qw(January February March April May June July
                            August September October November December)];
@@ -24,7 +24,7 @@ use constant MONTHS => [qw(January February March April May June July
 
 sub parameters {
     my ($self) = @_;
-    
+
     return (
             body_tag => 'content',
             web_extension => 'html',
@@ -45,7 +45,7 @@ sub build_body {
         my $sections = $self->{template}->parse_sections($page);
         $data->{body} = $sections->{$self->{body_tag}};
     }
-            
+
     return $data;
 }
 
@@ -54,7 +54,7 @@ sub build_body {
 
 sub build_date {
     my ($self, $data, $filename) = @_;
-    
+
     my $num = '01';
     my $months = MONTHS;
     my %month2num = map {substr($_, 0, 3) => $num ++} @$months;
@@ -66,7 +66,7 @@ sub build_date {
     } else {
         $time = time();
     }
-    
+
     my $ctime = localtime($time);
     my @names = qw(weekday month day hour24 minute second year);
     my @values = split(/\W+/, $ctime);
@@ -99,13 +99,13 @@ sub build_date {
 
 sub build_is_index {
     my ($self, $data, $filename) = @_;
-    
+
     my ($directory, $file) = $self->split_filename($filename);
     my ($root, $ext) = split(/\./, $file);
-    
+
     my $is_index = $root eq 'index' && $ext eq $self->{web_extension};
     $data->{is_index} = $is_index ? 1 : 0;
-    
+
     return $data;
 }
 
@@ -114,19 +114,19 @@ sub build_is_index {
 
 sub build_title_from_filename {
     my ($self, $data, $filename) = @_;
-    
+
     my ($dir, $file) = $self->split_filename($filename);
     my ($root, $ext) = split(/\./, $file);
-    
+
     if ($root eq 'index') {
         my @dirs = splitdir($dir);
         $root = pop(@dirs) || '';
     }
-    
+
     $root =~ s/^\d+// unless $root =~ /^\d+$/;
     my @words = map {ucfirst $_} split(/\-/, $root);
     $data->{title} = join(' ', @words);
-    
+
     return $data;
 }
 
@@ -135,7 +135,7 @@ sub build_title_from_filename {
 
 sub build_summary {
     my ($self, $data) = @_;
-    
+
     if ($data->{body}) {
         if ($data->{body} =~ m!<p[^>]*>(.*?)</p[^>]*>!si) {
             $data->{summary} = $1;
@@ -150,13 +150,13 @@ sub build_summary {
 
 sub build_title_from_header {
     my ($self, $data) = @_;
-    
+
     if ($data->{body}) {
         if ($data->{body} =~ s!^\s*<h(\d)[^>]*>(.*?)</h\1[^>]*>!!si) {
             $data->{title} = $2;
         }
     }
-    
+
     return $data;
 }
 
@@ -170,7 +170,7 @@ sub build_url {
                                           $filename,
                                           $self->{web_extension}
                                         );
-    
+
     $data->{absolute_url} = '/' . $self->filename_to_url($self->{top_directory},
                                                          $filename,
                                                          $self->{web_extension}
@@ -197,15 +197,15 @@ sub external_fields {
 # Convert filename to url
 
 sub filename_to_url {
-    my ($self, $directory, $filename, $ext) = @_;    
+    my ($self, $directory, $filename, $ext) = @_;
 
     my $is_dir = -d $filename;
     $filename = rel2abs($filename);
     $filename = abs2rel($filename, $directory);
-    
+
     my @path = splitdir($filename);
     push(@path, 'index.html') if $is_dir;
-    
+
     my $url = join('/', @path);
     $url =~ s/\.[^\.]*$/.$ext/ if defined $ext;
 
@@ -246,12 +246,12 @@ sub full_file_name {
     my ($self, @directories) = @_;
 
     return $directories[-1] if file_name_is_absolute($directories[-1]);
-   
+
     my @dirs;
     foreach my $dir (@directories) {
         push(@dirs, splitdir($dir));
     }
-    
+
     my @new_dirs;
     foreach my $dir (@dirs) {
         if (no_upwards($dir)) {
@@ -260,8 +260,8 @@ sub full_file_name {
             pop(@new_dirs) unless $dir eq '.';
         }
     }
-    
-    return catfile(@new_dirs);  
+
+    return catfile(@new_dirs);
 }
 
 #----------------------------------------------------------------------
@@ -320,7 +320,7 @@ sub glob_patterns {
     foreach my $pattern (@patterns) {
         if ($pattern eq '*') {
             push(@globbed_patterns,  '.');
-            
+
         } else {
             my $start;
             if ($pattern =~ s/^\*//) {
@@ -328,22 +328,22 @@ sub glob_patterns {
             } else {
                 $start = '^';
             }
-        
+
             my $finish;
             if ($pattern =~ s/\*$//) {
                 $finish = '';
             } else {
                 $finish = '$';
             }
-        
+
             $pattern =~ s/\./\\./g;
             $pattern =~ s/\*/\.\*/g;
             $pattern =~ s/\?/\.\?/g;
-        
+
             push(@globbed_patterns, $start . $pattern . $finish);
         }
     }
-    
+
     return \@globbed_patterns;
 }
 
@@ -351,7 +351,7 @@ sub glob_patterns {
 # Get fields from reading the file
 
 sub internal_fields {
-    my ($self, $data, $filename) = @_;   
+    my ($self, $data, $filename) = @_;
 
     my $ext;
     if (-d $filename) {
@@ -362,8 +362,8 @@ sub internal_fields {
         ($ext) = $filename =~ /\.([^\.]*)$/;
     }
 
-    if (defined $ext) {       
-        if ($ext eq $self->{web_extension}) {   
+    if (defined $ext) {
+        if ($ext eq $self->{web_extension}) {
             $data = $self->build_body($data, $filename);
             $data = $self->build_summary($data);
             $data = $self->build_title_from_header($data);
@@ -378,23 +378,23 @@ sub internal_fields {
 
 sub is_newer {
     my ($self, $target, @sources) = @_;
-    
-    my $target_date = 0;   
+
+    my $target_date = 0;
     if (-e $target) {
-        my @stats = stat($target);  
+        my @stats = stat($target);
         $target_date = $stats[9];
     }
-    
+
     foreach my $source (@sources) {
         next unless defined $source;
-        
+
         $source = catfile($source, "index.$self->{web_extension}")
             if -d $source;
 
         next unless -e $source;
         next if $self->same_file($target, $source);
 
-        my @stats = stat($source);  
+        my @stats = stat($source);
         my $source_date = $stats[9];
         return if $source_date >= $target_date;
     }
@@ -410,13 +410,13 @@ sub make_template {
 
     my ($directory, $base) = $self->split_filename($filename);
     undef $filename unless -e $filename;
-    
+
     my $template_name = $self->get_template_name($template_file);
     my $prototype_name = $self->find_prototype($directory);
 
     my @filenames = grep {defined $_}
         ($prototype_name, $filename, $template_name);
-    
+
     my $sub = $self->{template}->compile(@filenames);
     return $sub;
 }
@@ -426,13 +426,13 @@ sub make_template {
 
 sub match_file {
     my ($self, $filename) = @_;
-    
+
     $self->{include_patterns} ||=
         $self->glob_patterns($self->get_included_files());
-        
+
     $self->{exclude_patterns} ||=
         $self->glob_patterns($self->get_excluded_files());
-    
+
     my ($dir, $file) = $self->split_filename($filename);
     return if $self->match_patterns($file, $self->{exclude_patterns});
     return unless $self->match_patterns($file, $self->{include_patterns});
@@ -445,7 +445,7 @@ sub match_file {
 
 sub match_patterns {
     my ($self, $file, $patterns) = @_;
-    
+
     foreach my $pattern (@$patterns) {
         return 1 if $file =~ /$pattern/;
     }
@@ -458,27 +458,27 @@ sub match_patterns {
 
 sub most_recent_file {
     my ($self, $directory, $pattern) = @_;
-    
+
     my ($filenames, $directories) = $self->visit($directory);
 
     my $newest_file;
     my $newest_date = 0;
     my $globs = $self->glob_patterns($pattern);
-    
+
     foreach my $filename (@$filenames) {
         my ($dir, $file) = $self->split_filename($filename);
         next unless $self->match_patterns($file, $globs);
 
-        my @stats = stat($filename);  
+        my @stats = stat($filename);
         my $file_date = $stats[9];
-    
+
         if ($file_date > $newest_date) {
             $newest_date = $file_date;
             $newest_file = $filename;
         }
     }
 
-    return $newest_file;    
+    return $newest_file;
 }
 
 #----------------------------------------------------------------------
@@ -487,14 +487,14 @@ sub most_recent_file {
 sub read_page {
     my ($self, $filename) = @_;
     return unless defined $filename;
-    
+
     local $/;
     my $fd = IO::File->new($filename, 'r');
     return unless $fd;
-    
+
     my $page = <$fd>;
     close($fd);
-    
+
     return $page;
 }
 
@@ -503,9 +503,9 @@ sub read_page {
 
 sub same_file {
     my ($self, $filename1, $filename2) = @_;
-    
+
     return unless defined $filename1 && defined $filename2;
-    
+
     my @path1 = splitdir(rel2abs($filename1));
     my @path2 = splitdir(rel2abs($filename2));
     return unless @path1 == @path2;
@@ -513,7 +513,7 @@ sub same_file {
     while(@path1) {
         return unless shift(@path1) eq shift(@path2);
     }
-    
+
     return 1;
 }
 
@@ -522,13 +522,13 @@ sub same_file {
 
 sub search_directory {
     my ($self, $directory) = @_;
-    
+
     my $excluded_dirs = $self->get_excluded_directories();
-    
+
     foreach my $excluded (@$excluded_dirs) {
         return if $self->same_file($directory, $excluded);
     }
-    
+
     return 1;
 }
 
@@ -550,7 +550,7 @@ sub setup {
 
 sub set_fields {
     my ($self, $directory, $filename) = @_;
-    
+
     my $data = {};
     $data = $self->external_fields($data, $directory, $filename);
     $data = $self->internal_fields($data, $filename);
@@ -573,11 +573,11 @@ sub sort_files {
 
 sub split_filename {
     my ($self, $filename) = @_;
-    
+
     $filename = rel2abs($filename);
     my @path = splitdir($filename);
     my $file = pop(@path);
-        
+
     my $dir = catfile(@path);
     return ($dir, $file);
 }
@@ -597,7 +597,7 @@ sub visit {
     while (defined (my $file = $dd->read())) {
         next unless no_upwards($file);
         my $path = catfile($directory, $file);
-    
+
         if (-d $path) {
             push(@directories, $path);
         } else {
@@ -606,11 +606,11 @@ sub visit {
     }
 
     $dd->close;
-    
+
     my $filenames = $self->sort_files(\@filenames);
     my $directories = $self->sort_files(\@directories);
-    
-    return ($filenames, $directories);   
+
+    return ($filenames, $directories);
 }
 
 #----------------------------------------------------------------------
@@ -621,10 +621,10 @@ sub write_page {
 
     my $fd = IO::File->new($filename, 'w');
     die "Couldn't write $filename" unless $fd;
-    
+
     print $fd $page;
     close($fd);
-        
+
     return;
 }
 
@@ -663,7 +663,7 @@ modules.
 Packages loaded as modules get a consistent behavior by subclassing
 App::Foolowme:Module. It is not invoked directly. It provides methods for i/o,
 handling templates, and prototypes, and building the variables that are inserted
-into templates. 
+into templates.
 
 A template is a file containing commands and variables for making a web page.
 First, the template is compiled into a subroutine and then the subroutine is
@@ -682,7 +682,7 @@ C<monthnum, day, year, hour24, hour, ampm, minute,> and C<second.>
 =item my $data = $self->build_is_index($data, $filename);
 
 The variable C<is_flag> is one of the filename is an index file and zero if
-it is not. 
+it is not.
 
 =item my $data = $self->build_title_from_filename($data, $filename);
 
@@ -738,7 +738,7 @@ text. For comments look like
 
 Read a fie into a string. An the entire file is read from a string, there is no
 line at a time IO. This is because files are typically small and the parsing
-done is not line oriented. 
+done is not line oriented.
 
 =item $data = $self->set_fields($directory, $filename);
 
