@@ -241,6 +241,60 @@ $body
 </body>
 </html>
 
+#>>>copy templates/gallery.htm
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!-- section meta -->
+<title>$title</title>
+<style>
+div.float {
+  float: left;
+  padding: 10px;
+  vertical-align: top;
+  }
+div.float p {
+   text-align: center;
+   }
+</style>
+<script>
+var win = null;
+function pop(mypage,myname,w,h){
+  LeftPosition = (screen.width) ? (screen.width-w)/2 : 0;
+  TopPosition = (screen.height) ? (screen.height-h)/2 : 0;
+  settings = 'height='+h+',width='+w+',top='+TopPosition+
+  ',left='+LeftPosition+',status=no,scrollbars=no,resizable=no'
+  win = window.open(mypage,myname,settings)
+}
+</script>
+<!-- endsection meta -->
+</head>
+<body>
+<div id="header">
+<h1>Site Title</h1>
+</div>
+<div id="content">
+<!-- section content -->
+<div class="spacer">
+  &nbsp;
+</div>
+<!-- for @loop -->
+<div class="float">
+  <a target="_blank"
+  onclick="pop(this.href,'_blank',
+  '$photo_width','$photo_height');return false"
+  href="$photo_url"><img width="$thumb_width" height="$thumb_height"
+  src="$thumb_url"></a><br>
+  <p>$title</p>
+</div>
+<!-- endfor -->
+<div class="spacer">
+  &nbsp;
+</div>
+<!-- endsection content-->
+</div>
+</body>
+</html>
 #>>>copy templates/index.htm
 <html>
 <head>
