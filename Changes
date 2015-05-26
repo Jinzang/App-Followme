@@ -1,11 +1,11 @@
 Revision history for Perl extension App::Followme
 
-{{$NEXT}}
+1.12 2014-05-25T00:22:22Z
     - Updated code to generate initial website
     - added CreateGallery module to create photo galleries
     - added EditSections module to edit section tags on website
     - added bundle.pl script to modify initial website
-    
+
 1.11 2014-12-08T00:04:05Z
     - modified UploadSite: cd to top directory before run
     - modified UploadSite: fix checksum computation
