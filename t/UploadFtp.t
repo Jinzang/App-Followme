@@ -7,6 +7,11 @@ use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
 use Test::More tests => 5;
 
+SKIP: {
+eval { require Net::FTP };
+
+skip "Net::FTP not installed", 2 if $@;
+
 #----------------------------------------------------------------------
 # Load package
 
@@ -31,11 +36,11 @@ my $configuration = {
                     };
 
 #----------------------------------------------------------------------
-# Test 
+# Test
 
 SKIP: {
     # Site specific configuration
-    
+
     my $user = '';
     my $password = '';
     $configuration->{ftp_url} = '';
@@ -62,9 +67,9 @@ EOQ
     my $fd = IO::File->new($filename, 'w');
     print $fd $file;
     close($fd);
-    
+
      # The methods to test
-    
+
     my $up = App::Followme::UploadFtp->new($configuration);
 
     $up->open($user, $password);
@@ -85,3 +90,5 @@ EOQ
 
     $up->close();
 };
+
+}; # End SKIP

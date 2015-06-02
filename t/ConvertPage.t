@@ -6,6 +6,13 @@ use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
 use Test::More tests => 5;
 
+SKIP: {
+eval { require Text::Markdown };
+
+skip "Text::Markdown not installed", 2 if $@;
+
+use lib '../..';
+
 #----------------------------------------------------------------------
 # Load package
 
@@ -26,7 +33,7 @@ mkdir catfile($test_dir, "sub");
 chdir $test_dir;
 
 #----------------------------------------------------------------------
-# Test 
+# Test
 
 do {
    my $index = <<'EOQ';
@@ -83,7 +90,7 @@ EOQ
 
     my $configuration = {page_template => 'template.htm'};
     my $cvt = App::Followme::ConvertPage->new($configuration);
-    
+
     $cvt->write_page('index.html', $index);
     $cvt->write_page('template.htm', $template);
 
@@ -91,7 +98,7 @@ EOQ
         sleep(1);
         my $output = $text;
         $output =~ s/%%/$count/g;
-        
+
         my $filename = "$count.md";
         $cvt->write_page($filename, $output);
     }
@@ -103,7 +110,7 @@ EOQ
     my $data = $cvt->internal_fields({}, 'three.md');
     ok(index($data->{body}, "<li>third three</li>") > 0,'Convert Text'); # test 2
     $cvt->convert_a_file($test_dir, 'four.md');
-    
+
     my $page = $cvt->read_page('four.html');
     like($page, qr/<h1>Page four<\/h1>/, 'Convert a file'); # test 3
 
@@ -113,3 +120,5 @@ EOQ
     $page = $cvt->read_page('two.html');
     like($page, qr/<h1>Page two<\/h1>/, 'Convert text file two'); # test 5
 };
+
+}; # End SKIP

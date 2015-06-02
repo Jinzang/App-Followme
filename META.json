@@ -42,10 +42,12 @@
       },
       "runtime" : {
          "requires" : {
+            "perl" : "5.008005"
+         },
+         "recommend" : {
             "GD" : "0",
             "Net::FTP" : "0",
             "Text::Markdown" : "1.000031",
-            "perl" : "5.008005"
          }
       },
       "test" : {
