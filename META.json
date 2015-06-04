@@ -41,13 +41,13 @@
          }
       },
       "runtime" : {
-         "requires" : {
-            "perl" : "5.008005"
-         },
-         "recommend" : {
+         "recommends" : {
             "GD" : "0",
             "Net::FTP" : "0",
-            "Text::Markdown" : "1.000031",
+            "Text::Markdown" : "1.000031"
+         },
+         "requires" : {
+            "perl" : "5.008005"
          }
       },
       "test" : {
@@ -68,5 +68,5 @@
          "web" : "https://github.com/Jinzang/App-Followme"
       }
    },
-   "version" : "1.12"
+   "version" : "1.13"
 }
