@@ -27,3 +27,6 @@ test/
 MYMETA.*
 
 /App-Followme-*
+
+lib/App/Followme/DoubleDown.pm
+lib/App/Followme/Metadata.pm
