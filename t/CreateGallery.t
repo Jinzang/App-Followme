@@ -5,12 +5,8 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
+use Test::Requires 'GD';
 use Test::More tests => 17;
-
-SKIP: {
-eval { require GD };
-
-skip "GD not installed", 2 if $@;
 
 #----------------------------------------------------------------------
 # Load package
@@ -144,5 +140,3 @@ EOQ
     my @items = $page =~ m/(<li>)/g;
     is(@items, 3, 'Index three photos'); # test 17
 };
-
-}; # End SKIP

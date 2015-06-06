@@ -5,12 +5,8 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
+use Test::Requires 'Net::FTP';
 use Test::More tests => 5;
-
-SKIP: {
-eval { require Net::FTP };
-
-skip "Net::FTP not installed", 2 if $@;
 
 #----------------------------------------------------------------------
 # Load package
@@ -90,5 +86,3 @@ EOQ
 
     $up->close();
 };
-
-}; # End SKIP

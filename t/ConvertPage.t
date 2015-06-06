@@ -4,12 +4,8 @@ use strict;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
+use Test::Requires 'Text::Markdown';
 use Test::More tests => 5;
-
-SKIP: {
-eval { require Text::Markdown };
-
-skip "Text::Markdown not installed", 2 if $@;
 
 use lib '../..';
 
@@ -120,5 +116,3 @@ EOQ
     $page = $cvt->read_page('two.html');
     like($page, qr/<h1>Page two<\/h1>/, 'Convert text file two'); # test 5
 };
-
-}; # End SKIP
