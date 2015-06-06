@@ -11,7 +11,7 @@ use base qw(App::Followme::ConfiguredObject);
 use Net::FTP;
 use File::Spec::Functions qw(abs2rel splitdir catfile);
 
-our $VERSION = "1.13";
+our $VERSION = "1.14";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
@@ -213,23 +213,23 @@ The following are the public methods of the interface
 
 =over 4
 
-=item $flag = $self->add_directory($dir);
+=item L<$flag = $self->add_directory($dir);>
 
 Create a new directory.
 
-=item $flag = $self->add_file($filename);
+=item L<$flag = $self->add_file($filename);>
 
 Upload a file.
 
-=item $flag = $self->delete_directory($dir);
+=item L<$flag = $self->delete_directory($dir);>
 
 Delete a directory, including its contents
 
-=item $flag = $self->delete_file($filename);
+=item L<$flag = $self->delete_file($filename);>
 
 Delete a file on the remote site. .
 
-=item $self->close();
+=item L<$self->close();>
 
 Close the ftp connection to the remote site.
 
@@ -260,6 +260,7 @@ The url of the remote ftp site.
 The name of the package that manipulates filenames for the remote system. The
 default value is 'File::Spec::Unix'. Other possible values are
 'File::Spec::Win32' and 'File::Spec::VMS'. Consult the Perl documentation for
+more information.
 
 =back
 

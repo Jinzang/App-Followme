@@ -12,7 +12,7 @@ use Cwd;
 use IO::Dir;
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
 
-our $VERSION = "1.13";
+our $VERSION = "1.14";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
@@ -292,7 +292,7 @@ App::Followme::CreateGallery - Create a photo gallery page
 =head1 DESCRIPTION
 
 This package builds an index for a directory which serves as a photo gallery.
-The variables described below aresubstituted into a template to produce the
+The variables described below are substituted into a template to produce the
 gallery. Loop comments that look like
 
     <!-- loop -->
@@ -359,8 +359,8 @@ is index.html.
 
 =item gallery_include
 
-A wildcard expression indicating the files that are photos to be included in the
-gallery. The default is '*.jpg',
+A wild card expression indicating the files that are photos to be included in
+the gallery. The default is '*.jpg',
 
 =item gallery_template
 
@@ -391,6 +391,8 @@ proportional to the height.
 
 The height of the photo after resizing. Leave at 0 if the height is defined to
 be proportional to the width.
+
+=back
 
 =head1 LICENSE
 

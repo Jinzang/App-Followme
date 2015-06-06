@@ -6,7 +6,7 @@ use warnings;
 use Cwd;
 use IO::File;
 use File::Spec::Functions qw(splitdir catfile);
-our $VERSION = "1.13";
+our $VERSION = "1.14";
 
 require Exporter;
 our @ISA = qw(Exporter);

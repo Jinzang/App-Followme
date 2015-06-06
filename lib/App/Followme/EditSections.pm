@@ -9,7 +9,7 @@ use lib '../..';
 use File::Spec::Functions qw(catfile);
 use base qw(App::Followme::Module);
 
-our $VERSION = "1.13";
+our $VERSION = "1.14";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
@@ -213,7 +213,7 @@ The following field in the configuration file are used:
 
 =item remove_comments
 
-Remove all html comments that are in a file, not just the section and endection
+Remove all html comments that are in a file, not just the section and endsection
 tags.
 
 =back
