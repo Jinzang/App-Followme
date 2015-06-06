@@ -213,23 +213,23 @@ The following are the public methods of the interface
 
 =over 4
 
-=item L<$flag = $self->add_directory($dir);>
+=item $flag = $self->add_directory($dir);
 
 Create a new directory.
 
-=item L<$flag = $self->add_file($filename);>
+=item $flag = $self->add_file($filename);
 
 Upload a file.
 
-=item L<$flag = $self->delete_directory($dir);>
+=item $flag = $self->delete_directory($dir);
 
 Delete a directory, including its contents
 
-=item L<$flag = $self->delete_file($filename);>
+=item $flag = $self->delete_file($filename);
 
 Delete a file on the remote site. .
 
-=item L<$self->close();>
+=item $self->close();
 
 Close the ftp connection to the remote site.
 
