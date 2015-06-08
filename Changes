@@ -1,10 +1,11 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
-
+    - made Test::Requires a requirement
+    
 1.14 2015-06-06T10:47:19Z
     - revised tests to use Test::Requires
-    
+
 1.13 2015-06-04T23:12:11Z
     - make other modules optional
 
