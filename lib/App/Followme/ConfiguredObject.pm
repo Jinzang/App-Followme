@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use Cwd;
-our $VERSION = "1.14";
+our $VERSION = "1.15";
 
 #----------------------------------------------------------------------
 # Create object that returns files in a directory tree

@@ -47,6 +47,7 @@
             "Text::Markdown" : "1.000031"
          },
          "requires" : {
+            "Test::Requires" : "0",
             "perl" : "5.008005"
          }
       },
@@ -68,5 +69,5 @@
          "web" : "https://github.com/Jinzang/App-Followme"
       }
    },
-   "version" : "1.14"
+   "version" : "1.15"
 }

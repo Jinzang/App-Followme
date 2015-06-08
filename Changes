@@ -1,6 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+
+1.15 2015-06-08T23:01:40Z
     - made Test::Requires a requirement
     
 1.14 2015-06-06T10:47:19Z

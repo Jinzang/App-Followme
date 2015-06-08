@@ -9,7 +9,7 @@ use lib '../..';
 use File::Spec::Functions qw(catfile);
 use base qw(App::Followme::Module);
 
-our $VERSION = "1.14";
+our $VERSION = "1.15";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
