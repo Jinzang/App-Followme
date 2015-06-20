@@ -79,7 +79,6 @@ sub load_and_run_modules {
 
     $configuration{base_directory} = $base_directory;
     foreach my $module (@$modules) {
-        my ($pkg) = $module =~ /^(\w+(?:\:\:\w+)*)$/;
         eval "require $module" or die "Module not found: $module\n";
 
         my $object = $module->new(\%configuration);
