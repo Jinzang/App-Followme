@@ -448,7 +448,7 @@ sub store_stack {
     my ($self, $var, @val) = @_;
 
     my ($sigil, $name) = $var =~ /([\$\@\%])(\w+)/;
-    die "Unrecognized variable type: $name" unless defined $sigil;
+    die "Unrecognized variable type: $var" unless defined $sigil;
 
     my $i;
     for ($i = 0; $i < @{$self->{stack}}; $i ++) {
