@@ -176,6 +176,30 @@ sub build_url {
                                                          $self->{web_extension}
                                                         );
 
+    my @path = splitdir(abs2rel($filename, $self->{top_directory}));
+    pop(@path);
+
+    my @breadcrumbs;
+    for (;;) {
+        my $filename = @path ? catfile($self->{top_directory}, @path)
+                             : $self->{top_directory};
+
+        my $breadcrumb = {};
+        $breadcrumb = $self->build_title_from_filename($breadcrumb, $filename);
+
+        $breadcrumb->{url} = '/' . $self->filename_to_url($self->{top_directory},
+                                                          $filename,
+                                                          $self->{web_extension}
+                                                         );
+
+        push (@breadcrumbs, $breadcrumb);
+        last unless @path;
+        pop(@path);
+    }
+
+    @breadcrumbs = reverse(@breadcrumbs);
+    $data->{breadcrumbs} = \@breadcrumbs;
+
     return $data;
 }
 
@@ -203,7 +227,7 @@ sub filename_to_url {
     $filename = rel2abs($filename);
     $filename = abs2rel($filename, $directory);
 
-    my @path = splitdir($filename);
+    my @path = $filename eq '.' ? () : splitdir($filename);
     push(@path, 'index.html') if $is_dir;
 
     my $url = join('/', @path);
