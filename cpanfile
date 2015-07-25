@@ -1,6 +1,6 @@
 requires 'perl', '5.008001';
 requires 'Test::Requires', 0;
-recommends 'GD', 0;
+recommends 'GD', 2.21;
 recommends 'Net::FTP', '0';
 recommends 'Text::Markdown', '1.000031';
 
