@@ -5,9 +5,11 @@ use warnings;
 
 use FindBin qw($Bin);
 
-use IO::File;
+use Cwd;
 use IO::Dir;
-use File::Spec::Functions qw(catfile  no_upwards rel2abs splitdir);
+use IO::File;
+use MIME::Base64  qw(encode_base64);
+use File::Spec::Functions qw(catfile no_upwards rel2abs splitdir);
 
 #----------------------------------------------------------------------
 # Configuration
@@ -16,12 +18,11 @@ use File::Spec::Functions qw(catfile  no_upwards rel2abs splitdir);
 # Must agree with Initialize.pm
 use constant CMD_PREFIX => '#>>>';
 
+# The name of the index file in the template
+my $index_file = 'index.html';
+
 # The location of the initialization module relative to this file
 my $output = 'lib/App/Followme/Initialize.pm';
-
-# The files that will be included in the data section
-# using unix style wild cards
-my @patterns = qw(index.html *.cfg *.htm);
 
 #----------------------------------------------------------------------
 # Main routine
@@ -29,16 +30,15 @@ my @patterns = qw(index.html *.cfg *.htm);
 my $dir = shift(@ARGV) or die "Must supply site directory\n";
 $dir  = rel2abs($dir);
 
-@patterns = glob_patterns(@patterns);
-
 chdir ($Bin);
 my $out = copy_script($output);
 
 chdir($dir);
-my $visitor = get_visitor(@patterns);
+list_directories($out, $index_file);
 
+my $visitor = get_visitor();
 while (my $file = &$visitor) {
-    append_file($out, $file);
+    bundle_file($out, $file);
 }
 
 close($out);
@@ -49,14 +49,58 @@ rename("$output.TMP", $output);
 #----------------------------------------------------------------------
 # Append a text file to the bundle
 
-sub append_file {
+sub append_binary_file {
     my ($out, $file) = @_;
 
-    my $text = read_file($file);
-    $file = join('/', splitdir($file));
 
-    print $out CMD_PREFIX, "copy $file\n";
-    print $out $text;
+    my $in = IO::File->new($file, 'r');
+    die "Couldn't read $file: $!\n" unless $in;
+
+    binmode $in;
+    my $buf;
+
+    while (read($in, $buf, 60*57)) {
+        print $out encode_base64($buf);
+    }
+
+    close($in);
+    return;
+}
+
+#----------------------------------------------------------------------
+# Append a text file to the bundle
+
+sub append_text_file {
+    my ($out, $file) = @_;
+
+    my $in = IO::File->new($file, 'r');
+    die "Couldn't read $file: $!\n" unless $in;
+
+    while (defined (my $line = <$in>)) {
+        chomp($line);
+        print $out $line, "\n";
+    }
+
+    close($in);
+    return;
+}
+
+#----------------------------------------------------------------------
+# Append a text file to the bundle
+
+sub bundle_file {
+    my ($out, $file) = @_;
+
+    my ($dir, $rest) = split_dir($file);
+    my $bin = -B $file ? 'binary' : 'text';
+    my $cmd = join(' ', CMD_PREFIX, 'copy', $bin, $dir, $rest);
+    print $out $cmd, "\n";
+
+    if ($bin eq 'binary') {
+        append_binary_file($out, $file);
+    } else {
+        append_text_file($out, $file);
+    }
 
     return;
 }
@@ -71,13 +115,19 @@ sub copy_script {
     $output = catfile(@path);
 
     my $last = "__DATA__\n";
-    my $text = read_file($output, $last);
+    my $in = IO::File->new($output, 'r') or
+        die "Couldn't read $output: $!\n";
 
     $output .= '.TMP';
     my $out = IO::File->new($output, 'w');
     die "Couldn't write to script: $output\n" unless $out;
 
-    print $out $text;
+    while (<$in>) {
+        print $out $_;
+        last if $_ eq $last;
+    }
+
+    close($in);
     return $out;
 }
 
@@ -85,7 +135,7 @@ sub copy_script {
 # Return a closure that visits files in a directory
 
 sub get_visitor {
-    my (@patterns) = @_;
+    my () = @_;
 
     my @dirlist;
     my @filelist;
@@ -102,20 +152,14 @@ sub get_visitor {
             my $dd = IO::Dir->new($dir) or die "Couldn't open $dir: $!\n";
 
             while (defined ($file = $dd->read())) {
+                next if $file =~ /^\./;
                 my $path = $dir ne '.' ? catfile($dir, $file) : $file;
 
                 if (-d $path) {
                     push(@dirlist, $path) if no_upwards($file);
 
                 } else {
-                    my $match = 0;
-                    foreach my $pattern (@patterns) {
-                        if ($path =~ /$pattern/) {
-                            $match = 1;
-                            last;
-                        }
-                    }
-                    push(@filelist, $path) if $match;
+                    push(@filelist, $path);
                 }
             }
 
@@ -125,55 +169,40 @@ sub get_visitor {
 }
 
 #----------------------------------------------------------------------
-# Map filename globbing metacharacters onto regexp metacharacters
+# List the topmost directories in a set command
 
-sub glob_patterns {
-    my (@patterns) = @_;
+sub list_directories{
+    my ($out, $index_file) = @_;
 
-    my @globbed_patterns;
-    foreach my $pattern (@patterns) {
-        my $start;
-        if ($pattern =~ s/^\*//) {
-            $start = '';
-        } else {
-            $start = '^';
+    my @dirs;
+    my $dir = getcwd();
+    my $dd = IO::Dir->new($dir) or die "Couldn't open $dir: $!\n";
+
+    while (defined (my $file = $dd->read())) {
+        if (-d $file && no_upwards($file)) {
+            my $subfile = catfile($file, $index_file);
+            push(@dirs, $file) if -e $subfile;
         }
-
-        my $finish;
-        if ($pattern =~ s/\*$//) {
-            $finish = '';
-        } else {
-            $finish = '$';
-        }
-
-        $pattern =~ s/\./\\./g;
-        $pattern =~ s/\*/\.\*/g;
-        $pattern =~ s/\?/\.\?/g;
-
-        push(@globbed_patterns, $start . $pattern . $finish);
     }
 
-    return @globbed_patterns;
+    $dd->close;
+    my $cmd = join(' ', CMD_PREFIX, 'set', 'dir', @dirs);
+    print $out $cmd, "\n";
+
+    return;
 }
 
 #----------------------------------------------------------------------
-# Read a text file into a string
+# Split topmost directory off from file name
 
-sub read_file {
-    my ($file, $last) = @_;
+sub split_dir {
+    my ($file) = @_;
 
-    my $in = IO::File->new($file, 'r') or
-        die "Couldn't read $file: $!\n";
+    my@path = splitdir($file);
+    my $dir = shift(@path);
+    my $rest = catfile(@path);
 
-    my @text;
-    while (<$in>) {
-        push(@text, $_);
-        last if $last && $_ eq $last;
-    }
-
-    close($in);
-
-    return join('', @text);
+    return ($dir, $rest);
 }
 
 __END__
@@ -193,9 +222,10 @@ bundle.pl - Combine website files with Initialize module
 When followme is called with the -i flag it creates a new website in a directory,
 including the files it needs to run. These files are extraced from the DATA
 section at the end of the Initialize.pm module. This script updates that DATA section
-from a sample website. It is for developers of this code and not for end users.
+from a directory containing several sample websites. It is for developers of this code
+and not for end users.
 
-Run this script with the name of the directory containing the sample website on
+Run this script with the name of the directory containing the sample websites on
 the command line.
 
 =head1 CONFIGURATION
@@ -215,11 +245,6 @@ the constant of the same name in the Initialize.pm module.
 The file path to the Initialize.pm module relative to the location of this script.
 Directories should be separated by forward slashes (/) regardless of the convention
 of the operating system.
-
-=item @patterns
-
-A list of wildcard patterns using Unix filename wildcard syntax. If a file matches
-any of the patterns it will be added to the DATA section.
 
 =back
 
