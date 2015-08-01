@@ -108,6 +108,8 @@ sub create_a_gallery {
     return if $self->is_newer($gallery_name, $template_name, @$filenames);
 
     my $data = $self->SUPER::set_fields($directory, $gallery_name);
+    $data = $self->set_dimensions($data);
+
     $data->{loop} = $self->gallery_data($directory, $filenames);
 
     my $render = $self->make_template($gallery_name,
@@ -239,6 +241,22 @@ sub resize_a_photo {
                           $old_width, $old_height);
 
     return $photo;
+}
+
+#----------------------------------------------------------------------
+#  Set photo|thumb height|width where defined
+
+sub set_dimensions {
+    my ($self, $data) = @_;
+
+    for my $item (qw(photo thumb)) {
+        for my $dimension (qw(height width)) {
+            my $field = join("_", $item, $dimension);
+            $data->{$field} = $self->{$field} if $self->{$field} > 0;
+        }
+    }
+
+    return $data;
 }
 
 #----------------------------------------------------------------------
