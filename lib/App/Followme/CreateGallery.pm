@@ -108,8 +108,6 @@ sub create_a_gallery {
     return if $self->is_newer($gallery_name, $template_name, @$filenames);
 
     my $data = $self->SUPER::set_fields($directory, $gallery_name);
-    $data = $self->set_dimensions($data);
-
     $data->{loop} = $self->gallery_data($directory, $filenames);
 
     my $render = $self->make_template($gallery_name,
@@ -147,17 +145,23 @@ sub get_dimensions {
 
     for my $field (qw(thumb photo)) {
         my ($width, $height) = $self->new_size($field, $old_width, $old_height);
-        $data->{"${field}_width"} = $width;
-        $data->{"${field}_height"} = $height;
+        if ($width && $height) {
+            $data->{"${field}_width"} = $width;
+            $data->{"${field}_height"} = $height;
 
-        my $sub = "build_${field}_name";
-        my $photoname = $self->$sub($filename);
-        next unless $self->is_newer($photoname, $gallery_name);
+            my $sub = "build_${field}_name";
+            my $photoname = $self->$sub($filename);
+            next unless $self->is_newer($photoname, $gallery_name);
 
-        my $photo = $self->resize_a_photo($old_photo, $width, $height,
-                                          $old_width, $old_height);
+            my $photo = $self->resize_a_photo($old_photo, $width, $height,
+                                              $old_width, $old_height);
 
-        $self->write_photo($photoname, $photo);
+            $self->write_photo($photoname, $photo);
+
+        } else {
+            $data->{"${field}_width"} = $old_width;
+            $data->{"${field}_height"} = $old_height;
+        }
     }
 
     return $data;
@@ -206,7 +210,7 @@ sub new_size {
         $factor = $self->{$height_field} / $old_height;
 
     } else {
-        die "$width_field and $height_field not set";
+        $factor = 0.0;
     }
 
     my $height = int($factor * $old_height);
@@ -241,22 +245,6 @@ sub resize_a_photo {
                           $old_width, $old_height);
 
     return $photo;
-}
-
-#----------------------------------------------------------------------
-#  Set photo|thumb height|width where defined
-
-sub set_dimensions {
-    my ($self, $data) = @_;
-
-    for my $item (qw(photo thumb)) {
-        for my $dimension (qw(height width)) {
-            my $field = join("_", $item, $dimension);
-            $data->{$field} = $self->{$field} if $self->{$field} > 0;
-        }
-    }
-
-    return $data;
 }
 
 #----------------------------------------------------------------------
@@ -398,7 +386,8 @@ proportional to the height.
 =item thumb_height
 
 The height of the thumb photos. Leave at 0 if the height is defined to be
-proportional to the width.
+proportional to the width. If both thumb_width and thumb_height are 0, no
+thumb photo will be created.
 
 =item photo_width
 
@@ -408,7 +397,8 @@ proportional to the height.
 =item photo_height
 
 The height of the photo after resizing. Leave at 0 if the height is defined to
-be proportional to the width.
+be proportional to the width. If both photo_width and photo_height are zero,
+the image will not be resized.
 
 =back
 
