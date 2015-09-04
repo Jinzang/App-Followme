@@ -11,8 +11,8 @@ use File::Spec::Functions qw(splitdir catfile);
 use App::Followme;
 use App::Followme::Initialize qw(initialize);
 
-my ($choice, $help);
-GetOptions('init|i=s' => \$choice, 'help|h' => \$help);
+my ($init, $help);
+GetOptions('init|i' => \$init, 'help|h' => \$help);
 
 my $filename = shift @ARGV;
 my $config = configuration_file();
@@ -22,8 +22,8 @@ my $directory = set_directory($filename);
 if ($help) {
     show_help();
 
-} elsif ($choice) {
-    initialize($directory, $choice);
+} elsif ($init) {
+    initialize($directory);
 
 } else {
     my $app = App::Followme->new({configuration_file => $config,

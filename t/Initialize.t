@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catfile catdir rel2abs splitdir);
 
-use Test::More tests => 8;
+use Test::More tests => 9;
 
 #----------------------------------------------------------------------
 # Load package
@@ -31,72 +31,99 @@ chdir $test_dir;
 do {
     my $line = "#>>> copy text common followme.cfg";
     my $is = App::Followme::Initialize::is_command($line);
-    is($is, " copy text common followme.cfg", "test is command line"); # test 1
+    is($is, " copy text common followme.cfg", "is command line"); # test 1
 
     $line = "run_before = App::Followme::FormatPage";
     $is = App::Followme::Initialize::is_command($line);
-    is($is, undef, "test is not command line"); # test 2
+    is($is, undef, "is not command line"); # test 2
 
-    my @dirs = qw(one-fixed two-full three-full one-full);
-    eval {App::Followme::Initialize::check_choice(\@dirs, 'two-full')};
+    my $data_ok = {one => 1, two=> 2, three => 3, four => 4};
+    while (my ($name, $value) = each %$data_ok) {
+        App::Followme::Initialize::write_var($name, $value);
+    }
 
-    my $error = $@;
-    is($error, '', "test is valid choice"); # test 3
+    my $data = {};
+    foreach my $name (keys %$data_ok) {
+        $data->{$name} = App::Followme::Initialize::read_var($name);
+    }
 
-    eval {App::Followme::Initialize::check_choice(\@dirs, 'not-full')};
-    $error = $@;
-    isnt($error, '', "test is not valid choice"); # test 4
+    is_deeply($data, $data_ok, "read and write vars"); # test 3
+
+    my $config_lines = <<'EOQ';
+# modules
+run_before = App::Followme::FormatPage
+run_before = App::Followme::ConvertPage
+# test data
+one = 1
+two = 2
+three = 3
+four = 4
+EOQ
+
+    $data = {};
+    my @lines = map {"$_\n"} split("\n", $config_lines);
+    my $parser = App::Followme::Initialize::parse_configuration(\@lines);
+    while (my ($name, $value) = &$parser()) {
+        $data->{$name} = $value;
+    }
+
+    is_deeply($data, $data_ok, "parse configuration"); # test 4
+
+    my $val = App::Followme::Initialize::read_configuration(\@lines, 'three');
+    is($val, 3, "read configuration"); # test 5
 };
 
 #----------------------------------------------------------------------
-# Test next_file
+# Test write_file
 
 do {
-    my (@commands, @texts, @files, @args);
-    my ($read, $unread) = App::Followme::Initialize::data_readers();
-    while(my ($command, $lines) = App::Followme::Initialize::next_command($read, $unread)) {
-        push(@commands, $command);
-        push(@texts, $lines);
+    my $text = <<EOQ;
+Copyright 2015 by Bernie Simon
+This file is licensed under thesame terms as Perl itself.
+EOQ
 
-        @args = split(' ', $command);
-        push(@files, pop @args) if $args[0] eq 'copy';
-    }
+    my @ok_lines = map {"$_\n"} split("\n", $text);
+    my $type = 'text';
+    my $file = 'license.txt';
 
-    my $command = shift @commands;
-    my $text = shift @texts;
+    App::Followme::Initialize::write_file(\@ok_lines, $type, $file);
+    my $lines = App::Followme::Initialize::read_file($file);
+    is_deeply($lines, \@ok_lines, "write text file"); # test 6
 
-    @args = split(' ', $command);
-    my @args_ok = qw(set dir one-fixed two-full three-full one-full);
-    is_deeply(\@args, \@args_ok, "Set command"); # Test 5
+    $text = <<'EOQ';
+# modules
+run_before = App::Followme::FormatPage
+run_before = App::Followme::ConvertPage
+# version
+version = 1
+# test data
+one = 1
+two = 2
+three = 3
+four = 4
+EOQ
 
-    @files = sort(@files);
-    @texts = sort(@texts);
+    @ok_lines = map {"$_\n"} split("\n", $text);
+    $type = 'configuration';
+    $file = 'followme.cfg';
+    my $version = 1;
 
-    my @files_ok = ('LICENCE', 'apple-touch-icon.png', 'favicon.ico',
-                    'followme.cfg', 'index.html', 'index.html','index.html',
-                    'index.html', 'styles.css', 'styles.css',
-                    'styles.css', 'styles.css', 'templates/gallery.htm',
-                    'templates/index.htm', 'templates/news.htm',
-                    'templates/news_index.htm', 'templates/page.htm',);
+    App::Followme::Initialize::write_file(\@ok_lines, $type, $file, $version);
+    $lines = App::Followme::Initialize::read_file($file);
+    is_deeply($lines, \@ok_lines, "write configuration file"); # test 7
 
-    foreach (@files_ok) {
-        my @dirs = split('/', $_);
-        $_ = catfile(@dirs);
-    }
-    @files_ok = sort(@files_ok);
+    App::Followme::Initialize::write_file(\@ok_lines, $type, $file, $version);
+    $lines = App::Followme::Initialize::read_file($file);
+    is_deeply($lines, \@ok_lines, "rewrite configuration file"); # test 8
 
-    is_deeply(\@files, \@files_ok, "Next command"); # test 6
+    $text = <<'EOQ';
+R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7
+EOQ
 
-    my @has_text = grep {@{$_}} @texts;
-    is(@has_text, @texts, "Has lines"); # test 7
+    my @lines = map {"$_\n"} split("\n", $text);
+    $type = 'binary';
+    $file = 'transparent.gif';
+    App::Followme::Initialize::write_file(\@lines, $type, $file);
 
-    $command = shift @commands;
-    @args = split(' ', $command);
-    shift @args;
-
-    $text = shift @texts;
-    my $file = shift @files;
-
-    App::Followme::Initialize::copy_file('one-full', $text, @args);
-    ok(-e $file, 'Copy file'); #test 8
+    ok(-e $file, 'write binary file'); # test 9
 };

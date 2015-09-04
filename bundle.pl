@@ -34,7 +34,6 @@ chdir ($Bin);
 my $out = copy_script($output);
 
 chdir($dir);
-list_directories($out, $index_file);
 
 my $visitor = get_visitor();
 while (my $file = &$visitor) {
@@ -91,12 +90,19 @@ sub append_text_file {
 sub bundle_file {
     my ($out, $file) = @_;
 
-    my ($dir, $rest) = split_dir($file);
-    my $bin = -B $file ? 'binary' : 'text';
-    my $cmd = join(' ', CMD_PREFIX, 'copy', $bin, $dir, $rest);
-    print $out $cmd, "\n";
+    my ($type, $cmd);
+    if ($file =~ /\.cfg$/) {
+        $type = 'configuration';
+        my ($new_file, $version) = get_version($file);
+        $cmd = join(' ', CMD_PREFIX, 'copy', $type, $new_file, $version);
 
-    if ($bin eq 'binary') {
+    } else {
+        $type = -B $file ? 'binary' : 'text';
+        $cmd = join(' ', CMD_PREFIX, 'copy', $type, $file);
+    }
+
+    print $out $cmd, "\n";
+    if ($type eq 'binary') {
         append_binary_file($out, $file);
     } else {
         append_text_file($out, $file);
@@ -132,6 +138,26 @@ sub copy_script {
 }
 
 #----------------------------------------------------------------------
+# Set the maximum version of any file
+
+sub get_version {
+    my ($file) = @_;
+
+    my $version;
+    if ($file =~ /_vsn\d+\./) {
+        my $ext;
+        my ($base, $rest) = split(/_vsn/, $file, 2);
+        ($version, $ext) = split(/\./, $rest, 2);
+        $file = "$base.$ext";
+
+    } else {
+        $version = 0;
+    }
+
+    return ($file, $version);
+}
+
+#----------------------------------------------------------------------
 # Return a closure that visits files in a directory
 
 sub get_visitor {
@@ -163,33 +189,11 @@ sub get_visitor {
                 }
             }
 
+            @filelist = sort(@filelist);
+            @dirlist = sort(@dirlist);
             $dd->close;
         }
     };
-}
-
-#----------------------------------------------------------------------
-# List the topmost directories in a set command
-
-sub list_directories{
-    my ($out, $index_file) = @_;
-
-    my @dirs;
-    my $dir = getcwd();
-    my $dd = IO::Dir->new($dir) or die "Couldn't open $dir: $!\n";
-
-    while (defined (my $file = $dd->read())) {
-        if (-d $file && no_upwards($file)) {
-            my $subfile = catfile($file, $index_file);
-            push(@dirs, $file) if -e $subfile;
-        }
-    }
-
-    $dd->close;
-    my $cmd = join(' ', CMD_PREFIX, 'set', 'dir', @dirs);
-    print $out $cmd, "\n";
-
-    return;
 }
 
 #----------------------------------------------------------------------
@@ -222,10 +226,10 @@ bundle.pl - Combine website files with Initialize module
 When followme is called with the -i flag it creates a new website in a directory,
 including the files it needs to run. These files are extraced from the DATA
 section at the end of the Initialize.pm module. This script updates that DATA section
-from a directory containing several sample websites. It is for developers of this code
+from a directory containing a sample website. It is for developers of this code
 and not for end users.
 
-Run this script with the name of the directory containing the sample websites on
+Run this script with the name of the directory containing the sample website on
 the command line.
 
 =head1 CONFIGURATION
