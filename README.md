@@ -5,7 +5,7 @@ App::Followme::Guide - How to install, configure, and run followme
 # SYNOPSIS
 
     followme [directory]
-    
+
 
 # DESCRIPTION
 
@@ -36,17 +36,7 @@ init option in that directory
     followme --init
 
 It will install the initial templates and configuration files. The initial
-setup is configured to update pages to maintain a consistent look for the site
-and to create a weblog from files placed in the archive directory. If you do not
-want a weblog, just delete the archive directory and its contents.
-
-To start creating your site, create the index page as a Markdown file, run
-followme again, and edit the resulting page:
-
-    vi index.md
-    followme
-    vi index.html
-    
+setup is configured to update pages to maintain a consistent look for the site.
 
 The first page will serve as a prototype for the rest of your site. When you
 look at the html page, you will see that it contains comments looking like
@@ -61,12 +51,12 @@ more than one html page in the folder, you can edit any page, run followme,
 and the other pages will be updated to match it.
 
 So you should edit your first page and add any other files you need to create
-the look of your site, such as the style sheet.
+the look of your site, such as the style sheets.
 
 You can also use followme on an existing site. Run the command
 
     followme --init
-    
+
 
 in the top directory of your site. The init option will not overwrite any
 existing files in your site. Then look at the page template it has
@@ -165,7 +155,7 @@ These modules are distributed with followme:
         <!-- endfor -->
 
     indicate the section of the template that is repeated for each file contained
-    in the index. 
+    in the index.
 
 - [App::Followme::CreateNews](https://metacpan.org/pod/App::Followme::CreateNews)
 
@@ -364,7 +354,7 @@ its argument.
 The signature of the new method is
 
     $obj = $module_name->new($configuration);
-    
+
 
 where $configuration is a reference to a hash containing the configuration
 parameters. $module name is the same as the name in the configuration file.
