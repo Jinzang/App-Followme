@@ -2,9 +2,15 @@ Revision history for Perl extension App::Followme
 
 {{$NEXT}}
 
+1.16 2015-09-10T00:35:31Z
+    - New initial website
+    - make photo resize optional in gallery
+    - added breadcrumb urls
+    - added class UploadLocal
+
 1.15 2015-06-08T23:01:40Z
     - made Test::Requires a requirement
-    
+
 1.14 2015-06-06T10:47:19Z
     - revised tests to use Test::Requires
 

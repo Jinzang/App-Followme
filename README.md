@@ -6,7 +6,6 @@ App::Followme::Guide - How to install, configure, and run followme
 
     followme [directory]
 
-
 # DESCRIPTION
 
 Updates a static website after changes. Constant portions of each page are
@@ -35,8 +34,10 @@ init option in that directory
     cd website
     followme --init
 
-It will install the initial templates and configuration files. The initial
-setup is configured to update pages to maintain a consistent look for the site.
+When you run followme with the --init flag, it will install the initial
+templates and configuration files. The initial setup is configured to update
+pages to maintain a consistent look for the site and simplify the onboarding of
+new content.
 
 The first page will serve as a prototype for the rest of your site. When you
 look at the html page, you will see that it contains comments looking like
@@ -55,8 +56,7 @@ the look of your site, such as the style sheets.
 
 You can also use followme on an existing site. Run the command
 
-    followme --init
-
+    followme --init [template]
 
 in the top directory of your site. The init option will not overwrite any
 existing files in your site. Then look at the page template it has
@@ -354,7 +354,6 @@ its argument.
 The signature of the new method is
 
     $obj = $module_name->new($configuration);
-
 
 where $configuration is a reference to a hash containing the configuration
 parameters. $module name is the same as the name in the configuration file.

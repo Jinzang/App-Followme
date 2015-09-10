@@ -12,7 +12,7 @@ use File::Copy;
 use File::Path qw(remove_tree);
 use File::Spec::Functions qw(abs2rel splitdir catfile);
 
-our $VERSION = "1.15";
+our $VERSION = "1.16";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
@@ -174,7 +174,7 @@ The following parameters are used from the configuration.
 
 =item remote_directory
 
-The top direcotry of the website the files are being copied to
+The top directory of the website the files are being copied to
 
 =item permissions
 

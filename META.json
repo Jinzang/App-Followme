@@ -42,7 +42,7 @@
       },
       "runtime" : {
          "recommends" : {
-            "GD" : "0",
+            "GD" : "2.21",
             "Net::FTP" : "0",
             "Text::Markdown" : "1.000031"
          },
@@ -69,5 +69,5 @@
          "web" : "https://github.com/Jinzang/App-Followme"
       }
    },
-   "version" : "1.15"
+   "version" : "1.16"
 }

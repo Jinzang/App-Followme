@@ -12,7 +12,7 @@ use Cwd;
 use IO::File;
 use File::Spec::Functions qw(splitdir catfile);
 
-our $VERSION = "1.15";
+our $VERSION = "1.16";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
