@@ -179,11 +179,11 @@ sub more_recent_files {
     foreach my $filename (@$filenames) {
         next unless $self->match_file($filename);
 
-        my @stats = stat($filename);
-        if (@$augmented_files < $limit || $stats[9] > $augmented_files->[0][0]) {
+        my $date = fio_get_date($filename);
+        if (@$augmented_files < $limit || $date > $augmented_files->[0][0]) {
 
             shift(@$augmented_files) if @$augmented_files >= $limit;
-            push(@$augmented_files, [$stats[9], $filename]);
+            push(@$augmented_files, [$date, $filename]);
 
             @$augmented_files = sort {$a->[0] <=> $b->[0]} @$augmented_files;
         }

@@ -56,15 +56,9 @@ sub build_date {
     my $months = MONTHS;
     my %month2num = map {substr($_, 0, 3) => $num ++} @$months;
 
-    my $time;
-    if (-e $filename) {
-        my @stats = stat($filename);
-        $time = $stats[9];
-    } else {
-        $time = time();
-    }
-
+    my $time = -e $filename ? fio_get_date($filename) : time();
     my $ctime = localtime($time);
+
     my @names = qw(weekday month day hour24 minute second year);
     my @values = split(/\W+/, $ctime);
 

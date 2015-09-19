@@ -13,10 +13,11 @@ use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(fio_filename_to_url fio_full_file_name fio_glob_patterns
-                 fio_is_newer fio_match_patterns fio_most_recent_file
-                 fio_read_page fio_same_file fio_split_filename
-                 fio_to_file fio_visit fio_write_page);
+our @EXPORT = qw(fio_filename_to_url fio_full_file_name fio_get_date
+                 fio_glob_patterns fio_is_newer fio_match_patterns
+                 fio_most_recent_file fio_read_page fio_same_file
+                 fio_set_date fio_split_filename fio_to_file
+                 fio_visit fio_write_page);
 
 our $VERSION = "1.16";
 
@@ -64,6 +65,16 @@ sub fio_full_file_name {
 }
 
 #----------------------------------------------------------------------
+# Get modification date of file
+
+sub fio_get_date {
+    my ($filename) = @_;
+
+    my @stats = stat($filename);
+    return $stats[9];
+}
+
+#----------------------------------------------------------------------
 # Map filename globbing metacharacters onto regexp metacharacters
 
 sub fio_glob_patterns {
@@ -108,11 +119,7 @@ sub fio_glob_patterns {
 sub fio_is_newer {
     my ($target, @sources) = @_;
 
-    my $target_date = 0;
-    if (-e $target) {
-        my @stats = stat($target);
-        $target_date = $stats[9];
-    }
+    my $target_date = -e $target ? fio_get_date($target) : 0;
 
     foreach my $source (@sources) {
         next unless defined $source;
@@ -120,8 +127,7 @@ sub fio_is_newer {
         next unless -e $source;
         next if fio_same_file($target, $source);
 
-        my @stats = stat($source);
-        my $source_date = $stats[9];
+        my $source_date = fio_get_date($source);
         return if $source_date >= $target_date;
     }
 
@@ -203,6 +209,14 @@ sub fio_same_file {
     }
 
     return 1;
+}
+
+#----------------------------------------------------------------------
+# Set modification date of file
+
+sub fio_set_date {
+    my ($filename, $date) = @_;
+    return utime($date, $date, $filename);
 }
 
 #----------------------------------------------------------------------

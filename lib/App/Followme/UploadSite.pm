@@ -157,8 +157,7 @@ sub get_state {
                             $self->{hash_file});
 
     if (-e $hash_file) {
-        my @stats = stat($hash_file);
-        $self->{target_date} = $stats[9];
+        $self->{target_date} = fio_get_date($hash_file);
     }
 
     my $hash = $self->read_hash_file($hash_file);
@@ -328,8 +327,7 @@ sub update_folder {
         # Skip check if in quick mode and modification date is old
 
         if ($self->{quick_update}) {
-            my @stats = stat($filename);
-            next if $self->{target_date} > $stats[9];
+            next if $self->{target_date} > fio_get_date($filename);
         }
 
         $filename = abs2rel($filename, $self->{top_directory});

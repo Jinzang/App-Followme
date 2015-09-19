@@ -161,8 +161,7 @@ sub sort_files {
 
     my @augmented_files;
     foreach my $filename (@$filenames) {
-        my @stats = stat($filename);
-        push(@augmented_files, [$stats[9], $filename]);
+        push(@augmented_files, [fio_get_date($filename), $filename]);
     }
 
     @augmented_files = sort {$b->[0] <=> $a->[0]} @augmented_files;
@@ -202,8 +201,7 @@ sub update_directory {
     my ($filenames, $directories) = fio_visit($directory);
     $filenames = $self->sort_files($filenames);
 
-    my @stats = stat($directory);
-    my $modtime = $stats[9];
+    my $modtime = fio_get_date($directory);
 
     # The first update uses a file from the directory above
     # as a prototype, if one is found
@@ -245,11 +243,10 @@ sub update_directory {
             };
             die "$filename: $@" if $@;
 
-            my @stats = stat($filename);
-            my $modtime = $stats[9];
+            my $modtime = fio_get_date($filename);
 
             fio_write_page($filename, $page);
-            utime($modtime, $modtime, $filename);
+            fio_set_date($filename, $modtime);
             $changes += 1;
         }
 
