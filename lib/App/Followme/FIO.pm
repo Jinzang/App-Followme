@@ -163,8 +163,7 @@ sub fio_most_recent_file {
         my ($dir, $file) = fio_split_filename($filename);
         next unless fio_match_patterns($file, $globs);
 
-        my @stats = stat($filename);
-        my $file_date = $stats[9];
+        my $file_date = fio_get_date($filename);
 
         if ($file_date > $newest_date) {
             $newest_date = $file_date;
