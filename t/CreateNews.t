@@ -17,6 +17,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
+eval "use App::Followme::FIO";
 require App::Followme::CreateNews;
 
 my $test_dir = catdir(@path, 'test');
@@ -109,16 +110,16 @@ EOQ
 EOQ
 
     my $idx = App::Followme::CreateNews->new($configuration);
-    $idx->write_page('blog_template.htm', $archive_template);
-    $idx->write_page('news_index_template.htm', $index_template);
+    fio_write_page('blog_template.htm', $archive_template);
+    fio_write_page('news_index_template.htm', $index_template);
 
     foreach my $count (qw(four three two one)) {
         sleep(2);
         my $output = $page;
         $output =~ s/%%/$count/g;
-        
+
         my $filename = catfile('archive',"$count.html");
-        $idx->write_page($filename, $output);
+        fio_write_page($filename, $output);
     }
 };
 
@@ -128,19 +129,19 @@ EOQ
 do {
     chdir($test_dir);
     my $idx = App::Followme::CreateNews->new($configuration);
-    
+
     my $archive_dir = catfile($test_dir, 'archive');
-    my ($filenames, $directories) = $idx->visit($archive_dir);
+    my ($filenames, $directories) = fio_visit($archive_dir);
     $idx->create_an_index($archive_dir, $directories, $filenames);
-   
-    my $page = $idx->read_page(catfile($archive_dir,"index.html"));
+
+    my $page = fio_read_page(catfile($archive_dir,"index.html"));
 
     like($page, qr/>Post one<\/a><\/li>/, 'Archive index content'); # test 1
     like($page, qr/<a href="one.html">/, 'Archive index link'); # test 2
 };
 
 #----------------------------------------------------------------------
-# Test recent_files 
+# Test recent_files
 
 do {
     chdir($test_dir);
@@ -151,7 +152,7 @@ do {
     foreach my $file (qw(one.html two.html three.html)) {
         push(@ok_filenames, catfile($archive_dir, $file));
     }
-    
+
     is_deeply($filenames, \@ok_filenames, 'Recent files'); # test 3
 };
 
@@ -162,14 +163,14 @@ do {
     my $body_ok = "\n\n<p>All about three.</p>\n";
 
     my $idx = App::Followme::CreateNews->new($configuration);
-    my ($filenames, $directories) = $idx->visit($archive_dir);
+    my ($filenames, $directories) = fio_visit($archive_dir);
     my $data = $idx->index_data($archive_dir, $directories, $filenames);
 
     is($data->[2]{url}, 'three.html', 'Archive news url'); # test 4
     is($data->[2]{body}, $body_ok, "Archive news body"); #test 5
 
     $idx->create_recent_news($archive_dir);
-    my $page = $idx->read_page(catfile($test_dir,"blog.html"));
+    my $page = fio_read_page(catfile($test_dir,"blog.html"));
 
     like($page, qr/All about two/, 'Archive news content'); # test 6
     like($page, qr/<h2>Post two/, 'Archive news title'); # test 7

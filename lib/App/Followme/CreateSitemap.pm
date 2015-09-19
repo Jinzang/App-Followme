@@ -6,8 +6,10 @@ use warnings;
 
 use lib '../..';
 
-use File::Spec::Functions qw(catfile);
 use base qw(App::Followme::Module);
+
+use File::Spec::Functions qw(catfile);
+use App::Followme::FIO;
 
 our $VERSION = "1.16";
 
@@ -33,7 +35,7 @@ sub run {
     my $page = join("\n", @urls) . "\n";
 
     my $filename = catfile($directory, $self->{sitemap});
-    $self->write_page($filename, $page);
+    fio_write_page($filename, $page);
 
     return;
 }
@@ -46,7 +48,7 @@ sub list_urls {
 
     my @urls;
     my $data = {};
-    my ($filenames, $directories) =  $self->visit($directory);
+    my ($filenames, $directories) =  fio_visit($directory);
 
     foreach my $filename (@$filenames) {
         next unless $self->match_file($filename);

@@ -19,6 +19,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
+eval "use App::Followme::FIO";
 require App::Followme;
 require App::Followme::Initialize;
 
@@ -47,14 +48,14 @@ do {
     my $followme = App::Followme->new();
 
     my $text = "This is the top page\n";
-    $followme->write_page('index.md', $text);
+    fio_write_page('index.md', $text);
     $followme->run($test_dir);
 
     ok(-e 'index.html', 'Index file created'); #test 4
     ok(! -e 'index.md', 'Text file deleted'); #test 5
 
     chomp($text);
-    my $page = $followme->read_page('index.html');
+    my $page = fio_read_page('index.html');
     ok(index($page, '<h2>Test</h2>') > 0, 'Generated title'); # test 6
     ok(index($page, "<p>$text</p>") > 0, 'Generated body'); # test 7
 
@@ -78,14 +79,14 @@ do {
         $file = catfile($path, $file);
 
         my $text = "$count blog post.\n";
-        $followme->write_page($file, $text);
+        fio_write_page($file, $text);
 
         $followme->run($path);
         $file =~ s/md$/html/;
         sleep(1);
 
         chomp($text);
-        my $page = $followme->read_page($file);
+        my $page = fio_read_page($file);
         ok(index($page, "<p>$text</p>") > 0,
            "Generated $count blog post"); # test 8-10
     }
@@ -95,7 +96,7 @@ do {
     ok(-e $file, "archive index file created");
 
     foreach my $dir (qw(2013 12december)) {
-        my $page = $followme->read_page($file);
+        my $page = fio_read_page($file);
         ok(index($page, "$dir/index.html") > 0,
            "Link to $dir directory"); # test 12,14
 

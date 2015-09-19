@@ -10,6 +10,7 @@ use base qw(App::Followme::Module);
 use Cwd;
 use IO::Dir;
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile no_upwards);
+use App::Followme::FIO;
 
 our $VERSION = "1.16";
 
@@ -32,13 +33,13 @@ sub parameters {
 sub run {
     my ($self, $directory) = @_;
 
-    my $index_name = $self->full_file_name($directory, $self->{index_file});
+    my $index_name = fio_full_file_name($directory, $self->{index_file});
     my $template_name = $self->get_template_name($self->{index_template});
 
     my $pattern = $self->get_included_files();
-    my $filename = $self->most_recent_file($directory, $pattern);
+    my $filename = fio_most_recent_file($directory, $pattern);
 
-    return if $self->is_newer($index_name, $template_name, $filename);
+    return if fio_is_newer($index_name, $template_name, $filename);
 
     eval {$self->create_an_index($directory, $index_name)};
     warn "$index_name: $@" if $@;
@@ -52,13 +53,9 @@ sub run {
 sub build_url {
     my ($self, $data, $directory, $filename) = @_;
 
-    $data->{url} = $self->filename_to_url($directory,
-                                          $filename,
-                                        );
-
-    $data->{absolute_url} = '/' . $self->filename_to_url($self->{top_directory},
-                                                         $filename,
-                                                        );
+    $data->{url} = fio_filename_to_url($directory, $filename);
+    $data->{absolute_url} = '/' . fio_filename_to_url($self->{top_directory},
+                                                      $filename);
 
     return $data;
 }
@@ -75,7 +72,7 @@ sub create_an_index {
     my $render = $self->make_template($index_name, $self->{index_template});
     my $page = $render->($data);
 
-    $self->write_page($index_name, $page);
+    fio_write_page($index_name, $page);
     return;
 }
 
@@ -85,7 +82,7 @@ sub create_an_index {
 sub get_excluded_files {
     my ($self) = @_;
 
-    my ($dir, $file) = $self->split_filename($self->{index_file});
+    my ($dir, $file) = fio_split_filename($self->{index_file});
     return $file;
 }
 
@@ -103,7 +100,7 @@ sub get_included_files {
 sub index_data {
     my ($self, $directory) = @_;
 
-    my ($filenames, $directories) = $self->visit($directory);
+    my ($filenames, $directories) = fio_visit($directory);
 
     my @index_data;
     foreach my $filename (@$filenames) {

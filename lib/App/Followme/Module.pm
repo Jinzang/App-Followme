@@ -6,13 +6,10 @@ use warnings;
 use integer;
 use lib '../..';
 
-use Cwd;
-use IO::Dir;
-use IO::File;
-use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
-                             no_upwards rel2abs splitdir updir);
-
 use base qw(App::Followme::ConfiguredObject);
+
+use File::Spec::Functions qw(abs2rel catfile splitdir);
+use App::Followme::FIO;
 
 our $VERSION = "1.16";
 
@@ -39,7 +36,7 @@ sub parameters {
 sub build_body {
     my ($self, $data, $filename) = @_;
 
-    my $page = $self->read_page($filename);
+    my $page = fio_read_page($filename);
 
     if ($page) {
         my $sections = $self->{template}->parse_sections($page);
@@ -100,7 +97,7 @@ sub build_date {
 sub build_is_index {
     my ($self, $data, $filename) = @_;
 
-    my ($directory, $file) = $self->split_filename($filename);
+    my ($directory, $file) = fio_split_filename($filename);
     my ($root, $ext) = split(/\./, $file);
 
     my $is_index = $root eq 'index' && $ext eq $self->{web_extension};
@@ -115,7 +112,7 @@ sub build_is_index {
 sub build_title_from_filename {
     my ($self, $data, $filename) = @_;
 
-    my ($dir, $file) = $self->split_filename($filename);
+    my ($dir, $file) = fio_split_filename($filename);
     my ($root, $ext) = split(/\./, $file);
 
     if ($root eq 'index') {
@@ -166,15 +163,13 @@ sub build_title_from_header {
 sub build_url {
     my ($self, $data, $directory, $filename) = @_;
 
-    $data->{url} = $self->filename_to_url($directory,
-                                          $filename,
-                                          $self->{web_extension}
-                                        );
+    $data->{url} = fio_filename_to_url($directory,
+                                       $filename,
+                                       $self->{web_extension});
 
-    $data->{absolute_url} = '/' . $self->filename_to_url($self->{top_directory},
-                                                         $filename,
-                                                         $self->{web_extension}
-                                                        );
+    $data->{absolute_url} = '/' . fio_filename_to_url($self->{top_directory},
+                                                      $filename,
+                                                      $self->{web_extension});
 
     my @path = splitdir(abs2rel($filename, $self->{top_directory}));
     pop(@path);
@@ -187,10 +182,9 @@ sub build_url {
         my $breadcrumb = {};
         $breadcrumb = $self->build_title_from_filename($breadcrumb, $filename);
 
-        $breadcrumb->{url} = '/' . $self->filename_to_url($self->{top_directory},
-                                                          $filename,
-                                                          $self->{web_extension}
-                                                         );
+        $breadcrumb->{url} = '/' . fio_filename_to_url($self->{top_directory},
+                                                       $filename,
+                                                       $self->{web_extension});
 
         push (@breadcrumbs, $breadcrumb);
         last unless @path;
@@ -218,25 +212,6 @@ sub external_fields {
 }
 
 #----------------------------------------------------------------------
-# Convert filename to url
-
-sub filename_to_url {
-    my ($self, $directory, $filename, $ext) = @_;
-
-    my $is_dir = -d $filename;
-    $filename = rel2abs($filename);
-    $filename = abs2rel($filename, $directory);
-
-    my @path = $filename eq '.' ? () : splitdir($filename);
-    push(@path, 'index.html') if $is_dir;
-
-    my $url = join('/', @path);
-    $url =~ s/\.[^\.]*$/.$ext/ if defined $ext;
-
-    return $url;
-}
-
-#----------------------------------------------------------------------
 # Find an file to serve as a prototype for updating other files
 
 sub find_prototype {
@@ -252,7 +227,7 @@ sub find_prototype {
             $uplevel -= 1;
         } else {
             my $pattern = "*.$self->{web_extension}";
-            my $file = $self->most_recent_file($dir, $pattern);
+            my $file = fio_most_recent_file($dir, $pattern);
             return $file if $file;
         }
 
@@ -261,31 +236,6 @@ sub find_prototype {
     }
 
     return;
-}
-
-#----------------------------------------------------------------------
-# Construct the full file name from a relative file name
-
-sub full_file_name {
-    my ($self, @directories) = @_;
-
-    return $directories[-1] if file_name_is_absolute($directories[-1]);
-
-    my @dirs;
-    foreach my $dir (@directories) {
-        push(@dirs, splitdir($dir));
-    }
-
-    my @new_dirs;
-    foreach my $dir (@dirs) {
-        if (no_upwards($dir)) {
-            push(@new_dirs, $dir);
-        } else {
-            pop(@new_dirs) unless $dir eq '.';
-        }
-    }
-
-    return catfile(@new_dirs);
 }
 
 #----------------------------------------------------------------------
@@ -320,55 +270,16 @@ sub get_template_name {
     my ($self, $template_file) = @_;
 
     my @directories = ($self->{base_directory});
-    push(@directories, $self->full_file_name($self->{top_directory},
-                                             $self->{template_directory}));
+
+    push(@directories, fio_full_file_name($self->{top_directory},
+                                          $self->{template_directory}));
 
     foreach my $directory (@directories) {
-        my $template_name = $self->full_file_name($directory,
-                                                  $template_file);
+        my $template_name = fio_full_file_name($directory, $template_file);
         return $template_name if -e $template_name;
     }
 
     die "Couldn't find template: $template_file\n";
-}
-
-#----------------------------------------------------------------------
-# Map filename globbing metacharacters onto regexp metacharacters
-
-sub glob_patterns {
-    my ($self, $patterns) = @_;
-
-    my @globbed_patterns;
-    my @patterns = split(/\s*,\s*/, $patterns);
-
-    foreach my $pattern (@patterns) {
-        if ($pattern eq '*') {
-            push(@globbed_patterns,  '.');
-
-        } else {
-            my $start;
-            if ($pattern =~ s/^\*//) {
-                $start = '';
-            } else {
-                $start = '^';
-            }
-
-            my $finish;
-            if ($pattern =~ s/\*$//) {
-                $finish = '';
-            } else {
-                $finish = '$';
-            }
-
-            $pattern =~ s/\./\\./g;
-            $pattern =~ s/\*/\.\*/g;
-            $pattern =~ s/\?/\.\?/g;
-
-            push(@globbed_patterns, $start . $pattern . $finish);
-        }
-    }
-
-    return \@globbed_patterns;
 }
 
 #----------------------------------------------------------------------
@@ -398,41 +309,12 @@ sub internal_fields {
 }
 
 #----------------------------------------------------------------------
-# Is the target newer than any source file?
-
-sub is_newer {
-    my ($self, $target, @sources) = @_;
-
-    my $target_date = 0;
-    if (-e $target) {
-        my @stats = stat($target);
-        $target_date = $stats[9];
-    }
-
-    foreach my $source (@sources) {
-        next unless defined $source;
-
-        $source = catfile($source, "index.$self->{web_extension}")
-            if -d $source;
-
-        next unless -e $source;
-        next if $self->same_file($target, $source);
-
-        my @stats = stat($source);
-        my $source_date = $stats[9];
-        return if $source_date >= $target_date;
-    }
-
-    return 1;
-}
-
-#----------------------------------------------------------------------
 # Combine template with prototype and compile to subroutine
 
 sub make_template {
     my ($self, $filename, $template_file) = @_;
 
-    my ($directory, $base) = $self->split_filename($filename);
+    my ($directory, $base) = fio_split_filename($filename);
     undef $filename unless -e $filename;
 
     my $template_name = $self->get_template_name($template_file);
@@ -451,92 +333,12 @@ sub make_template {
 sub match_file {
     my ($self, $filename) = @_;
 
-    $self->{include_patterns} ||=
-        $self->glob_patterns($self->get_included_files());
+    $self->{include_patterns} ||= fio_glob_patterns($self->get_included_files());
+    $self->{exclude_patterns} ||= fio_glob_patterns($self->get_excluded_files());
 
-    $self->{exclude_patterns} ||=
-        $self->glob_patterns($self->get_excluded_files());
-
-    my ($dir, $file) = $self->split_filename($filename);
-    return if $self->match_patterns($file, $self->{exclude_patterns});
-    return unless $self->match_patterns($file, $self->{include_patterns});
-
-    return 1;
-}
-
-#----------------------------------------------------------------------
-# Return true if filename matches pattern
-
-sub match_patterns {
-    my ($self, $file, $patterns) = @_;
-
-    foreach my $pattern (@$patterns) {
-        return 1 if $file =~ /$pattern/;
-    }
-
-    return;
-}
-
-#----------------------------------------------------------------------
-# Get the most recently modified web file in a directory
-
-sub most_recent_file {
-    my ($self, $directory, $pattern) = @_;
-
-    my ($filenames, $directories) = $self->visit($directory);
-
-    my $newest_file;
-    my $newest_date = 0;
-    my $globs = $self->glob_patterns($pattern);
-
-    foreach my $filename (@$filenames) {
-        my ($dir, $file) = $self->split_filename($filename);
-        next unless $self->match_patterns($file, $globs);
-
-        my @stats = stat($filename);
-        my $file_date = $stats[9];
-
-        if ($file_date > $newest_date) {
-            $newest_date = $file_date;
-            $newest_file = $filename;
-        }
-    }
-
-    return $newest_file;
-}
-
-#----------------------------------------------------------------------
-# Read a file into a string
-
-sub read_page {
-    my ($self, $filename) = @_;
-    return unless defined $filename;
-
-    local $/;
-    my $fd = IO::File->new($filename, 'r');
-    return unless $fd;
-
-    my $page = <$fd>;
-    close($fd);
-
-    return $page;
-}
-
-#----------------------------------------------------------------------
-# Cehck if two filenames are the same in an os independent way
-
-sub same_file {
-    my ($self, $filename1, $filename2) = @_;
-
-    return unless defined $filename1 && defined $filename2;
-
-    my @path1 = splitdir(rel2abs($filename1));
-    my @path2 = splitdir(rel2abs($filename2));
-    return unless @path1 == @path2;
-
-    while(@path1) {
-        return unless shift(@path1) eq shift(@path2);
-    }
+    my ($dir, $file) = fio_split_filename($filename);
+    return if fio_match_patterns($file, $self->{exclude_patterns});
+    return unless fio_match_patterns($file, $self->{include_patterns});
 
     return 1;
 }
@@ -550,7 +352,7 @@ sub search_directory {
     my $excluded_dirs = $self->get_excluded_directories();
 
     foreach my $excluded (@$excluded_dirs) {
-        return if $self->same_file($directory, $excluded);
+        return if fio_same_file($directory, $excluded);
     }
 
     return 1;
@@ -592,66 +394,6 @@ sub sort_files {
     return \@files;
 }
 
-#----------------------------------------------------------------------
-# Split filename from directory
-
-sub split_filename {
-    my ($self, $filename) = @_;
-
-    $filename = rel2abs($filename);
-    my @path = splitdir($filename);
-    my $file = pop(@path);
-
-    my $dir = catfile(@path);
-    return ($dir, $file);
-}
-
-#----------------------------------------------------------------------
-# Return two closures that will visit a directory tree
-
-sub visit {
-    my ($self, $directory) = @_;
-
-    my @filenames;
-    my @directories;
-    my $dd = IO::Dir->new($directory);
-    die "Couldn't open $directory: $!\n" unless $dd;
-
-    # Find matching files and directories
-    while (defined (my $file = $dd->read())) {
-        next unless no_upwards($file);
-        my $path = catfile($directory, $file);
-
-        if (-d $path) {
-            push(@directories, $path);
-        } else {
-            push(@filenames, $path);
-        }
-    }
-
-    $dd->close;
-
-    my $filenames = $self->sort_files(\@filenames);
-    my $directories = $self->sort_files(\@directories);
-
-    return ($filenames, $directories);
-}
-
-#----------------------------------------------------------------------
-# Write the page back to the file
-
-sub write_page {
-    my ($self, $filename, $page) = @_;
-
-    my $fd = IO::File->new($filename, 'w');
-    die "Couldn't write $filename" unless $fd;
-
-    print $fd $page;
-    close($fd);
-
-    return;
-}
-
 1;
 
 =pod
@@ -664,10 +406,11 @@ App::Followme::Module - Base class for modules invoked from configuration
 
 =head1 SYNOPSIS
 
+    use App::Followme::FIO;
     use App::Followme::Module;
     my $obj = App::Followme::Module->new($configuration);
     my $prototype = $obj->find_prototype($directory, 0);
-    my $test = $obj->is_newer($filename, $prototype);
+    my $test = fio_is_newer($filename, $prototype);
     if ($test) {
         my $data = $obj->set_fields($directory, $filename);
         my $sub = $obj->make_template($filename, $template_name);
@@ -758,12 +501,6 @@ text. For comments look like
     <!-- for @loop -->
     <!-- endfor -->
 
-=item $str = $self->read_page($filename);
-
-Read a fie into a string. An the entire file is read from a string, there is no
-line at a time IO. This is because files are typically small and the parsing
-done is not line oriented.
-
 =item $data = $self->set_fields($directory, $filename);
 
 The main method for getting variables. This method calls the build methods
@@ -771,7 +508,7 @@ defined in this class. Filename is the file that the variables are being
 computed for. Directory is used to compute the relative url. The url computed is
 relative to it.
 
-=item $self->write_page($filename, $str);
+=item fio_write_page($filename, $str);
 
 Write a file from a string. An the entire file is written from a string, there
 is no line at a time IO. This is because files are typically small.

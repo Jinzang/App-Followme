@@ -13,6 +13,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
+eval "use App::Followme::FIO";
 require App::Followme::EditSections;
 
 my $test_dir = catdir(@path, 'test');
@@ -64,7 +65,7 @@ EOQ
         }
 
         my $filename = "$count.html";
-        $es->write_page($filename, $output);
+        fio_write_page($filename, $output);
         sleep(2);
     }
 };
@@ -76,7 +77,7 @@ do {
     my $es = App::Followme::EditSections->new($configuration);
 
     my $output = $es->strip_comments('one.html', 1);
-    my $output_ok = $es->read_page('one.html');
+    my $output_ok = fio_read_page('one.html');
     is($output, $output_ok, 'strip comments, keep sections'); # test 1
 
     $output = $es->strip_comments('one.html', 0);
@@ -84,7 +85,7 @@ do {
     is($output, $output_ok, 'strip comments and sections'); # test 2
 
     $output = $es->strip_comments('two.html', 0);
-    $output_ok = $es->read_page('two.html');
+    $output_ok = fio_read_page('two.html');
     is($output, $output_ok, 'don\'t strip comments'); # test 3
 
     $configuration->{remove_comments} = 1;
@@ -104,8 +105,8 @@ do {
     my $prototype = $es->strip_comments('one.html', 1);
     $es->update_page('two.html', $prototype);
 
-    my $output = $es->read_page('two.html');
-    my $output_ok = $es->read_page('one.html');
+    my $output = fio_read_page('two.html');
+    my $output_ok = fio_read_page('one.html');
     $output_ok =~ s/one/two/g;
 
     is($output, $output_ok, 'update page'); # test 5

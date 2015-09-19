@@ -11,6 +11,7 @@ use GD;
 use Cwd;
 use IO::Dir;
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
+use App::Followme::FIO;
 
 our $VERSION = "1.16";
 
@@ -38,7 +39,7 @@ sub parameters {
 sub run {
     my ($self, $directory) = @_;
 
-    my $gallery_name = $self->full_file_name($directory, $self->{gallery_file});
+    my $gallery_name = fio_full_file_name($directory, $self->{gallery_file});
 
     eval {
        $self->create_a_gallery($directory, $gallery_name)
@@ -68,14 +69,11 @@ sub build_photo_url {
         my $sub = "build_${field}_name";
 
         my $photoname = $self->$sub($filename, $field);
-        $data->{$name} = $self->filename_to_url($directory,
-                                                $photoname,
-                                               );
+        $data->{$name} = fio_filename_to_url($directory, $photoname);
 
         $name = 'absolute_' . $name;
-        $data->{$name} = '/' . $self->filename_to_url($self->{top_directory},
-                                                      $photoname,
-                                                     );
+        $data->{$name} = '/' . fio_filename_to_url($self->{top_directory},
+                                                   $photoname);
     }
 
     return $data;
@@ -87,7 +85,7 @@ sub build_photo_url {
 sub build_thumb_name {
     my ($self, $filename) = @_;
 
-    my ($dir, $file) = $self->split_filename($filename);
+    my ($dir, $file) = fio_split_filename($filename);
     my ($root, $ext) = split(/\./, $file);
     $file = join('', $root, $self->{thumb_suffix}, '.', $ext);
     my $photoname = catfile($dir, $file);
@@ -101,11 +99,11 @@ sub build_thumb_name {
 sub create_a_gallery {
     my ($self, $directory, $gallery_name) = @_;
 
-    my ($filenames, $directories) = $self->visit($directory);
+    my ($filenames, $directories) = fio_visit($directory);
     @$filenames = grep {$self->match_file($_)} @$filenames;
 
     my $template_name = $self->get_template_name($self->{gallery_template});
-    return if $self->is_newer($gallery_name, $template_name, @$filenames);
+    return if fio_is_newer($gallery_name, $template_name, @$filenames);
 
     my $data = $self->SUPER::set_fields($directory, $gallery_name);
     $data->{loop} = $self->gallery_data($directory, $filenames);
@@ -114,7 +112,7 @@ sub create_a_gallery {
                                       $self->{gallery_template});
     my $page = $render->($data);
 
-    $self->write_page($gallery_name, $page);
+    fio_write_page($gallery_name, $page);
     return;
 }
 
@@ -138,7 +136,7 @@ sub gallery_data {
 sub get_dimensions {
     my ($self, $data, $directory, $filename) = @_;
 
-    my $gallery_name = $self->full_file_name($directory, $self->{gallery_file});
+    my $gallery_name = fio_full_file_name($directory, $self->{gallery_file});
 
     my $old_photo = $self->read_photo($filename);
     my ($old_width, $old_height) = $old_photo->getBounds();
@@ -151,7 +149,7 @@ sub get_dimensions {
 
             my $sub = "build_${field}_name";
             my $photoname = $self->$sub($filename);
-            next unless $self->is_newer($photoname, $gallery_name);
+            next unless fio_is_newer($photoname, $gallery_name);
 
             my $photo = $self->resize_a_photo($old_photo, $width, $height,
                                               $old_width, $old_height);
@@ -173,9 +171,9 @@ sub get_dimensions {
 sub get_excluded_files {
     my ($self) = @_;
 
-    my ($dir, $file) = $self->split_filename($self->{gallery_include});
+    my ($dir, $file) = fio_split_filename($self->{gallery_include});
     $file = $self->build_thumb_name($file);
-    ($dir, $file) = $self->split_filename($file);
+    ($dir, $file) = fio_split_filename($file);
 
     return $file;
 }

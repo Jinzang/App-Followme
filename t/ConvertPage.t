@@ -19,6 +19,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
+eval "use App::Followme::FIO";
 require App::Followme::ConvertPage;
 
 my $test_dir = catdir(@path, 'test');
@@ -87,8 +88,8 @@ EOQ
     my $configuration = {page_template => 'template.htm'};
     my $cvt = App::Followme::ConvertPage->new($configuration);
 
-    $cvt->write_page('index.html', $index);
-    $cvt->write_page('template.htm', $template);
+    fio_write_page('index.html', $index);
+    fio_write_page('template.htm', $template);
 
     foreach my $count (qw(four three two one)) {
         sleep(1);
@@ -96,7 +97,7 @@ EOQ
         $output =~ s/%%/$count/g;
 
         my $filename = "$count.md";
-        $cvt->write_page($filename, $output);
+        fio_write_page($filename, $output);
     }
 
     my $prototype_file = $cvt->find_prototype($test_dir);
@@ -107,12 +108,12 @@ EOQ
     ok(index($data->{body}, "<li>third three</li>") > 0,'Convert Text'); # test 2
     $cvt->convert_a_file($test_dir, 'four.md');
 
-    my $page = $cvt->read_page('four.html');
+    my $page = fio_read_page('four.html');
     like($page, qr/<h1>Page four<\/h1>/, 'Convert a file'); # test 3
 
     $cvt->run($test_dir);
-    $page = $cvt->read_page('one.html');
+    $page = fio_read_page('one.html');
     like($page, qr/<h1>Page one<\/h1>/, 'Convert text file one'); # test 4
-    $page = $cvt->read_page('two.html');
+    $page = fio_read_page('two.html');
     like($page, qr/<h1>Page two<\/h1>/, 'Convert text file two'); # test 5
 };

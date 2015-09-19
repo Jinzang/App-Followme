@@ -6,8 +6,10 @@ use warnings;
 
 use lib '../..';
 
-use File::Spec::Functions qw(catfile);
 use base qw(App::Followme::Module);
+
+use File::Spec::Functions qw(catfile);
+use App::Followme::FIO;
 
 our $VERSION = "1.16";
 
@@ -92,7 +94,7 @@ sub find_location {
 sub strip_comments {
     my ($self, $filename, $keep_sections) = @_;
 
-    my $page = $self->read_page($filename);
+    my $page = fio_read_page($filename);
     die "Could not read page" unless length($page);
 
     my @output;
@@ -117,7 +119,7 @@ sub strip_comments {
 sub update_directory {
     my ($self, $directory, $prototype) = @_;
 
-    my ($filenames, $directories) = $self->visit($directory);
+    my ($filenames, $directories) = fio_visit($directory);
 
     foreach my $filename (@$filenames) {
         next unless $self->match_file($filename);
@@ -172,7 +174,7 @@ sub update_page {
     }
 
     push(@output, $page);
-    $self->write_page($filename, join('', @output));
+    fio_write_page($filename, join('', @output));
 
     die "Could not locate tags\n" if $notfound;
     return;

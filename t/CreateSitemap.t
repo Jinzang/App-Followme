@@ -17,6 +17,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
+eval "use App::Followme::FIO";
 require App::Followme::CreateSitemap;
 
 my $test_dir = catdir(@path, 'test');
@@ -60,9 +61,9 @@ EOQ
     foreach my $count (qw(first second third)) {
         my $output = $page;
         $output =~ s/%%/$count/g;
-        
+
         my $filename = "$count.html";
-        $map->write_page($filename, $output);
+        fio_write_page($filename, $output);
 
         my $data = {};
         $map->build_url($data, $test_dir, $filename);

@@ -17,6 +17,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
+eval "use App::Followme::FIO";
 require App::Followme::UploadSite;
 
 my $test_dir = catdir(@path, 'test');
@@ -74,7 +75,7 @@ do {
     ($hash, $local) = $up->get_state();
     is_deeply($local, \%local_ok, 'compute local hash'); # test 4
     is_deeply($hash, $hash_ok, 'get hash'); # test 5
-    
+
     unlink($hash_file);
 };
 
@@ -106,27 +107,27 @@ EOQ
     my $local = {};
     my $hash_ok = {};
     my @dirs = ('', 'before', 'after');
-    
+
     foreach my $dir (@dirs) {
         if ($dir) {
             mkdir $dir;
             $local->{$dir} = 1;
             $hash_ok->{$dir} = 'dir';
         }
-        
+
         foreach my $count (qw(one two three)) {
             my $output = $page;
             $output =~ s/!!/$dir/g;
             $output =~ s/%%/$count/g;
-        
+
             my $filename = $dir ? catfile($dir, "$count.html") : "$count.html";
-            $up->write_page($filename, $output);
+            fio_write_page($filename, $output);
 
             $local->{$filename} = 1;
             $hash_ok->{$filename} = $up->checksum_file($filename);
         }
     }
-    
+
     my $hash = {};
     my %saved_local = %$local;
     $up->update_folder($up->{top_directory}, $hash, $local);

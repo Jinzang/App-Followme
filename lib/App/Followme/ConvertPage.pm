@@ -9,6 +9,7 @@ use base qw(App::Followme::Module);
 
 use Text::Markdown;
 use File::Spec::Functions qw(catfile);
+use App::Followme::FIO;
 
 our $VERSION = "1.16";
 
@@ -33,7 +34,7 @@ sub parameters {
 sub run {
     my ($self, $directory) = @_;
 
-    my ($filenames, $directories) = $self->visit($directory);
+    my ($filenames, $directories) = fio_visit($directory);
 
     foreach my $filename (@$filenames) {
         next unless $self->match_file($filename);
@@ -65,7 +66,7 @@ sub convert_a_file {
     my $data = $self->set_fields($directory, $filename);
     my $page = $render->($data);
 
-    $self->write_page($new_file, $page);
+    fio_write_page($new_file, $page);
     unlink($filename);
 
     return;
@@ -85,7 +86,7 @@ sub get_included_files {
 sub internal_fields {
     my ($self, $data, $filename) = @_;
 
-    my $text = $self->read_page($filename);
+    my $text = fio_read_page($filename);
     die "Couldn't read\n" unless defined $text;
 
     $data->{body} = $self->{md}->markdown($text);

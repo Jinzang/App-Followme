@@ -11,6 +11,7 @@ use base qw(App::Followme::Module);
 use Cwd;
 use IO::File;
 use File::Spec::Functions qw(splitdir catfile);
+use App::Followme::FIO;
 
 our $VERSION = "1.16";
 
@@ -94,7 +95,7 @@ sub load_and_run_modules {
 sub set_directories {
     my ($self, @configuration_files) = @_;
 
-    my ($directory, $file) = $self->split_filename($configuration_files[0]);
+    my ($directory, $file) = fio_split_filename($configuration_files[0]);
     $self->{base_directory} = $directory;
     $self->{top_directory} = $directory;
     return;
@@ -153,7 +154,7 @@ sub update_folder {
     my $configuration_file = shift(@$configuration_files) ||
                              catfile($directory, $self->{configuration_file});
 
-    my ($base_directory, $filename) = $self->split_filename($configuration_file);
+    my ($base_directory, $filename) = fio_split_filename($configuration_file);
 
     my ($run_before, $run_after);
     if (-e $configuration_file) {
@@ -179,7 +180,7 @@ sub update_folder {
                              %configuration);
 
     } elsif (! $self->{quick_update}) {
-        my ($filenames, $directories) = $self->visit($directory);
+        my ($filenames, $directories) = fio_visit($directory);
 
         foreach my $subdirectory (@$directories) {
             $self->update_folder($subdirectory,

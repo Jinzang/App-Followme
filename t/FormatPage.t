@@ -17,6 +17,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
+eval "use App::Followme::FIO";
 require App::Followme::FormatPage;
 
 my $test_dir = catdir(@path, 'test');
@@ -38,14 +39,14 @@ do {
         $blocks->{$blockname} = $blocktext;
         return;
     };
-    
+
     my $prototype = [];
     my $template_handler = sub {
         my ($blocktext) = @_;
         push(@$prototype, $blocktext);
         return;
     };
-    
+
     my @page = (
                 "Top line",
                 "<!-- section first in folder -->",
@@ -59,7 +60,7 @@ do {
                );
 
     my $page = join("\n", @page) . "\n";
-    
+
     my $up = App::Followme::FormatPage->new;
     $up->parse_blocks($page, $block_handler, $template_handler);
 
@@ -76,7 +77,7 @@ do {
 
     is_deeply($blocks, $ok_blocks, 'Parse blocks'); # test 1
     is_deeply($prototype, $ok_prototype, 'Parse prototype'); # test 2
-    
+
     $blocks = {};
     $prototype = [];
     my @bad_page = @page;
@@ -142,13 +143,13 @@ do {
         first => join("\n", @page[1..3]),
         second => join("\n", @page[5..7]),
     };
-  
+
     is_deeply($blocks, $ok_blocks, 'Parse undecorated blocks'); # test 7
 
     my $bad_page = $page;
     $bad_page =~ s/second/first/g;
     $blocks = eval {$up->parse_page($bad_page)};
-    
+
     is($@, "Duplicate block name (first)\n", 'Duplicate block names'); # test 8
 };
 
@@ -173,12 +174,12 @@ do {
     my $page = $prototype;
     $page =~ s/line/portion/g;
     $page =~ s/block/section/g;
-    
+
     my $prototype_path = {folder => 1};
     my $up = App::Followme::FormatPage->new;
     my $output = $up->update_page($prototype, $page, $prototype_path);
     my @output = split(/\n/, $output);
-    
+
     my @output_ok = @prototype;
     $output_ok[6] =~ s/block/section/;
 
@@ -222,7 +223,7 @@ EOQ
         foreach my $count (qw(four three two one)) {
             my $output = $code;
             my $dir_name = $dir ? $dir : 'top';
-            
+
             $output =~ s/%%/$count/g;
             $output =~ s/&&/$dir_name/g;
             $output =~ s/section nav/section nav in $dir/ if $dir;
@@ -231,8 +232,8 @@ EOQ
             push(@dirs, $test_dir);
             push(@dirs, $dir) if $dir;
             my $filename = catfile(@dirs, "$count.html");
-            
-            $up->write_page($filename, $output);
+
+            fio_write_page($filename, $output);
             sleep(2);
         }
     }
@@ -247,9 +248,9 @@ do {
     chdir($bottom);
 
     my $prototype_path = $up->get_prototype_path('one.html');
-    
+
     is_deeply($prototype_path, {sub => 1}, 'Get prototype path'); # test 11
-    
+
     my $prototype_file = $up->find_prototype($bottom, 1);
     is($prototype_file, catfile($test_dir, 'one.html'),
        'Find prototype'); # test 12
@@ -269,11 +270,11 @@ do {
         $up->run($path);
         foreach my $count (qw(two one)) {
             my $filename = "$count.html";
-            my $input = $up->read_page($filename);
+            my $input = fio_read_page($filename);
 
             like($input, qr(Page $count),
                "Format block in $dir/$count"); # test 13, 17, 21, 25
-            
+
             like($input, qr(top link),
                "Format prototype $dir/$count"); # test 14, 18, 22 26
 
@@ -282,11 +283,11 @@ do {
                    "Format section tag in $dir/$count"); # test 23, 27
                 like($input, qr(link one),
                    "Format folder block $dir/$count"); # test 24, 28
-                
+
             } else {
-                like($input, qr(section nav --), 
+                like($input, qr(section nav --),
                    "Format section tag in $dir/$count"); # test 15, 19
-                like($input, qr(link $count), 
+                like($input, qr(link $count),
                    "Format folder block in $dir/$count"); # test 16, 22
             }
         }

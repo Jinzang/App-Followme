@@ -9,6 +9,7 @@ use base qw(App::Followme::Module);
 
 use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
+use App::Followme::FIO;
 
 our $VERSION = "1.16";
 
@@ -23,7 +24,7 @@ sub run {
 
     if (defined $prototype_file) {
         $prototype_path = $self->get_prototype_path($prototype_file);
-        $prototype = $self->read_page($prototype_file);
+        $prototype = fio_read_page($prototype_file);
     }
 
     $self->update_directory($directory, $prototype, $prototype_path);
@@ -198,7 +199,8 @@ sub unchanged_prototype {
 sub update_directory {
     my ($self, $directory, $prototype, $prototype_path) = @_;
 
-    my ($filenames, $directories) = $self->visit($directory);
+    my ($filenames, $directories) = fio_visit($directory);
+    $filenames = $self->sort_files($filenames);
 
     my @stats = stat($directory);
     my $modtime = $stats[9];
@@ -209,11 +211,11 @@ sub update_directory {
     my $prototype_file;
     unless (defined $prototype) {
         my $pattern = $self->get_included_files();
-        $prototype_file = $self->most_recent_file($directory, $pattern);
+        $prototype_file = fio_most_recent_file($directory, $pattern);
 
         if ($prototype_file) {
             $prototype_path = $self->get_prototype_path($prototype_file);
-            $prototype = $self->read_page($prototype_file);
+            $prototype = fio_read_page($prototype_file);
         }
     }
 
@@ -223,7 +225,7 @@ sub update_directory {
         next unless $self->match_file($filename);
         next if defined $prototype_file && $filename eq $prototype_file;
 
-        my $page = $self->read_page($filename);
+        my $page = fio_read_page($filename);
         die "Couldn't read $filename" unless defined $page;
 
         # Check for changes before updating page
@@ -246,7 +248,7 @@ sub update_directory {
             my @stats = stat($filename);
             my $modtime = $stats[9];
 
-            $self->write_page($filename, $page);
+            fio_write_page($filename, $page);
             utime($modtime, $modtime, $filename);
             $changes += 1;
         }

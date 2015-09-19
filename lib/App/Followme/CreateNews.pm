@@ -8,6 +8,7 @@ use lib '../..';
 use base qw(App::Followme::Module);
 
 use File::Spec::Functions qw(abs2rel catfile no_upwards rel2abs splitdir);
+use App::Followme::FIO;
 
 our $VERSION = "1.16";
 
@@ -38,8 +39,8 @@ sub run {
         };
 
     if ($@) {
-        my $news_file = $self->full_file_name($self->{base_directory},
-                                              $self->{news_file});
+        my $news_file = fio_full_file_name($self->{base_directory},
+                                           $self->{news_file});
         die "$news_file: $@\n";
     }
 
@@ -55,12 +56,13 @@ sub create_an_index {
     # Don't re-create index if directory and template haven't changed
 
     my $template_name = $self->get_template_name($self->{news_index_template});
-    my $index_name = $self->full_file_name($directory, $self->{news_index_file});
+    my $index_name = fio_full_file_name($directory, $self->{news_index_file});
+    my @directories = fio_to_file($self->{web_extension}, @$directories);
 
-    return if $self->is_newer($index_name,
-                              $template_name,
-                              @$directories,
-                              @$filenames);
+    return if fio_is_newer($index_name,
+                           $template_name,
+                           @directories,
+                           @$filenames);
 
     my $data = $self->set_fields($directory, $index_name);
     $data->{loop} = $self->index_data($directory, $directories, $filenames);
@@ -68,7 +70,7 @@ sub create_an_index {
     my $render = $self->make_template($index_name, $self->{news_index_template});
 
     my $page = $render->($data);
-    $self->write_page($index_name, $page);
+    fio_write_page($index_name, $page);
 
     return;
 }
@@ -79,7 +81,7 @@ sub create_an_index {
 sub create_news_indexes {
     my ($self, $directory) = @_;
 
-    my ($filenames, $directories) = $self->visit($directory);
+    my ($filenames, $directories) = fio_visit($directory);
 
     foreach my $subdirectory (@$directories) {
         $self->create_news_indexes($subdirectory);
@@ -100,15 +102,15 @@ sub create_recent_news {
     my $file;
     my $recent_files = $self->recent_files($directory);
 
-    my $news_file = $self->full_file_name($directory, $self->{news_file});
-    ($directory, $file) = $self->split_filename($news_file);
+    my $news_file = fio_full_file_name($directory, $self->{news_file});
+    ($directory, $file) = fio_split_filename($news_file);
 
     my $template_name = $self->get_template_name($directory,
                                                  $self->{news_template});
 
     # Don't create news if no files have changed
 
-    return if $self->is_newer($news_file, $template_name, @$recent_files);
+    return if fio_is_newer($news_file, $template_name, @$recent_files);
     return unless @$recent_files;
 
     # Get the data for these files
@@ -118,7 +120,7 @@ sub create_recent_news {
 
     my $render = $self->make_template($news_file, $self->{news_template});
     my $page = $render->($data);
-    $self->write_page($news_file, $page);
+    fio_write_page($news_file, $page);
 
     return;
 }
@@ -131,7 +133,7 @@ sub get_excluded_files {
 
     my @excluded;
     foreach my $filename ($self->{news_file}, $self->{news_index_file}) {
-        my ($dir, $file) = $self->split_filename($filename);
+        my ($dir, $file) = fio_split_filename($filename);
         push(@excluded, $file);
     }
 
@@ -167,8 +169,10 @@ sub more_recent_files {
     # Skip chcking the directory if it is older than the oldest recent file
 
     my $limit = $self->{news_index_length};
+    my @directory = fio_to_file($self->{web_extension}, $directory);
+
     return $augmented_files if @$augmented_files >= $limit &&
-        $self->is_newer($augmented_files->[0][1], $directory);
+        fio_is_newer($augmented_files->[0][1], @directory);
 
     # Add file to list of recent files if modified more recently than others
 
@@ -225,7 +229,7 @@ sub recent_files {
 sub update_filelist {
     my ($self, $directory, $augmented_files) = @_;
 
-    my ($filenames, $directories) = $self->visit($directory);
+    my ($filenames, $directories) = fio_visit($directory);
 
     $augmented_files = $self->more_recent_files($directory,
                                                 $filenames,

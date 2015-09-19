@@ -16,6 +16,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
+eval "use App::Followme::FIO";
 require App::Followme::Template;
 require App::Followme::Module;
 
@@ -59,37 +60,37 @@ do {
 do {
     my $data = $pp->coerce('$', 2);
     is($$data, 2, "Coerce scalar to scalar"); # test 7
-    
+
     $data = $pp->coerce('@', 2);
     is_deeply($data, [2], "Coerce scalar to array"); # test 8
-    
+
     $data = $pp->coerce('%', 2);
     is($data, undef, "Coerce scalar to hash"); # test 9
-    
+
     $data = $pp->coerce('$');
     is($$data, undef, "Coerce undef to scalar"); # test 10
-    
+
     $data = $pp->coerce('@');
     is($data, undef, "Coerce undef to array"); # test 11
-    
+
     $data = $pp->coerce('%');
     is($data, undef, "Coerce undef to hash"); # test 12
-    
+
     $data = $pp->coerce('$', [1, 3]);
     is($$data, 2, "Coerce array to scalar"); # test 13
-    
+
     $data = $pp->coerce('@', [1, 3]);
     is_deeply($data, [1, 3], "Coerce array to array"); # test 14
-    
+
     $data = $pp->coerce('%', [1, 3]);
     is_deeply($data, {1 => 3}, "Coerce array to hash"); # test 15
-    
+
     $data = $pp->coerce('$', {1 => 3});
     is($$data, 2, "Coerce hash to scalar"); # test 16
-    
+
     $data = $pp->coerce('@', {1 => 3});
     is_deeply($data, [1, 3], "Coerce hash to array"); # test 17
-    
+
     $data = $pp->coerce('%', {1 => 3});
     is_deeply($data, {1 => 3}, "Coerce hash to hash"); # test 18
 };
@@ -115,16 +116,16 @@ Odd line
 Footer
 <!-- endsection footer -->
 EOQ
-    
+
     my $sections = {};
     $pp->substitute_sections($template, $sections);
     my @sections = sort keys %$sections;
-    
+
     is_deeply(\@sections, [qw(footer header)],
               "All sections returned from substitute_sections"); #test 19
     is($sections->{footer}, "\nFooter\n",
        "Right value in footer from substitute_sections"); # test 20
-    
+
     my $subtemplate = <<'EOQ';
 <!-- section header -->
 Another Header
@@ -138,13 +139,13 @@ EOQ
     $sections = {};
     my $text = $pp->substitute_sections($subtemplate, $sections);
     $text = $pp->substitute_sections($template, $sections);
-   
+
     like($text, qr/<!-- section header extra -->/, "Keep sections start tag"); # test 21
     like($text, qr/<!-- endsection header -->/, "Keep sections start teag"); # test 22
-    
+
     my $sub = $pp->compile($template, $subtemplate);
     is(ref $sub, 'CODE', "compiled template with keep sections"); # test 23
-    
+
     $text = $sub->({data => [1, 2]});
     my $text_ok = <<'EOQ';
 <!-- section header extra -->
@@ -156,24 +157,24 @@ Odd line
 Another Footer
 <!-- endsection footer -->
 EOQ
-    
+
     is($text, $text_ok, "Run compiled template with keep sections"); # test 24
 
     my $template_name = catfile($test_dir, 'template.htm');
     my $subtemplate_name = catfile($test_dir, 'subtemplate.htm');
 
     my $hs = App::Followme::Module->new();
-    $hs->write_page($template_name, $template);
-    my $test_template = $hs->read_page($template_name);
+    fio_write_page($template_name, $template);
+    my $test_template = fio_read_page($template_name);
     is($test_template, $template, 'Read and write template'); # test 25
 
-    $hs->write_page($subtemplate_name, $subtemplate);
-    my $test_subtemplate = $hs->read_page($subtemplate_name);
+    fio_write_page($subtemplate_name, $subtemplate);
+    my $test_subtemplate = fio_read_page($subtemplate_name);
     is($test_subtemplate, $subtemplate, 'Read and write subtemplate'); # test 26
-    
+
     $sub = $pp->compile($template_name, $subtemplate_name);
     is(ref $sub, 'CODE', "Compiled template"); # test 27
-    
+
     $text = $sub->({data => [1, 2]});
     $text_ok = <<'EOQ';
 <!-- section header extra -->
@@ -187,10 +188,10 @@ Another Footer
 EOQ
 
     is($text, $text_ok, "Run compiled template"); # test 28
-    
+
     $sub = $pp->compile($template_name, $subtemplate_name);
     is(ref $sub, 'CODE', "Compiled template"); # test 29
-    
+
     $text = $sub->([1, 2]);
     $text_ok = <<'EOQ';
 <!-- section header extra -->

@@ -18,6 +18,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
+eval "use App::Followme::FIO";
 require App::Followme::CreateGallery;
 
 my $test_dir = catdir(@path, 'test');
@@ -97,7 +98,7 @@ do {
 EOQ
 
     my $gal = App::Followme::CreateGallery->new($configuration);
-    $gal->write_page($template_name, $gallery_template);
+    fio_write_page($template_name, $gallery_template);
 
     my $gallery_dir = catfile($test_dir, 'gallery');
     mkdir($gallery_dir);
@@ -131,12 +132,12 @@ EOQ
         ok(-e $thumb_files[$i-1], "Create thumb $i"); # test 13-15
     }
 
-    my $gallery_name = $gal->full_file_name($gallery_dir, $gal->{gallery_file});
+    my $gallery_name = fio_full_file_name($gallery_dir, $gal->{gallery_file});
     $gal->create_a_gallery($gallery_dir, $gallery_name);
 
     ok(-e $gallery_name, 'Create index file'); # test 16
 
-    my $page = $gal->read_page($gallery_name);
+    my $page = fio_read_page($gallery_name);
     my @items = $page =~ m/(<li>)/g;
     is(@items, 3, 'Index three photos'); # test 17
 };

@@ -12,6 +12,7 @@ use Cwd;
 use IO::File;
 use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel splitdir catfile);
+use App::Followme::FIO;
 
 our $VERSION = "1.16";
 
@@ -297,7 +298,7 @@ sub unobfuscate {
 sub update_folder {
     my ($self, $directory, $hash, $local) = @_;
 
-    my ($filenames, $directories) = $self->visit($directory);
+    my ($filenames, $directories) = fio_visit($directory);
 
     # Check if folder is new
 

@@ -17,6 +17,7 @@ pop(@path);
 my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
+eval "use App::Followme::FIO";
 require App::Followme::CreateIndex;
 
 my $test_dir = catdir(@path, 'test');
@@ -88,30 +89,30 @@ EOQ
             };
 
     my $idx = App::Followme::CreateIndex->new($configuration);
-    $idx->write_page($template_name, $index_template);
+    fio_write_page($template_name, $index_template);
 
     my $archive_dir = catfile($test_dir, 'archive');
     mkdir($archive_dir);
     chdir($archive_dir);
-    
+
     my @archived_files;
     foreach my $count (qw(four three two one)) {
         my $output = $page;
         $output =~ s/%%/$count/g;
-        
+
         my $filename = "$count.html";
-        $idx->write_page($filename, $output);
+        fio_write_page($filename, $output);
         push(@archived_files, $filename);
     }
 
     my $data = $idx->index_data($archive_dir);
     is($data->[0]{title}, 'Post four', 'Index first page title'); # test 1
     is($data->[3]{title}, 'Post two', 'Index last page title'); # test 2
-    
-    my $index_name = $idx->full_file_name($archive_dir, $idx->{index_file});
+
+    my $index_name = fio_full_file_name($archive_dir, $idx->{index_file});
     $idx->create_an_index($archive_dir, $index_name);
-    $page = $idx->read_page($index_name);
-    
+    $page = fio_read_page($index_name);
+
     like($page, qr/<title>Archive<\/title>/, 'Write index title'); # test 3
     like($page, qr/<li><a href="two.html">Post two<\/a><\/li>/,
        'Write index link'); #test 4
