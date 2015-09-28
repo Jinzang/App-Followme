@@ -22,15 +22,14 @@ use constant SEED => 96;
 # Read the default parameter values
 
 sub parameters {
-    my ($self) = @_;
+    my ($pkg) = @_;
 
     return (
             verbose => 0,
-            no_upload => 0,
             max_errors => 5,
             hash_file => 'upload.hash',
             credentials => 'upload.cred',
-            upload_pkg => 'App::Followme::UploadFtp',
+            upload_pkg => 'App::Followme::UploadNone',
            );
 
 }
@@ -44,7 +43,7 @@ sub run {
     my ($hash, $local) = $self->get_state();
 
     my ($user, $pass) = $self->get_word();
-    $self->{uploader}->open($user, $pass);
+    $self->{upload}->open($user, $pass);
 
     eval {
         my $old_directory = getcwd();
@@ -53,7 +52,7 @@ sub run {
 
         $self->update_folder($self->{top_directory}, $hash, $local);
         $self->clean_files($hash, $local);
-        $self->{uploader}->close();
+        $self->{upload}->close();
 
         chdir($old_directory);
     };
@@ -110,9 +109,9 @@ sub clean_files {
     foreach my $filename (@filenames) {
         my $flag;
         if ($hash->{$filename} eq 'dir') {
-            $flag = $self->{uploader}->delete_directory($filename);
+            $flag = $self->{upload}->delete_directory($filename);
         } else {
-            $flag = $self->{uploader}->delete_file($filename);
+            $flag = $self->{upload}->delete_file($filename);
         }
 
         if ($flag) {
@@ -251,17 +250,7 @@ sub read_word {
 # Load the modules that will upload the file and convert the filename
 
 sub setup {
-    my ($self, $configuration) = @_;
-
-    # Add the remote user name and password to the configuration
-    # They are not stored in the configuration, so they will not
-    #  be in the clear
-
-    my $upload_pkg = $self->{no_upload} ? 'App::Followme::UploadNone'
-                                 : $self->{upload_pkg};
-
-    eval "require $upload_pkg" or die "Module not found: $upload_pkg\n";
-    $self->{uploader} = $upload_pkg->new($configuration);
+    my ($self) = @_;
 
     # Turn off messages when in quick mode
     $self->{verbose} = 0 if $self->{quick_mode};
@@ -308,7 +297,7 @@ sub update_folder {
         if (! exists $hash->{$directory} ||
             $hash->{$directory} ne 'dir') {
 
-            if ($self->{uploader}->add_directory($directory)) {
+            if ($self->{upload}->add_directory($directory)) {
                 $hash->{$directory} = 'dir';
                 print "add $directory\n" if $self->{verbose};
 
@@ -338,7 +327,7 @@ sub update_folder {
         # Add file if new or changed
 
         if (! exists $hash->{$filename} || $hash->{$filename} ne $value) {
-            if ($self->{uploader}->add_file($filename)) {
+            if ($self->{upload}->add_file($filename)) {
                 $hash->{$filename} = $value;
                 print "add $filename\n" if $self->{verbose};
 

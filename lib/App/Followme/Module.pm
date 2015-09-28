@@ -20,7 +20,7 @@ use constant MONTHS => [qw(January February March April May June July
 # Read the default parameter values
 
 sub parameters {
-    my ($self) = @_;
+    my ($pkg) = @_;
 
     return (
             body_tag => 'content',
@@ -28,6 +28,14 @@ sub parameters {
             template_directory => 'templates',
             template_pkg => 'App::Followme::Template',
            );
+}
+
+#----------------------------------------------------------------------
+# Run the object on a directory (stub)
+
+sub run {
+    my ($self, $directory) = @_;
+    die "Run method not defined";
 }
 
 #----------------------------------------------------------------------
@@ -350,19 +358,6 @@ sub search_directory {
     }
 
     return 1;
-}
-
-#----------------------------------------------------------------------
-# Set the regular expression patterns used to match a command
-
-sub setup {
-    my ($self, $configuration) = @_;
-
-    my $template_pkg = $self->{template_pkg};
-    eval "require $template_pkg" or die "Module not found: $template_pkg\n";
-    $self->{template} = $template_pkg->new($configuration);
-
-    return;
 }
 
 #----------------------------------------------------------------------

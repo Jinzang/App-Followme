@@ -31,10 +31,10 @@ mkdir $remote_dir;
 
 chdir $local_dir;
 
-my $configuration = {
+my %configuration = (
                      top_directory => $local_dir,
                      remote_directory => $remote_dir,
-                    };
+                    );
 
 #----------------------------------------------------------------------
 # Test
@@ -62,7 +62,7 @@ EOQ
 
      # The methods to test
 
-    my $up = App::Followme::UploadLocal->new($configuration);
+    my $up = App::Followme::UploadLocal->new(%configuration);
 
     $up->open();
     my $flag =$up->add_directory($dir);

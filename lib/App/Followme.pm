@@ -82,7 +82,7 @@ sub load_and_run_modules {
     foreach my $module (@$modules) {
         eval "require $module" or die "Module not found: $module\n";
 
-        my $object = $module->new(\%configuration);
+        my $object = $module->new(%configuration);
         $object->run($directory);
     }
 
@@ -107,35 +107,45 @@ sub set_directories {
 sub update_configuration {
     my ($self, $filename, %configuration) = @_;
 
-    my @modules;
-    $configuration{run_before} = [];
-    $configuration{run_after} = [];
+    $configuration{''}{run_before} = [];
+    $configuration{''}{run_after} = [];
 
     my $fd = IO::File->new($filename, 'r');
+    my $class = '';
 
     if ($fd) {
         while (my $line = <$fd>) {
             # Ignore comments and blank lines
             next if $line =~ /^\s*\#/ || $line !~ /\S/;
 
-            # Split line into name and value, remove leading and
-            # trailing whitespace
+            if ($line =~ /=/) {
+                # Split line into name and value, remove leading and
+                # trailing whitespace
 
-            my ($name, $value) = split (/\s*=\s*/, $line, 2);
+                my ($name, $value) = split (/\s*=\s*/, $line, 2);
+                $value =~ s/\s+$//;
 
-            die "Bad line in config file: ($name)" unless defined $value;
-            $value =~ s/\s+$//;
+                # Insert the name and value into the hash
 
-            # Insert the name and value into the hash
+                if ($name eq 'run_before') {
+                    die "Cannot set run_before inside of $class\n" if $class;
+                    push(@{$configuration{''}->{run_before}}, $value);
 
-            if ($name eq 'run_before' || $name eq 'module') {
-                push(@{$configuration{run_before}}, $value);
+                } elsif ($name eq 'run_after') {
+                    die "Cannot set run_after inside of $class\n" if $class;
+                    push(@{$configuration{''}->{run_after}}, $value);
 
-            } elsif ($name eq 'run_after') {
-                push(@{$configuration{run_after}}, $value);
+                } else {
+                    $configuration{$class}->{$name} = $value;
+                }
+
+
+            } elsif ($line =~ /^\s*\[([\w:]+)\]\s*$/) {
+                $class = $1;
+                $configuration{$class} = {};
 
             } else {
-                $configuration{$name} = $value;
+                die "Bad line in config file: " . substr($line, 30) . "\n";
             }
         }
 
@@ -161,11 +171,11 @@ sub update_folder {
         %configuration = $self->update_configuration($configuration_file,
                                                      %configuration);
 
-        $run_before = $configuration{run_before};
-        delete $configuration{run_before};
+        $run_before = $configuration{''}->{run_before};
+        delete $configuration{''}->{run_before};
 
-        $run_after = $configuration{run_after};
-        delete $configuration{run_after};
+        $run_after = $configuration{''}->{run_after};
+        delete $configuration{''}->{run_after};
     }
 
     $self->load_and_run_modules($run_before,

@@ -26,10 +26,10 @@ rmtree($test_dir);
 mkdir $test_dir;
 chdir $test_dir;
 
-my $configuration = {
+my %configuration = (
                      top_directory => $test_dir,
                      remote_pkg => 'File::Spec::Unix',
-                    };
+                    );
 
 #----------------------------------------------------------------------
 # Test
@@ -39,10 +39,10 @@ SKIP: {
 
     my $user = '';
     my $password = '';
-    $configuration->{ftp_url} = '';
-    $configuration->{ftp_directory} = '';
+    $configuration{ftp_url} = '';
+    $configuration{ftp_directory} = '';
 
-    skip('Ftp connection not configured', 5) unless $configuration->{ftp_url};
+    skip('Ftp connection not configured', 5) unless $configuration{ftp_url};
 
     # Test files
 
@@ -66,7 +66,7 @@ EOQ
 
      # The methods to test
 
-    my $up = App::Followme::UploadFtp->new($configuration);
+    my $up = App::Followme::UploadFtp->new(%configuration);
 
     $up->open($user, $password);
     my $flag =$up->add_directory($dir);

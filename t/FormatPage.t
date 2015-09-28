@@ -27,7 +27,7 @@ mkdir $test_dir;
 mkdir catfile($test_dir, "sub");
 chdir $test_dir;
 
-my $configuration = {};
+my %configuration = ();
 
 #----------------------------------------------------------------------
 # Test parse_blocks
@@ -217,7 +217,7 @@ do {
 </html>
 EOQ
 
-    my $up = App::Followme::FormatPage->new($configuration);
+    my $up = App::Followme::FormatPage->new(%configuration);
 
     foreach my $dir (('sub', '')) {
         foreach my $count (qw(four three two one)) {
@@ -243,7 +243,7 @@ EOQ
 # Test get prototype path and find prototype
 
 do {
-    my $up = App::Followme::FormatPage->new($configuration);
+    my $up = App::Followme::FormatPage->new(%configuration);
     my $bottom = catfile($test_dir, 'sub');
     chdir($bottom);
 
@@ -261,7 +261,7 @@ do {
 
 do {
     chdir ($test_dir);
-    my $up = App::Followme::FormatPage->new($configuration);
+    my $up = App::Followme::FormatPage->new(%configuration);
 
     foreach my $dir (('sub', '')) {
         my $path = $dir ? catfile($test_dir, $dir) : $test_dir;

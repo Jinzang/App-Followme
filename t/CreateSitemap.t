@@ -49,13 +49,13 @@ do {
 </html>
 EOQ
 
-    my $configuration = {
+    my %configuration = (
             site_url => 'http://www.example.com',
             sitemap => 'sitemap.txt',
             web_extension => 'html',
-            };
+            );
 
-    my $map = App::Followme::CreateSitemap->new($configuration);
+    my $map = App::Followme::CreateSitemap->new(%configuration);
 
     my @webpages;
     foreach my $count (qw(first second third)) {
@@ -68,7 +68,7 @@ EOQ
         my $data = {};
         $map->build_url($data, $test_dir, $filename);
 
-        my $webpage = $configuration->{site_url} . $data->{absolute_url};
+        my $webpage = $configuration{site_url} . $data->{absolute_url};
         push(@webpages, $webpage);
     }
 

@@ -30,7 +30,7 @@ chdir $test_dir;
 
 my $template_name = 'gallery_template.htm';
 
-my $configuration = {
+my %configuration = (
                     gallery_file => 'index.html',
                     gallery_include => '*.jpg',
                     gallery_template => $template_name,
@@ -38,13 +38,13 @@ my $configuration = {
                     web_extension => 'html',
                     photo_height => 600,
                     thumb_height => 150,
-                    };
+                    );
 
 #----------------------------------------------------------------------
 # Test support routines
 
 do {
-    my $gal = App::Followme::CreateGallery->new($configuration);
+    my $gal = App::Followme::CreateGallery->new(%configuration);
     my $filename = catfile($test_dir, 'myphoto.jpg');
     my $thumbname = $gal->build_thumb_name($filename);
     is($thumbname, catfile($test_dir, 'myphoto-thumb.jpg'),
@@ -53,18 +53,18 @@ do {
     my $exclude = $gal->get_excluded_files();
     is($exclude, '*-thumb.jpg', 'excluded files'); # test 2
 
-    my %configuration = %$configuration;
-    $configuration{photo_height} = 600;
-    $configuration{thumb_height} = 150;
-    $gal = App::Followme::CreateGallery->new(\%configuration);
+    my %new_configuration = %configuration;
+    $new_configuration{photo_height} = 600;
+    $new_configuration{thumb_height} = 150;
+    $gal = App::Followme::CreateGallery->new(%new_configuration);
     my ($width, $height) = $gal->new_size('photo', 1800, 1200);
     is($width, 900, 'photo width'); # test 3
     is($height, 600, 'photo height'); # test 4
 
-    %configuration = %$configuration;
-    $configuration{photo_width} = 600;
-    $configuration{thumb_width} = 150;
-    $gal = App::Followme::CreateGallery->new(\%configuration);
+    %new_configuration = %configuration;
+    $new_configuration{photo_width} = 600;
+    $new_configuration{thumb_width} = 150;
+    $gal = App::Followme::CreateGallery->new(%new_configuration);
     ($width, $height) = $gal->new_size('thumb', 1800, 1200);
     is($width, 150, 'thumb width'); # test 5
     is($height, 100, 'thumb height'); # test 6
@@ -97,7 +97,7 @@ do {
 </html>
 EOQ
 
-    my $gal = App::Followme::CreateGallery->new($configuration);
+    my $gal = App::Followme::CreateGallery->new(%configuration);
     fio_write_page($template_name, $gallery_template);
 
     my $gallery_dir = catfile($test_dir, 'gallery');

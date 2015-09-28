@@ -27,7 +27,7 @@ mkdir $test_dir;
 chdir $test_dir;
 my $archive_dir = catfile($test_dir, 'archive');
 
-my $configuration = {
+my %configuration = (
                         absolute => 0,
                         base_directory => $test_dir,
                         news_file => '../blog.html',
@@ -38,7 +38,7 @@ my $configuration = {
                         news_template => 'blog_template.htm',
                         news_index_template => 'news_index_template.htm',
                         template_directory => '.',
-                     };
+                    );
 
 #----------------------------------------------------------------------
 # Write templates
@@ -109,7 +109,7 @@ EOQ
 </html>
 EOQ
 
-    my $idx = App::Followme::CreateNews->new($configuration);
+    my $idx = App::Followme::CreateNews->new(%configuration);
     fio_write_page('blog_template.htm', $archive_template);
     fio_write_page('news_index_template.htm', $index_template);
 
@@ -128,7 +128,7 @@ EOQ
 
 do {
     chdir($test_dir);
-    my $idx = App::Followme::CreateNews->new($configuration);
+    my $idx = App::Followme::CreateNews->new(%configuration);
 
     my $archive_dir = catfile($test_dir, 'archive');
     my ($filenames, $directories) = fio_visit($archive_dir);
@@ -145,7 +145,7 @@ do {
 
 do {
     chdir($test_dir);
-    my $idx = App::Followme::CreateNews->new($configuration);
+    my $idx = App::Followme::CreateNews->new(%configuration);
     my $filenames = $idx->recent_files($test_dir);
 
     my @ok_filenames;
@@ -162,7 +162,7 @@ do {
 do {
     my $body_ok = "\n\n<p>All about three.</p>\n";
 
-    my $idx = App::Followme::CreateNews->new($configuration);
+    my $idx = App::Followme::CreateNews->new(%configuration);
     my ($filenames, $directories) = fio_visit($archive_dir);
     my $data = $idx->index_data($archive_dir, $directories, $filenames);
 

@@ -7,7 +7,6 @@ use warnings;
 use lib '../..';
 
 use base qw(App::Followme::ConfiguredObject);
-
 use Net::FTP;
 use File::Spec::Functions qw(abs2rel splitdir catfile);
 
@@ -17,7 +16,7 @@ our $VERSION = "1.16";
 # Read the default parameter values
 
 sub parameters {
-    my ($self) = @_;
+    my ($pkg) = @_;
 
     return (
             ftp_url => '',
@@ -164,23 +163,8 @@ sub remote_name {
     my ($self, $filename) = @_;
 
     my @path = splitdir($filename);
-    $filename = $self->{remote_pkg}->catfile(@path);
+    $filename = $self->{remote}->catfile(@path);
     return $filename;
-}
-
-#----------------------------------------------------------------------
-# Set up object parameters
-
-sub setup {
-    my ($self, $configuration) = @_;
-
-    # Load the methods that build file names for the remote site,
-    # which my be different than thos on this machine
-
-    my $remote_pkg = $self->{remote_pkg};
-    eval "require $remote_pkg" or die "Module not found: $remote_pkg\n";
-
-    return;
 }
 
 1;

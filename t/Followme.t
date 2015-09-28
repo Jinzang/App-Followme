@@ -32,7 +32,7 @@ $test_dir = getcwd();
 # Test set directory
 
 do {
-    my $app = App::Followme->new({});
+    my $app = App::Followme->new();
 
     my $config_file = catfile($test_dir, 'followme.cfg');
     $app->set_directories($config_file);
@@ -49,8 +49,8 @@ do {
 # Test update configuration
 
 do {
-    my %configuration = (one => 1, two => 2);
-    my $app = App::Followme->new({});
+    my %configuration = ('' => {one => 1, two => 2});
+    my $app = App::Followme->new();
 
     my $source = <<'EOQ';
 # Test configuration file
@@ -68,9 +68,13 @@ EOQ
     close($fd);
 
     %configuration = $app->update_configuration($filename, %configuration);
-    my %configuration_ok = (one => 1, two => 2, three => 3, four => 4,
-                            run_before => [],
-                            run_after => ['App::Followme::CreateSitemap']);
+
+    my %configuration_ok = ('' => {one => 1, two => 2,
+                                   three => 3, four => 4,
+                                   run_before => [],
+                                   run_after => ['App::Followme::CreateSitemap'],
+                                  }
+                           );
 
     is_deeply(\%configuration, \%configuration_ok,
               'Update configuration'); # test 3
@@ -80,7 +84,7 @@ EOQ
 # Test run
 
 do {
-    my $app = App::Followme->new({});
+    my $app = App::Followme->new();
 
     chdir($test_dir);
     my $config = 'followme.cfg';

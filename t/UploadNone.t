@@ -24,22 +24,22 @@ my $test_dir = catdir(@path, 'test');
 rmtree($test_dir);
 mkdir $test_dir;
 
-my $configuration = {
+my %configuration = (
                      top_directory => $test_dir,
-                    };
+                    );
 
 #----------------------------------------------------------------------
-# Test 
+# Test
 
 do {
-    my $up = App::Followme::UploadNone->new($configuration);
+    my $up = App::Followme::UploadNone->new(%configuration);
 
     my $user = 'user';
     my $password = 'password';
 
     my $dir = 'subdir';
     my $filename = catfile($dir, 'filename');
-    
+
     $up->open($user, $password);
     my $flag =$up->add_directory($dir);
     is($flag, 1, 'Mock add directory'); # test 1

@@ -85,8 +85,8 @@ This is a paragraph
 * third %%
 EOQ
 
-    my $configuration = {page_template => 'template.htm'};
-    my $cvt = App::Followme::ConvertPage->new($configuration);
+    my %configuration = (page_template => 'template.htm');
+    my $cvt = App::Followme::ConvertPage->new(%configuration);
 
     fio_write_page('index.html', $index);
     fio_write_page('template.htm', $template);

@@ -5,9 +5,11 @@ use strict;
 use warnings;
 use integer;
 
+use lib '../..';
+
 use Carp;
-use IO::File;
 use File::Spec::Functions qw(abs2rel catfile rel2abs splitdir);
+use App::Followme::FIO;
 
 use lib '../..';
 
@@ -81,7 +83,7 @@ sub compile {
         # If a template contains a newline, it is a string,
         # if not, it is a filename
 
-        $text = ($template =~ /\n/) ? $template : $self->slurp($template);
+        $text = ($template =~ /\n/) ? $template : fio_read_page($template);
         $text = $self->substitute_sections($text, $section);
     }
 
@@ -403,7 +405,7 @@ sub render {
 # Set the regular expression patterns used to match a command
 
 sub setup {
-    my ($self, $configuration) = @_;
+    my ($self) = @_;
 
     $self->{command_start_pattern} = '^\s*' . quotemeta(COMMAND_START);
     $self->{command_end_pattern} = '\s*' . quotemeta(COMMAND_END) . '\s*$';
@@ -421,24 +423,6 @@ sub set_command {
     $expr = $self->encode_expression($expr);
 
     return "\$self->store_stack(\'$var\', ($expr));\n";
-}
-
-#----------------------------------------------------------------------
-# Read a file into a string
-
-sub slurp {
-    my ($self, $input) = @_;
-
-    my $in;
-    local $/;
-
-    $in = IO::File->new ($input, 'r');
-    return '' unless defined $in;
-
-    my $text = <$in>;
-    $in->close;
-
-    return $text;
 }
 
 #----------------------------------------------------------------------

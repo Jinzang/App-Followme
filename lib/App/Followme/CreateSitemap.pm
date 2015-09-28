@@ -17,7 +17,7 @@ our $VERSION = "1.16";
 # Read the default parameter values
 
 sub parameters {
-    my ($self) = @_;
+    my ($pkg) = @_;
 
     return (
             site_url => '',
@@ -70,7 +70,7 @@ sub list_urls {
 # Clean up parameters passed to this object
 
 sub setup {
-    my ($self, $configuration) = @_;
+    my ($self) = @_;
 
     # Remove any trailing slash
     $self->{site_url} =~ s/\/$//;

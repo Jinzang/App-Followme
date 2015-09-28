@@ -27,17 +27,17 @@ mkdir $test_dir;
 mkdir catfile($test_dir, 'templates');
 chdir $test_dir;
 
-my $configuration = {
+my %configuration = (
                      no_upload => 1,
                      top_directory => $test_dir,
                      template_dir =>'templates',
-                     };
+                    );
 
 #----------------------------------------------------------------------
 # Test read and write files
 
 do {
-    my $up = App::Followme::UploadSite->new($configuration);
+    my $up = App::Followme::UploadSite->new(%configuration);
 
     my $user_ok = 'gandalf';
     my $password_ok = 'wizzard';
@@ -102,7 +102,7 @@ do {
 </html>
 EOQ
 
-    my $up = App::Followme::UploadSite->new($configuration);
+    my $up = App::Followme::UploadSite->new(%configuration);
 
     my $local = {};
     my $hash_ok = {};

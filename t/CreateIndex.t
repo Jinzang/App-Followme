@@ -80,15 +80,15 @@ EOQ
 
     my $template_name = 'index_template.htm';
 
-    my $configuration = {
+    my %configuration = (
             include_directories => 1,
             index_include => '*.html',
             index_template => $template_name,
             index_file => 'index.html',
             web_extension => 'html',
-            };
+            );
 
-    my $idx = App::Followme::CreateIndex->new($configuration);
+    my $idx = App::Followme::CreateIndex->new(%configuration);
     fio_write_page($template_name, $index_template);
 
     my $archive_dir = catfile($test_dir, 'archive');

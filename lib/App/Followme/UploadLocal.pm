@@ -18,7 +18,7 @@ our $VERSION = "1.16";
 # Read the default parameter values
 
 sub parameters {
-    my ($self) = @_;
+    my ($pkg) = @_;
 
     return (
             remote_directory => '',

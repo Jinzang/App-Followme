@@ -11,11 +11,11 @@ our $VERSION = "1.16";
 # Create object that returns files in a directory tree
 
 sub new {
-    my ($pkg, $configuration) = @_;
+    my ($pkg, %configuration) = @_;
 
     my $self = {};
     my $cycle = {};
-    initialize($pkg, $configuration, $self, $cycle);
+    initialize($pkg, $self, $cycle, %configuration);
 
     return $self;
 }
@@ -24,7 +24,7 @@ sub new {
 # Read the default parameter values
 
 sub parameters {
-    my ($self) = @_;
+    my ($pkg) = @_;
 
     return (
             quick_update => 0,
@@ -34,57 +34,96 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Run the object on a directory (stub)
+# Update an object's fields from all the configuration hashes
 
-sub run {
-    my ($self, $directory) = @_;
-    die "Run method not defined";
+sub add_configurations {
+    my ($self, $pkg, %configuration) = @_;
+
+    foreach my $field ($self->all_fields($configuration{''})) {
+        $self->{$field} = $configuration{''}->{$field};
+    }
+
+    foreach my $field ($self->all_fields($configuration{$pkg})) {
+        $self->{$field} = $configuration{$pkg}->{$field};
+    }
+
+    foreach my $field ($self->all_fields(\%configuration)) {
+        $self->{$field} = $configuration{$field};
+    }
+
+    return;
+}
+
+#----------------------------------------------------------------------
+# Create subobjects for any parameter ending in _pkg
+
+sub add_subpackages {
+    my ($self, %configuration) = @_;
+
+    foreach my $field ($self->all_fields($self)) {
+        my $subpkg = $self->{$field};
+        next unless $field =~ s/_pkg$//;
+
+        eval "require $subpkg" or die "Module not found: $subpkg\n";
+
+        if ($subpkg->isa('App::Followme::ConfiguredObject')) {
+            $self->{$field} = $subpkg->new(%configuration);
+        } else {
+            $self->{$field} = $subpkg->new();
+        }
+    }
+
+    return;
+}
+
+#----------------------------------------------------------------------
+# Get the configuration fields that apply to this package
+
+sub all_fields {
+    my ($self, $configuration) = @_;
+
+    my @fields = ();
+    if (defined $configuration) {
+        my $pkg = ref $self;
+        my %parameters = $pkg->parameters();
+
+        foreach my $field (keys %$configuration) {
+            next if ref $configuration->{$field};
+            next unless exists $parameters{$field};
+
+            push(@fields, $field);
+        }
+    }
+
+    return @fields;
 }
 
 #----------------------------------------------------------------------
 # Initialize the object by populating its hash
 
 sub initialize {
-    my ($pkg, $configuration, $self, $cycle) = @_;
+    my ($pkg, $self, $cycle, %configuration) = @_;
+    %configuration = () unless %configuration;
     return if $cycle->{$pkg};
 
     no strict 'refs';
-    initialize($_, $configuration, $self, $cycle) foreach @{"${pkg}::ISA"};
+    initialize($_, $self, $cycle, %configuration) foreach @{"${pkg}::ISA"};
     $cycle->{$pkg} = 1;
 
+    %$self = (%$self, $pkg->parameters());
     $self = bless($self, $pkg);
 
-    $self->update_parameters($configuration)
-        if defined &{"${pkg}::parameters"};
+    $self->add_configurations($pkg, %configuration);
+    $self->add_subpackages(%configuration);
 
-    $self->setup($configuration)
-        if defined &{"${pkg}::setup"};
-
+    $self->setup() if defined &{"${pkg}::setup"};
     return;
 }
 #----------------------------------------------------------------------
 # Set up object fields (stub)
 
 sub setup {
-    my ($self, $configuration) = @_;
-    return;
-}
-
-#----------------------------------------------------------------------
-# Update a module's parameters
-
-sub update_parameters {
-    my ($self, $configuration) = @_;
-
-    my %parameters = $self->parameters();
-    foreach my $field (keys %parameters) {
-        if (exists $configuration->{$field}) {
-            $self->{$field} = $configuration->{$field};
-        } else {
-            $self->{$field} = $parameters{$field};
-        }
-    }
-
+    my ($self) = @_;
     return;
 }
 
