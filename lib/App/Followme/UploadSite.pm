@@ -29,7 +29,7 @@ sub parameters {
             max_errors => 5,
             hash_file => 'upload.hash',
             credentials => 'upload.cred',
-            upload_pkg => 'App::Followme::UploadNone',
+            upload_pkg => 'App::Followme::UploadFtp',
            );
 
 }
