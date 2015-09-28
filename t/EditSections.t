@@ -22,9 +22,9 @@ rmtree($test_dir);
 mkdir $test_dir;
 chdir $test_dir;
 
-my $configuration = {
+my %configuration = (
                     remove_comments => 0,
-                    };
+                    );
 
 #----------------------------------------------------------------------
 # Write test pages
@@ -52,7 +52,7 @@ do {
 </html>
 EOQ
 
-    my $es = App::Followme::EditSections->new($configuration);
+    my $es = App::Followme::EditSections->new(%configuration);
 
     foreach my $count (qw(four three two one)) {
         my $output = $page;
@@ -74,7 +74,7 @@ EOQ
 # Test comment removal
 
 do {
-    my $es = App::Followme::EditSections->new($configuration);
+    my $es = App::Followme::EditSections->new(%configuration);
 
     my $output = $es->strip_comments('one.html', 1);
     my $output_ok = fio_read_page('one.html');
@@ -88,8 +88,9 @@ do {
     $output_ok = fio_read_page('two.html');
     is($output, $output_ok, 'don\'t strip comments'); # test 3
 
-    $configuration->{remove_comments} = 1;
-    $es = App::Followme::EditSections->new($configuration);
+    $configuration{remove_comments} = 1;
+    $es = App::Followme::EditSections->new(%configuration);
+    $configuration{remove_comments} = 0;
 
     $output = $es->strip_comments('two.html', 0);
     $output_ok =~ s/(<!--.*?-->)//g;
@@ -100,14 +101,38 @@ do {
 # Test update page
 
 do {
-    my $es = App::Followme::EditSections->new($configuration);
+    my $es = App::Followme::EditSections->new(%configuration);
 
     my $prototype = $es->strip_comments('one.html', 1);
-    $es->update_page('two.html', $prototype);
+    my $output = $es->update_page('two.html', $prototype);
 
-    my $output = fio_read_page('two.html');
-    my $output_ok = fio_read_page('one.html');
-    $output_ok =~ s/one/two/g;
+    my $output_ok = <<EOQ;
+<html>
+<head>
+<meta name="robots" content="archive">
+<!-- section meta -->
+<!-- begin meta -->
+<title>page two</title>
+<!-- end meta -->
+<!-- endsection meta -->
+</head>
+<body>
+<!-- section content -->
+<!-- begin content -->
+<h1>page two</h1>
+<!-- end content -->
+<!-- endsection content -->
+<ul>
+<li><a href="">&& link</a></li>
+<!-- section nav -->
+<!-- begin nav -->
+<li><a href="">link two</a></li>
+<!-- end nav -->
+<!-- endsection nav -->
+</ul>
+</body>
+</html>
+EOQ
 
     is($output, $output_ok, 'update page'); # test 5
 };

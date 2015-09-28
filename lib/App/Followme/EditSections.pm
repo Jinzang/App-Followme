@@ -17,7 +17,7 @@ our $VERSION = "1.16";
 # Read the default parameter values
 
 sub parameters {
-    my ($self) = @_;
+    my ($pkg) = @_;
 
     return (
             remove_comments => 0,
@@ -57,26 +57,26 @@ sub find_location {
             $str = substr($prototype, $propos-$mid, $mid);
         }
 
-        my $pagepos;
         my $count = 0;
-        while ($page =~ /($str)/g) {
-            if ($count ++) {
-                last;
-            } else {
-                $pagepos = pos($page);
-            }
+        my $pagepos = -1;
+        while ($count < 2) {
+            my $newpos = index($page, $str, $pagepos+1);
+            last unless $newpos > $pagepos;
+
+            $count ++;
+            $pagepos = $newpos;
         }
 
         if ($count > 1) {
             $lo = $mid;
             if (defined $hi) {
                 $mid = int(0.5 * ($mid + $hi));
-           } else {
-                $mid = $mid + 8;
+            } else {
+                $mid = 2 * $mid;
             }
 
         } elsif ($count == 1) {
-            $pagepos -= $mid if $after;
+            $pagepos += $mid unless $after;
             return $pagepos;
 
         } else {
@@ -119,7 +119,7 @@ sub strip_comments {
 sub update_directory {
     my ($self, $directory, $prototype) = @_;
 
-    my ($filenames, $directories) = fio_visit($directory);
+    my ($filenames, $directories) = $self->visit($directory);
 
     foreach my $filename (@$filenames) {
         next unless $self->match_file($filename);
@@ -132,7 +132,7 @@ sub update_directory {
         if ($@) {
             warn "$filename: $@";
         } else {
-            $self->write_page($filename, $page);
+            fio_write_page($filename, $page);
         }
     }
 
@@ -157,7 +157,7 @@ sub update_page {
     while ($prototype =~ /(<!--\s*(?:end)?section\s+.*?-->)/g) {
         my $comment = $1;
         my $pos = pos($prototype);
-        my $after = $comment =~ /end/;
+        my $after = $comment =~ /<!--\s*end/;
 
         # locate the position of the comment from the prototype in the page
         $pos = $pos - length($comment) unless $after;
@@ -169,15 +169,15 @@ sub update_page {
         }
 
         # substitute comment into page
+        $comment = $after ? "\n$comment" : "$comment\n";
         push(@output, substr($page, 0, $loc), $comment);
         $page = substr($page, $loc);
     }
 
     push(@output, $page);
-    fio_write_page($filename, join('', @output));
 
     die "Could not locate tags\n" if $notfound;
-    return;
+    return join('', @output);
 }
 
 1;
