@@ -100,7 +100,7 @@ do {
 
 do {
     my $template = <<'EOQ';
-<!-- section header extra -->
+<!-- section header -->
 Header
 <!-- endsection header -->
 <!-- set $i = 0 -->
@@ -140,15 +140,15 @@ EOQ
     my $text = $pp->substitute_sections($subtemplate, $sections);
     $text = $pp->substitute_sections($template, $sections);
 
-    like($text, qr/<!-- section header extra -->/, "Keep sections start tag"); # test 21
-    like($text, qr/<!-- endsection header -->/, "Keep sections start teag"); # test 22
+    like($text, qr/<!-- section header -->/, "Keep sections start tag"); # test 21
+    like($text, qr/<!-- endsection header -->/, "Keep sections start tag"); # test 22
 
     my $sub = $pp->compile($template, $subtemplate);
     is(ref $sub, 'CODE', "compiled template with keep sections"); # test 23
 
     $text = $sub->({data => [1, 2]});
     my $text_ok = <<'EOQ';
-<!-- section header extra -->
+<!-- section header -->
 Another Header
 <!-- endsection header -->
 Even line
@@ -177,7 +177,7 @@ EOQ
 
     $text = $sub->({data => [1, 2]});
     $text_ok = <<'EOQ';
-<!-- section header extra -->
+<!-- section header -->
 Another Header
 <!-- endsection header -->
 Even line
@@ -194,7 +194,7 @@ EOQ
 
     $text = $sub->([1, 2]);
     $text_ok = <<'EOQ';
-<!-- section header extra -->
+<!-- section header -->
 Another Header
 <!-- endsection header -->
 Even line
@@ -258,11 +258,13 @@ EOQ
 
 do {
     my $template = <<'EOQ';
+<!-- section body -->
 $a
 <!-- with %hash -->
 $a $b
 <!-- endwith -->
 $b
+<!-- endsection body -->
 EOQ
 
     my $sub = App::Followme::Template->compile($template);
@@ -270,9 +272,11 @@ EOQ
     my $text = $sub->($data);
 
     my $text_ok = <<'EOQ';
+<!-- section body -->
 1
 10 20
 2
+<!-- endsection body -->
 EOQ
 
     is($text, $text_ok, "With block"); # test 34

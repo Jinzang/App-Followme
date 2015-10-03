@@ -256,8 +256,8 @@ sub parse_code {
             }
 
         } else {
-            push(@stash, $self->encode_text($line));
-        }
+			push(@stash, $self->encode_text($line));
+		}
     }
 
     die "Missing end (end$command)" if $command;
