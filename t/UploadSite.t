@@ -21,16 +21,21 @@ eval "use App::Followme::FIO";
 require App::Followme::UploadSite;
 
 my $test_dir = catdir(@path, 'test');
+my $local_dir = catdir(@path, 'test', 'local');
+my $remote_dir = catdir(@path, 'test', 'remote');
+my $state_dir = catdir(@path, 'test', 'local', '_state');
 
 rmtree($test_dir);
 mkdir $test_dir;
-mkdir catfile($test_dir, 'templates');
-chdir $test_dir;
+mkdir $local_dir;
+mkdir $remote_dir;
+mkdir $state_dir;
+chdir $local_dir;
 
 my %configuration = (
-                     no_upload => 1,
-                     top_directory => $test_dir,
-                     template_dir =>'templates',
+                     top_directory => $local_dir,
+                     remote_directory => $remote_dir,
+                     upload_pkg => 'App::Followme::UploadLocal',
                     );
 
 #----------------------------------------------------------------------
@@ -44,7 +49,7 @@ do {
 
     my $cred_file = catfile(
                             $up->{top_directory},
-                            $up->{template_directory},
+                            $up->{state_directory},
                             $up->{credentials},
                            );
 
@@ -55,7 +60,7 @@ do {
     is($pass, $password_ok, 'Read password'); # test 2
 
     my $hash_file = catfile($up->{top_directory},
-                            $up->{template_directory},
+                            $up->{state_directory},
                             $up->{hash_file});
 
     my $hash_ok = {'file1.html' => '014e32',
@@ -106,7 +111,7 @@ EOQ
 
     my $local = {};
     my $hash_ok = {};
-    my @dirs = ('', 'before', 'after');
+    my @dirs = ('', 'sub');
 
     foreach my $dir (@dirs) {
         if ($dir) {
@@ -124,7 +129,7 @@ EOQ
             fio_write_page($filename, $output);
 
             $local->{$filename} = 1;
-            $hash_ok->{$filename} = $up->checksum_file($filename);
+            $hash_ok->{$filename} = $up->{data}->build('checksum', $filename);
         }
     }
 

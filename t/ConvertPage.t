@@ -5,7 +5,7 @@ use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
 use Test::Requires 'Text::Markdown';
-use Test::More tests => 5;
+use Test::More tests => 6;
 
 use lib '../..';
 
@@ -26,11 +26,25 @@ my $test_dir = catdir(@path, 'test');
 
 rmtree($test_dir);
 mkdir $test_dir;
-mkdir catfile($test_dir, "sub");
+my $sub = catfile($test_dir, "sub");
+mkdir $sub;
 chdir $test_dir;
 
 #----------------------------------------------------------------------
-# Test
+# Create object
+
+my $template_directory = $sub;
+my $template_file = 'template.htm';
+my $prototype_file = rel2abs('index.html');
+
+my $cvt = App::Followme::ConvertPage->new(template_directory => $template_directory,
+                                          template_file => $template_file);
+
+isa_ok($cvt, "App::Followme::ConvertPage"); # test 1
+can_ok($cvt, qw(new run)); # test 2
+
+#----------------------------------------------------------------------
+# Write test data
 
 do {
    my $index = <<'EOQ';
@@ -42,9 +56,9 @@ do {
 <!-- endsection meta -->
 </head>
 <body>
-<!-- section content -->
+<!-- section primary -->
 <h1>Home</h1>
-<!-- endsection content -->
+<!-- endsection primary -->
 
 <ul>
 <li><a href="index.html">Home</a></li>
@@ -62,11 +76,11 @@ EOQ
 <!-- endsection meta -->
 </head>
 <body>
-<!-- section content -->
+<!-- section primary -->
 <h1>$title</h1>
 
 $body
-<!-- endsection content -->
+<!-- endsection primary -->
 </body>
 </html>
 EOQ
@@ -85,11 +99,11 @@ This is a paragraph
 * third %%
 EOQ
 
-    my %configuration = (page_template => 'template.htm');
+    my %configuration = (template_dile => 'template.htm');
     my $cvt = App::Followme::ConvertPage->new(%configuration);
 
-    fio_write_page('index.html', $index);
-    fio_write_page('template.htm', $template);
+    fio_write_page($prototype_file, $index);
+    fio_write_page(catfile($template_directory, $template_file), $template);
 
     foreach my $count (qw(four three two one)) {
         sleep(1);
@@ -99,21 +113,23 @@ EOQ
         my $filename = "$count.md";
         fio_write_page($filename, $output);
     }
+};
 
-    my $prototype_file = $cvt->find_prototype($test_dir);
-    my $prototype_file_ok = catfile($test_dir, 'index.html');
-    is($prototype_file, $prototype_file_ok, 'Find page template'); # test 1
-
-    my $data = $cvt->internal_fields({}, 'three.md');
-    ok(index($data->{body}, "<li>third three</li>") > 0,'Convert Text'); # test 2
-    $cvt->convert_a_file($test_dir, 'four.md');
+#----------------------------------------------------------------------
+# Test update file and folder
+do {
+    $cvt->update_file($prototype_file, 'four.md');
 
     my $page = fio_read_page('four.html');
-    like($page, qr/<h1>Page four<\/h1>/, 'Convert a file'); # test 3
+    like($page, qr/<h1>Four<\/h1>/, 'Update file four'); # test 3
 
-    $cvt->run($test_dir);
-    $page = fio_read_page('one.html');
-    like($page, qr/<h1>Page one<\/h1>/, 'Convert text file one'); # test 4
-    $page = fio_read_page('two.html');
-    like($page, qr/<h1>Page two<\/h1>/, 'Convert text file two'); # test 5
+    $cvt->update_folder($prototype_file);
+    foreach my $count (qw(three two one)) {
+        my $file = "$count.html";
+        $page = fio_read_page($file);
+        my $kount = ucfirst($count);
+
+        like($page, qr/<h1>$kount<\/h1>/,
+             "Update folder file file $count"); # test 4-6
+    }
 };

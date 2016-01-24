@@ -14,20 +14,25 @@ use App::Followme::FIO;
 our $VERSION = "1.16";
 
 #----------------------------------------------------------------------
+# Read the default parameter values
+
+sub parameters {
+    my ($pkg) = @_;
+
+    return (
+            sort_reverse => 1,
+            sort_field => 'mdate',
+            data_pkg => 'App::Followme::WebData',
+    );
+}
+
+#----------------------------------------------------------------------
 # Modify pages to match the most recently modified page
 
 sub run {
-    my ($self, $directory) = @_;
+    my ($self, $folder) = @_;
 
-    my ($prototype_file, $prototype_path, $prototype);
-    $prototype_file = $self->find_prototype($directory, 1);
-
-    if (defined $prototype_file) {
-        $prototype_path = $self->get_prototype_path($prototype_file);
-        $prototype = fio_read_page($prototype_file);
-    }
-
-    $self->update_directory($directory, $prototype, $prototype_path);
+    $self->update_folder($folder);
     return;
 }
 
@@ -154,23 +159,6 @@ sub parse_page {
 }
 
 #----------------------------------------------------------------------
-# Sort files so more recently modified files are first
-
-sub sort_files {
-    my ($self, $filenames) = @_;
-
-    my @augmented_files;
-    foreach my $filename (@$filenames) {
-        push(@augmented_files, [fio_get_date($filename), $filename]);
-    }
-
-    @augmented_files = sort {$b->[0] <=> $a->[0]} @augmented_files;
-    @$filenames = map {$_->[1]} @augmented_files;
-
-    return $filenames;
-}
-
-#----------------------------------------------------------------------
 # Determine if page matches prototype or needs to be updated
 
 sub unchanged_prototype {
@@ -193,80 +181,83 @@ sub unchanged_prototype {
 }
 
 #----------------------------------------------------------------------
+# Update file using prototype
+
+sub update_file {
+    my ($self, $file, $prototype, $prototype_path) = @_;
+
+    my $page = fio_read_page($file);
+    die "Couldn't read $file" unless defined $page;
+
+    # Check for changes before updating page
+    return 0 if $self->unchanged_prototype($prototype, $page, $prototype_path);
+
+    $page = $self->update_page($page, $prototype, $prototype_path);
+
+    my $modtime = fio_get_date($file);
+    fio_write_page($file, $page);
+    fio_set_date($file, $modtime);
+
+    return 1;
+}
+
+#----------------------------------------------------------------------
 # Perform all updates on the directory
 
-sub update_directory {
-    my ($self, $directory, $prototype, $prototype_path) = @_;
+sub update_folder {
+    my ($self, $folder, $prototype_file, $prototype) = @_;
 
-    my ($filenames, $directories) = fio_visit($directory);
-    $filenames = $self->sort_files($filenames);
+    my $index_file = $self->to_file($folder);
+    ($folder) = fio_split_filename($folder);
 
-    my $modtime = fio_get_date($directory);
+    my $prototype_path;
+    my $modtime = fio_get_date($folder);
 
-    # The first update uses a file from the directory above
-    # as a prototype, if one is found
+    my $files = $self->{data}->build('files', $index_file);
+    my $file = shift(@$files);
 
-    my $prototype_file;
-    unless (defined $prototype) {
-        my $pattern = $self->get_included_files();
-        $prototype_file = fio_most_recent_file($directory, $pattern);
+    if ($file) {
+        # The first update uses a file from the  directory above
+        # as a prototype, if one is found
+
+        $prototype_file ||= $self->find_prototype($folder, 1);
 
         if ($prototype_file) {
             $prototype_path = $self->get_prototype_path($prototype_file);
             $prototype = fio_read_page($prototype_file);
+
+            eval {$self->update_file($file, $prototype, $prototype_path)};
+            $self->check_error($@, $file);
         }
+
+        # Subsequent updates use the most recently modified file
+        # in the directory as the prototype
+
+        $prototype_file = $file;
+        $prototype_path = $self->get_prototype_path($prototype_file);
+        $prototype = fio_read_page($prototype_file);
     }
 
-    my $count = 0;
     my $changes = 0;
-    foreach my $filename (@$filenames) {
-        next unless $self->match_file($filename);
-        next if defined $prototype_file && $filename eq $prototype_file;
+    foreach my $file (@$files) {
+        my $change;
+        eval {$change = $self->update_file($file, $prototype, $prototype_path)};
+        $self->check_error($@, $file);
 
-        my $page = fio_read_page($filename);
-        die "Couldn't read $filename" unless defined $page;
-
-        # Check for changes before updating page
-        my $skip;
-        eval {
-            $skip = $self->unchanged_prototype($prototype, $page,
-                                               $prototype_path);
-        };
-        die "$filename: $@" if $@;
-
-        if ($skip) {
-            last if $count;
-
-        } else {
-            eval {
-                $page = $self->update_page($prototype, $page, $prototype_path);
-            };
-            die "$filename: $@" if $@;
-
-            my $modtime = fio_get_date($filename);
-
-            fio_write_page($filename, $page);
-            fio_set_date($filename, $modtime);
-            $changes += 1;
-        }
-
-        if ($count == 0) {
-            # The second and subsequent updates use the most recently
-            # modified file in a directory as the prototype, so we
-            # must change the values used for the first update
-            $prototype = $page;
-            $prototype_path = $self->get_prototype_path($filename);
-        }
-
-        $count += 1;
+        last unless $change;
+        $changes += 1;
     }
 
-    utime($modtime, $modtime, $directory);
-    return unless $changes;
+    fio_set_date($folder, $modtime);
 
-    for my $subdirectory (@$directories) {
-        next unless $self->search_directory($directory);
-        $self->update_directory($subdirectory, $prototype, $prototype_path);
+    # Update files in subdirectory
+
+    if ($changes || @$files == 0) {
+        my $folders = $self->{data}->build('folders', $index_file);
+
+        foreach my $subfolder (@$folders) {
+            $self->update_folder($subfolder, $prototype, $prototype_path);
+        }
     }
 
     return;
@@ -276,7 +267,7 @@ sub update_directory {
 # Parse prototype and page and combine them
 
 sub update_page {
-    my ($self, $prototype, $page, $prototype_path) = @_;
+    my ($self, $page, $prototype, $prototype_path) = @_;
     $prototype_path = {} unless defined $prototype_path;
 
     my $output = [];

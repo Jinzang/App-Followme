@@ -26,7 +26,7 @@ mkdir $test_dir;
 chdir $test_dir;
 
 #----------------------------------------------------------------------
-# Testsupport functions
+# Test support functions
 
 do {
     my $line = "#>>> copy text common followme.cfg";

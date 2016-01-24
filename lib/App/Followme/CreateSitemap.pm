@@ -29,12 +29,12 @@ sub parameters {
 # Write a list of urls in a directory tree
 
 sub run {
-    my ($self, $directory) = @_;
+    my ($self, $folder) = @_;
 
-    my @urls = $self->list_urls($directory);
+    my @urls = $self->list_urls($folder);
     my $page = join("\n", @urls) . "\n";
 
-    my $filename = catfile($directory, $self->{sitemap});
+    my $filename = catfile($folder, $self->{sitemap});
     fio_write_page($filename, $page);
 
     return;
@@ -44,23 +44,23 @@ sub run {
 # Return a list of the urls of all web pages in a directory
 
 sub list_urls {
-    my ($self, $directory) = @_;
+    my ($self, $folder) = @_;
 
     my @urls;
-    my $data = {};
-    my ($filenames, $directories) =  fio_visit($directory);
+    my $index_file = $self->to_file($folder);
+    my $files = $self->{data}->build('files', $index_file);
 
-    foreach my $filename (@$filenames) {
-        next unless $self->match_file($filename);
-
-        $data = $self->build_url($data, $directory, $filename);
-        my $url = $self->{site_url} . $data->{absolute_url};
-        push(@urls, $url);
+    foreach my $file (@$files) {
+        # build returns a reference, so must dereference
+        my $url = $self->{data}->build('absolute_url', $file);
+        my $page_url = $self->{site_url} . $$url;
+        push(@urls, $page_url);
     }
 
-    foreach my $subdirectory (@$directories) {
-        next unless $self->search_directory($directory);
-        push(@urls, $self->list_urls($subdirectory));
+    my $folders = $self->{data}->build('folders', $index_file);
+
+    foreach my $subfolder (@$folders) {
+        push(@urls, $self->list_urls($subfolder));
     }
 
     return @urls;
@@ -90,7 +90,7 @@ App::Followme::CreateSitemap - Create a Google sitemap
 
     use App::Followme::Sitemap;
     my $map = App::Followme::Sitemap->new();
-    $map->run($directory);
+    $map->run($folder);
 
 =head1 DESCRIPTION
 

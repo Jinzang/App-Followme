@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 28;
+use Test::More tests => 29;
 
 #----------------------------------------------------------------------
 # Load package
@@ -28,6 +28,14 @@ mkdir catfile($test_dir, "sub");
 chdir $test_dir;
 
 my %configuration = ();
+
+#----------------------------------------------------------------------
+# Create object
+
+my $up = App::Followme::FormatPage->new();
+
+isa_ok($up, "App::Followme::FormatPage"); # test 1
+can_ok($up, qw(new run)); # test 2
 
 #----------------------------------------------------------------------
 # Test parse_blocks
@@ -60,8 +68,6 @@ do {
                );
 
     my $page = join("\n", @page) . "\n";
-
-    my $up = App::Followme::FormatPage->new;
     $up->parse_blocks($page, $block_handler, $template_handler);
 
     my $ok_blocks = {
@@ -75,8 +81,8 @@ do {
                         "\nLast line\n",
                            ];
 
-    is_deeply($blocks, $ok_blocks, 'Parse blocks'); # test 1
-    is_deeply($prototype, $ok_prototype, 'Parse prototype'); # test 2
+    is_deeply($blocks, $ok_blocks, 'Parse blocks'); # test 3
+    is_deeply($prototype, $ok_prototype, 'Parse prototype'); # test 4
 
     $blocks = {};
     $prototype = [];
@@ -87,7 +93,7 @@ do {
     eval {
         $up->parse_blocks($page, $block_handler, $template_handler);
     };
-    is($@, "Unmatched block (<!-- section second -->)\n", 'Missing end'); # test 3
+    is($@, "Unmatched block (<!-- section second -->)\n", 'Missing end'); # test 5
 
     @bad_page = @page;
     shift(@bad_page); shift(@bad_page);
@@ -96,7 +102,7 @@ do {
     eval {
         $up->parse_blocks($page, $block_handler, $template_handler);
     };
-    is($@, "Unmatched (<!-- endsection first -->)\n", 'Missing begin'); # test 4
+    is($@, "Unmatched (<!-- endsection first -->)\n", 'Missing begin'); # test 6
 
     @bad_page = @page;
     splice(@bad_page, 3, 1);
@@ -106,7 +112,7 @@ do {
         $up->parse_blocks($page, $block_handler, $template_handler);
     };
     is($@, "Improperly nested block (<!-- section second -->)\n",
-       'Begin inside of begin'); # test 5
+       'Begin inside of begin'); # test 7
 
     @bad_page = @page;
     splice(@bad_page, 3, 3);
@@ -116,7 +122,7 @@ do {
         $up->parse_blocks($page, $block_handler, $template_handler);
     };
     is($@, "Unmatched (<!-- endsection second -->)\n",
-       'Begin does not match end'); # test 6
+       'Begin does not match end'); # test 8
 };
 
 #----------------------------------------------------------------------
@@ -144,17 +150,17 @@ do {
         second => join("\n", @page[5..7]),
     };
 
-    is_deeply($blocks, $ok_blocks, 'Parse undecorated blocks'); # test 7
+    is_deeply($blocks, $ok_blocks, 'Parse undecorated blocks'); # test 9
 
     my $bad_page = $page;
     $bad_page =~ s/second/first/g;
     $blocks = eval {$up->parse_page($bad_page)};
 
-    is($@, "Duplicate block name (first)\n", 'Duplicate block names'); # test 8
+    is($@, "Duplicate block name (first)\n", 'Duplicate block names'); # test 10
 };
 
 #----------------------------------------------------------------------
-# Test update_page
+# Test update_file
 
 do {
     my @prototype = (
@@ -177,18 +183,18 @@ do {
 
     my $prototype_path = {folder => 1};
     my $up = App::Followme::FormatPage->new;
-    my $output = $up->update_page($prototype, $page, $prototype_path);
+    my $output = $up->update_page($page, $prototype, $prototype_path);
     my @output = split(/\n/, $output);
 
     my @output_ok = @prototype;
     $output_ok[6] =~ s/block/section/;
 
-    is_deeply(\@output, \@output_ok, 'Update page'); # test 9
+    is_deeply(\@output, \@output_ok, 'Update file'); # test 11
     my $bad_page = $page;
     $bad_page =~ s/second/third/g;
 
-    $output = eval{$up->update_page($prototype, $bad_page, $prototype_path)};
-    is($@, "Unused blocks (third)\n", 'Update page bad block'); # test 10
+    $output = eval{$up->update_page($bad_page, $prototype, $prototype_path)};
+    is($@, "Unused blocks (third)\n", 'Update file bad block'); # test 12
 };
 
 #----------------------------------------------------------------------
@@ -240,7 +246,7 @@ EOQ
 };
 
 #----------------------------------------------------------------------
-# Test get prototype path and find prototype
+# Test get prototype path
 
 do {
     my $up = App::Followme::FormatPage->new(%configuration);
@@ -249,11 +255,7 @@ do {
 
     my $prototype_path = $up->get_prototype_path('one.html');
 
-    is_deeply($prototype_path, {sub => 1}, 'Get prototype path'); # test 11
-
-    my $prototype_file = $up->find_prototype($bottom, 1);
-    is($prototype_file, catfile($test_dir, 'one.html'),
-       'Find prototype'); # test 12
+    is_deeply($prototype_path, {sub => 1}, 'Get prototype path'); # test 13
 };
 
 #----------------------------------------------------------------------
@@ -273,22 +275,22 @@ do {
             my $input = fio_read_page($filename);
 
             like($input, qr(Page $count),
-               "Format block in $dir/$count"); # test 13, 17, 21, 25
+               "Format block in $dir/$count"); # test 14, 18, 22, 26
 
             like($input, qr(top link),
-               "Format prototype $dir/$count"); # test 14, 18, 22 26
+               "Format prototype $dir/$count"); # test 15, 19, 23 27
 
             if ($dir) {
                 like($input, qr(section nav in sub --),
-                   "Format section tag in $dir/$count"); # test 23, 27
+                   "Format section tag in $dir/$count"); # test 24, 28
                 like($input, qr(link one),
-                   "Format folder block $dir/$count"); # test 24, 28
+                   "Format folder block $dir/$count"); # test 25, 29
 
             } else {
                 like($input, qr(section nav --),
-                   "Format section tag in $dir/$count"); # test 15, 19
+                   "Format section tag in $dir/$count"); # test 16, 20
                 like($input, qr(link $count),
-                   "Format folder block in $dir/$count"); # test 16, 22
+                   "Format folder block in $dir/$count"); # test 17, 23
             }
         }
     }

@@ -65,10 +65,8 @@ EOQ
         my $filename = "$count.html";
         fio_write_page($filename, $output);
 
-        my $data = {};
-        $map->build_url($data, $test_dir, $filename);
-
-        my $webpage = $configuration{site_url} . $data->{absolute_url};
+        my $absolute_url = $map->{data}->build('absolute_url', $filename);
+        my $webpage = $configuration{site_url} . $$absolute_url;
         push(@webpages, $webpage);
     }
 

@@ -6,211 +6,55 @@ use warnings;
 use integer;
 use lib '../..';
 
+use Cwd;
+use IO::File;
+use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
+                             no_upwards rel2abs splitdir updir);
+use App::Followme::FIO;
+use App::Followme::Web;
+
 use base qw(App::Followme::ConfiguredObject);
 
-use File::Spec::Functions qw(abs2rel catfile splitdir);
-use App::Followme::FIO;
-
 our $VERSION = "1.16";
-
-use constant MONTHS => [qw(January February March April May June July
-                           August September October November December)];
 
 #----------------------------------------------------------------------
 # Read the default parameter values
 
 sub parameters {
-    my ($pkg) = @_;
+    my ($self) = @_;
 
     return (
-            body_tag => 'content',
+            template_file => '',
             web_extension => 'html',
-            template_directory => 'templates',
+            configuration_file => 'followme.cfg',
+            template_directory => '_templates',
+            data_pkg => 'App::Followme::WebData',
             template_pkg => 'App::Followme::Template',
            );
 }
 
 #----------------------------------------------------------------------
-# Run the object on a directory (stub)
+# Main method of all module subclasses (stub)
 
 sub run {
-    my ($self, $directory) = @_;
-    die "Run method not defined";
+    my ($self, $folder) = @_;
+
+    my $pkg = ref $self;
+    die "Run method not implemented by $pkg\n";
 }
 
 #----------------------------------------------------------------------
-# Extract a web page's body from between section tags
+# Check for error and warn if found
 
-sub build_body {
-    my ($self, $data, $filename) = @_;
+sub check_error {
+    my($self, $error, $folder) = @_;
+    return 1 unless $error;
 
-    my $page = fio_read_page($filename);
+    my $pkg = ref $self;
+    my $filename = $self->to_file($folder);
+    warn "$pkg $filename: $error";
 
-    if ($page) {
-        my $sections = $self->{template}->parse_sections($page);
-        $data->{body} = $sections->{$self->{body_tag}};
-    }
-
-    return $data;
-}
-
-#----------------------------------------------------------------------
-# Build date fields from time, based on Blosxom 3
-
-sub build_date {
-    my ($self, $data, $filename) = @_;
-
-    my $num = '01';
-    my $months = MONTHS;
-    my %month2num = map {substr($_, 0, 3) => $num ++} @$months;
-
-    my $time = -e $filename ? fio_get_date($filename) : time();
-    my $ctime = localtime($time);
-
-    my @names = qw(weekday month day hour24 minute second year);
-    my @values = split(/\W+/, $ctime);
-
-    while (@names) {
-        my $name = shift @names;
-        my $value = shift @values;
-        $data->{$name} = $value;
-    }
-
-    $data->{day} = sprintf("%02d", $data->{day});
-    $data->{monthnum} = $month2num{$data->{month}};
-
-    my $hr = $data->{hour24};
-    if ($hr < 12) {
-        $data->{ampm} = 'am';
-    } else {
-        $data->{ampm} = 'pm';
-        $hr -= 12;
-    }
-
-    $hr = 12 if $hr == 0;
-    $data->{hour} = sprintf("%02d", $hr);
-
-    return $data;
-}
-
-#----------------------------------------------------------------------
-# Set a flag indicating if the the filename is the index file
-
-sub build_is_index {
-    my ($self, $data, $filename) = @_;
-
-    my ($directory, $file) = fio_split_filename($filename);
-    my ($root, $ext) = split(/\./, $file);
-
-    my $is_index = $root eq 'index' && $ext eq $self->{web_extension};
-    $data->{is_index} = $is_index ? 1 : 0;
-
-    return $data;
-}
-
-#----------------------------------------------------------------------
-# Get the title from the filename root
-
-sub build_title_from_filename {
-    my ($self, $data, $filename) = @_;
-
-    my ($dir, $file) = fio_split_filename($filename);
-    my ($root, $ext) = split(/\./, $file);
-
-    if ($root eq 'index') {
-        my @dirs = splitdir($dir);
-        $root = pop(@dirs) || '';
-    }
-
-    $root =~ s/^\d+// unless $root =~ /^\d+$/;
-    my @words = map {ucfirst $_} split(/\-/, $root);
-    $data->{title} = join(' ', @words);
-
-    return $data;
-}
-
-#----------------------------------------------------------------------
-# Get the title from the first paragraph of the page
-
-sub build_summary {
-    my ($self, $data) = @_;
-
-    if ($data->{body}) {
-        if ($data->{body} =~ m!<p[^>]*>(.*?)</p[^>]*>!si) {
-            $data->{summary} = $1;
-        }
-    }
-
-    return $data;
-}
-
-#----------------------------------------------------------------------
-# Get the title from the page header
-
-sub build_title_from_header {
-    my ($self, $data) = @_;
-
-    if ($data->{body}) {
-        if ($data->{body} =~ s!^\s*<h(\d)[^>]*>(.*?)</h\1[^>]*>!!si) {
-            $data->{title} = $2;
-        }
-    }
-
-    return $data;
-}
-
-#----------------------------------------------------------------------
-# Build a url from a filename
-
-sub build_url {
-    my ($self, $data, $directory, $filename) = @_;
-
-    $data->{url} = fio_filename_to_url($directory,
-                                       $filename,
-                                       $self->{web_extension});
-
-    $data->{absolute_url} = '/' . fio_filename_to_url($self->{top_directory},
-                                                      $filename,
-                                                      $self->{web_extension});
-
-    my @path = splitdir(abs2rel($filename, $self->{top_directory}));
-    pop(@path);
-
-    my @breadcrumbs;
-    for (;;) {
-        my $filename = @path ? catfile($self->{top_directory}, @path)
-                             : $self->{top_directory};
-
-        my $breadcrumb = {};
-        $breadcrumb = $self->build_title_from_filename($breadcrumb, $filename);
-
-        $breadcrumb->{url} = '/' . fio_filename_to_url($self->{top_directory},
-                                                       $filename,
-                                                       $self->{web_extension});
-
-        push (@breadcrumbs, $breadcrumb);
-        last unless @path;
-        pop(@path);
-    }
-
-    @breadcrumbs = reverse(@breadcrumbs);
-    $data->{breadcrumbs} = \@breadcrumbs;
-
-    return $data;
-}
-
-#----------------------------------------------------------------------
-# Get fields external to file content
-
-sub external_fields {
-    my ($self, $data, $directory, $filename) = @_;
-
-    $data = $self->build_date($data, $filename);
-    $data = $self->build_title_from_filename($data, $filename);
-    $data = $self->build_is_index($data, $filename);
-    $data = $self->build_url($data, $directory, $filename);
-
-    return $data;
+    return;
 }
 
 #----------------------------------------------------------------------
@@ -220,6 +64,7 @@ sub find_prototype {
     my ($self, $directory, $uplevel) = @_;
 
     $uplevel = 0 unless defined $uplevel;
+    ($directory) = fio_split_filename($directory);
     my @path = splitdir(abs2rel($directory, $self->{top_directory}));
 
     for (;;) {
@@ -241,40 +86,15 @@ sub find_prototype {
 }
 
 #----------------------------------------------------------------------
-# Get the list of excluded files
-
-sub get_excluded_directories {
-    my ($self) = @_;
-    return [$self->{template_directory}];
-}
-
-#----------------------------------------------------------------------
-# Get the list of excluded files
-
-sub get_excluded_files {
-    my ($self) = @_;
-    return '';
-}
-
-#----------------------------------------------------------------------
-# Get the list of included files
-
-sub get_included_files {
-    my ($self) = @_;
-
-    return "*.$self->{web_extension}";
-}
-
-#----------------------------------------------------------------------
 # Get the full template name
 
 sub get_template_name {
     my ($self, $template_file) = @_;
 
-    my @directories = ($self->{base_directory});
+    my $template_directory = fio_full_file_name($self->{top_directory},
+                                                $self->{template_directory});
 
-    push(@directories, fio_full_file_name($self->{top_directory},
-                                          $self->{template_directory}));
+    my @directories = ($self->{base_directory}, $template_directory);
 
     foreach my $directory (@directories) {
         my $template_name = fio_full_file_name($directory, $template_file);
@@ -285,102 +105,101 @@ sub get_template_name {
 }
 
 #----------------------------------------------------------------------
-# Get fields from reading the file
+# Read the configuration from a file
 
-sub internal_fields {
-    my ($self, $data, $filename) = @_;
+sub read_configuration {
+    my ($self, $filename, %configuration) = @_;
 
-    my $ext;
-    if (-d $filename) {
-        $ext = $self->{web_extension};
-        $filename = catfile($filename, "index.$ext");
+    $configuration{''}{run_before} = [];
+    $configuration{''}{run_after} = [];
 
-    } else {
-        ($ext) = $filename =~ /\.([^\.]*)$/;
+    my $fd = IO::File->new($filename, 'r');
+    my $class = '';
+
+    if ($fd) {
+        while (my $line = <$fd>) {
+            # Ignore comments and blank lines
+            next if $line =~ /^\s*\#/ || $line !~ /\S/;
+
+            if ($line =~ /=/) {
+                # Split line into name and value, remove leading and
+                # trailing whitespace
+
+                my ($name, $value) = split (/\s*=\s*/, $line, 2);
+                $value =~ s/\s+$//;
+
+                # Insert the name and value into the hash
+
+                if ($name eq 'run_before') {
+                    die "Cannot set run_before inside of $class\n" if $class;
+                    push(@{$configuration{''}->{run_before}}, $value);
+
+                } elsif ($name eq 'run_after') {
+                    die "Cannot set run_after inside of $class\n" if $class;
+                    push(@{$configuration{''}->{run_after}}, $value);
+
+                } else {
+                    $configuration{$class}->{$name} = $value;
+                }
+
+
+            } elsif ($line =~ /^\s*\[([\w:]+)\]\s*$/) {
+                $class = $1;
+                $configuration{$class} = {};
+
+            } else {
+                die "Bad line in config file: " . substr($line, 30) . "\n";
+            }
+        }
+
+        close($fd);
     }
 
-    if (defined $ext) {
-        if ($ext eq $self->{web_extension}) {
-            $data = $self->build_body($data, $filename);
-            $data = $self->build_summary($data);
-            $data = $self->build_title_from_header($data);
+    return %configuration;
+}
+
+#----------------------------------------------------------------------
+# Reformat the contents of an html file using one or more prototypes
+
+sub reformat_file {
+    my ($self, @files) = @_;
+
+    my $page;
+    my $section = {};
+    foreach my $file (reverse @files) {
+        if (defined $file) {
+            if ($file =~ /\n/) {
+                $page = web_substitute_sections($file, $section);
+            } elsif (-e $file) {
+                $page = web_substitute_sections(fio_read_page($file), $section);
+            }
         }
     }
 
-    return $data;
+    return $page;
 }
 
 #----------------------------------------------------------------------
-# Combine template with prototype and compile to subroutine
+# Render the data contained in a file using a template
 
-sub make_template {
-    my ($self, $filename, $template_file) = @_;
+sub render_file {
+    my ($self, $template_file, $file) = @_;
 
-    my ($directory, $base) = fio_split_filename($filename);
-    undef $filename unless -e $filename;
+    $template_file = $self->get_template_name($template_file);
+    my $template = fio_read_page($template_file);
 
-    my $template_name = $self->get_template_name($template_file);
-    my $prototype_name = $self->find_prototype($directory);
-
-    my @filenames = grep {defined $_}
-        ($prototype_name, $filename, $template_name);
-
-    my $sub = $self->{template}->compile(@filenames);
-    return $sub;
+    my $renderer = $self->{template}->compile($template);
+    return $renderer->($self->{data}, $file);
 }
 
 #----------------------------------------------------------------------
-# Return true if this is an included file
+# Convert filename to index file if it is a directory
 
-sub match_file {
-    my ($self, $filename) = @_;
+sub to_file {
+    my ($self, $file) = @_;
 
-    $self->{include_patterns} ||= fio_glob_patterns($self->get_included_files());
-    $self->{exclude_patterns} ||= fio_glob_patterns($self->get_excluded_files());
-
-    my ($dir, $file) = fio_split_filename($filename);
-    return if fio_match_patterns($file, $self->{exclude_patterns});
-    return unless fio_match_patterns($file, $self->{include_patterns});
-
-    return 1;
-}
-
-#----------------------------------------------------------------------
-# Check if directory should be searched
-
-sub search_directory {
-    my ($self, $directory) = @_;
-
-    my $excluded_dirs = $self->get_excluded_directories();
-
-    foreach my $excluded (@$excluded_dirs) {
-        return if fio_same_file($directory, $excluded);
-    }
-
-    return 1;
-}
-
-#----------------------------------------------------------------------
-# Set the data fields for a file
-
-sub set_fields {
-    my ($self, $directory, $filename) = @_;
-
-    my $data = {};
-    $data = $self->external_fields($data, $directory, $filename);
-    $data = $self->internal_fields($data, $filename);
-
-    return $data;
-}
-
-#----------------------------------------------------------------------
-# Sort pending filenames
-
-sub sort_files {
-    my ($self, $files) = @_;
-
-    my @files = sort @$files;
-    return \@files;
+    $file = catfile($file, "index.$self->{web_extension}") if -d $file;
+    return $file;
 }
 
 1;
@@ -395,77 +214,39 @@ App::Followme::Module - Base class for modules invoked from configuration
 
 =head1 SYNOPSIS
 
-    use App::Followme::FIO;
+    use Cwd;
     use App::Followme::Module;
     my $obj = App::Followme::Module->new($configuration);
-    my $prototype = $obj->find_prototype($directory, 0);
-    my $test = fio_is_newer($filename, $prototype);
-    if ($test) {
-        my $data = $obj->set_fields($directory, $filename);
-        my $sub = $obj->make_template($filename, $template_name);
-        my $webppage = $sub->($data);
-        print $webpage;
-    }
+    my $directory = getcwd();
+    $obj->run($directory);
 
 =head1 DESCRIPTION
 
-This module contains the methods that build variables and perform template
-and prototype handling. It serves as the basis of all the computations
+This module serves as the basis of all the computations
 performed by App::Followme, and thus is used as the base class for all its
-modules.
+modules. It contains a few methods used by the modules and is not meant to
+be invoked itself.
 
 =head1 METHODS
 
 Packages loaded as modules get a consistent behavior by subclassing
 App::Foolowme:Module. It is not invoked directly. It provides methods for i/o,
-handling templates, and prototypes, and building the variables that are inserted
-into templates.
+handling templates and prototypes.
 
 A template is a file containing commands and variables for making a web page.
 First, the template is compiled into a subroutine and then the subroutine is
-called with a hash as an argument to fill in the variables and produce a web
-page. A prototype is the most recently modified web page in a directory. It is
-combined with the template so that the web page has the same look as the other
-pages in the directory.
+called with a metadata object as an argument to fill in the variables and
+produce a web page. A prototype is the most recently modified web page in a
+directory. It is combined with the template so that the web page has the same
+look as the other pages in the directory.
 
 =over 4
-
-=item my $data = $self->build_date($data, $filename);
-
-The variables calculated from the modification time are: C<weekday, month,>
-C<monthnum, day, year, hour24, hour, ampm, minute,> and C<second.>
-
-=item my $data = $self->build_is_index($data, $filename);
-
-The variable C<is_flag> is one of the filename is an index file and zero if
-it is not.
-
-=item my $data = $self->build_title_from_filename($data, $filename);
-
-The title of the page is derived from the file name by removing the filename
-extension, removing any leading digits,replacing dashes with spaces, and
-capitalizing the first character of each word.
-
-=item $data = $self->build_url($data, $filename);
-
-Build the relative and absolute urls of a web page from a filename.
 
 =item $filename = $self->find_prototype($directory, $uplevel);
 
 Return the name of the most recently modified web page in a directory. If
 $uplevel is defined, search that many directory levels up from the directory
 passed as the first argument.
-
-=item my $data = $self->internal_fields($data, $filename);
-
-Compute the fields that you must read the file to calculate: title, body,
-and summary
-
-=item $test = $self->is_newer($target, @sources);
-
-Compare the modification date of the target file to the modification dates of
-the source files. If the target file is newer than all of the sources, return
-1 (true).
 
 =item $sub = $self->make_template($filename, $template_name);
 
@@ -490,22 +271,6 @@ text. For comments look like
     <!-- for @loop -->
     <!-- endfor -->
 
-=item $data = $self->set_fields($directory, $filename);
-
-The main method for getting variables. This method calls the build methods
-defined in this class. Filename is the file that the variables are being
-computed for. Directory is used to compute the relative url. The url computed is
-relative to it.
-
-=item fio_write_page($filename, $str);
-
-Write a file from a string. An the entire file is written from a string, there
-is no line at a time IO. This is because files are typically small.
-
-=item ($filenames, $directories) = $self->visit($top_directory);
-
-Return a list of filenames and directories in a directory,
-
 =back
 
 =head1 CONFIGURATION
@@ -515,15 +280,6 @@ class based on it:
 
 =over 4
 
-=item base_directory
-
-The directory the class is invoked from. This controls which files are returned. The
-default value is the current directory.
-
-=item web_extension
-
-The extension used by web pages. This controls which files are returned. The
-default value is 'html'.
 
 =back
 

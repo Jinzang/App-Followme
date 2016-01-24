@@ -6,20 +6,25 @@ use warnings;
 use integer;
 use lib '../..';
 
+use Cwd;
 use IO::Dir;
 use IO::File;
+use Time::Local;
+use Time::Format;
 use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
                              no_upwards rel2abs splitdir);
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(fio_filename_to_url fio_full_file_name fio_get_date
-                 fio_glob_patterns fio_is_newer fio_match_patterns
-                 fio_most_recent_file fio_read_page fio_same_file
-                 fio_set_date fio_split_filename fio_to_file
-                 fio_visit fio_write_page);
+our @EXPORT = qw(fio_filename_to_url fio_full_file_name fio_format_date
+                 fio_get_date fio_get_size fio_glob_patterns fio_is_newer
+                 fio_match_patterns fio_most_recent_file fio_pushdir fio_popdir
+                 fio_read_page fio_same_file fio_set_date fio_split_filename
+                 fio_to_file fio_visit fio_write_page);
 
 our $VERSION = "1.16";
+
+our @fio_directory_stack = (); # for fio_pushdir and fio_popdir
 
 #----------------------------------------------------------------------
 # Convert filename to url
@@ -28,7 +33,7 @@ sub fio_filename_to_url {
     my ($directory, $filename, $ext) = @_;
 
     $filename = rel2abs($filename);
-    ($filename) = fio_to_file($ext, $filename);
+    $filename = fio_to_file($filename, $ext);
     $filename = abs2rel($filename, $directory);
 
     my @path = $filename eq '.' ? () : splitdir($filename);
@@ -37,6 +42,17 @@ sub fio_filename_to_url {
     $url =~ s/\.[^\.]*$/.$ext/ if defined $ext;
 
     return $url;
+}
+
+#----------------------------------------------------------------------
+# Format a date string
+
+sub fio_format_date {
+    my ($date, $format) = @_;
+
+    # Default format is iso date format
+    $format = 'yyyy-mm-ddThh:mm:ss' unless defined $format;
+    return time_format($format, $date);
 }
 
 #----------------------------------------------------------------------
@@ -70,8 +86,32 @@ sub fio_full_file_name {
 sub fio_get_date {
     my ($filename) = @_;
 
-    my @stats = stat($filename);
-    return $stats[9];
+    my $date;
+    if (-e $filename) {
+        my @stats = stat($filename);
+        $date = $stats[9];
+    } else {
+        $date =time();
+    }
+
+    return $date;
+}
+
+#----------------------------------------------------------------------
+# Get size of file
+
+sub fio_get_size {
+    my ($filename) = @_;
+
+    my $size;
+    if (-e $filename) {
+        my @stats = stat($filename);
+        $size = $stats[7];
+    } else {
+        $size = 0;
+    }
+
+    return $size;
 }
 
 #----------------------------------------------------------------------
@@ -178,13 +218,14 @@ sub fio_most_recent_file {
 # Read a file into a string
 
 sub fio_read_page {
-    my ($filename) = @_;
+    my ($filename, $binmode) = @_;
     return unless defined $filename;
 
     local $/;
     my $fd = IO::File->new($filename, 'r');
     return unless $fd;
 
+    binmode($fd, $binmode) if defined $binmode;
     my $page = <$fd>;
     close($fd);
 
@@ -215,6 +256,15 @@ sub fio_same_file {
 
 sub fio_set_date {
     my ($filename, $date) = @_;
+
+    if ($date =~ /[^\d]/) {
+        die "Can't convert date: $date\n" unless $date =~ /T/;
+        my @time = split(/[^\d]/, $date);
+        $time[1] -= 1; # from 1 based to 0 based month
+
+        $date = timelocal(reverse @time);
+    }
+
     return utime($date, $date, $filename);
 }
 
@@ -225,24 +275,29 @@ sub fio_split_filename {
     my ($filename) = @_;
 
     $filename = rel2abs($filename);
-    my @path = splitdir($filename);
-    my $file = pop(@path);
 
-    my $dir = catfile(@path);
+    my ($dir, $file);
+    if (-d $filename) {
+        $file = '';
+        $dir = $filename;
+
+    } else {
+        my @path = splitdir($filename);
+        $file = pop(@path);
+        $dir = catfile(@path);
+    }
+
     return ($dir, $file);
 }
 
 #----------------------------------------------------------------------
-# Convert directories in a list of files to index files
-# TODO: use whole file name
+# Convert filename to index file if it is a directory
+
 sub fio_to_file {
-    my($ext, @files) = @_;
+    my ($file, $ext) = @_;
 
-    foreach (@files) {
-        $_ = catfile($_, "index.$ext") if -d $_;
-    }
-
-    return @files;
+    $file = catfile($file, "index.$ext") if -d $file;
+    return $file;
 }
 
 #----------------------------------------------------------------------
@@ -280,11 +335,12 @@ sub fio_visit {
 # Write the page back to the file
 
 sub fio_write_page {
-    my ($filename, $page) = @_;
+    my ($filename, $page, $binmode) = @_;
 
     my $fd = IO::File->new($filename, 'w');
     die "Couldn't write $filename" unless $fd;
 
+    binmode($fd, $binmode) if defined $binmode;
     print $fd $page;
     close($fd);
 
@@ -320,16 +376,18 @@ Compare the modification date of the target file to the modification dates of
 the source files. If the target file is newer than all of the sources, return
 1 (true).
 
-=item $str = fio_read_page($filename);
+=item $str = fio_read_page($filename, $binmode);
 
 Read a fie into a string. An the entire file is read from a string, there is no
 line at a time IO. This is because files are typically small and the parsing
-done is not line oriented.
+done is not line oriented. Binmode is an optional parameter that indicates file
+type if it is not a plain text file.
 
-=item fio_write_page($filename, $str);
+=item fio_write_page($filename, $str, $binmode);
 
 Write a file from a string. An the entire file is written from a string, there
-is no line at a time IO. This is because files are typically small.
+is no line at a time IO. This is because files are typically small. Binmode is
+an optional parameter that indicates file type if it is not a plain text file.
 
 =item ($filenames, $directories) = fio_visit($top_directory);
 

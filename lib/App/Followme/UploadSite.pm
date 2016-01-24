@@ -9,8 +9,6 @@ use lib '../..';
 use base qw(App::Followme::Module);
 
 use Cwd;
-use IO::File;
-use Digest::MD5 qw(md5_hex);
 use File::Spec::Functions qw(abs2rel splitdir catfile);
 use App::Followme::FIO;
 
@@ -29,16 +27,17 @@ sub parameters {
             max_errors => 5,
             hash_file => 'upload.hash',
             credentials => 'upload.cred',
+            state_directory => '_state',
+            data_pkg => 'App::Followme::UploadData',
             upload_pkg => 'App::Followme::UploadFtp',
            );
-
 }
 
 #----------------------------------------------------------------------
 # Upload changed files in a directory tree
 
 sub run {
-    my ($self, $directory) = @_;
+    my ($self, $folder) = @_;
 
     my ($hash, $local) = $self->get_state();
 
@@ -82,28 +81,13 @@ sub ask_word {
 }
 
 #----------------------------------------------------------------------
-# Compute checksum for a file
-
-sub checksum_file {
-    my ($self, $filename) = @_;
-
-    my $fd = IO::File->new($filename, 'r');
-    return '' unless $fd;
-    binmode($fd, ':raw');
-
-    my $md5 = Digest::MD5->new;
-    $md5->addfile($fd);
-    close($fd);
-
-    return $md5->hexdigest;
-}
-
-#----------------------------------------------------------------------
 # Delete files on remote site when they are no longer on local site
 
 sub clean_files {
     my ($self, $hash, $local) = @_;
 
+    # Sort files so that files in directories are deleted before
+    # their directories are
     my @filenames = sort {length($b) <=> length($a)} keys(%$local);
 
     foreach my $filename (@filenames) {
@@ -128,31 +112,13 @@ sub clean_files {
 }
 
 #----------------------------------------------------------------------
-# Get the list of excluded files
-
-sub get_excluded_files {
-    my ($self) = @_;
-
-    return '*.cfg';
-}
-
-#----------------------------------------------------------------------
-# Get the list of included files
-
-sub get_included_files {
-    my ($self) = @_;
-
-    return '*';
-}
-
-#----------------------------------------------------------------------
 # Get the state of the site, contained in the hash file
 
 sub get_state {
     my ($self) = @_;
 
     my $hash_file = catfile($self->{top_directory},
-                            $self->{template_directory},
+                            $self->{state_directory},
                             $self->{hash_file});
 
     if (-e $hash_file) {
@@ -173,7 +139,7 @@ sub get_word {
 
     my $filename = catfile(
                             $self->{top_directory},
-                            $self->{template_directory},
+                            $self->{state_directory},
                             $self->{credentials}
                            );
 
@@ -214,17 +180,16 @@ sub read_hash_file {
     my ($self, $filename) = @_;
 
     my %hash;
-    my $fd = IO::File->new($filename, 'r');
+    my $page = fio_read_page($filename);
 
-    if ($fd) {
-        while (my $line = <$fd>) {
-            chomp $line;
+    if ($page) {
+        my @lines = split(/\n/, $page);
+        foreach my $line (@lines) {
             my ($name, $value) = split (/\t/, $line, 2);
             die "Bad line in hash file: ($name)" unless defined $value;
 
             $hash{$name} = $value;
         }
-        close($fd);
     }
 
     return \%hash;
@@ -236,11 +201,8 @@ sub read_hash_file {
 sub read_word {
     my ($self, $filename) = @_;
 
-    my $fd = IO::File->new ($filename, 'r') || die "Cannot read $filename\n";
-
-    my $obstr = <$fd>;
+    my $obstr = fio_read_page($filename) || die "Cannot read $filename\n";
     chomp($obstr);
-    close($fd);
 
     my ($user, $pass) = $self->unobfuscate($obstr);
     return ($user, $pass);
@@ -284,22 +246,23 @@ sub unobfuscate {
 # Update files in one folder
 
 sub update_folder {
-    my ($self, $directory, $hash, $local) = @_;
+    my ($self, $folder, $hash, $local) = @_;
 
-    my ($filenames, $directories) = fio_visit($directory);
+    my $index_file = $self->to_file($folder);
+    ($folder) = fio_split_filename($folder);
 
     # Check if folder is new
 
-    if ($directory ne $self->{top_directory}) {
-        $directory = abs2rel($directory, $self->{top_directory});
-        delete $local->{$directory} if exists $local->{$directory};
+    if ($folder ne $self->{top_directory}) {
+        $folder = abs2rel($folder, $self->{top_directory});
+        delete $local->{$folder} if exists $local->{$folder};
 
-        if (! exists $hash->{$directory} ||
-            $hash->{$directory} ne 'dir') {
+        if (! exists $hash->{$folder} ||
+            $hash->{$folder} ne 'dir') {
 
-            if ($self->{upload}->add_directory($directory)) {
-                $hash->{$directory} = 'dir';
-                print "add $directory\n" if $self->{verbose};
+            if ($self->{upload}->add_directory($folder)) {
+                $hash->{$folder} = 'dir';
+                print "add $folder\n" if $self->{verbose};
 
             } else {
                 die "Too many upload errors\n" if $self->{max_errors} == 0;
@@ -310,26 +273,26 @@ sub update_folder {
 
     # Check each of the files in the directory
 
-    foreach my $filename (@$filenames) {
-        next unless $self->match_file($filename);
+    my $files = $self->{data}->build('files', $index_file);
 
+    foreach my $file (@$files) {
         # Skip check if in quick mode and modification date is old
 
         if ($self->{quick_update}) {
-            next if $self->{target_date} > fio_get_date($filename);
+            next if $self->{target_date} > fio_get_date($file);
         }
 
-        $filename = abs2rel($filename, $self->{top_directory});
-        delete $local->{$filename} if exists $local->{$filename};
+        $file = abs2rel($file, $self->{top_directory});
+        delete $local->{$file} if exists $local->{$file};
 
-        my $value = $self->checksum_file($filename);
+        my $value = $self->{data}->build('checksum', $file);
 
         # Add file if new or changed
 
-        if (! exists $hash->{$filename} || $hash->{$filename} ne $value) {
-            if ($self->{upload}->add_file($filename)) {
-                $hash->{$filename} = $value;
-                print "add $filename\n" if $self->{verbose};
+        if (! exists $hash->{$file} || $hash->{$file} ne $value) {
+            if ($self->{upload}->add_file($file)) {
+                $hash->{$file} = $value;
+                print "add $file\n" if $self->{verbose};
 
             } else {
                 die "Too many upload errors\n" if $self->{max_errors} == 0;
@@ -340,9 +303,9 @@ sub update_folder {
 
     # Recursively check each of the subdirectories
 
-    foreach my $subdirectory (@$directories) {
-        next unless $self->search_directory($subdirectory);
-        $self->update_folder($subdirectory, $hash, $local);
+    my $folders = $self->{data}->build('folders', $folder);
+    foreach my $subfolder (@$folders) {
+        $self->update_folder($subfolder, $hash, $local);
     }
 
     return;
@@ -354,18 +317,17 @@ sub update_folder {
 sub write_hash_file {
     my ($self, $hash) = @_;
 
-    my $filename = catfile($self->{top_directory},
-                           $self->{template_directory},
-                           $self->{hash_file});
-
-    my $fd = IO::File->new($filename, 'w');
-    die "Couldn't write hash file: $filename" unless $fd;
-
+    my @hash_list;
     while (my ($name, $value) = each(%$hash)) {
-        print $fd "$name\t$value\n";
+        push(@hash_list, "$name\t$value\n");
     }
 
-    close($fd);
+    my $filename = catfile($self->{top_directory},
+                           $self->{state_directory},
+                           $self->{hash_file});
+
+    fio_write_page($filename, join('', @hash_list));
+
     return;
 }
 
@@ -376,12 +338,9 @@ sub write_word {
     my ($self, $filename, $user, $pass) = @_;
 
     my $obstr = $self->obfuscate ($user, $pass);
-
-    my $fd = IO::File->new ($filename, 'w') || die "Cannot write $filename: $!";
-    print $fd $obstr, "\n";
-    close($fd);
-
+    fio_write_page($filename, "$obstr\n");
     chmod (0600, $filename);
+
     return;
 }
 
@@ -397,7 +356,7 @@ App::Followme::Uploadme - Upload changed and new files
 =head1 SYNOPSIS
 
     my $app = App::Followme::UploadSite->new(\%configuration);
-    $app->run($directory);
+    $app->run($folder);
 
 =head1 DESCRIPTION
 
@@ -418,30 +377,30 @@ The following fields in the configuration file are used:
 =item credentials
 
 The name of the file which holds the user name and password for the remote site
-in obfuscated form. It is in the templates directory and the default name is
-'upload.cred'.
+in obfuscated form. Te default name is 'upload.cred'.
 
 =item hash_file
 
-The name of the file containing all the checksums for files on the site. It
-is in the templates directory and the default name is 'upload.hash'.
+The name of the file containing all the checksums for files on the site. The
+default name is 'upload.hash'.
 
 =item max_errors
 
 The number of upload errors the module tolerate before quitting. The default
 value is 5.
 
-=item no_upload
+=item state_directory
 
-If the site has been uploaded by another program and is up to date, set this
-variable to 1. It will recompute the hash file, but not upload any files.
+The name of the directory containing the credentials and hash file. This
+directory name is relative to the top directory of the site. The default
+name is '_state'.
 
 =item upload_pkg
 
 The name of the package with methods that add and delete files on the remote
 site. The default is L<App::Followme::UploadFtp>. Other packages can be
 written, the methods a package must support can be found in
-L<App::Followme::None>.
+L<App::Followme::UploadNone>.
 
 =item verbose
 

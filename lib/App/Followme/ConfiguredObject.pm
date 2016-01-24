@@ -119,6 +119,7 @@ sub initialize {
     $self->setup() if defined &{"${pkg}::setup"};
     return;
 }
+
 #----------------------------------------------------------------------
 # Set up object fields (stub)
 

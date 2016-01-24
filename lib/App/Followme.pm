@@ -22,7 +22,6 @@ sub parameters {
     my ($pkg) = @_;
 
     return (
-            configuration_file => 'followme.cfg',
            );
 }
 
@@ -79,6 +78,8 @@ sub load_and_run_modules {
     my ($self, $modules, $base_directory, $directory, %configuration) = @_;
 
     $configuration{base_directory} = $base_directory;
+    $configuration{current_directory} = $directory;
+
     foreach my $module (@$modules) {
         eval "require $module" or die "Module not found: $module\n";
 
@@ -102,60 +103,6 @@ sub set_directories {
 }
 
 #----------------------------------------------------------------------
-# Update the configuration from a file
-
-sub update_configuration {
-    my ($self, $filename, %configuration) = @_;
-
-    $configuration{''}{run_before} = [];
-    $configuration{''}{run_after} = [];
-
-    my $fd = IO::File->new($filename, 'r');
-    my $class = '';
-
-    if ($fd) {
-        while (my $line = <$fd>) {
-            # Ignore comments and blank lines
-            next if $line =~ /^\s*\#/ || $line !~ /\S/;
-
-            if ($line =~ /=/) {
-                # Split line into name and value, remove leading and
-                # trailing whitespace
-
-                my ($name, $value) = split (/\s*=\s*/, $line, 2);
-                $value =~ s/\s+$//;
-
-                # Insert the name and value into the hash
-
-                if ($name eq 'run_before') {
-                    die "Cannot set run_before inside of $class\n" if $class;
-                    push(@{$configuration{''}->{run_before}}, $value);
-
-                } elsif ($name eq 'run_after') {
-                    die "Cannot set run_after inside of $class\n" if $class;
-                    push(@{$configuration{''}->{run_after}}, $value);
-
-                } else {
-                    $configuration{$class}->{$name} = $value;
-                }
-
-
-            } elsif ($line =~ /^\s*\[([\w:]+)\]\s*$/) {
-                $class = $1;
-                $configuration{$class} = {};
-
-            } else {
-                die "Bad line in config file: " . substr($line, 30) . "\n";
-            }
-        }
-
-        close($fd);
-    }
-
-    return %configuration;
-}
-
-#----------------------------------------------------------------------
 # Update files in one folder
 
 sub update_folder {
@@ -168,8 +115,8 @@ sub update_folder {
 
     my ($run_before, $run_after);
     if (-e $configuration_file) {
-        %configuration = $self->update_configuration($configuration_file,
-                                                     %configuration);
+        %configuration = $self->read_configuration($configuration_file,
+                                                   %configuration);
 
         $run_before = $configuration{''}->{run_before};
         delete $configuration{''}->{run_before};

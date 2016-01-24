@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 8;
+use Test::More tests => 7;
 
 #----------------------------------------------------------------------
 # Load package
@@ -28,17 +28,18 @@ chdir $test_dir;
 my $archive_dir = catfile($test_dir, 'archive');
 
 my %configuration = (
-                        absolute => 0,
                         base_directory => $test_dir,
-                        news_file => '../blog.html',
-                        news_index_file => 'index.html',
-                        news_index_length => 3,
-                        web_extension => 'html',
-                        body_tag => 'content',
-                        news_template => 'blog_template.htm',
-                        news_index_template => 'news_index_template.htm',
                         template_directory => '.',
+                        news_index_length => 3,
+                        news_template_file => 'blog_template.htm',
+                        index_template_file => 'news_index.htm',
+                        date_format => 'mon d, yyyy',
                     );
+
+my $idx = App::Followme::CreateNews->new(%configuration);
+
+isa_ok($idx, "App::Followme::CreateNews"); # test 1
+can_ok($idx, qw(new run)); # test 2
 
 #----------------------------------------------------------------------
 # Write templates
@@ -56,11 +57,13 @@ do {
 <!-- endsection meta -->
 </head>
 <body>
-<!-- section content -->
+<!-- section primary -->
 <h1>Post %%</h1>
 
 <p>All about %%.</p>
-<!-- endsection content -->
+<!-- endsection primary -->
+<!-- section secondary -->
+<!-- endsection secondary -->
 </body>
 </html>
 EOQ
@@ -74,16 +77,16 @@ EOQ
 <!-- endsection meta -->
 </head>
 <body>
-<!-- section content -->
+<!-- section secondary -->
 <h1>$title</h1>
 
-<!-- for @loop -->
+<!-- for @top_files -->
 <h2>$title</h2>
 
 $body
-<p>$month $day $year<a href="$url">Permalink</a></p>
+<p>$date<a href="$url">Permalink</a></p>
 <!-- endfor -->
-<!-- endsection content -->
+<!-- endsection secondary -->
 </body>
 </html>
 EOQ
@@ -97,21 +100,21 @@ EOQ
 <!-- endsection meta -->
 </head>
 <body>
-<!-- section content -->
+<!-- section secondary -->
 <h1>$title</h1>
 <ul>
-<!-- for @loop -->
+<!-- for @files -->
 <li><a href="$url">$title</a></li>
 <!-- endfor -->
 </ul>
-<!-- endsection content -->
+<!-- endsection secondary -->
 </body>
 </html>
 EOQ
 
     my $idx = App::Followme::CreateNews->new(%configuration);
-    fio_write_page('blog_template.htm', $archive_template);
-    fio_write_page('news_index_template.htm', $index_template);
+    fio_write_page($idx->{news_template_file}, $archive_template);
+    fio_write_page($idx->{index_template_file}, $index_template);
 
     foreach my $count (qw(four three two one)) {
         sleep(2);
@@ -131,48 +134,27 @@ do {
     my $idx = App::Followme::CreateNews->new(%configuration);
 
     my $archive_dir = catfile($test_dir, 'archive');
-    my ($filenames, $directories) = fio_visit($archive_dir);
-    $idx->create_an_index($archive_dir, $directories, $filenames);
+    my $index_file = fio_to_file($archive_dir, $idx->{web_extension});
 
-    my $page = fio_read_page(catfile($archive_dir,"index.html"));
+    $idx->update_folder($test_dir);
+    my $page = fio_read_page($index_file);
 
-    like($page, qr/>Post one<\/a><\/li>/, 'Archive index content'); # test 1
-    like($page, qr/<a href="one.html">/, 'Archive index link'); # test 2
-};
-
-#----------------------------------------------------------------------
-# Test recent_files
-
-do {
-    chdir($test_dir);
-    my $idx = App::Followme::CreateNews->new(%configuration);
-    my $filenames = $idx->recent_files($test_dir);
-
-    my @ok_filenames;
-    foreach my $file (qw(one.html two.html three.html)) {
-        push(@ok_filenames, catfile($archive_dir, $file));
-    }
-
-    is_deeply($filenames, \@ok_filenames, 'Recent files'); # test 3
+    like($page, qr/>Post one<\/a><\/li>/, 'Archive index content'); # test 3
+    like($page, qr/<a href="archive\/one.html">/, 'Archive index link'); # test 4
 };
 
 #----------------------------------------------------------------------
 # Create news file
 
 do {
-    my $body_ok = "\n\n<p>All about three.</p>\n";
-
+    chdir($test_dir);
     my $idx = App::Followme::CreateNews->new(%configuration);
-    my ($filenames, $directories) = fio_visit($archive_dir);
-    my $data = $idx->index_data($archive_dir, $directories, $filenames);
+    my $news_file = fio_full_file_name($test_dir, 'index.html');
 
-    is($data->[2]{url}, 'three.html', 'Archive news url'); # test 4
-    is($data->[2]{body}, $body_ok, "Archive news body"); #test 5
+    $idx->update_folder($test_dir);
+    my $page = fio_read_page($news_file);
 
-    $idx->create_recent_news($archive_dir);
-    my $page = fio_read_page(catfile($test_dir,"blog.html"));
-
-    like($page, qr/All about two/, 'Archive news content'); # test 6
-    like($page, qr/<h2>Post two/, 'Archive news title'); # test 7
-    like($page, qr/<a href="archive\/one.html">/, 'Archive news link'); # test 8
+    like($page, qr/All about two/, 'Archive news content'); # test 5
+    like($page, qr/<h2>Post two/, 'Archive news title'); # test 6
+    like($page, qr/<a href="archive\/one.html">/, 'Archive news link'); # test 7
 };

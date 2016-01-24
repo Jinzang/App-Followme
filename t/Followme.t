@@ -6,7 +6,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 10;
+use Test::More tests => 9;
 
 #----------------------------------------------------------------------
 # Load package
@@ -46,41 +46,6 @@ do {
 };
 
 #----------------------------------------------------------------------
-# Test update configuration
-
-do {
-    my %configuration = ('' => {one => 1, two => 2});
-    my $app = App::Followme->new();
-
-    my $source = <<'EOQ';
-# Test configuration file
-
-three = 3
-four = 4
-
-run_after = App::Followme::CreateSitemap
-
-EOQ
-
-    my $filename = 'test.cfg';
-    my $fd = IO::File->new($filename, 'w');
-    print $fd $source;
-    close($fd);
-
-    %configuration = $app->update_configuration($filename, %configuration);
-
-    my %configuration_ok = ('' => {one => 1, two => 2,
-                                   three => 3, four => 4,
-                                   run_before => [],
-                                   run_after => ['App::Followme::CreateSitemap'],
-                                  }
-                           );
-
-    is_deeply(\%configuration, \%configuration_ok,
-              'Update configuration'); # test 3
-};
-
-#----------------------------------------------------------------------
 # Test run
 
 do {
@@ -109,7 +74,7 @@ do {
     }
 
     my $config_files = $app->find_configuration($directory);
-    is_deeply($config_files, \@config_files_ok, 'Find configuration'); # test 4
+    is_deeply($config_files, \@config_files_ok, 'Find configuration'); # test 3
     $app->run($test_dir);
 
     my $count = 9;
@@ -118,12 +83,12 @@ do {
         chdir ($dir);
 
         my $filename = rel2abs('sitemap.txt');
-        ok(-e $filename, 'Ran create sitemap'); # test 5, 7, 9
+        ok(-e $filename, 'Ran create sitemap'); # test 4, 6, 8
 
         my $page = fio_read_page($filename);
 
         my @lines = split(/\n/, $page);
-        is(@lines, $count, 'Right number of urls'); # test 6, 8, 10
+        is(@lines, $count, 'Right number of urls'); # test 5, 7, 9
 
         $count -= 3;
     }

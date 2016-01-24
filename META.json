@@ -47,7 +47,9 @@
             "Text::Markdown" : "1.000031"
          },
          "requires" : {
+            "YAML::Tiny" : "0",
             "Test::Requires" : "0",
+            "Time::Format": "1.02",
             "perl" : "5.008005"
          }
       },

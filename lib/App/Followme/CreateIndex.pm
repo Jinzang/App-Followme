@@ -21,94 +21,42 @@ sub parameters {
     my ($pkg) = @_;
 
     return (
-            index_file => 'index.html',
-            index_include => 'html',
-            index_template => 'index.htm',
+            template_file => 'index.htm',
+            data_pkg => 'App::Followme::WebData',
            );
 }
 
 #----------------------------------------------------------------------
-#  Create an index to all files in a directory with a specified extension
+#  Create an index to all files in a folder with a specified extension
 
 sub run {
-    my ($self, $directory) = @_;
+    my ($self, $folder) = @_;
 
-    my $index_name = fio_full_file_name($directory, $self->{index_file});
-    my $template_name = $self->get_template_name($self->{index_template});
-
-    my $pattern = $self->get_included_files();
-    my $filename = fio_most_recent_file($directory, $pattern);
-
-    return if fio_is_newer($index_name, $template_name, $filename);
-
-    eval {$self->create_an_index($directory, $index_name)};
-    warn "$index_name: $@" if $@;
+    eval {$self->update_folder($folder)};
+    $self->check_error($@, $folder);
 
     return;
 }
 
 #----------------------------------------------------------------------
-# Build a url from a filename
+# Find files in directory to convert and do that
 
-sub build_url {
-    my ($self, $data, $directory, $filename) = @_;
+sub update_folder {
+    my ($self, $folder) = @_;
 
-    $data->{url} = fio_filename_to_url($directory, $filename);
-    $data->{absolute_url} = '/' . fio_filename_to_url($self->{top_directory},
-                                                      $filename);
+    my $index_file = $self->to_file($folder);
+    my $template_file = $self->get_template_name($self->{template_file});
+    my $newest_file = $self->{data}->build('newest_file', $index_file);
 
-    return $data;
-}
+    unless (fio_is_newer($index_file, $template_file, @$newest_file)) {
+        my $page = $self->render_file($self->{template_file}, $index_file);
+        my $prototype_file = $self->find_prototype();
 
-#----------------------------------------------------------------------
-# Create the index file for a directory
-
-sub create_an_index {
-    my ($self, $directory, $index_name) = @_;
-
-    my $data = $self->set_fields($directory, $index_name);
-    $data->{loop} = $self->index_data($directory);
-
-    my $render = $self->make_template($index_name, $self->{index_template});
-    my $page = $render->($data);
-
-    fio_write_page($index_name, $page);
-    return;
-}
-
-#----------------------------------------------------------------------
-# Get the list of excluded files
-
-sub get_excluded_files {
-    my ($self) = @_;
-
-    my ($dir, $file) = fio_split_filename($self->{index_file});
-    return $file;
-}
-
-#----------------------------------------------------------------------
-# Get the list of included files
-
-sub get_included_files {
-    my ($self) = @_;
-    return $self->{index_include};
-}
-
-#----------------------------------------------------------------------
-# Get data to be interpolated into template
-
-sub index_data {
-    my ($self, $directory) = @_;
-
-    my ($filenames, $directories) = fio_visit($directory);
-
-    my @index_data;
-    foreach my $filename (@$filenames) {
-        next unless $self->match_file($filename);
-        push(@index_data, $self->set_fields($directory, $filename));
+        $page = $self->reformat_file($prototype_file, $index_file, $page);
+        fio_write_page($index_file, $page);
     }
 
-    return \@index_data;
+    return;
 }
 
 1;
@@ -138,55 +86,21 @@ substituted into a template to produce the index. Loop comments that look like
 indicate the section of the template that is repeated for each file contained
 in the index.
 
-=over 4
-
-=item absolute_url
-
-The absolute_url of the web page.
-
-=item body
-
-If a file is a web (html) file, the body is all the text inside the content tags
-in an page.
-
-=item title
-
-If the file is a web (html) file, the title is the text contained in the header
-tags at the top of the page. if not, the title of the page is derived from the
-file name by removing the filename extension, removing any leading
-digits,replacing dashes with spaces, and capitalizing the first character of
-each word.
-
-=item url
-
-The relative url of each file.
-
-=item time fields
-
-The variables calculated from the modification time are: C<weekday, month,>
-C<monthnum, day, year, hour24, hour, ampm, minute,> and C<second.>
-
-=back
-
 =head1 CONFIGURATION
 
 The following fields in the configuration file are used:
 
 =over 4
 
-=item index_file
-
-Name of the index file to be created
-
-=item index_include
-
-A comma separated list of filename patterns used to create the index
-
-=item index_template
+=item template_file
 
 The name of the template file. The template file is either in the same
 directory as the configuration file used to invoke this method, or if not
 there, in the templates subdirectory.
+
+=item metadata_pkg
+
+The name of the class used to find and parse files included in the index.
 
 =back
 

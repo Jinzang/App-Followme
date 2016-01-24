@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 12;
+use Test::More tests => 8;
 
 use Cwd;
 use IO::File;
@@ -28,74 +28,170 @@ mkdir $test_dir;
 chdir $test_dir;
 $test_dir = cwd();
 
+my $subdir = catfile($test_dir, 'sub');
+mkdir ($subdir);
+
+my $template_file = 'template.htm';
+
 #----------------------------------------------------------------------
-# Test builders
+# Create object
+
+my $obj = App::Followme::Module->new(template_directory => 'sub',
+                                     template_file => $template_file);
+
+isa_ok($obj, "App::Followme::Module"); # test 1
+can_ok($obj, qw(new run)); # test 2
+
+#----------------------------------------------------------------------
+# Write test pages
 
 do {
-    chdir($test_dir);
-    mkdir('watch');
+       my $template = <<'EOQ';
+<html>
+<head>
+<!-- section meta -->
+<title>$title</title>
+<meta name="date" content="$date" />
+<!-- endsection meta -->
+</head>
+<body>
+<!-- section primary -->
+<h1>$title</h1>
 
-    my $data = {};
-    my $mo = App::Followme::Module->new;
-    my $text_name = catfile('watch','this-is-only-a-test.txt');
+$body
+<!-- endsection primary -->
 
-    $data = $mo->build_title_from_filename($data, $text_name);
-    my $title_ok = 'This Is Only A Test';
-    is($data->{title}, $title_ok, 'Build file title'); # test 1
-
-    my $index_name = catfile('watch','index.html');
-    $data = $mo->build_title_from_filename($data, $index_name);
-    $title_ok = 'Watch';
-    is($data->{title}, $title_ok, 'Build directory title'); # test 2
-
-    $data = $mo->build_is_index($data, $text_name);
-    is($data->{is_index}, 0, 'Regular file in not index'); # test 3
-
-    $data = $mo->build_is_index($data, $index_name);
-    is($data->{is_index}, 1, 'Index file is index'); # test 4
-
-    $data = $mo->build_url($data, $test_dir, $text_name);
-    my $url_ok = 'watch/this-is-only-a-test.html';
-    is($data->{url}, $url_ok, 'Build a relative file url'); # test 5
-
-    $url_ok = '/' . $url_ok;
-    is($data->{absolute_url}, $url_ok, 'Build an absolute file url'); # test 6
-
-    my $breadcrumbs_ok = [{title => 'Test', url => '/index.html'},
-                          {title => 'Watch', url => '/watch/index.html'}];
-
-    is_deeply($data->{breadcrumbs}, $breadcrumbs_ok,
-              'Build breadcrumbs'); # test 7
-
-    $data = $mo->build_url($data, $test_dir, 'watch');
-    is($data->{url}, 'watch/index.html', 'Build directory url'); #test 8
-
-    $data = {};
-    my $date = $mo->build_date($data, 'two.html');
-    my @date_fields = grep {/\S/} sort keys %$date;
-    my @date_ok = sort qw(day month monthnum  weekday
-                          hour24 hour minute second year ampm);
-    is_deeply(\@date_fields, \@date_ok, 'Build date'); # test 9
-
-    $data = {};
-    $data = $mo->external_fields($data, $test_dir, 'two.html');
-    my @keys = sort keys %$data;
-    my @keys_ok = sort(@date_ok, 'absolute_url', 'breadcrumbs',
-                       'title', 'url', 'is_index');
-    is_deeply(\@keys, \@keys_ok, 'Get data for file'); # test 10
-
-    my $body = <<'EOQ';
-    <h2>The title</h2>
-
-    <p>The body
-</p>
+<ul>
+<!-- section nav -->
+<!-- endsection nav -->
+</ul>
+</body>
+</html>
 EOQ
 
-    $data = {body => $body};
-    $data = $mo->build_title_from_header($data);
-    is($data->{title}, 'The title', 'Get title from header'); # test 11
+   fio_write_page($template_file, $template);
 
-    $data = $mo->build_summary($data);
-    is($data->{summary}, "The body\n", 'Get summary'); # test 12
+   my $code = <<'EOQ';
+<html>
+<head>
+<meta name="robots" content="archive">
+<!-- section meta -->
+<title>Page %%</title>
+<!-- endsection meta -->
+</head>
+<body>
+<!-- section primary -->
+<h1>%%</h1>
+
+<p>This is paragraph %%</p>
+<!-- endsection primary -->
+<ul>
+<li><a href="">&& link</a></li>
+<!-- section nav -->
+<li><a href="">link %%</a></li>
+<!-- endsection nav -->
+</ul>
+</body>
+</html>
+EOQ
+
+    foreach my $dir (('sub', '')) {
+        foreach my $count (qw(four three two one)) {
+            my $output = $code;
+            my $dir_name = $dir ? $dir : 'top';
+
+            $output =~ s/%%/$count/g;
+            $output =~ s/&&/$dir_name/g;
+
+            my @dirs;
+            push(@dirs, $test_dir);
+            push(@dirs, $dir) if $dir;
+            my $filename = catfile(@dirs, "$count.html");
+
+            fio_write_page($filename, $output);
+            sleep(2);
+        }
+    }
 };
 
+#----------------------------------------------------------------------
+# Test find prototype
+
+do {
+    my $subdir = catfile($test_dir, 'sub');
+    my $prototype = $obj->find_prototype($subdir, 0);
+
+    my $prototype_ok = catfile($subdir, 'one.html');
+    is($prototype, $prototype_ok, 'Find prototype in current directory'); # test 3
+
+    $prototype = $obj->find_prototype($subdir, 1);
+    $prototype_ok = catfile($test_dir, 'one.html');
+    is($prototype, $prototype_ok, 'Find prototype in directory above'); # test 4
+
+};
+
+#----------------------------------------------------------------------
+# Test get template
+
+do {
+    my $template_file = 'three.html';
+    my $template = $obj->get_template_name($template_file);
+    my $template_ok = catfile($test_dir, $template_file);
+    is($template, $template_ok, 'Get template name'); # test 5
+};
+
+#----------------------------------------------------------------------
+# Test read configuration
+
+do {
+    my %configuration = ('' => {one => 1, two => 2});
+    my $app = App::Followme::Module->new();
+
+    my $source = <<'EOQ';
+# Test configuration file
+
+three = 3
+four = 4
+
+run_after = App::Followme::CreateSitemap
+
+EOQ
+
+    my $filename = 'test.cfg';
+    my $fd = IO::File->new($filename, 'w');
+    print $fd $source;
+    close($fd);
+
+    %configuration = $app->read_configuration($filename, %configuration);
+
+    my %configuration_ok = ('' => {one => 1, two => 2,
+                                   three => 3, four => 4,
+                                   run_before => [],
+                                   run_after => ['App::Followme::CreateSitemap'],
+                                  }
+                           );
+
+    is_deeply(\%configuration, \%configuration_ok,
+              'Read configuration'); # test 6
+};
+
+#----------------------------------------------------------------------
+# Test reformat file
+
+do {
+    my $three = 'three.html';
+    my $prototype = catfile($test_dir, 'one.html');
+    my $file = catfile($subdir, $three);
+
+    my $page = $obj->reformat_file($prototype, $file);
+    like($page, qr(top link), 'Reformat file'); # test 7
+};
+
+#----------------------------------------------------------------------
+# Test render file
+
+do {
+   my $page = $obj->render_file('one.html');
+
+   like($page, qr(Page one), 'render file'); # test 8
+};

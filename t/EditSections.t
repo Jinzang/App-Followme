@@ -1,7 +1,7 @@
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 5;
+use Test::More tests => 11;
 
 #----------------------------------------------------------------------
 # Load package
@@ -20,10 +20,12 @@ my $test_dir = catdir(@path, 'test');
 
 rmtree($test_dir);
 mkdir $test_dir;
+mkdir catfile($test_dir, "sub");
 chdir $test_dir;
 
 my %configuration = (
                     remove_comments => 0,
+                    data_pkg => 'App::Followme::WebData',
                     );
 
 #----------------------------------------------------------------------
@@ -54,23 +56,27 @@ EOQ
 
     my $es = App::Followme::EditSections->new(%configuration);
 
-    foreach my $count (qw(four three two one)) {
-        my $output = $page;
+    foreach my $dir (('sub', '')) {
+        foreach my $count (qw(four three two one)) {
+            my $output = $page;
 
-        $output =~ s/%%/$count/g;
+            $output =~ s/%%/$count/g;
 
-        if ($count eq 'one') {
-            $output =~ s/begin/section/g;
-            $output =~ s/end/endsection/g;
+            my $filename = $dir ? catfile($dir, $count) : $count;
+            $filename .= '.html';
+
+            if ($filename eq 'one.html') {
+                $output =~ s/begin/section/g;
+                $output =~ s/end/endsection/g;
+            }
+
+            fio_write_page($filename, $output);
+            sleep(2);
         }
-
-        my $filename = "$count.html";
-        fio_write_page($filename, $output);
-        sleep(2);
     }
-};
 
 #----------------------------------------------------------------------
+};
 # Test comment removal
 
 do {
@@ -98,35 +104,35 @@ do {
 };
 
 #----------------------------------------------------------------------
-# Test update page
+# Test update folder
 
 do {
     my $es = App::Followme::EditSections->new(%configuration);
 
     my $prototype = $es->strip_comments('one.html', 1);
-    my $output = $es->update_page('two.html', $prototype);
+    $es->update_folder($test_dir);
 
-    my $output_ok = <<EOQ;
+    my $output_template = <<EOQ;
 <html>
 <head>
 <meta name="robots" content="archive">
 <!-- section meta -->
 <!-- begin meta -->
-<title>page two</title>
+<title>page %%</title>
 <!-- end meta -->
 <!-- endsection meta -->
 </head>
 <body>
 <!-- section content -->
 <!-- begin content -->
-<h1>page two</h1>
+<h1>page %%</h1>
 <!-- end content -->
 <!-- endsection content -->
 <ul>
 <li><a href="">&& link</a></li>
 <!-- section nav -->
 <!-- begin nav -->
-<li><a href="">link two</a></li>
+<li><a href="">link %%</a></li>
 <!-- end nav -->
 <!-- endsection nav -->
 </ul>
@@ -134,5 +140,19 @@ do {
 </html>
 EOQ
 
-    is($output, $output_ok, 'update page'); # test 5
+    foreach my $dir (('sub', '')) {
+        for my $count (qw(one two three four)) {
+            my $file = $dir ? catfile($dir, $count) : $count;
+            next if $file eq 'one';
+
+            $file .= '.html';
+            my $output = fio_read_page($file);
+
+            my $output_ok = $output_template;
+            $output_ok =~ s/%%/$count/g;
+
+            is($output, $output_ok, "update file $file"); # test 5-11
+        }
+    }
+
 };

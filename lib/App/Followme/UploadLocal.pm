@@ -33,11 +33,11 @@ sub add_directory {
     my ($self, $dir) = @_;
 
     my $new_dir = catfile($self->{remote_directory}, $dir);
-    my $status = mkdir($dir);
+    my $status = mkdir($new_dir);
 
     if ($status) {
-        my $permissions = $self->{permissions} || 0111;
-        chmod($self->{permissions}, $new_dir);
+        my $permissions = $self->{permissions} | 0111;
+        chmod($permissions, $new_dir);
     }
 
     return $status;
@@ -57,7 +57,7 @@ sub add_file {
 }
 
 #----------------------------------------------------------------------
-# Close the ftp connection
+# Close the connection
 
 sub close {
     my ($self) = @_;

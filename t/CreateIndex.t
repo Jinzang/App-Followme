@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 5;
+use Test::More tests => 8;
 
 #----------------------------------------------------------------------
 # Load package
@@ -24,8 +24,28 @@ my $test_dir = catdir(@path, 'test');
 
 rmtree($test_dir);
 mkdir $test_dir;
-mkdir catfile($test_dir, "sub");
+
 chdir $test_dir;
+
+my $archive_dir = catfile($test_dir, 'archive');
+mkdir($archive_dir);
+
+#----------------------------------------------------------------------
+# Create object
+
+my $template_file = 'template.htm';
+my $prototype_file = 'index.html';
+
+my %configuration = (
+        template_directory => $test_dir,
+        template_file => $template_file,
+        web_extension => 'html',
+        );
+
+my $idx = App::Followme::CreateIndex->new(%configuration);
+
+isa_ok($idx, "App::Followme::CreateIndex"); # test 1
+can_ok($idx, qw(new run)); # test 2
 
 #----------------------------------------------------------------------
 # Create indexes
@@ -40,11 +60,14 @@ do {
 <!-- endsection meta -->
 </head>
 <body>
-<!-- section content -->
+<!-- section primary -->
+<p>My latest posts.</p>
+<!-- endsection primary -->
+<!-- section secondary -->
 <h1>Post %%</h1>
 
 <p>All about %%.</p>
-<!-- endsection content -->
+<!-- endsection secondary -->
 </body>
 </html>
 EOQ
@@ -58,15 +81,15 @@ EOQ
 <!-- endsection meta -->
 </head>
 <body>
-<!-- section content -->
+<!-- section secondary -->
 <h1>$title</h1>
 
 <ul>
-<!-- for @loop -->
+<!-- for @files -->
 <li><a href="$url">$title</a></li>
 <!-- endfor -->
 </ul>
-<!-- endsection content -->
+<!-- endsection secondary -->
 </body>
 </html>
 EOQ
@@ -78,24 +101,11 @@ my $body_ok = <<'EOQ';
 <p>All about three.</p>
 EOQ
 
-    my $template_name = 'index_template.htm';
+    fio_write_page($template_file, $index_template);
 
-    my %configuration = (
-            include_directories => 1,
-            index_include => '*.html',
-            index_template => $template_name,
-            index_file => 'index.html',
-            web_extension => 'html',
-            );
-
-    my $idx = App::Followme::CreateIndex->new(%configuration);
-    fio_write_page($template_name, $index_template);
-
-    my $archive_dir = catfile($test_dir, 'archive');
-    mkdir($archive_dir);
     chdir($archive_dir);
-
     my @archived_files;
+
     foreach my $count (qw(four three two one)) {
         my $output = $page;
         $output =~ s/%%/$count/g;
@@ -105,18 +115,21 @@ EOQ
         push(@archived_files, $filename);
     }
 
-    my $data = $idx->index_data($archive_dir);
-    is($data->[0]{title}, 'Post four', 'Index first page title'); # test 1
-    is($data->[3]{title}, 'Post two', 'Index last page title'); # test 2
+    chdir($test_dir);
 
-    my $index_name = fio_full_file_name($archive_dir, $idx->{index_file});
-    $idx->create_an_index($archive_dir, $index_name);
+    $idx->run($archive_dir);
+    my ($index_name) = fio_to_file($archive_dir, $configuration{web_extension});
+
     $page = fio_read_page($index_name);
+    ok($page, 'Write index page'); # test 3
 
-    like($page, qr/<title>Archive<\/title>/, 'Write index title'); # test 3
-    like($page, qr/<li><a href="two.html">Post two<\/a><\/li>/,
-       'Write index link'); #test 4
+    like($page, qr/Post four/, 'Index first page title'); # test 4
+    like($page, qr/Post two/, 'Index last page title'); # test 5
+
+    like($page, qr/<title>Archive<\/title>/, 'Write index title'); # test 6
+    like($page, qr/<li><a href="archive\/two.html">Post two<\/a><\/li>/,
+       'Write index link'); #test 7
 
     my $pos = index($page, $index_name);
-    is($pos, -1, 'Exclude index file'); # test 5
+    is($pos, -1, 'Exclude index file'); # test 8
 };

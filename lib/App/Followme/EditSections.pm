@@ -28,13 +28,9 @@ sub parameters {
 # Modify pages to match the most recently modified page
 
 sub run {
-    my ($self, $directory) = @_;
+    my ($self, $folder) = @_;
 
-    my $prototype_file = $self->find_prototype($directory, 0);
-    my $prototype = $self->strip_comments($prototype_file, 1);
-
-    $self->update_directory($directory, $prototype);
-
+    $self->update_folder($folder);
     return;
 }
 
@@ -92,9 +88,9 @@ sub find_location {
 # Read page and strip comments
 
 sub strip_comments {
-    my ($self, $filename, $keep_sections) = @_;
+    my ($self, $file, $keep_sections) = @_;
 
-    my $page = fio_read_page($filename);
+    my $page = fio_read_page($file);
     die "Could not read page" unless length($page);
 
     my @output;
@@ -114,43 +110,12 @@ sub strip_comments {
 }
 
 #----------------------------------------------------------------------
-# Edit all files in the directory
-
-sub update_directory {
-    my ($self, $directory, $prototype) = @_;
-
-    my ($filenames, $directories) = $self->visit($directory);
-
-    foreach my $filename (@$filenames) {
-        next unless $self->match_file($filename);
-
-        my $page;
-        eval {
-            $page = $self->update_page($filename, $prototype);
-        };
-
-        if ($@) {
-            warn "$filename: $@";
-        } else {
-            fio_write_page($filename, $page);
-        }
-    }
-
-    for my $subdirectory (@$directories) {
-        next unless $self->search_directory($directory);
-        $self->update_directory($subdirectory, $prototype);
-    }
-
-    return;
-}
-
-#----------------------------------------------------------------------
 # Parse prototype and page and combine them
 
-sub update_page {
-    my ($self, $filename, $prototype) = @_;
+sub update_file {
+    my ($self, $file, $prototype) = @_;
 
-    my $page = $self->strip_comments($filename, 0);
+    my $page = $self->strip_comments($file, 0);
 
     my @output;
     my $notfound;
@@ -177,7 +142,38 @@ sub update_page {
     push(@output, $page);
 
     die "Could not locate tags\n" if $notfound;
-    return join('', @output);
+
+    fio_write_page($file, join('', @output));
+    return;
+}
+
+#----------------------------------------------------------------------
+# Edit all files in the directory
+
+sub update_folder {
+    my ($self, $folder, $prototype_file, $prototype) = @_;
+
+    my $index_file = $self->to_file($folder);
+    my $files = $self->{data}->build('files', $index_file);
+
+    unless (defined $prototype_file) {
+        if (@$files) {
+            $prototype_file = shift(@$files);
+            $prototype =  $self->strip_comments($prototype_file, 1);
+        }
+    }
+
+    foreach my $file (@$files) {
+        eval {$self->update_file($file, $prototype)};
+        $self->check_error($@, $folder);
+    }
+
+    my $folders = $self->{data}->build('folders', $index_file);
+    for my $subfolder (@$folders) {
+        $self->update_folder($subfolder, $prototype_file, $prototype);
+    }
+
+    return;
 }
 
 1;

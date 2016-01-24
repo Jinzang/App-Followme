@@ -20,94 +20,64 @@ sub parameters {
     my ($pkg) = @_;
 
     return (
-            text_extension => 'md',
-            page_template => 'page.htm',
-            empty_element_suffix => '/>',
-            tab_width => 4,
-            trust_list_start_value => 0,
+            template_file => 'convert_page.htm',
+            data_pkg => 'App::Followme::MarkdownData',
     );
 }
 
 #----------------------------------------------------------------------
-# Convert markdown files to html
+# Convert files to html
 
 sub run {
-    my ($self, $directory) = @_;
+    my ($self, $folder) = @_;
 
-    my ($filenames, $directories) = fio_visit($directory);
-
-    foreach my $filename (@$filenames) {
-        next unless $self->match_file($filename);
-
-        eval {$self->convert_a_file($directory, $filename)};
-        warn "$filename: $@" if $@;
-    }
-
-    return if $self->{quick_update};
-
-    foreach my $directory (@$directories) {
-        next unless $self->search_directory($directory);
-        $self->run($directory);
-    }
-
+    $self->update_folder($folder);
     return;
 }
 
 #----------------------------------------------------------------------
 # Convert a single file
 
-sub convert_a_file {
-    my ($self, $directory, $filename) = @_;
+sub update_file {
+    my ($self, $prototype, $file) = @_;
 
-    my $new_file = $filename;
+    my $date = $self->{data}->build('date', $file);
+
+    my $new_file = $file;
     $new_file =~ s/\.[^\.]*$/.$self->{web_extension}/;
 
-    my $render = $self->make_template($new_file, $self->{page_template});
-    my $data = $self->set_fields($directory, $filename);
-    my $page = $render->($data);
+    my $page = $self->render_file($self->{template_file}, $file);
+    $page = $self->reformat_file($prototype, $new_file, $page);
 
     fio_write_page($new_file, $page);
-    unlink($filename);
+    fio_set_date($new_file, $$date);
+    unlink($file);
 
     return;
 }
 
 #----------------------------------------------------------------------
-# Get the list of included files
+# Find files in directory to convert and do that
 
-sub get_included_files {
-    my ($self) = @_;
-    return "*.$self->{text_extension}";
-}
+sub update_folder {
+    my ($self, $folder) = @_;
 
-#----------------------------------------------------------------------
-# Get fields from reading the file
+    my $index_file = $self->to_file($folder);
+    my $files = $self->{data}->build('files', $index_file);
 
-sub internal_fields {
-    my ($self, $data, $filename) = @_;
-
-    my $text = fio_read_page($filename);
-    die "Couldn't read\n" unless defined $text;
-
-    $data->{body} = $self->{md}->markdown($text);
-    $data = $self->build_title_from_header($data);
-
-    return $data;
-}
-
-#----------------------------------------------------------------------
-# Create markdown object and add it to self
-
-sub setup {
-    my ($self, $configuration) = @_;
-
-    my %params;
-    for my $field (qw(empty_element_suffix tab_width
-                      trust_list_start_value)) {
-        $params{$field} = $self->{$field};
+    my $prototype;
+    foreach my $file (@$files) {
+        my $prototype ||= $self->find_prototype($folder, 0);
+        eval {$self->update_file($prototype, $file)};
+        $self->check_error($@, $file);
     }
 
-    $self->{md} = Text::Markdown->new(%params);
+    if (! $self->{quick_update}) {
+        my $folders = $self->{data}->build('folders', $folder);
+        foreach my $subfolder (@$folders) {
+            $self->update_folder($subfolder);
+        }
+    }
 
     return;
 }
@@ -125,7 +95,7 @@ App::Followme::ConvertPage - Convert Markdown files to html
 
     use App::Followme::ConvertPage;
     my $converter = App::Followme::ConvertPage->new($configuration);
-    $converter->run($directory);
+    $converter->run($folder);
 
 =head1 DESCRIPTION
 
@@ -140,51 +110,17 @@ a dollar sign. Thus a link would look like:
 
     <li><a href="$url">$title</a></li>
 
-The variables that are calculated for each markdown file are:
-
-=over 4
-
-=item body
-
-All the contents of the file, minus the title if there is one. Markdown is
-called on the file's content to generate html before being stored in the body
-variable.
-
-=item title
-
-The title of the page is derived from contents of the top header tag, if one is
-at the front of the file content, or the filename, if it is not.
-
-=item time fields
-
-The variables calculated from the modification time are: C<weekday, month,>
-C<monthnum, day, year, hour24, hour, ampm, minute,> and C<second.>
-
-=item url
-
-The url of the html file built from the Markdown file.
-
-=back
-
 =head1 CONFIGURATION
 
 The following parameters are used from the configuration:
 
 =over 4
 
-=item page_template
+=item template_file
 
-The name of the template file. The template file is either in the same
-directory as the configuration file used to invoke this method, or if not
-there, in the templates subdirectory.
-
-=item text_extension
-
-The extension of files that are converted to web pages. The default value
-is md.
-
-The remaining parameters are passed unchanged to L<Text::Markdown>. You
-should not need to change them.
+The name of the template file. The template file is either in the current
+directory, in the same directory as the configuration file used to invoke this
+method, or if not there, in the templates subdirectory.
 
 =back
 

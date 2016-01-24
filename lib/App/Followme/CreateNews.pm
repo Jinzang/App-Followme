@@ -19,11 +19,9 @@ sub parameters {
     my ($pkg) = @_;
 
     return (
-            news_file => '../blog.html',
-            news_index_file => 'index.html',
             news_index_length => 5,
-            news_template => 'news.htm',
-            news_index_template => 'news_index.htm',
+            news_template_file => 'news.htm',
+            index_template_file => 'news_index.htm',
            );
 }
 
@@ -31,216 +29,56 @@ sub parameters {
 # Create a page of recent news items and indexes in each subdirectory
 
 sub run {
-    my ($self, $directory) = @_;
+    my ($self, $folder) = @_;
 
-    eval {
-        $self->create_news_indexes($self->{base_directory});
-        $self->create_recent_news($self->{base_directory});
-        };
+    if ($self->{quick_mode}) {
+        eval {$self->update_folder($folder)};
+        $self->check_error($@, $folder);
 
-    if ($@) {
-        my $news_file = fio_full_file_name($self->{base_directory},
-                                           $self->{news_file});
-        die "$news_file: $@\n";
+        eval{$self->update_folder($self->{base_directory})};
+        $self->check_error($@, $self->{base_directory});
+
+    } else {
+        eval{$self->update_folder($folder)};
+        $self->check_error($@, $folder);
     }
 
     return;
 }
 
 #----------------------------------------------------------------------
-# Create an index file
+# Update the index files in each directory
 
-sub create_an_index {
-    my ($self, $directory, $directories, $filenames) = @_;
+sub update_folder {
+    my ($self, $folder) = @_;
 
-    # Don't re-create index if directory and template haven't changed
+    my $index_file = $self->to_file($folder);
+    my $newest_file = $self->{data}->build('newest_file', $index_file);
 
-    my $template_name = $self->get_template_name($self->{news_index_template});
-    my $index_name = fio_full_file_name($directory, $self->{news_index_file});
-    my @directories = fio_to_file($self->{web_extension}, @$directories);
-
-    return if fio_is_newer($index_name,
-                           $template_name,
-                           @directories,
-                           @$filenames);
-
-    my $data = $self->set_fields($directory, $index_name);
-    $data->{loop} = $self->index_data($directory, $directories, $filenames);
-
-    my $render = $self->make_template($index_name, $self->{news_index_template});
-
-    my $page = $render->($data);
-    fio_write_page($index_name, $page);
-
-    return;
-}
-
-#----------------------------------------------------------------------
-# Create news indexes for directory and its subdirectories
-
-sub create_news_indexes {
-    my ($self, $directory) = @_;
-
-    my ($filenames, $directories) = fio_visit($directory);
-
-    foreach my $subdirectory (@$directories) {
-        $self->create_news_indexes($subdirectory);
+    my $template_file;
+    if (fio_same_file($folder, $self->{base_directory})) {
+        $template_file = $self->get_template_name($self->{news_template_file});
+    } else {
+        $template_file = $self->get_template_name($self->{index_template_file});
     }
 
-    $self->create_an_index($directory, $directories, $filenames);
-    return;
-}
+    unless (fio_is_newer($index_file, $template_file, @$newest_file)) {
+        my $page = $self->render_file($template_file, $index_file);
+        my $prototype_file = $self->find_prototype();
 
-#----------------------------------------------------------------------
-# Create the file containing recent news
-
-sub create_recent_news {
-    my ($self, $directory) = @_;
-
-    # Get the names of the more recent files
-
-    my $file;
-    my $recent_files = $self->recent_files($directory);
-
-    my $news_file = fio_full_file_name($directory, $self->{news_file});
-    ($directory, $file) = fio_split_filename($news_file);
-
-    my $template_name = $self->get_template_name($directory,
-                                                 $self->{news_template});
-
-    # Don't create news if no files have changed
-
-    return if fio_is_newer($news_file, $template_name, @$recent_files);
-    return unless @$recent_files;
-
-    # Get the data for these files
-    my $data = $self->recent_data($recent_files, $directory, $news_file);
-
-    # Interpolate the data into the template and write the file
-
-    my $render = $self->make_template($news_file, $self->{news_template});
-    my $page = $render->($data);
-    fio_write_page($news_file, $page);
-
-    return;
-}
-
-#----------------------------------------------------------------------
-# Get the list of excluded files
-
-sub get_excluded_files {
-    my ($self) = @_;
-
-    my @excluded;
-    foreach my $filename ($self->{news_file}, $self->{news_index_file}) {
-        my ($dir, $file) = fio_split_filename($filename);
-        push(@excluded, $file);
+        $page = $self->reformat_file($prototype_file, $index_file, $page);
+        fio_write_page($index_file, $page);
     }
 
-    return join(',', @excluded);
-}
-
-#----------------------------------------------------------------------
-# Get data to be interpolated into template
-
-sub index_data {
-    my ($self, $directory, $directories, $filenames) = @_;
-
-    my @index_data;
-    foreach my $filename (@$directories) {
-        next unless $self->search_directory($filename);
-        push(@index_data, $self->set_fields($directory, $filename));
-    }
-
-    foreach my $filename (@$filenames) {
-        next unless $self->match_file($filename);
-        push(@index_data, $self->set_fields($directory, $filename));
-    }
-
-    return \@index_data;
-}
-
-#----------------------------------------------------------------------
-# Get the more recently changed files
-
-sub more_recent_files {
-    my ($self, $directory, $filenames, $augmented_files) = @_;
-
-    # Skip chcking the directory if it is older than the oldest recent file
-
-    my $limit = $self->{news_index_length};
-    my @directory = fio_to_file($self->{web_extension}, $directory);
-
-    return $augmented_files if @$augmented_files >= $limit &&
-        fio_is_newer($augmented_files->[0][1], @directory);
-
-    # Add file to list of recent files if modified more recently than others
-
-    foreach my $filename (@$filenames) {
-        next unless $self->match_file($filename);
-
-        my $date = fio_get_date($filename);
-        if (@$augmented_files < $limit || $date > $augmented_files->[0][0]) {
-
-            shift(@$augmented_files) if @$augmented_files >= $limit;
-            push(@$augmented_files, [$date, $filename]);
-
-            @$augmented_files = sort {$a->[0] <=> $b->[0]} @$augmented_files;
+    unless ($self->{quick_mode}) {
+        my $folders = $self->{data}->build('folders', $index_file);
+        foreach my $subfolder (@$folders) {
+            eval {$self->update_folder($subfolder)};
+            $self->check_error($@, $subfolder);
         }
     }
 
-    return $augmented_files;
-}
-
-#----------------------------------------------------------------------
-# Get the data used to construct the index to the more recent files
-
-sub recent_data {
-    my ($self, $recent_files, $directory, $news_file) = @_;
-
-   my @recent_data;
-    for my $file (@$recent_files) {
-        push(@recent_data, $self->set_fields($directory, $file));
-    }
-
-    my $data = $self->set_fields($directory, $news_file);
-    $data->{loop} = \@recent_data;
-    return $data;
-}
-
-#----------------------------------------------------------------------
-# Get a list of recently modified files
-
-sub recent_files {
-    my ($self, $directory) = @_;
-
-    my $augmented_files = [];
-    $augmented_files = $self->update_filelist($directory, $augmented_files);
-
-    my @recent_files = map {$_->[1]} @$augmented_files;
-    @recent_files = reverse @recent_files if @recent_files > 1;
-
-    return \@recent_files;
-}
-
-#----------------------------------------------------------------------
-# Return most recent files
-
-sub update_filelist {
-    my ($self, $directory, $augmented_files) = @_;
-
-    my ($filenames, $directories) = fio_visit($directory);
-
-    $augmented_files = $self->more_recent_files($directory,
-                                                $filenames,
-                                                $augmented_files);
-
-    foreach my $subdirectory (@$directories) {
-        $augmented_files = $self->update_filelist($subdirectory,
-                                                  $augmented_files);
-    }
-
-    return $augmented_files;
+    return;
 }
 
 1;
@@ -303,14 +141,6 @@ C<monthnum, day, year, hour24, hour, ampm, minute,> and C<second.>
 The following fields in the configuration file are used:
 
 =over 4
-
-=item news_file
-
-Name of the file containing recent news items, relative to the base directory.
-
-=item news_index_file
-
-Name of the index files to be created in each directory.
 
 =item news_index_length
 
