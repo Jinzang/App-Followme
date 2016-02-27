@@ -116,7 +116,7 @@ sub initialize {
     $self->add_configurations($pkg, %configuration);
     $self->add_subpackages(%configuration);
 
-    $self->setup() if defined &{"${pkg}::setup"};
+    $self->setup(%configuration) if defined &{"${pkg}::setup"};
     return;
 }
 
@@ -124,7 +124,7 @@ sub initialize {
 # Set up object fields (stub)
 
 sub setup {
-    my ($self) = @_;
+    my ($self, %configuration) = @_;
     return;
 }
 

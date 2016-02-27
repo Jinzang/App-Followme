@@ -39,7 +39,7 @@ sub fetch_as_html {
 # Create markdown object and add it to self
 
 sub setup {
-    my ($self) = @_;
+    my ($self, %configuration) = @_;
 
     my %params;
     for my $field (qw(empty_element_suffix tab_width

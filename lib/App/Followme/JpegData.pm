@@ -27,32 +27,15 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Fetch data from all its possible sources
+# Look in the file for the data
 
-sub fetch_data {
-    my ($self, $name, $filename, $loop) = @_;
+sub fetch_from_file {
+    my ($self, $filename) = @_;
 
-    # Check to see if you can get data without opening file
-    $self->check_filename($name, $filename);
-    my %data = $self->gather_data('get', $name, $filename, $loop);
+    return () unless -e $filename;
+    return $self->SUPER::fetch_from_file($filename) if -T $filename;
 
-    unless (exists $data{$name}) {
-        my $photo = $self->read_photo($filename);
-        %data = (%data, $self->fetch_dimensions($photo));
-    }
-
-    # If not found in the file, calculate from other fields
-    %data = (%data, $self->gather_data('calculate', $name, $filename, $loop))
-            unless exists $data{$name};
-
-    return %data;
-}
-
-#----------------------------------------------------------------------
-#
-
-sub fetch_dimensions {
-    my ($self, $photo) = @_;
+    my $photo = $self->read_photo($filename);
 
     my %dimensions;
     ($dimensions{width}, $dimensions{height}) = $photo->getBounds();
@@ -74,6 +57,16 @@ sub get_thumb_file {
     return [$photoname];
 }
 
+#----------------------------------------------------------------------
+# Get a url from a filename
+
+sub get_url {
+    my ($self, $filename) = @_;
+
+    return $self->filename_to_url($self->{base_directory},
+                                  $filename);
+}
+
 #---------------------------------------------------------------------------
 # Read a photo
 
@@ -91,7 +84,7 @@ sub read_photo {
 # Set up exclude
 
 sub setup {
-    my ($self) = @_;
+    my ($self, %configuration) = @_;
 
     my $dir;
     my $thumb_files = $self->get_thumb_file("*.$self->{extension}");

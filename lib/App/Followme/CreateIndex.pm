@@ -21,7 +21,7 @@ sub parameters {
     my ($pkg) = @_;
 
     return (
-            template_file => 'index.htm',
+            template_file => 'create_index.htm',
             data_pkg => 'App::Followme::WebData',
            );
 }

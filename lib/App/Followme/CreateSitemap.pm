@@ -22,6 +22,7 @@ sub parameters {
     return (
             site_url => '',
             sitemap => 'sitemap.txt',
+            data_pkg => 'App::Followme::WebData',
            );
 }
 
@@ -70,7 +71,7 @@ sub list_urls {
 # Clean up parameters passed to this object
 
 sub setup {
-    my ($self) = @_;
+    my ($self, %configuration) = @_;
 
     # Remove any trailing slash
     $self->{site_url} =~ s/\/$//;

@@ -101,25 +101,33 @@ sub fetch_data {
     $self->check_filename($name, $filename);
     my %data = $self->gather_data('get', $name, $filename, $loop);
 
-    unless (exists $data{$name}) {
-        # Need to look in the file for the data
-        my $text = fio_read_page($filename);
-
-        if (defined $text) {
-            my $section = $self->fetch_sections($text);
-
-            # First look in the metadata and then the content
-            my %metadata = $self->fetch_metadata($section->{metadata});
-            my %content = $self->fetch_content($section->{body});
-            %data = (%content, %metadata, %data);
-        }
-    }
+    # Then open the file and try to read the data from it
+    %data = ($self->fetch_from_file($filename), %data)
+            unless exists $data{$name};
 
     # If not found in the file, calculate from other fields
     %data = (%data, $self->gather_data('calculate', $name, $filename, $loop))
             unless exists $data{$name};
 
     return %data;
+}
+
+#----------------------------------------------------------------------
+# Look in the file for the data
+
+sub fetch_from_file {
+    my ($self, $filename) = @_;
+
+    my $text = fio_read_page($filename);
+    return () unless $text;
+
+    my $section = $self->fetch_sections($text);
+
+    # First look in the metadata and then the content
+    my %metadata = $self->fetch_metadata($section->{metadata});
+    my %content = $self->fetch_content($section->{body});
+
+    return (%content, %metadata);
 }
 
 #----------------------------------------------------------------------
@@ -197,14 +205,6 @@ sub format_title {
     }
 
     return $title;
-}
-#----------------------------------------------------------------------
-# Set the regular expression patterns used to match a command
-
-sub setup {
-    my ($self) = @_;
-
-    return;
 }
 
 1;

@@ -26,7 +26,7 @@ sub parameters {
             thumb_height => 0,
             photo_width => 0,
             photo_height => 0,
-            template_file => 'gallery.htm',
+            template_file => 'create_gallery.htm',
             data_pkg => 'App::Followme::JpegData',
             );
 }
@@ -79,19 +79,21 @@ sub new_size {
 }
 
 #---------------------------------------------------------------------------
-# Resize a photo
+# Resize a photo, return undef if it does not need to be resized
 
 sub resize_a_photo {
     my ($self, $file, $new_width, $new_height, $width, $height) = @_;
     return if $width == $new_width && $height == $new_height;
 
-    my $photo = GD::Image->new($width, $height);
-    $photo->copyResampled($file,
+    my $photo = GD::Image->new($file);
+    my $new_photo = GD::Image->new($width, $height);
+
+    $new_photo->copyResampled($photo,
                           0, 0, 0, 0,
                           $new_width, $new_height,
                           $width, $height);
 
-    return $photo;
+    return $new_photo;
 }
 
 #---------------------------------------------------------------------------
@@ -108,25 +110,28 @@ sub resize_photos {
 
         for my $field (qw(thumb photo)) {
 
-            my $width = $self->{data}->build('width', $file);
-            my $height = $self->{data}->build('height', $file);
+            my $width = ${$self->{data}->build('width', $file)};
+            my $height = ${$self->{data}->build('height', $file)};
             my ($new_width, $new_height) =
                 $self->new_size($field, $width, $height);
 
             if ($new_width && $new_height) {
-                my $photo = $self->resize_a_photo($file, $new_width,
-                                                  $new_height, $width, $height);
-                if ($photo) {
+                my $new_photo = $self->resize_a_photo($file,
+                                                      $new_width,
+                                                      $new_height,
+                                                      $width,
+                                                      $height);
+                if ($new_photo) {
                     my $photoname;
                     if ($field eq 'photo') {
                         $photoname = $file;
                     } else {
                         my $thumb_files = $self->{data}->build('thumb_file',
                                                                $file);
-                        my $photoname = $thumb_files->[0];
+                        $photoname = $thumb_files->[0];
                     }
 
-                    $self->write_photo($photoname, $photo);
+                    $self->write_photo($photoname, $new_photo);
                 }
             }
         }

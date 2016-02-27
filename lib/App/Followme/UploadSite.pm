@@ -212,7 +212,7 @@ sub read_word {
 # Load the modules that will upload the file and convert the filename
 
 sub setup {
-    my ($self) = @_;
+    my ($self, %configuration) = @_;
 
     # Turn off messages when in quick mode
     $self->{verbose} = 0 if $self->{quick_mode};

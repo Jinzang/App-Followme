@@ -20,8 +20,9 @@ sub parameters {
 
     return (
             news_index_length => 5,
-            news_template_file => 'news.htm',
-            index_template_file => 'news_index.htm',
+            news_template_file => 'create_news.htm',
+            index_template_file => 'create_news_index.htm',
+            data_pkg => 'App::Followme::WebData',
            );
 }
 
@@ -31,18 +32,8 @@ sub parameters {
 sub run {
     my ($self, $folder) = @_;
 
-    if ($self->{quick_mode}) {
-        eval {$self->update_folder($folder)};
-        $self->check_error($@, $folder);
-
-        eval{$self->update_folder($self->{base_directory})};
-        $self->check_error($@, $self->{base_directory});
-
-    } else {
-        eval{$self->update_folder($folder)};
-        $self->check_error($@, $folder);
-    }
-
+    eval{$self->update_folder($self->{base_directory})};
+    $self->check_error($@, $self->{base_directory});
     return;
 }
 
@@ -70,14 +61,30 @@ sub update_folder {
         fio_write_page($index_file, $page);
     }
 
-    unless ($self->{quick_mode}) {
-        my $folders = $self->{data}->build('folders', $index_file);
-        foreach my $subfolder (@$folders) {
-            eval {$self->update_folder($subfolder)};
-            $self->check_error($@, $subfolder);
-        }
+    my $folders = $self->{data}->build('folders', $index_file);
+    foreach my $subfolder (@$folders) {
+        eval {$self->update_folder($subfolder)};
+        $self->check_error($@, $subfolder);
     }
 
+    return;
+}
+
+#----------------------------------------------------------------------
+#  Add index file to list of excluded files
+
+sub setup {
+    my ($self, %configuration) = @_;
+
+    my @exclude;
+    if ($self->{data}{exclude}) {
+        @exclude = split(/\s*,\s*/, $self->{data}{exclude});
+    }
+
+    my $index_file = join('.', 'index', $self->{web_extension});
+    push(@exclude, $index_file);
+
+    $self->{data}{exclude} = join(',', @exclude);
     return;
 }
 

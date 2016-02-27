@@ -28,7 +28,7 @@ rmtree($test_dir);
 mkdir $test_dir;
 chdir $test_dir;
 
-my $template_name = 'gallery_template.htm';
+my $template_name = catfile($test_dir, 'gallery_template.htm');
 
 my %configuration = (
                     template_file => $template_name,
@@ -74,26 +74,31 @@ do {
 <!-- endsection meta -->
 </head>
 <body>
-<!-- section content -->
+<!-- section primary -->
 <h1>$title</h1>
+<!-- endsection primary -->
 
+<!-- section secondary -->
 <ul>
-<!-- for @loop -->
-<li><img src="$thumb_url" width="$thumb_width" height="$thumb_height" /><br />
-<a href="$photo_url">$title</a></li>
+<!-- for @files -->
+<!-- for @thumb_file -->
+<li><img src="$url" width="$width" height="$height" /><br />
+<!-- endfor -->
+<a href="$url">$title</a></li>
 <!-- endfor -->
 </ul>
-<!-- endsection content -->
+<!-- endsection secondary -->
 </body>
 </html>
 EOQ
 
-    my $gal = App::Followme::CreateGallery->new(%configuration);
     fio_write_page($template_name, $gallery_template);
 
     my $gallery_dir = catfile($test_dir, 'gallery');
     mkdir($gallery_dir);
     chdir($gallery_dir);
+
+    my $gal = App::Followme::CreateGallery->new(%configuration);
 
     my @photo_files;
     my @thumb_files;
@@ -109,23 +114,26 @@ EOQ
         ok(-e $output_file, "read and write photo $count"); # test 5-7
 
         push(@photo_files, $output_file);
-        my $thumb_file = $gal->build_thumb_name($output_file);
-        push(@thumb_files, $thumb_file);
+        my $thumb_file = $gal->{data}->get_thumb_file($output_file);
+        push(@thumb_files, $thumb_file->[0]);
     }
 
-    my $data = $gal->gallery_data($gallery_dir, \@photo_files);
-    is($data->[0]{title}, 'First Photo', 'First page title'); # test 8
-    is($data->[1]{photo_url}, 'second-photo.jpg', 'Second page url'); # test 9
-    is($data->[2]{thumb_url}, 'third-photo-thumb.jpg',
-       'Third page thumb url'); # test 12
+    my $title = $gal->{data}->build('$title', $photo_files[0]);
+    is($$title, 'First Photo', 'First page title'); # test 8
+
+    my $url = $gal->{data}->build('url', $photo_files[1]);
+    is($$url, 'second-photo.jpg', 'Second page url'); # test 9
+
+    $url = $gal->{data}->build('url', $thumb_files[2]);
+    is($$url, 'third-photo-thumb.jpg', 'Third page thumb url'); # test 10
+
+    $gal->run($gallery_dir);
 
     foreach my $i (1 .. 3) {
         ok(-e $thumb_files[$i-1], "Create thumb $i"); # test 11-13
     }
 
-    my $gallery_name = fio_full_file_name($gallery_dir, $gal->{gallery_file});
-    $gal->create_a_gallery($gallery_dir, $gallery_name);
-
+    my $gallery_name = fio_to_file($gallery_dir, 'html');
     ok(-e $gallery_name, 'Create index file'); # test 14
 
     my $page = fio_read_page($gallery_name);

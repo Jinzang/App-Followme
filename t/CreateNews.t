@@ -77,8 +77,10 @@ EOQ
 <!-- endsection meta -->
 </head>
 <body>
+<!-- section primary -->
+<!-- endsection primary -->
 <!-- section secondary -->
-<h1>$title</h1>
+<h2>$title</h2>
 
 <!-- for @top_files -->
 <h2>$title</h2>
@@ -100,6 +102,8 @@ EOQ
 <!-- endsection meta -->
 </head>
 <body>
+<!-- section primary -->
+<!-- endsection primary -->
 <!-- section secondary -->
 <h1>$title</h1>
 <ul>

@@ -63,8 +63,7 @@ do {
     is($data->{exclude}, '*-thumb.jpg', 'excluded files'); # test 4
 
     $filename = catfile($data_dir, 'first-photo.jpg');
-    my $photo = $data->read_photo($filename);
-    my %dimension = $data->fetch_dimensions($photo);
+    my %dimension = $data->fetch_from_file($filename);
 
     is($dimension{height}, 750, 'fetch photo height'); # test 5
     is($dimension{width}, 750, 'fetch photo width'); # test 6

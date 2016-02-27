@@ -35,7 +35,7 @@ $test_dir = cwd();
 
 do {
     App::Followme::Initialize::initialize($test_dir);
-    ok(-e 'templates', 'Created templates directory'); # test 1
+    ok(-e '_templates', 'Created templates directory'); # test 1
     ok(-e 'archive', 'Created archive directory'); # test 2
     ok(-e 'followme.cfg', 'Created configuration file'); # test 3
 };

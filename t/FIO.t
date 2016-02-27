@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 29;
+use Test::More tests => 27;
 
 use Cwd;
 use IO::File;
@@ -138,32 +138,17 @@ EOQ
 };
 
 #----------------------------------------------------------------------
-# Test push and pop directory
-
-do {
-    my $subdir = catfile($test_dir, 'sub-one');
-
-    fio_pushdir($subdir);
-    my $dir = getcwd();
-    is($dir, $subdir, 'Push directory'); # test 19
-
-    fio_popdir();
-    $dir = getcwd();
-    is($dir, $test_dir, 'Pop directory'); # test 20
-};
-
-#----------------------------------------------------------------------
 # Test file name conversion
 
 do {
     my $filename = 'foobar.txt';
     my $filename_ok = catfile($test_dir, $filename);
     my $test_filename = fio_full_file_name($test_dir, $filename);
-    is($test_filename, $filename_ok, 'Full file name relative path'); # test 21
+    is($test_filename, $filename_ok, 'Full file name relative path'); # test 19
 
     $filename = $filename_ok;
     $test_filename = fio_full_file_name($test_dir, $filename);
-    is($test_filename, $filename_ok, 'Full file name absolute path'); # test 22
+    is($test_filename, $filename_ok, 'Full file name absolute path'); # test 20
 };
 
 #----------------------------------------------------------------------
@@ -206,16 +191,16 @@ EOQ
     }
 
     my $newer = fio_is_newer('three.html', 'two.html', 'one.html');
-    is($newer, undef, 'Source is  newer'); # test 23
+    is($newer, undef, 'Source is  newer'); # test 21
 
     $newer = fio_is_newer('one.html', 'two.html', 'three.html');
-    is($newer, 1, "Target is newer"); # test 24
+    is($newer, 1, "Target is newer"); # test 22
 
     $newer = fio_is_newer('five.html', 'one.html');
-    is($newer, undef, 'Target is undefined'); # test 25
+    is($newer, undef, 'Target is undefined'); # test 23
 
     $newer = fio_is_newer('six.html', 'five.html');
-    is($newer, 1, 'Source and target undefined'); # test 26
+    is($newer, 1, 'Source and target undefined'); # test 24
 };
 
 #----------------------------------------------------------------------
@@ -225,16 +210,16 @@ do {
     my $url_ok = 'index.html';
     my $filename = catfile($test_dir, $url_ok);
     my $url = fio_filename_to_url($test_dir, $filename);
-    is($url, $url_ok, 'Simple url'); # test 27
+    is($url, $url_ok, 'Simple url'); # test 25
 
     $filename = catfile($test_dir, 'index.md');
     $url = fio_filename_to_url($test_dir, $filename, 'html');
-    is($url, $url_ok, 'Url from filename'); # test 28
+    is($url, $url_ok, 'Url from filename'); # test 26
 
     $url_ok = 'subdir/foobar.html';
     my @path = split(/\//, $url_ok);
     $filename = catfile($test_dir, @path);
     $url = fio_filename_to_url($test_dir, $filename, 'html');
-    is($url, $url_ok, 'Url in subdirectory'); # test 29
+    is($url, $url_ok, 'Url in subdirectory'); # test 27
 
 };

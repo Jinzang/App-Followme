@@ -21,6 +21,7 @@ sub parameters {
 
     return (
             remove_comments => 0,
+            data_pkg => 'App::Followme::WebData',
            );
 }
 

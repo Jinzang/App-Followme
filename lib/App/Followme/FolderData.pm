@@ -292,14 +292,6 @@ sub format_folders {
 }
 
 #----------------------------------------------------------------------
-# Format the file modification date
-
-sub format_mdate {
-    my ($self, $sorted_order, $mdate) = @_;
-    return $self->format_date($sorted_order, $mdate);
-}
-
-#----------------------------------------------------------------------
 # Format the file size
 
 sub format_size {
@@ -434,7 +426,8 @@ sub get_is_index {
 sub get_mdate {
     my ($self, $filename) = @_;
 
-    return fio_get_date($filename);
+    my $date = fio_get_date($filename);
+    return fio_format_date($date);
 }
 
 #----------------------------------------------------------------------
@@ -620,7 +613,7 @@ sub merge_augmented {
 # Set the directory if not passed as an argument
 
 sub setup {
-    my ($self) = @_;
+    my ($self, %configuration) = @_;
 
     $self->{extension} ||= $self->{web_extension};
     return;

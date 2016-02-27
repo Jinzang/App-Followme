@@ -41,7 +41,7 @@ sub run {
 sub update_file {
     my ($self, $prototype, $file) = @_;
 
-    my $date = $self->{data}->build('date', $file);
+    ##my $date = $self->{data}->build('date', $file);
 
     my $new_file = $file;
     $new_file =~ s/\.[^\.]*$/.$self->{web_extension}/;
@@ -50,7 +50,7 @@ sub update_file {
     $page = $self->reformat_file($prototype, $new_file, $page);
 
     fio_write_page($new_file, $page);
-    fio_set_date($new_file, $$date);
+    ##fio_set_date($new_file, $$date);
     unlink($file);
 
     return;

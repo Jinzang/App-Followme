@@ -580,7 +580,7 @@ html[xmlns] .slides {
 	cursor:default;
   border:1px solid #289aca;
 }
-#>>> copy configuration followme.cfg 01
+#>>> copy configuration followme.cfg 0
 run_before = App::Followme::FormatPage
 run_before = App::Followme::ConvertPage
 
@@ -596,8 +596,13 @@ run_before = App::Followme::ConvertPage
   <link rel="stylesheet" id="css_style" href="style.css">
   <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   <!-- section meta -->
-  <title></title>
-  <!-- endsection meta -->
+<base href="file:///home/bernie/Code/App-Followme/test" />
+<title>Test</title>
+<meta name="date" content="2016-02-13T07:41:02" />
+<meta name="description" content="This is the top page" />
+<meta name="keywords" content="" />
+<meta name="author" content="" />
+<!-- endsection meta -->
 </head>
 
 <body>
@@ -617,241 +622,13 @@ run_before = App::Followme::ConvertPage
 
 
     <div class="info">
-      <!-- section content -->
-      <article class="hero clearfix">
-        <div class="col_100">
-          <h1>Simplest solution for your simple tasks</h1>
-          <p>You don't always need to make difficult work of running management system with administrative panel to have a web site. “Simpliste” is a very simple and easy to use HTML template for web projects where you only need to create one or couple of pages with simple layout. If you are working on a lightweight information page with as less efforts for you to code and as less kilobytes  for the user to download as possible, “Simpliste” is what you need.</p>
-          <p>No CMS required and it's free. Clean code will make your task even easier. HTML5 and CSS3 bring all their features for your future site. This template has skins which you can choose from. No images are used for styling.</p>
-          <p>Are you worried about convenience of your site users with mobile devices? “Simpliste” responds to the width of user's device and makes information more accessible.</p>
-        </div>
-      </article>
+      <!-- section primary -->
+<h2>Test</h2>
+<p>This is the top page</p>
 
-
-      <article class="article clearfix">
-        <div class="col_33">
-          <h2>Clean code</h2>
-          <p>HTML5 and CSS3 made live of web developers easier than ever. Welcome to the world where less code and less files required. “Simpliste” has different skins and all of them are created with no images for styling at all.</p>
-          <p>Template contains CSS-reset based on the reset file from <a href="http://html5boilerplate.com/" target="_blank">HTML5 boilerplate</a> which makes appearens of “Simpliste” skins consistent in different browsers.</p>
-          <p>Print styles and styles for mobile devices are already included in the stylesheet.</p>
-        </div>
-
-        <div class="col_33">
-          <h2>Responsive markup</h2>
-          <p>You know that now it's time to think more about your users with mobile devices. This template will make your site respond to your client's browser with no effort on your part.</p>
-          <p>Multi-column layout becomes one column for viewers with tablets, navigation elements become bigger for users with smartphones. And your desktop browser users will see just a normal web site.</p>
-          <p>Try changing the width of your browser window and you'll see how “Simpliste” works.</p>
-        </div>
-
-        <div class="col_33">
-          <h2>Easy to use</h2>
-          <p>“Simpliste” is not a template for a CMS. You can use its code right away after downloading without reading any documentation. Place your content, make customisations and voilà the site is ready to upload to the server.</p>
-          <p>All content management can be done by using existing sample blocks and styles. Almost every template style is represented among <a href="#samples">samples</a> on this page. Off course you can create your own styles, which is easy as well.</p>
-        </div>
-
-        <div class="clearfix"></div>
-
-
-        <h1>“Simpliste” in use</h1>
-
-        <div class="col_50">
-          <h2>Sample content</h2>
-
-          <h3>Principles behind “Simpliste”</h3>
-          <ul>
-             <li>Really simple</li>
-             <li>Has ready to use set of simple designs</li>
-             <li>It's written using HTML5 and CSS3</li>
-             <li>It responds to mobile devices</li>
-             <li>No CMS</li>
-             <li>Free</li>
-          </ul>
-
-          <h3>How to use?</h3>
-          <form action="">
-          <select name=skin onchange='reskin(this.form.skin);'>
-          <option>default</option>
-          <option>aim</option>
-          <option>blackberry</option>
-          <option>blue</option>
-          <option>dark-blue</option>
-          <option>fresh</option>
-          <option>fruitjuice</option>
-          <option>glimpse</option>
-          <option>green</option>
-          <option>humble</option>
-          <option>illusion</option>
-          <option>isimple</option>
-          <option>liner</option>
-          <option>maple</option>
-          <option>mentol</option>
-          <option>nightroad</option>
-          <option>orange</option>
-          <option>passion</option>
-          <option>pink</option>
-          <option>purple</option>
-          <option>red</option>
-          <option>simplesoft</option>
-          <option>simpleswiss</option>
-          <option>simploid</option>
-          <option>snobbish</option>
-          <option>solution</option>
-          <option>stylus</option>
-          <option>teawithmilk</option>
-          <option>yellow</option>
-          </select>
-          </form>
-          <script>
-            function reskin(dropdown){
-              var theIndex  = dropdown.selectedIndex;
-              var theValue = dropdown.options[theIndex].value;
-              var sheet  = "skin/" + theValue + ".css";
-              document.getElementById('css_skin').setAttribute('href', sheet);
-              return true;
-            }
-          </script>
-          <ol>
-             <li>Choose one skin from the list above</li>
-             <li>Copy the file from the skin folder</li>
-             <li>Rename it to skin.css</li>
-             <li>Make any customisation you need</li>
-          </ol>
-        </div>
-
-        <div class="col_50">
-          <form action="#" method="post" class="form">
-            <h2>Sample form</h2>
-
-            <p class="col_50">
-              <label for="name">Simple name:</label><br/>
-              <input type="text" name="name" id="name" value="" />
-            </p>
-            <p class="col_50">
-              <label for="email">Simple e-mail:</label><br/>
-              <input type="text" name="email" id="email" value="" />
-            </p>
-            <div class="clearfix"></div>
-
-            <h3>Your favorite number</h3>
-            <p>
-              <div class="col_33">
-                <label for="radio-choice-1"><input type="radio" name="radio-choice-1" id="radio-choice-1" tabindex="2" value="choice-1" /> One</label><br/>
-                <label for="radio-choice-2"><input type="radio" name="radio-choice-1" id="radio-choice-2" tabindex="3" value="choice-2" /> Two</label><br/>
-                <label for="radio-choice-3"><input type="radio" name="radio-choice-1" id="radio-choice-3" tabindex="4" value="choice-3" /> Three</label>
-              </div>
-
-              <div class="col_33">
-                <label for="radio-choice-4"><input type="radio" name="radio-choice-1" id="radio-choice-4" tabindex="2" value="choice-1" /> Four</label><br/>
-                <label for="radio-choice-5"><input type="radio" name="radio-choice-1" id="radio-choice-5" tabindex="3" value="choice-2" /> Five</label><br/>
-                <label for="radio-choice-6"><input type="radio" name="radio-choice-1" id="radio-choice-6" tabindex="4" value="choice-3" /> Six</label>
-              </div>
-
-              <div class="col_33">
-                <label for="radio-choice-7"><input type="radio" name="radio-choice-1" id="radio-choice-7" tabindex="2" value="choice-1" /> Seven</label><br/>
-                <label for="radio-choice-8"><input type="radio" name="radio-choice-1" id="radio-choice-8" tabindex="3" value="choice-2" /> Eight</label><br/>
-                <label for="radio-choice-9"><input type="radio" name="radio-choice-1" id="radio-choice-9" tabindex="3" value="choice-2" /> Niine</label>
-              </div>
-
-            <div class="clearfix"></div>
-            </p>
-
-            <p>
-              <label for="select-choice">Simple city:</label>
-              <select name="select-choice" id="select-choice">
-                <option value="Choice 1">London</option>
-                <option value="Choice 2">Paris</option>
-                <option value="Choice 3">Rome</option>
-              </select>
-            </p>
-
-            <p>
-              <label for="textarea">Simple testimonial:</label><br/>
-              <textarea cols="40" rows="8" name="textarea" id="textarea"></textarea>
-            </p>
-
-            <p>
-              <label for="checkbox"><input type="checkbox" name="checkbox" id="checkbox" /> Simple agreement</label><br/>
-            </p>
-
-            <div>
-                <button type="button" class="button">Submit</button>
-            </div>
-          </form>
-        </div>
-
-        <div class="clearfix"></div>
-
-
-        <div class="col_33">
-          <h2>More elements</h2>
-
-          <p>Use <code>strong</code> tag for information with <strong>strong importance</strong>. Use <code>em</code> tag to <em>stress emphasis</em> on a word or phrase.</p>
-
-          <p class="warning">Sample <code>.warning</code></p>
-          <p class="success">Sample <code>.success</code></p>
-          <p class="message">Sample <code>.message</code></p>
-        </div>
-
-        <div class="col_66">
-          <h2>CSS classes table</h2>
-
-          <table class="table">
-            <tr>
-              <th>Class</th>
-              <th>Description</th>
-            </tr>
-
-            <tr>
-              <td><code>.col_33</code></td>
-              <td>Column with 33% width</td>
-            </tr>
-            <tr>
-              <td><code>.col_50</code></td>
-              <td>Column with 50% width</td>
-            </tr>
-            <tr>
-              <td><code>.col_66</code></td>
-              <td>Column with 66% width</td>
-            </tr>
-            <tr>
-              <td><code>.col_100</code></td>
-              <td>Full width column with proper margins</td>
-            </tr>
-            <tr>
-              <td><code>.clearfix</code></td>
-              <td>Use after or wrap a block of floated columns</td>
-            </tr>
-            <tr>
-              <td><code>.left</code></td>
-              <td>Left text alignment</td>
-            </tr>
-            <tr>
-              <td><code>.right</code></td>
-              <td>Right text alignment</td>
-            </tr>
-            <tr>
-              <td><code>.center</code></td>
-              <td>Centered text alignment</td>
-            </tr>
-            <tr>
-              <td><code>.img_floatleft</code></td>
-              <td>Left alignment for images in content</td>
-            </tr>
-            <tr>
-              <td><code>.img_floatright</code></td>
-              <td>Right alignment for images in content</td>
-            </tr>
-            <tr>
-              <td><code>.img</code></td>
-              <td>Makes image change its width when browser window width is changed</td>
-            </tr>
-          </table>
-        </div>
-
-        <div class="clearfix"></div>
-
-      </article>
-      <!-- endsection content -->
+<!-- endsection primary -->
+      <!-- section secondary -->
+      <!-- endsection secondary -->
     </div>
 
     <footer class="footer clearfix">
@@ -1314,10 +1091,585 @@ a.button { color:auto; }
   .header, .footer, .form {display:none;}
   .col_33, .col_66, .col_50  { width:98%; float:none; }
 }
+#>>> copy text _templates/convert_page.htm
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!-- section meta -->
+<base href="$site_url" />
+<title>$title</title>
+<meta name="date" content="$mdate" />
+<meta name="description" content="$description" />
+<meta name="keywords" content="$keywords" />
+<meta name="author" content="$author" />
+<!-- endsection meta -->
+</head>
+<body>
+<div id="header">
+<h1>Site Title</h1>
+</div>
+<div id="conent">
+<div id="primary">
+<!-- section primary -->
+<h2>$title</h2>
+$body
+<!-- endsection primary-->
+</div>
+<div id="secondary">
+<!-- section secondary -->
+<!-- endsection secondary-->
+</div>
+</div>
+</body>
+</html>
+#>>> copy text _templates/create_gallery.htm
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!-- section meta -->
+  <base href="$site_url" />
+  <title>$title</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script src="jquery.flexslider-min.js"></script>
+  <link rel="stylesheet" href="flexslider.css" type="text/css" media="screen" />
+  <!-- Hook up the FlexSlider -->
+  <script type="text/javascript">
+    $(window).load(function() {
+      $('.flexslider').flexslider();
+    });
+  </script>
+ <!-- endsection meta -->
+</head>
+<body>
+<div id="header">
+<h1>Site Title</h1>
+</div>
+<div id="content">
+<div id="primary">
+<!-- section primary -->
+<!-- endsection primary-->
+</div>
+<div id="secondary">
+<!-- section secondary -->
+    <div class="flexslider">
+      <ul class="slides">
+<!-- for @files -->
+        <li>
+          <img src="$url" width="$width" height="$height" />
+          <p class="flex-caption">$title</p>
+        </li>
+<!-- endfor -->
+      </ul>
+    </div>
+<!-- endsection secondary-->
+</div>
+</div>
+</body>
+</html>
+#>>> copy text _templates/create_index.htm
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!-- section meta -->
+<base href="$site_url" />
+<title>$title</title>
+<!-- endsection meta -->
+</head>
+<body>
+<div id="header">
+<h1>Site Title</h1>
+</div>
+<div id="content">
+<div id="primary">
+<!-- section primary -->
+<!-- endsection primary-->
+</div>
+<div id="secondary">
+<!-- section secondary -->
+<h2>$title</h2>
+
+<ul>
+<!-- for @files -->
+<li><a href="$url">$title</a></li>
+<!-- endfor -->
+</ul>
+<!-- endsection secondary-->
+</div>
+</div>
+</body>
+</html>
+#>>> copy text _templates/create_news.htm
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!-- section meta -->
+<base href="$site_url" />
+<title>$title</title>
+<!-- endsection meta -->
+</head>
+<body>
+<div id="header">
+<h1>Site Title</h1>
+</div>
+<div id="content">
+<div id="primary">
+<!-- section primary -->
+<!-- endsection primary-->
+</div>
+<div id="secondary">
+<!-- section secondary -->
+<!-- for @top_files -->
+<h2>$title</h2>
+$body
+<p><a href="$url">Written on $date</a></p>
+<!-- endfor -->
+<h3>Archive</h3>
+
+<p>
+<!-- for @folders -->
+<a href="$url">$title</a>&nbsp;&nbsp;
+<!-- endfor -->
+</p>
+<!-- endsection secondary-->
+</div>
+</div>
+</body>
+</html>
+#>>> copy text _templates/create_news_index.htm
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!-- section meta -->
+<base href="$site_url" />
+<<title>$title</title>
+<!-- endsection meta -->
+</head>
+<body>
+<div id="header">
+<h1>Site Title</h1>
+</div>
+<div id="content">
+<div id="primary">
+<!-- section primary -->
+<!-- endsection primary-->
+</div>
+<div id="secondary">
+<!-- section secondary -->
+<h2>$title</h2>
+
+<ul>
+<!-- for @folders -->
+<li><a href="$url">$title</a></li>
+<!-- endfor -->
+<!-- for @files -->
+<li><a href="$url">$title</a></li>
+<!-- endfor -->
+</ul>
+<!-- endsection secondary-->
+</div>
+</div>
+</body>
+</html>
 #>>> copy configuration archive/followme.cfg 0
 run_before = App::Followme::CreateNews
 news_index_file = index.html
 news_file = ../blog.html
+#>>> copy text archive/index.html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="favicon.ico" rel="shortcut icon">
+  <link rel="stylesheet" id="css_reset" href="reset.css">
+  <link rel="stylesheet" id="css_skin" href="skin.css">
+  <link rel="stylesheet" id="css_style" href="style.css">
+  <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <!-- section meta -->
+<base href="file:///home/bernie/Code/App-Followme/test" />
+<title>Archive</title>
+<!-- endsection meta -->
+</head>
+
+<body>
+  <div class="container">
+
+    <header class="header clearfix">
+      <div class="logo">.Simpliste</div>
+
+      <nav class="menu_main">
+        <ul>
+          <li class="active"><a href="#">About</a></li>
+          <li><a href="#">Skins</a></li>
+          <li><a href="#">Samples</a></li>
+        </ul>
+      </nav>
+    </header>
+
+
+    <div class="info">
+      <!-- section primary -->
+<h2>Test</h2>
+<p>This is the top page</p>
+
+<!-- endsection primary -->
+      <!-- section secondary -->
+<h2>First</h2>
+<h2>First</h2>
+<p>first blog post.</p>
+
+
+<p><a href="2013/12december/first.html">Written on Feb 13, 2016 7:41</a></p>
+<h2>Second</h2>
+<h2>Second</h2>
+<p>second blog post.</p>
+
+
+<p><a href="2013/12december/second.html">Written on Feb 13, 2016 7:41</a></p>
+<h2>Third</h2>
+<h2>Third</h2>
+<p>third blog post.</p>
+
+
+<p><a href="2013/12december/third.html">Written on Feb 13, 2016 7:41</a></p>
+<!-- endsection secondary -->
+    </div>
+
+    <footer class="footer clearfix">
+      <div class="copyright">Keep it simplest</div>
+
+      <nav class="menu_bottom">
+        <ul>
+          <li class="active"><a href="#">About</a></li>
+          <li><a href="#">Skins</a></li>
+          <li><a href="#">Samples</a></li>
+        </ul>
+      </nav>
+    </footer>
+
+  </div>
+</body>
+</html>
+#>>> copy text archive/2013/index.html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="favicon.ico" rel="shortcut icon">
+  <link rel="stylesheet" id="css_reset" href="reset.css">
+  <link rel="stylesheet" id="css_skin" href="skin.css">
+  <link rel="stylesheet" id="css_style" href="style.css">
+  <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <!-- section meta -->
+<base href="file:///home/bernie/Code/App-Followme/test" />
+<<title>2013</title>
+<!-- endsection meta -->
+</head>
+
+<body>
+  <div class="container">
+
+    <header class="header clearfix">
+      <div class="logo">.Simpliste</div>
+
+      <nav class="menu_main">
+        <ul>
+          <li class="active"><a href="#">About</a></li>
+          <li><a href="#">Skins</a></li>
+          <li><a href="#">Samples</a></li>
+        </ul>
+      </nav>
+    </header>
+
+
+    <div class="info">
+      <!-- section primary -->
+<h2>Test</h2>
+<p>This is the top page</p>
+
+<!-- endsection primary -->
+      <!-- section secondary -->
+<h2>2013</h2>
+
+<ul>
+<li><a href="2013/12december/index.html">December</a></li>
+</ul>
+<!-- endsection secondary -->
+    </div>
+
+    <footer class="footer clearfix">
+      <div class="copyright">Keep it simplest</div>
+
+      <nav class="menu_bottom">
+        <ul>
+          <li class="active"><a href="#">About</a></li>
+          <li><a href="#">Skins</a></li>
+          <li><a href="#">Samples</a></li>
+        </ul>
+      </nav>
+    </footer>
+
+  </div>
+</body>
+</html>
+#>>> copy text archive/2013/12december/first.html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="favicon.ico" rel="shortcut icon">
+  <link rel="stylesheet" id="css_reset" href="reset.css">
+  <link rel="stylesheet" id="css_skin" href="skin.css">
+  <link rel="stylesheet" id="css_style" href="style.css">
+  <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <!-- section meta -->
+<base href="file:///home/bernie/Code/App-Followme/test" />
+<title>First</title>
+<meta name="date" content="2016-02-13T07:41:02" />
+<meta name="description" content="first blog post." />
+<meta name="keywords" content="archive, 2013, 12december" />
+<meta name="author" content="" />
+<!-- endsection meta -->
+</head>
+
+<body>
+  <div class="container">
+
+    <header class="header clearfix">
+      <div class="logo">.Simpliste</div>
+
+      <nav class="menu_main">
+        <ul>
+          <li class="active"><a href="#">About</a></li>
+          <li><a href="#">Skins</a></li>
+          <li><a href="#">Samples</a></li>
+        </ul>
+      </nav>
+    </header>
+
+
+    <div class="info">
+      <!-- section primary -->
+<h2>First</h2>
+<p>first blog post.</p>
+
+<!-- endsection primary -->
+      <!-- section secondary -->
+<!-- endsection secondary -->
+    </div>
+
+    <footer class="footer clearfix">
+      <div class="copyright">Keep it simplest</div>
+
+      <nav class="menu_bottom">
+        <ul>
+          <li class="active"><a href="#">About</a></li>
+          <li><a href="#">Skins</a></li>
+          <li><a href="#">Samples</a></li>
+        </ul>
+      </nav>
+    </footer>
+
+  </div>
+</body>
+</html>
+#>>> copy text archive/2013/12december/index.html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="favicon.ico" rel="shortcut icon">
+  <link rel="stylesheet" id="css_reset" href="reset.css">
+  <link rel="stylesheet" id="css_skin" href="skin.css">
+  <link rel="stylesheet" id="css_style" href="style.css">
+  <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <!-- section meta -->
+<base href="file:///home/bernie/Code/App-Followme/test" />
+<<title>December</title>
+<!-- endsection meta -->
+</head>
+
+<body>
+  <div class="container">
+
+    <header class="header clearfix">
+      <div class="logo">.Simpliste</div>
+
+      <nav class="menu_main">
+        <ul>
+          <li class="active"><a href="#">About</a></li>
+          <li><a href="#">Skins</a></li>
+          <li><a href="#">Samples</a></li>
+        </ul>
+      </nav>
+    </header>
+
+
+    <div class="info">
+      <!-- section primary -->
+<h2>Test</h2>
+<p>This is the top page</p>
+
+<!-- endsection primary -->
+      <!-- section secondary -->
+<h2>December</h2>
+
+<ul>
+<li><a href="2013/12december/first.html">First</a></li>
+<li><a href="2013/12december/second.html">Second</a></li>
+<li><a href="2013/12december/third.html">Third</a></li>
+</ul>
+<!-- endsection secondary -->
+    </div>
+
+    <footer class="footer clearfix">
+      <div class="copyright">Keep it simplest</div>
+
+      <nav class="menu_bottom">
+        <ul>
+          <li class="active"><a href="#">About</a></li>
+          <li><a href="#">Skins</a></li>
+          <li><a href="#">Samples</a></li>
+        </ul>
+      </nav>
+    </footer>
+
+  </div>
+</body>
+</html>
+#>>> copy text archive/2013/12december/second.html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="favicon.ico" rel="shortcut icon">
+  <link rel="stylesheet" id="css_reset" href="reset.css">
+  <link rel="stylesheet" id="css_skin" href="skin.css">
+  <link rel="stylesheet" id="css_style" href="style.css">
+  <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <!-- section meta -->
+<base href="file:///home/bernie/Code/App-Followme/test" />
+<title>Second</title>
+<meta name="date" content="2016-02-13T07:41:03" />
+<meta name="description" content="second blog post." />
+<meta name="keywords" content="archive, 2013, 12december" />
+<meta name="author" content="" />
+<!-- endsection meta -->
+</head>
+
+<body>
+  <div class="container">
+
+    <header class="header clearfix">
+      <div class="logo">.Simpliste</div>
+
+      <nav class="menu_main">
+        <ul>
+          <li class="active"><a href="#">About</a></li>
+          <li><a href="#">Skins</a></li>
+          <li><a href="#">Samples</a></li>
+        </ul>
+      </nav>
+    </header>
+
+
+    <div class="info">
+      <!-- section primary -->
+<h2>Second</h2>
+<p>second blog post.</p>
+
+<!-- endsection primary -->
+      <!-- section secondary -->
+<!-- endsection secondary -->
+    </div>
+
+    <footer class="footer clearfix">
+      <div class="copyright">Keep it simplest</div>
+
+      <nav class="menu_bottom">
+        <ul>
+          <li class="active"><a href="#">About</a></li>
+          <li><a href="#">Skins</a></li>
+          <li><a href="#">Samples</a></li>
+        </ul>
+      </nav>
+    </footer>
+
+  </div>
+</body>
+</html>
+#>>> copy text archive/2013/12december/third.html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="favicon.ico" rel="shortcut icon">
+  <link rel="stylesheet" id="css_reset" href="reset.css">
+  <link rel="stylesheet" id="css_skin" href="skin.css">
+  <link rel="stylesheet" id="css_style" href="style.css">
+  <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <!-- section meta -->
+<base href="file:///home/bernie/Code/App-Followme/test" />
+<title>Third</title>
+<meta name="date" content="2016-02-13T07:41:04" />
+<meta name="description" content="third blog post." />
+<meta name="keywords" content="archive, 2013, 12december" />
+<meta name="author" content="" />
+<!-- endsection meta -->
+</head>
+
+<body>
+  <div class="container">
+
+    <header class="header clearfix">
+      <div class="logo">.Simpliste</div>
+
+      <nav class="menu_main">
+        <ul>
+          <li class="active"><a href="#">About</a></li>
+          <li><a href="#">Skins</a></li>
+          <li><a href="#">Samples</a></li>
+        </ul>
+      </nav>
+    </header>
+
+
+    <div class="info">
+      <!-- section primary -->
+<h2>Third</h2>
+<p>third blog post.</p>
+
+<!-- endsection primary -->
+      <!-- section secondary -->
+<h2>December</h2>
+
+<ul>
+<li><a href="2013/12december/first.html">First</a></li>
+<li><a href="2013/12december/second.html">Second</a></li>
+</ul>
+<!-- endsection secondary -->
+    </div>
+
+    <footer class="footer clearfix">
+      <div class="copyright">Keep it simplest</div>
+
+      <nav class="menu_bottom">
+        <ul>
+          <li class="active"><a href="#">About</a></li>
+          <li><a href="#">Skins</a></li>
+          <li><a href="#">Samples</a></li>
+        </ul>
+      </nav>
+    </footer>
+
+  </div>
+</body>
+</html>
 #>>> copy text skin/aim.css
 /* Skin "Aim" by Renat Rafikov */
 body {
@@ -8748,139 +9100,6 @@ a.button:active,
 
 @media only screen and (max-width:768px) { /* Tablet custom styles*/
 }
-#>>> copy text templates/gallery.htm
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<!-- section meta -->
-  <title>$title</title>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-  <script src="jquery.flexslider-min.js"></script>
-  <link rel="stylesheet" href="flexslider.css" type="text/css" media="screen" />
-  <!-- Hook up the FlexSlider -->
-  <script type="text/javascript">
-    $(window).load(function() {
-      $('.flexslider').flexslider();
-    });
-  </script>
- <!-- endsection meta -->
-</head>
-<body>
-<div id="header">
-<h1>Site Title</h1>
-</div>
-<div id="content">
-<!-- section content -->
-    <div class="flexslider">
-      <ul class="slides">
-<!-- for @loop -->
-        <li>
-          <img src="$photo_url" />
-          <p class="flex-caption">$title</p>
-        </li>
-<!-- endfor -->
-      </ul>
-    </div>
-<!-- endsection content-->
-</div>
-</body>
-</html>
-#>>> copy text templates/index.htm
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<!-- section meta -->
-<title>$title</title>
-<!-- endsection meta -->
-</head>
-<body>
-<div id="header">
-<h1>Site Title</h1>
-</div>
-<div id="content">
-<!-- section content -->
-<h2>$title</h2>
-
-<ul>
-<!-- for @loop -->
-<li><a href="$url">$title</a></li>
-<!-- endfor -->
-</ul>
-<!-- endsection content-->
-</div>
-</body>
-</html>
-#>>> copy text templates/news.htm
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<!-- section meta -->
-<title>$title</title>
-<!-- endsection meta -->
-</head>
-<body>
-<div id="header">
-<h1>Site Title</h1>
-</div>
-<div id="content">
-<!-- section content -->
-<!-- for @loop -->
-<h2>$title</h2>
-$body
-<p><a href="$url">Written on $month $day, $year</a></p>
-<!-- endfor -->
-<!-- endsection content-->
-</div>
-</body>
-</html>
-
-#>>> copy text templates/news_index.htm
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<!-- section meta -->
-<title>$title</title>
-<!-- endsection meta -->
-</head>
-<body>
-<div id="header">
-<h1>Site Title</h1>
-</div>
-<div id="content">
-<!-- section content -->
-<h2>$title</h2>
-
-<ul>
-<!-- for @loop -->
-<li><a href="$url">$title</a></li>
-<!-- endfor -->
-</ul>
-<!-- endsection content-->
-</div>
-</body>
-</html>
-
-#>>> copy text templates/page.htm
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<!-- section meta -->
-<title>$title</title>
-<!-- endsection meta -->
-</head>
-<body>
-<div id="header">
-<h1>Site Title</h1>
-</div>
-<div id="content">
-<!-- section content -->
-<h2>$title</h2>
-$body
-<!-- endsection content-->
-</div>
-</body>
-</html>
-
 #>>> copy text xtensions/ie/ie.css
 /* Skin styles for IE */
 
@@ -9020,55 +9239,290 @@ http://css3pie.com/PIE script makes IE 6-9 understand some of CSS3 properties:
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 #>>> copy text xtensions/scripts/flexslider/demo.html
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <meta content="charset=utf-8">
-
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-  
-  <script src="jquery.flexslider-min.js"></script>
-  <link rel="stylesheet" href="flexslider.css" type="text/css" media="screen" />
-  
-  <!-- Hook up the FlexSlider -->
-  <script type="text/javascript">
-    $(window).load(function() {
-      $('.flexslider').flexslider();
-    });
-  </script>
-  
-  <!-- Demo styles, don't copy -->
-  <style type="text/css">
-    article, aside, details, figcaption, figure,footer, header, hgroup, menu, nav, section {display: block;}
-    body {line-height: 1;  font-size: 100%;}
-    ol, ul {list-style: none; margin:0; padding:0;}
-
-    .col_100 {width: 80%; max-width: 800px; margin: 0 auto;}
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="favicon.ico" rel="shortcut icon">
+  <link rel="stylesheet" id="css_reset" href="reset.css">
+  <link rel="stylesheet" id="css_skin" href="skin.css">
+  <link rel="stylesheet" id="css_style" href="style.css">
+  <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <!-- section meta -->
+  <title></title>
+  <!-- endsection meta -->
 </head>
-<body>
 
-  <div class="col_100">    
-    <div class="flexslider">
-      <ul class="slides">
-        <li>
-          <img src="http://flex.madebymufffin.com/images/inacup_samoa.jpg" />
-          <p class="flex-caption">Captions and cupcakes. Winning combination.</p>
-        </li>
-        <li>
-          <a href="http://flex.madebymufffin.com"><img src="http://flex.madebymufffin.com/images/inacup_pumpkin.jpg" /></a>
-          <p class="flex-caption">This image is wrapped in a link!</p>
-        </li>
-        <li>
-          <img src="http://flex.madebymufffin.com/images/inacup_donut.jpg" />
-        </li>
-        <li>
-          <img src="http://flex.madebymufffin.com/images/inacup_vanilla.jpg" />
-        </li>
-      </ul>
+<body>
+  <div class="container">
+
+    <header class="header clearfix">
+      <div class="logo">.Simpliste</div>
+
+      <nav class="menu_main">
+        <ul>
+          <li class="active"><a href="#">About</a></li>
+          <li><a href="#">Skins</a></li>
+          <li><a href="#">Samples</a></li>
+        </ul>
+      </nav>
+    </header>
+
+
+    <div class="info">
+      <!-- section primary -->
+      <article class="hero clearfix">
+        <div class="col_100">
+          <h1>Simplest solution for your simple tasks</h1>
+          <p>You don't always need to make difficult work of running management system with administrative panel to have a web site. “Simpliste” is a very simple and easy to use HTML template for web projects where you only need to create one or couple of pages with simple layout. If you are working on a lightweight information page with as less efforts for you to code and as less kilobytes  for the user to download as possible, “Simpliste” is what you need.</p>
+          <p>No CMS required and it's free. Clean code will make your task even easier. HTML5 and CSS3 bring all their features for your future site. This template has skins which you can choose from. No images are used for styling.</p>
+          <p>Are you worried about convenience of your site users with mobile devices? “Simpliste” responds to the width of user's device and makes information more accessible.</p>
+        </div>
+      </article>
+
+
+      <article class="article clearfix">
+        <div class="col_33">
+          <h2>Clean code</h2>
+          <p>HTML5 and CSS3 made live of web developers easier than ever. Welcome to the world where less code and less files required. “Simpliste” has different skins and all of them are created with no images for styling at all.</p>
+          <p>Template contains CSS-reset based on the reset file from <a href="http://html5boilerplate.com/" target="_blank">HTML5 boilerplate</a> which makes appearens of “Simpliste” skins consistent in different browsers.</p>
+          <p>Print styles and styles for mobile devices are already included in the stylesheet.</p>
+        </div>
+
+        <div class="col_33">
+          <h2>Responsive markup</h2>
+          <p>You know that now it's time to think more about your users with mobile devices. This template will make your site respond to your client's browser with no effort on your part.</p>
+          <p>Multi-column layout becomes one column for viewers with tablets, navigation elements become bigger for users with smartphones. And your desktop browser users will see just a normal web site.</p>
+          <p>Try changing the width of your browser window and you'll see how “Simpliste” works.</p>
+        </div>
+
+        <div class="col_33">
+          <h2>Easy to use</h2>
+          <p>“Simpliste” is not a template for a CMS. You can use its code right away after downloading without reading any documentation. Place your content, make customisations and voilà the site is ready to upload to the server.</p>
+          <p>All content management can be done by using existing sample blocks and styles. Almost every template style is represented among <a href="#samples">samples</a> on this page. Off course you can create your own styles, which is easy as well.</p>
+        </div>
+
+        <div class="clearfix"></div>
+
+
+        <h1>“Simpliste” in use</h1>
+
+        <div class="col_50">
+          <h2>Sample content</h2>
+
+          <h3>Principles behind “Simpliste”</h3>
+          <ul>
+             <li>Really simple</li>
+             <li>Has ready to use set of simple designs</li>
+             <li>It's written using HTML5 and CSS3</li>
+             <li>It responds to mobile devices</li>
+             <li>No CMS</li>
+             <li>Free</li>
+          </ul>
+
+          <h3>How to use?</h3>
+          <form action="">
+          <select name=skin onchange='reskin(this.form.skin);'>
+          <option>default</option>
+          <option>aim</option>
+          <option>blackberry</option>
+          <option>blue</option>
+          <option>dark-blue</option>
+          <option>fresh</option>
+          <option>fruitjuice</option>
+          <option>glimpse</option>
+          <option>green</option>
+          <option>humble</option>
+          <option>illusion</option>
+          <option>isimple</option>
+          <option>liner</option>
+          <option>maple</option>
+          <option>mentol</option>
+          <option>nightroad</option>
+          <option>orange</option>
+          <option>passion</option>
+          <option>pink</option>
+          <option>purple</option>
+          <option>red</option>
+          <option>simplesoft</option>
+          <option>simpleswiss</option>
+          <option>simploid</option>
+          <option>snobbish</option>
+          <option>solution</option>
+          <option>stylus</option>
+          <option>teawithmilk</option>
+          <option>yellow</option>
+          </select>
+          </form>
+          <script>
+            function reskin(dropdown){
+              var theIndex  = dropdown.selectedIndex;
+              var theValue = dropdown.options[theIndex].value;
+              var sheet  = "skin/" + theValue + ".css";
+              document.getElementById('css_skin').setAttribute('href', sheet);
+              return true;
+            }
+          </script>
+          <ol>
+             <li>Choose one skin from the list above</li>
+             <li>Copy the file from the skin folder</li>
+             <li>Rename it to skin.css</li>
+             <li>Make any customisation you need</li>
+          </ol>
+        </div>
+
+        <div class="col_50">
+          <form action="#" method="post" class="form">
+            <h2>Sample form</h2>
+
+            <p class="col_50">
+              <label for="name">Simple name:</label><br/>
+              <input type="text" name="name" id="name" value="" />
+            </p>
+            <p class="col_50">
+              <label for="email">Simple e-mail:</label><br/>
+              <input type="text" name="email" id="email" value="" />
+            </p>
+            <div class="clearfix"></div>
+
+            <h3>Your favorite number</h3>
+            <p>
+              <div class="col_33">
+                <label for="radio-choice-1"><input type="radio" name="radio-choice-1" id="radio-choice-1" tabindex="2" value="choice-1" /> One</label><br/>
+                <label for="radio-choice-2"><input type="radio" name="radio-choice-1" id="radio-choice-2" tabindex="3" value="choice-2" /> Two</label><br/>
+                <label for="radio-choice-3"><input type="radio" name="radio-choice-1" id="radio-choice-3" tabindex="4" value="choice-3" /> Three</label>
+              </div>
+
+              <div class="col_33">
+                <label for="radio-choice-4"><input type="radio" name="radio-choice-1" id="radio-choice-4" tabindex="2" value="choice-1" /> Four</label><br/>
+                <label for="radio-choice-5"><input type="radio" name="radio-choice-1" id="radio-choice-5" tabindex="3" value="choice-2" /> Five</label><br/>
+                <label for="radio-choice-6"><input type="radio" name="radio-choice-1" id="radio-choice-6" tabindex="4" value="choice-3" /> Six</label>
+              </div>
+
+              <div class="col_33">
+                <label for="radio-choice-7"><input type="radio" name="radio-choice-1" id="radio-choice-7" tabindex="2" value="choice-1" /> Seven</label><br/>
+                <label for="radio-choice-8"><input type="radio" name="radio-choice-1" id="radio-choice-8" tabindex="3" value="choice-2" /> Eight</label><br/>
+                <label for="radio-choice-9"><input type="radio" name="radio-choice-1" id="radio-choice-9" tabindex="3" value="choice-2" /> Niine</label>
+              </div>
+
+            <div class="clearfix"></div>
+            </p>
+
+            <p>
+              <label for="select-choice">Simple city:</label>
+              <select name="select-choice" id="select-choice">
+                <option value="Choice 1">London</option>
+                <option value="Choice 2">Paris</option>
+                <option value="Choice 3">Rome</option>
+              </select>
+            </p>
+
+            <p>
+              <label for="textarea">Simple testimonial:</label><br/>
+              <textarea cols="40" rows="8" name="textarea" id="textarea"></textarea>
+            </p>
+
+            <p>
+              <label for="checkbox"><input type="checkbox" name="checkbox" id="checkbox" /> Simple agreement</label><br/>
+            </p>
+
+            <div>
+                <button type="button" class="button">Submit</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="clearfix"></div>
+
+
+        <div class="col_33">
+          <h2>More elements</h2>
+
+          <p>Use <code>strong</code> tag for information with <strong>strong importance</strong>. Use <code>em</code> tag to <em>stress emphasis</em> on a word or phrase.</p>
+
+          <p class="warning">Sample <code>.warning</code></p>
+          <p class="success">Sample <code>.success</code></p>
+          <p class="message">Sample <code>.message</code></p>
+        </div>
+
+        <div class="col_66">
+          <h2>CSS classes table</h2>
+
+          <table class="table">
+            <tr>
+              <th>Class</th>
+              <th>Description</th>
+            </tr>
+
+            <tr>
+              <td><code>.col_33</code></td>
+              <td>Column with 33% width</td>
+            </tr>
+            <tr>
+              <td><code>.col_50</code></td>
+              <td>Column with 50% width</td>
+            </tr>
+            <tr>
+              <td><code>.col_66</code></td>
+              <td>Column with 66% width</td>
+            </tr>
+            <tr>
+              <td><code>.col_100</code></td>
+              <td>Full width column with proper margins</td>
+            </tr>
+            <tr>
+              <td><code>.clearfix</code></td>
+              <td>Use after or wrap a block of floated columns</td>
+            </tr>
+            <tr>
+              <td><code>.left</code></td>
+              <td>Left text alignment</td>
+            </tr>
+            <tr>
+              <td><code>.right</code></td>
+              <td>Right text alignment</td>
+            </tr>
+            <tr>
+              <td><code>.center</code></td>
+              <td>Centered text alignment</td>
+            </tr>
+            <tr>
+              <td><code>.img_floatleft</code></td>
+              <td>Left alignment for images in content</td>
+            </tr>
+            <tr>
+              <td><code>.img_floatright</code></td>
+              <td>Right alignment for images in content</td>
+            </tr>
+            <tr>
+              <td><code>.img</code></td>
+              <td>Makes image change its width when browser window width is changed</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="clearfix"></div>
+
+      </article>
+      <!-- endsection primary -->
+      <!-- section secondary -->
+      <!-- endsection secondary -->
     </div>
+
+    <footer class="footer clearfix">
+      <div class="copyright">Keep it simplest</div>
+
+      <nav class="menu_bottom">
+        <ul>
+          <li class="active"><a href="#">About</a></li>
+          <li><a href="#">Skins</a></li>
+          <li><a href="#">Samples</a></li>
+        </ul>
+      </nav>
+    </footer>
+
   </div>
-  
 </body>
 </html>
 #>>> copy text xtensions/scripts/flexslider/flexslider.css
@@ -9313,26 +9767,13 @@ Sticky footer will always be displayed on the bottom of the browser window (when
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="favicon.ico" rel="shortcut icon">
-  <link rel="stylesheet" href="../../../_www/css/style.css">
-  <title></title>  
+  <link rel="stylesheet" id="css_reset" href="reset.css">
+  <link rel="stylesheet" id="css_skin" href="skin.css">
+  <link rel="stylesheet" id="css_style" href="style.css">
   <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
-  
-<style>
-.link_nav {
-  display:none;
-}
-    
-@media only screen and (max-width:480px) { /* Smartphone custom styles */
-  .link_nav {
-    display:block;
-  }
-
-  .menu_main ul {
-    display:none;
-  } 
-}
-</style>
-
+  <!-- section meta -->
+  <title></title>
+  <!-- endsection meta -->
 </head>
 
 <body>
@@ -9342,102 +9783,268 @@ Sticky footer will always be displayed on the bottom of the browser window (when
       <div class="logo">.Simpliste</div>
 
       <nav class="menu_main">
-        <a href="#go_nav" class="link_nav">Menu</a>
         <ul>
           <li class="active"><a href="#">About</a></li>
           <li><a href="#">Skins</a></li>
           <li><a href="#">Samples</a></li>
-          <li><a href="#">Contacts</a></li>
         </ul>
       </nav>
     </header>
 
 
     <div class="info">
+      <!-- section primary -->
       <article class="hero clearfix">
         <div class="col_100">
-          <h1>The footer navigation anchor with link in the header</h1>
-          <p>Top navigation can hide data on mobile devices with small resolutions. To avoid this, we can place a link to the footer navigation and hide the navigation in the header. Sometimes there is only one navigation block used to achive this result, which has fixed positioning or absolutely positioned for desktop devices.</p>
-          
-          <p>Try <strong>changing width of your browser window</strong> to see this method in action. And use the <strong>source code of this page</strong> as your guide.</p>
+          <h1>Simplest solution for your simple tasks</h1>
+          <p>You don't always need to make difficult work of running management system with administrative panel to have a web site. “Simpliste” is a very simple and easy to use HTML template for web projects where you only need to create one or couple of pages with simple layout. If you are working on a lightweight information page with as less efforts for you to code and as less kilobytes  for the user to download as possible, “Simpliste” is what you need.</p>
+          <p>No CMS required and it's free. Clean code will make your task even easier. HTML5 and CSS3 bring all their features for your future site. This template has skins which you can choose from. No images are used for styling.</p>
+          <p>Are you worried about convenience of your site users with mobile devices? “Simpliste” responds to the width of user's device and makes information more accessible.</p>
         </div>
       </article>
 
 
       <article class="article clearfix">
-        <div class="col_66">
-          <h2>HTML</h2>
-          <p>
-            Add a link in your header with <strong>link_nav</strong> class and <strong>#go_nav</strong> href value. Name it as you like. It's <strong>Menu</strong> in this demo.
-          </p>    
-          
-<div class="snippet-container"><div class="sh_default snippet-wrap"><div class="snippet-menu sh_sourceCode"><a class="snippet-window sh_url" href="#">pop-up</a><a class="snippet-text sh_url" href="#">text</a></div><pre class="shi_pre sh_html snippet-formatted sh_sourceCode"><ol class="snippet-num"><li><span class="sh_keyword">&lt;nav</span> <span class="sh_type">class</span><span class="sh_symbol">=</span><span class="sh_string">"menu_main"</span><span class="sh_keyword">&gt;</span></li><li>  <span class="sh_keyword">&lt;a</span> <span class="sh_type">href</span><span class="sh_symbol">=</span><span class="sh_string">"#go_nav"</span> <span class="sh_type">class</span><span class="sh_symbol">=</span><span class="sh_string">"link_nav"</span><span class="sh_keyword">&gt;</span>Menu<span class="sh_keyword">&lt;/a&gt;</span></li><li>  <span class="sh_keyword">&lt;ul&gt;</span></li><li>    <span class="sh_keyword">&lt;li</span> <span class="sh_type">class</span><span class="sh_symbol">=</span><span class="sh_string">"active"</span><span class="sh_keyword">&gt;&lt;a</span> <span class="sh_type">href</span><span class="sh_symbol">=</span><span class="sh_string">"#"</span><span class="sh_keyword">&gt;</span>About<span class="sh_keyword">&lt;/a&gt;&lt;/li&gt;</span></li><li>    <span class="sh_keyword">&lt;li&gt;&lt;a</span> <span class="sh_type">href</span><span class="sh_symbol">=</span><span class="sh_string">"#"</span><span class="sh_keyword">&gt;</span>Skins<span class="sh_keyword">&lt;/a&gt;&lt;/li&gt;</span></li><li>    <span class="sh_keyword">&lt;li&gt;&lt;a</span> <span class="sh_type">href</span><span class="sh_symbol">=</span><span class="sh_string">"#"</span><span class="sh_keyword">&gt;</span>Samples<span class="sh_keyword">&lt;/a&gt;&lt;/li&gt;</span></li><li>    <span class="sh_keyword">&lt;li&gt;&lt;a</span> <span class="sh_type">href</span><span class="sh_symbol">=</span><span class="sh_string">"#"</span><span class="sh_keyword">&gt;</span>Contacts<span class="sh_keyword">&lt;/a&gt;&lt;/li&gt;</span></li><li>  <span class="sh_keyword">&lt;/ul&gt;</span></li><li><span class="sh_keyword">&lt;/nav&gt;</span></li></ol></pre><pre class="snippet-textonly sh_sourceCode" style="display: none;" tabindex="0" contenteditable="">&lt;nav class="menu_main"&gt;
-  &lt;a href="#go_nav" class="link_nav"&gt;Menu&lt;/a&gt;
-  &lt;ul&gt;
-    &lt;li class="active"&gt;&lt;a href="#"&gt;About&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="#"&gt;Skins&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="#"&gt;Samples&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="#"&gt;Contacts&lt;/a&gt;&lt;/li&gt;
-  &lt;/ul&gt;
-&lt;/nav&gt;</pre></div></div>
-          
-          <p>Add id <strong>go_nav</strong> to your footer navigation.</p>
-          
-<div class="snippet-container"><div class="sh_default snippet-wrap"><div class="snippet-menu sh_sourceCode"><a class="snippet-window sh_url" href="#">pop-up</a><a class="snippet-text sh_url" href="#">text</a></div><pre class="shi_pre sh_html snippet-formatted sh_sourceCode"><ol class="snippet-num"><li><span class="sh_keyword">&lt;nav</span> <span class="sh_type">class</span><span class="sh_symbol">=</span><span class="sh_string">"menu_bottom"</span><span class="sh_keyword">&gt;</span></li><li>  <span class="sh_keyword">&lt;ul</span> <span class="sh_type">id</span><span class="sh_symbol">=</span><span class="sh_string">"go_nav"</span><span class="sh_keyword">&gt;</span></li><li>    <span class="sh_keyword">&lt;li</span> <span class="sh_type">class</span><span class="sh_symbol">=</span><span class="sh_string">"active"</span><span class="sh_keyword">&gt;&lt;a</span> <span class="sh_type">href</span><span class="sh_symbol">=</span><span class="sh_string">"#"</span><span class="sh_keyword">&gt;</span>About<span class="sh_keyword">&lt;/a&gt;&lt;/li&gt;</span></li><li>    <span class="sh_keyword">&lt;li&gt;&lt;a</span> <span class="sh_type">href</span><span class="sh_symbol">=</span><span class="sh_string">"#"</span><span class="sh_keyword">&gt;</span>Skins<span class="sh_keyword">&lt;/a&gt;&lt;/li&gt;</span></li><li>    <span class="sh_keyword">&lt;li&gt;&lt;a</span> <span class="sh_type">href</span><span class="sh_symbol">=</span><span class="sh_string">"#"</span><span class="sh_keyword">&gt;</span>Samples<span class="sh_keyword">&lt;/a&gt;&lt;/li&gt;</span></li><li>    <span class="sh_keyword">&lt;li&gt;&lt;a</span> <span class="sh_type">href</span><span class="sh_symbol">=</span><span class="sh_string">"#"</span><span class="sh_keyword">&gt;</span>Contacts<span class="sh_keyword">&lt;/a&gt;&lt;/li&gt;</span></li><li>  <span class="sh_keyword">&lt;/ul&gt;</span></li><li><span class="sh_keyword">&lt;/nav&gt;</span></li></ol></pre><pre class="snippet-textonly sh_sourceCode" style="display: none;" tabindex="0" contenteditable="">&lt;nav class="menu_bottom"&gt;
-  &lt;ul id="go_nav"&gt;
-    &lt;li class="active"&gt;&lt;a href="#"&gt;About&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="#"&gt;Skins&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="#"&gt;Samples&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="#"&gt;Contacts&lt;/a&gt;&lt;/li&gt;
-  &lt;/ul&gt;
-&lt;/nav&gt;</pre></div></div>
-          
-          
-          <h2>CSS</h2>
-          
-          <p>Add styles for desktop and mobile phones.</p>
-          
-<div class="snippet-container"><div class="sh_default snippet-wrap"><div class="snippet-menu sh_sourceCode"><a class="snippet-window sh_url" href="#">pop-up</a><a class="snippet-text sh_url" href="#">text</a></div><pre class="shi_pre sh_css snippet-formatted sh_sourceCode"><ol class="snippet-num"><li><span class="sh_selector">.link_nav</span> <span class="sh_cbracket">{</span></li><li>  <span class="sh_property">display:</span><span class="sh_value">none</span>;</li><li><span class="sh_cbracket">}</span></li><li>    </li><li>@media only screen and <span class="sh_symbol">(</span>max<span class="sh_symbol">-</span>width<span class="sh_symbol">:</span>480px<span class="sh_symbol">)</span> <span class="sh_cbracket">{</span> <span class="sh_comment">/* Smartphone custom styles */</span></li><li>  <span class="sh_value">.link_nav</span> {</li><li>    <span class="sh_property">display:</span><span class="sh_value">block</span>;</li><li>  <span class="sh_cbracket">}</span></li><li></li><li>  <span class="sh_selector">.menu_main</span> ul <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">display:</span><span class="sh_value">none</span>;</li><li>  <span class="sh_cbracket">}</span> </li><li>}</li></ol></pre><pre class="snippet-textonly sh_sourceCode" style="display: none;" tabindex="0" contenteditable="">.link_nav {
-  display:none;
-}
-    
-@media only screen and (max-width:480px) { /* Smartphone custom styles */
-  .link_nav {
-    display:block;
-  }
-
-  .menu_main ul {
-    display:none;
-  } 
-}</pre></div></div>
-      
+        <div class="col_33">
+          <h2>Clean code</h2>
+          <p>HTML5 and CSS3 made live of web developers easier than ever. Welcome to the world where less code and less files required. “Simpliste” has different skins and all of them are created with no images for styling at all.</p>
+          <p>Template contains CSS-reset based on the reset file from <a href="http://html5boilerplate.com/" target="_blank">HTML5 boilerplate</a> which makes appearens of “Simpliste” skins consistent in different browsers.</p>
+          <p>Print styles and styles for mobile devices are already included in the stylesheet.</p>
         </div>
 
+        <div class="col_33">
+          <h2>Responsive markup</h2>
+          <p>You know that now it's time to think more about your users with mobile devices. This template will make your site respond to your client's browser with no effort on your part.</p>
+          <p>Multi-column layout becomes one column for viewers with tablets, navigation elements become bigger for users with smartphones. And your desktop browser users will see just a normal web site.</p>
+          <p>Try changing the width of your browser window and you'll see how “Simpliste” works.</p>
+        </div>
+
+        <div class="col_33">
+          <h2>Easy to use</h2>
+          <p>“Simpliste” is not a template for a CMS. You can use its code right away after downloading without reading any documentation. Place your content, make customisations and voilà the site is ready to upload to the server.</p>
+          <p>All content management can be done by using existing sample blocks and styles. Almost every template style is represented among <a href="#samples">samples</a> on this page. Off course you can create your own styles, which is easy as well.</p>
+        </div>
+
+        <div class="clearfix"></div>
+
+
+        <h1>“Simpliste” in use</h1>
+
+        <div class="col_50">
+          <h2>Sample content</h2>
+
+          <h3>Principles behind “Simpliste”</h3>
+          <ul>
+             <li>Really simple</li>
+             <li>Has ready to use set of simple designs</li>
+             <li>It's written using HTML5 and CSS3</li>
+             <li>It responds to mobile devices</li>
+             <li>No CMS</li>
+             <li>Free</li>
+          </ul>
+
+          <h3>How to use?</h3>
+          <form action="">
+          <select name=skin onchange='reskin(this.form.skin);'>
+          <option>default</option>
+          <option>aim</option>
+          <option>blackberry</option>
+          <option>blue</option>
+          <option>dark-blue</option>
+          <option>fresh</option>
+          <option>fruitjuice</option>
+          <option>glimpse</option>
+          <option>green</option>
+          <option>humble</option>
+          <option>illusion</option>
+          <option>isimple</option>
+          <option>liner</option>
+          <option>maple</option>
+          <option>mentol</option>
+          <option>nightroad</option>
+          <option>orange</option>
+          <option>passion</option>
+          <option>pink</option>
+          <option>purple</option>
+          <option>red</option>
+          <option>simplesoft</option>
+          <option>simpleswiss</option>
+          <option>simploid</option>
+          <option>snobbish</option>
+          <option>solution</option>
+          <option>stylus</option>
+          <option>teawithmilk</option>
+          <option>yellow</option>
+          </select>
+          </form>
+          <script>
+            function reskin(dropdown){
+              var theIndex  = dropdown.selectedIndex;
+              var theValue = dropdown.options[theIndex].value;
+              var sheet  = "skin/" + theValue + ".css";
+              document.getElementById('css_skin').setAttribute('href', sheet);
+              return true;
+            }
+          </script>
+          <ol>
+             <li>Choose one skin from the list above</li>
+             <li>Copy the file from the skin folder</li>
+             <li>Rename it to skin.css</li>
+             <li>Make any customisation you need</li>
+          </ol>
+        </div>
+
+        <div class="col_50">
+          <form action="#" method="post" class="form">
+            <h2>Sample form</h2>
+
+            <p class="col_50">
+              <label for="name">Simple name:</label><br/>
+              <input type="text" name="name" id="name" value="" />
+            </p>
+            <p class="col_50">
+              <label for="email">Simple e-mail:</label><br/>
+              <input type="text" name="email" id="email" value="" />
+            </p>
+            <div class="clearfix"></div>
+
+            <h3>Your favorite number</h3>
+            <p>
+              <div class="col_33">
+                <label for="radio-choice-1"><input type="radio" name="radio-choice-1" id="radio-choice-1" tabindex="2" value="choice-1" /> One</label><br/>
+                <label for="radio-choice-2"><input type="radio" name="radio-choice-1" id="radio-choice-2" tabindex="3" value="choice-2" /> Two</label><br/>
+                <label for="radio-choice-3"><input type="radio" name="radio-choice-1" id="radio-choice-3" tabindex="4" value="choice-3" /> Three</label>
+              </div>
+
+              <div class="col_33">
+                <label for="radio-choice-4"><input type="radio" name="radio-choice-1" id="radio-choice-4" tabindex="2" value="choice-1" /> Four</label><br/>
+                <label for="radio-choice-5"><input type="radio" name="radio-choice-1" id="radio-choice-5" tabindex="3" value="choice-2" /> Five</label><br/>
+                <label for="radio-choice-6"><input type="radio" name="radio-choice-1" id="radio-choice-6" tabindex="4" value="choice-3" /> Six</label>
+              </div>
+
+              <div class="col_33">
+                <label for="radio-choice-7"><input type="radio" name="radio-choice-1" id="radio-choice-7" tabindex="2" value="choice-1" /> Seven</label><br/>
+                <label for="radio-choice-8"><input type="radio" name="radio-choice-1" id="radio-choice-8" tabindex="3" value="choice-2" /> Eight</label><br/>
+                <label for="radio-choice-9"><input type="radio" name="radio-choice-1" id="radio-choice-9" tabindex="3" value="choice-2" /> Niine</label>
+              </div>
+
+            <div class="clearfix"></div>
+            </p>
+
+            <p>
+              <label for="select-choice">Simple city:</label>
+              <select name="select-choice" id="select-choice">
+                <option value="Choice 1">London</option>
+                <option value="Choice 2">Paris</option>
+                <option value="Choice 3">Rome</option>
+              </select>
+            </p>
+
+            <p>
+              <label for="textarea">Simple testimonial:</label><br/>
+              <textarea cols="40" rows="8" name="textarea" id="textarea"></textarea>
+            </p>
+
+            <p>
+              <label for="checkbox"><input type="checkbox" name="checkbox" id="checkbox" /> Simple agreement</label><br/>
+            </p>
+
+            <div>
+                <button type="button" class="button">Submit</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="clearfix"></div>
+
+
+        <div class="col_33">
+          <h2>More elements</h2>
+
+          <p>Use <code>strong</code> tag for information with <strong>strong importance</strong>. Use <code>em</code> tag to <em>stress emphasis</em> on a word or phrase.</p>
+
+          <p class="warning">Sample <code>.warning</code></p>
+          <p class="success">Sample <code>.success</code></p>
+          <p class="message">Sample <code>.message</code></p>
+        </div>
+
+        <div class="col_66">
+          <h2>CSS classes table</h2>
+
+          <table class="table">
+            <tr>
+              <th>Class</th>
+              <th>Description</th>
+            </tr>
+
+            <tr>
+              <td><code>.col_33</code></td>
+              <td>Column with 33% width</td>
+            </tr>
+            <tr>
+              <td><code>.col_50</code></td>
+              <td>Column with 50% width</td>
+            </tr>
+            <tr>
+              <td><code>.col_66</code></td>
+              <td>Column with 66% width</td>
+            </tr>
+            <tr>
+              <td><code>.col_100</code></td>
+              <td>Full width column with proper margins</td>
+            </tr>
+            <tr>
+              <td><code>.clearfix</code></td>
+              <td>Use after or wrap a block of floated columns</td>
+            </tr>
+            <tr>
+              <td><code>.left</code></td>
+              <td>Left text alignment</td>
+            </tr>
+            <tr>
+              <td><code>.right</code></td>
+              <td>Right text alignment</td>
+            </tr>
+            <tr>
+              <td><code>.center</code></td>
+              <td>Centered text alignment</td>
+            </tr>
+            <tr>
+              <td><code>.img_floatleft</code></td>
+              <td>Left alignment for images in content</td>
+            </tr>
+            <tr>
+              <td><code>.img_floatright</code></td>
+              <td>Right alignment for images in content</td>
+            </tr>
+            <tr>
+              <td><code>.img</code></td>
+              <td>Makes image change its width when browser window width is changed</td>
+            </tr>
+          </table>
+        </div>
 
         <div class="clearfix"></div>
 
       </article>
+      <!-- endsection primary -->
+      <!-- section secondary -->
+      <!-- endsection secondary -->
     </div>
-    
+
     <footer class="footer clearfix">
-      <div class="copyright"><a href="http://cssr.ru/simpliste/">Keep it simplest</a></div>
+      <div class="copyright">Keep it simplest</div>
 
       <nav class="menu_bottom">
-        <ul id="go_nav">
+        <ul>
           <li class="active"><a href="#">About</a></li>
           <li><a href="#">Skins</a></li>
           <li><a href="#">Samples</a></li>
-          <li><a href="#">Contacts</a></li>
         </ul>
       </nav>
     </footer>
 
   </div>
-  
-<!-- Don't copy. For demo only -->
-<link rel="stylesheet" href="http://syntaxhighlight.in/shi/css/shi_default.min.css">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-<script src="http://syntaxhighlight.in/shi/js/shi_jquery.min.js"></script>
 </body>
 </html>
 #>>> copy text xtensions/snippets/responsive_navigation/jquery.mobilemenu.min.js
@@ -9449,26 +10056,13 @@ Sticky footer will always be displayed on the bottom of the browser window (when
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="favicon.ico" rel="shortcut icon">
-  <link rel="stylesheet" href="../../../_www/css/style.css">
-  <title></title>  
+  <link rel="stylesheet" id="css_reset" href="reset.css">
+  <link rel="stylesheet" id="css_skin" href="skin.css">
+  <link rel="stylesheet" id="css_style" href="style.css">
   <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
-  
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-<script src="jquery.mobilemenu.min.js"></script>
-<script>
-$(
-  function(){
-    $('.menu_main ul').mobileMenu({
-      //combine: true,
-      //groupPageText: "Main",
-      nested: true,
-      prependTo: ".menu_main",
-      switchWidth: 480,
-      topOptionText: "Menu"
-    });
-  }
-)
-</script>
+  <!-- section meta -->
+  <title></title>
+  <!-- endsection meta -->
 </head>
 
 <body>
@@ -9479,79 +10073,267 @@ $(
 
       <nav class="menu_main">
         <ul>
-          <li class="active"><a href="#1">About</a></li>
-          <li><a href="#2">Skins</a></li>
-          <li><a href="#3">Samples</a></li>
-          <li><a href="#4">Contacts</a></li>
+          <li class="active"><a href="#">About</a></li>
+          <li><a href="#">Skins</a></li>
+          <li><a href="#">Samples</a></li>
         </ul>
       </nav>
     </header>
 
 
     <div class="info">
+      <!-- section primary -->
       <article class="hero clearfix">
         <div class="col_100">
-          <h1>Replace menu with select input</h1>
-          <p>Sometimes it's better to use native browser controls for certain tasks. And maybe creating navigation on mobile devices is one of those times. Script goes through your menu and creates a select input.</p>
-          
-          <p>This solution relies on Javascript, so don't forget to think about fallback styles.</p>
-          
-          <p>Try <strong>changing width of your browser window</strong> to see this method in action. And use the <strong>source code of this page</strong> as your guide.</p>
+          <h1>Simplest solution for your simple tasks</h1>
+          <p>You don't always need to make difficult work of running management system with administrative panel to have a web site. “Simpliste” is a very simple and easy to use HTML template for web projects where you only need to create one or couple of pages with simple layout. If you are working on a lightweight information page with as less efforts for you to code and as less kilobytes  for the user to download as possible, “Simpliste” is what you need.</p>
+          <p>No CMS required and it's free. Clean code will make your task even easier. HTML5 and CSS3 bring all their features for your future site. This template has skins which you can choose from. No images are used for styling.</p>
+          <p>Are you worried about convenience of your site users with mobile devices? “Simpliste” responds to the width of user's device and makes information more accessible.</p>
         </div>
       </article>
 
 
       <article class="article clearfix">
-        <div class="col_66">
-          <h2>Javascript</h2>
-          <p>Don't forget to include jQuery</p>
-<div class="snippet-container"><div class="sh_default snippet-wrap"><div class="snippet-menu sh_sourceCode"><a class="snippet-window sh_url" href="#">pop-up</a><a class="snippet-text sh_url" href="#">text</a></div><pre class="shi_pre sh_html snippet-formatted sh_sourceCode"><ol class="snippet-num"><li><span class="sh_keyword">&lt;script</span> <span class="sh_type">src</span><span class="sh_symbol">=</span><span class="sh_string">"https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"</span><span class="sh_keyword">&gt;&lt;/script&gt;</span></li></ol></pre><pre class="snippet-textonly sh_sourceCode" style="display: none;" tabindex="0" contenteditable="">&lt;script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"&gt;&lt;/script&gt;</pre></div></div>
-          
-          <p>Include a link to a small <a href="https://github.com/mattkersley/Responsive-Menu">Responsive Menu plugin</a>.</p>
-          
-<div class="snippet-container"><div class="sh_default snippet-wrap"><div class="snippet-menu sh_sourceCode"><a class="snippet-window sh_url" href="#">pop-up</a><a class="snippet-text sh_url" href="#">text</a></div><pre class="shi_pre sh_html snippet-formatted sh_sourceCode"><ol class="snippet-num"><li><span class="sh_keyword">&lt;script</span> <span class="sh_type">src</span><span class="sh_symbol">=</span><span class="sh_string">"jquery.mobilemenu.min.js"</span><span class="sh_keyword">&gt;&lt;/script&gt;</span></li></ol></pre><pre class="snippet-textonly sh_sourceCode" style="display: none;" tabindex="0" contenteditable="">&lt;script src="jquery.mobilemenu.min.js"&gt;&lt;/script&gt;</pre></div></div>
-          
-          <p>Call the script on navigation element (<strong>.menu_main ul</strong> in this demo) and change defaults if needed.</p>
-          
-<div class="snippet-container"><div class="sh_default snippet-wrap"><div class="snippet-menu sh_sourceCode"><a class="snippet-window sh_url" href="#">pop-up</a><a class="snippet-text sh_url" href="#">text</a></div><pre class="shi_pre sh_javascript snippet-formatted sh_sourceCode"><ol class="snippet-num"><li>$<span class="sh_symbol">(</span></li><li>  <span class="sh_keyword">function</span><span class="sh_symbol">()</span><span class="sh_cbracket">{</span></li><li>    $<span class="sh_symbol">(</span><span class="sh_string">'.menu_main ul'</span><span class="sh_symbol">).</span><span class="sh_function">mobileMenu</span><span class="sh_symbol">(</span><span class="sh_cbracket">{</span></li><li>      <span class="sh_comment">//combine: true,</span></li><li>      <span class="sh_comment">//groupPageText: "Main",</span></li><li>      nested<span class="sh_symbol">:</span> <span class="sh_keyword">true</span><span class="sh_symbol">,</span></li><li>      prependTo<span class="sh_symbol">:</span> <span class="sh_string">".menu_main"</span><span class="sh_symbol">,</span></li><li>      switchWidth<span class="sh_symbol">:</span> <span class="sh_number">480</span><span class="sh_symbol">,</span></li><li>      topOptionText<span class="sh_symbol">:</span> <span class="sh_string">"Menu"</span></li><li>    <span class="sh_cbracket">}</span><span class="sh_symbol">);</span></li><li>  <span class="sh_cbracket">}</span></li><li><span class="sh_symbol">)</span></li></ol></pre><pre class="snippet-textonly sh_sourceCode" style="display: none;" tabindex="0" contenteditable="">$(
-  function(){
-    $('.menu_main ul').mobileMenu({
-      //combine: true,
-      //groupPageText: "Main",
-      nested: true,
-      prependTo: ".menu_main",
-      switchWidth: 480,
-      topOptionText: "Menu"
-    });
-  }
-)</pre></div></div>
-
+        <div class="col_33">
+          <h2>Clean code</h2>
+          <p>HTML5 and CSS3 made live of web developers easier than ever. Welcome to the world where less code and less files required. “Simpliste” has different skins and all of them are created with no images for styling at all.</p>
+          <p>Template contains CSS-reset based on the reset file from <a href="http://html5boilerplate.com/" target="_blank">HTML5 boilerplate</a> which makes appearens of “Simpliste” skins consistent in different browsers.</p>
+          <p>Print styles and styles for mobile devices are already included in the stylesheet.</p>
         </div>
 
+        <div class="col_33">
+          <h2>Responsive markup</h2>
+          <p>You know that now it's time to think more about your users with mobile devices. This template will make your site respond to your client's browser with no effort on your part.</p>
+          <p>Multi-column layout becomes one column for viewers with tablets, navigation elements become bigger for users with smartphones. And your desktop browser users will see just a normal web site.</p>
+          <p>Try changing the width of your browser window and you'll see how “Simpliste” works.</p>
+        </div>
+
+        <div class="col_33">
+          <h2>Easy to use</h2>
+          <p>“Simpliste” is not a template for a CMS. You can use its code right away after downloading without reading any documentation. Place your content, make customisations and voilà the site is ready to upload to the server.</p>
+          <p>All content management can be done by using existing sample blocks and styles. Almost every template style is represented among <a href="#samples">samples</a> on this page. Off course you can create your own styles, which is easy as well.</p>
+        </div>
+
+        <div class="clearfix"></div>
+
+
+        <h1>“Simpliste” in use</h1>
+
+        <div class="col_50">
+          <h2>Sample content</h2>
+
+          <h3>Principles behind “Simpliste”</h3>
+          <ul>
+             <li>Really simple</li>
+             <li>Has ready to use set of simple designs</li>
+             <li>It's written using HTML5 and CSS3</li>
+             <li>It responds to mobile devices</li>
+             <li>No CMS</li>
+             <li>Free</li>
+          </ul>
+
+          <h3>How to use?</h3>
+          <form action="">
+          <select name=skin onchange='reskin(this.form.skin);'>
+          <option>default</option>
+          <option>aim</option>
+          <option>blackberry</option>
+          <option>blue</option>
+          <option>dark-blue</option>
+          <option>fresh</option>
+          <option>fruitjuice</option>
+          <option>glimpse</option>
+          <option>green</option>
+          <option>humble</option>
+          <option>illusion</option>
+          <option>isimple</option>
+          <option>liner</option>
+          <option>maple</option>
+          <option>mentol</option>
+          <option>nightroad</option>
+          <option>orange</option>
+          <option>passion</option>
+          <option>pink</option>
+          <option>purple</option>
+          <option>red</option>
+          <option>simplesoft</option>
+          <option>simpleswiss</option>
+          <option>simploid</option>
+          <option>snobbish</option>
+          <option>solution</option>
+          <option>stylus</option>
+          <option>teawithmilk</option>
+          <option>yellow</option>
+          </select>
+          </form>
+          <script>
+            function reskin(dropdown){
+              var theIndex  = dropdown.selectedIndex;
+              var theValue = dropdown.options[theIndex].value;
+              var sheet  = "skin/" + theValue + ".css";
+              document.getElementById('css_skin').setAttribute('href', sheet);
+              return true;
+            }
+          </script>
+          <ol>
+             <li>Choose one skin from the list above</li>
+             <li>Copy the file from the skin folder</li>
+             <li>Rename it to skin.css</li>
+             <li>Make any customisation you need</li>
+          </ol>
+        </div>
+
+        <div class="col_50">
+          <form action="#" method="post" class="form">
+            <h2>Sample form</h2>
+
+            <p class="col_50">
+              <label for="name">Simple name:</label><br/>
+              <input type="text" name="name" id="name" value="" />
+            </p>
+            <p class="col_50">
+              <label for="email">Simple e-mail:</label><br/>
+              <input type="text" name="email" id="email" value="" />
+            </p>
+            <div class="clearfix"></div>
+
+            <h3>Your favorite number</h3>
+            <p>
+              <div class="col_33">
+                <label for="radio-choice-1"><input type="radio" name="radio-choice-1" id="radio-choice-1" tabindex="2" value="choice-1" /> One</label><br/>
+                <label for="radio-choice-2"><input type="radio" name="radio-choice-1" id="radio-choice-2" tabindex="3" value="choice-2" /> Two</label><br/>
+                <label for="radio-choice-3"><input type="radio" name="radio-choice-1" id="radio-choice-3" tabindex="4" value="choice-3" /> Three</label>
+              </div>
+
+              <div class="col_33">
+                <label for="radio-choice-4"><input type="radio" name="radio-choice-1" id="radio-choice-4" tabindex="2" value="choice-1" /> Four</label><br/>
+                <label for="radio-choice-5"><input type="radio" name="radio-choice-1" id="radio-choice-5" tabindex="3" value="choice-2" /> Five</label><br/>
+                <label for="radio-choice-6"><input type="radio" name="radio-choice-1" id="radio-choice-6" tabindex="4" value="choice-3" /> Six</label>
+              </div>
+
+              <div class="col_33">
+                <label for="radio-choice-7"><input type="radio" name="radio-choice-1" id="radio-choice-7" tabindex="2" value="choice-1" /> Seven</label><br/>
+                <label for="radio-choice-8"><input type="radio" name="radio-choice-1" id="radio-choice-8" tabindex="3" value="choice-2" /> Eight</label><br/>
+                <label for="radio-choice-9"><input type="radio" name="radio-choice-1" id="radio-choice-9" tabindex="3" value="choice-2" /> Niine</label>
+              </div>
+
+            <div class="clearfix"></div>
+            </p>
+
+            <p>
+              <label for="select-choice">Simple city:</label>
+              <select name="select-choice" id="select-choice">
+                <option value="Choice 1">London</option>
+                <option value="Choice 2">Paris</option>
+                <option value="Choice 3">Rome</option>
+              </select>
+            </p>
+
+            <p>
+              <label for="textarea">Simple testimonial:</label><br/>
+              <textarea cols="40" rows="8" name="textarea" id="textarea"></textarea>
+            </p>
+
+            <p>
+              <label for="checkbox"><input type="checkbox" name="checkbox" id="checkbox" /> Simple agreement</label><br/>
+            </p>
+
+            <div>
+                <button type="button" class="button">Submit</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="clearfix"></div>
+
+
+        <div class="col_33">
+          <h2>More elements</h2>
+
+          <p>Use <code>strong</code> tag for information with <strong>strong importance</strong>. Use <code>em</code> tag to <em>stress emphasis</em> on a word or phrase.</p>
+
+          <p class="warning">Sample <code>.warning</code></p>
+          <p class="success">Sample <code>.success</code></p>
+          <p class="message">Sample <code>.message</code></p>
+        </div>
+
+        <div class="col_66">
+          <h2>CSS classes table</h2>
+
+          <table class="table">
+            <tr>
+              <th>Class</th>
+              <th>Description</th>
+            </tr>
+
+            <tr>
+              <td><code>.col_33</code></td>
+              <td>Column with 33% width</td>
+            </tr>
+            <tr>
+              <td><code>.col_50</code></td>
+              <td>Column with 50% width</td>
+            </tr>
+            <tr>
+              <td><code>.col_66</code></td>
+              <td>Column with 66% width</td>
+            </tr>
+            <tr>
+              <td><code>.col_100</code></td>
+              <td>Full width column with proper margins</td>
+            </tr>
+            <tr>
+              <td><code>.clearfix</code></td>
+              <td>Use after or wrap a block of floated columns</td>
+            </tr>
+            <tr>
+              <td><code>.left</code></td>
+              <td>Left text alignment</td>
+            </tr>
+            <tr>
+              <td><code>.right</code></td>
+              <td>Right text alignment</td>
+            </tr>
+            <tr>
+              <td><code>.center</code></td>
+              <td>Centered text alignment</td>
+            </tr>
+            <tr>
+              <td><code>.img_floatleft</code></td>
+              <td>Left alignment for images in content</td>
+            </tr>
+            <tr>
+              <td><code>.img_floatright</code></td>
+              <td>Right alignment for images in content</td>
+            </tr>
+            <tr>
+              <td><code>.img</code></td>
+              <td>Makes image change its width when browser window width is changed</td>
+            </tr>
+          </table>
+        </div>
 
         <div class="clearfix"></div>
 
       </article>
+      <!-- endsection primary -->
+      <!-- section secondary -->
+      <!-- endsection secondary -->
     </div>
-    
+
     <footer class="footer clearfix">
-      <div class="copyright"><a href="http://cssr.ru/simpliste/">Keep it simplest</a></div>
+      <div class="copyright">Keep it simplest</div>
 
       <nav class="menu_bottom">
         <ul>
           <li class="active"><a href="#">About</a></li>
           <li><a href="#">Skins</a></li>
           <li><a href="#">Samples</a></li>
-          <li><a href="#">Contacts</a></li>
         </ul>
       </nav>
     </footer>
 
   </div>
-  
-<!-- Don't copy. For demo only -->
-<link rel="stylesheet" href="http://syntaxhighlight.in/shi/css/shi_default.min.css">
-<script src="http://syntaxhighlight.in/shi/js/shi_jquery.min.js"></script>
 </body>
 </html>
 #>>> copy text xtensions/snippets/responsive_navigation/side_flyout.html
@@ -9561,124 +10343,13 @@ $(
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="favicon.ico" rel="shortcut icon">
-  <link rel="stylesheet" href="../../../_www/css/style.css">
-  <title></title>  
+  <link rel="stylesheet" id="css_reset" href="reset.css">
+  <link rel="stylesheet" id="css_skin" href="skin.css">
+  <link rel="stylesheet" id="css_style" href="style.css">
   <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
-  
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-<script>
-$(
-  function(){
-    $("body").addClass("js");
-  
-    $(".link_nav").click(
-      function(){
-        $("body").toggleClass("mobile_nav");
-      }
-    );
-  }
-)
-</script>
-<style>
-.link_nav {
-  display:none;
-}
-.link_nav:before {
-  content:"» ";
-}
-  
-@media only screen and (max-width:480px) { /* Smartphone custom styles */
-  .js .link_nav {
-    display:block;
-    position:fixed;
-    left:0px;
-    top:5px;
-    margin: 0 0 0 -1px;
-    
-    background:#fff;
-    background:rgba(255,255,255,0.9);
-    border:1px solid #666;
-    border:1px solid rgba(0,0,0,0.6);
-    border-left: 0 none;    
-    z-index: 100;    
-    
-    -moz-transition: all 1s; 
-    -webkit-transition: all 1s;  
-    -ms-transition: all 1s;  
-    -o-transition: all 1s;  
-    transition: all 1s;
-  }
-
-  .js .menu_main > ul {
-    position:fixed;
-    width:65%;
-    left:-65%;
-    top:0;
-    margin-left:-1px;
-    
-    background:#fff;
-    background:rgba(255,255,255,0.9);
-    border:1px solid #666;
-    border:1px solid rgba(0,0,0,0.6);
-    border-left:0;
-    
-    -moz-transition: all 1s; 
-    -webkit-transition: all 1s;  
-    -ms-transition: all 1s;  
-    -o-transition: all 1s;  
-    transition: all 1s;
-  }  
-  .js .menu_main ul li {
-    display:block;
-    text-align:left;
-  }
-  /* Second level menu */
-  .js .menu_main ul ul {
-    display:block;
-    margin-left:1.5em;
-    position:static;
-  }  
-  
-  .js .header,
-  .js .info,
-  .js .footer {
-    width:96%;
-    margin-left:0%;
-    
-    -moz-transition: margin 1s; 
-    -webkit-transition: margin 1s;  
-    -ms-transition: margin 1s;  
-    -o-transition: margin 1s;  
-    transition: margin 1s;
-  }
-  
-  
-  /* Navigation is opened */
-  .mobile_nav .container {
-    overflow-x: hidden;
-    width:100%;
-  }
-  .mobile_nav .header,
-  .mobile_nav .info,
-  .mobile_nav .footer {
-    margin-left: 70%;
-  }
-  
-  .mobile_nav .menu_main > ul {
-    display:block;
-    top:0;
-    left:0%;
-    width:65%;
-}
-  
-  .mobile_nav .link_nav {
-    left:65%;
-  }
-  .mobile_nav .link_nav:before {
-    content:"« ";
-  }
-}
-  </style>
+  <!-- section meta -->
+  <title></title>
+  <!-- endsection meta -->
 </head>
 
 <body>
@@ -9688,212 +10359,268 @@ $(
       <div class="logo">.Simpliste</div>
 
       <nav class="menu_main">
-        <a href="#go_nav" class="link_nav">Menu</a>
-        <ul id="go_nav">
+        <ul>
           <li class="active"><a href="#">About</a></li>
           <li><a href="#">Skins</a></li>
           <li><a href="#">Samples</a></li>
-          <li><a href="#">Contacts</a></li>
         </ul>
       </nav>
     </header>
 
 
     <div class="info">
+      <!-- section primary -->
       <article class="hero clearfix">
         <div class="col_100">
-          <h1>Flyout navigation</h1>
-          <p>Imagine having a button on page clicking on which would slide navigation from side of the browser window, moving content of the page in the same direction, so that you won't lose the context.</p>
-          
-          <p>This approach requires a little bit of Javascript.</p>
-          
-          <p>Try <strong>changing width of your browser window</strong> to see this method in action. And use the <strong>source code of this page</strong> as your guide.</p>
+          <h1>Simplest solution for your simple tasks</h1>
+          <p>You don't always need to make difficult work of running management system with administrative panel to have a web site. “Simpliste” is a very simple and easy to use HTML template for web projects where you only need to create one or couple of pages with simple layout. If you are working on a lightweight information page with as less efforts for you to code and as less kilobytes  for the user to download as possible, “Simpliste” is what you need.</p>
+          <p>No CMS required and it's free. Clean code will make your task even easier. HTML5 and CSS3 bring all their features for your future site. This template has skins which you can choose from. No images are used for styling.</p>
+          <p>Are you worried about convenience of your site users with mobile devices? “Simpliste” responds to the width of user's device and makes information more accessible.</p>
         </div>
       </article>
 
 
       <article class="article clearfix">
-        <div class="col_66">
-          <h2>HTML</h2>
-          <p>
-            Add a link in your header with <strong>link_nav</strong> class. Name it as you like. It's <strong>Menu</strong> in this demo. Use <strong>#go_nav</strong> href value on the link and id <strong>go_nav</strong> on the menu itself if your menu has too many items.
-          </p> 
-        
-          <div class="snippet-container"><div class="sh_default snippet-wrap"><div class="snippet-menu sh_sourceCode"><a class="snippet-window sh_url" href="#">pop-up</a><a class="snippet-text sh_url" href="#">text</a></div><pre class="shi_pre sh_html snippet-formatted sh_sourceCode"><ol class="snippet-num"><li><span class="sh_keyword">&lt;nav</span> <span class="sh_type">class</span><span class="sh_symbol">=</span><span class="sh_string">"menu_main"</span><span class="sh_keyword">&gt;</span></li><li>  <span class="sh_keyword">&lt;a</span> <span class="sh_type">href</span><span class="sh_symbol">=</span><span class="sh_string">"#go_nav"</span> <span class="sh_type">class</span><span class="sh_symbol">=</span><span class="sh_string">"link_nav"</span><span class="sh_keyword">&gt;</span>Menu<span class="sh_keyword">&lt;/a&gt;</span></li><li>  <span class="sh_keyword">&lt;ul</span> <span class="sh_type">id</span><span class="sh_symbol">=</span><span class="sh_string">"go_nav"</span><span class="sh_keyword">&gt;</span></li><li>    <span class="sh_keyword">&lt;li</span> <span class="sh_type">class</span><span class="sh_symbol">=</span><span class="sh_string">"active"</span><span class="sh_keyword">&gt;&lt;a</span> <span class="sh_type">href</span><span class="sh_symbol">=</span><span class="sh_string">"#"</span><span class="sh_keyword">&gt;</span>About<span class="sh_keyword">&lt;/a&gt;&lt;/li&gt;</span></li><li>    <span class="sh_keyword">&lt;li&gt;&lt;a</span> <span class="sh_type">href</span><span class="sh_symbol">=</span><span class="sh_string">"#"</span><span class="sh_keyword">&gt;</span>Skins<span class="sh_keyword">&lt;/a&gt;&lt;/li&gt;</span></li><li>    <span class="sh_keyword">&lt;li&gt;&lt;a</span> <span class="sh_type">href</span><span class="sh_symbol">=</span><span class="sh_string">"#"</span><span class="sh_keyword">&gt;</span>Samples<span class="sh_keyword">&lt;/a&gt;&lt;/li&gt;</span></li><li>    <span class="sh_keyword">&lt;li&gt;&lt;a</span> <span class="sh_type">href</span><span class="sh_symbol">=</span><span class="sh_string">"#"</span><span class="sh_keyword">&gt;</span>Contacts<span class="sh_keyword">&lt;/a&gt;&lt;/li&gt;</span></li><li>  <span class="sh_keyword">&lt;/ul&gt;</span></li><li><span class="sh_keyword">&lt;/nav&gt;</span></li></ol></pre><pre class="snippet-textonly sh_sourceCode" style="display: none;" tabindex="0" contenteditable="">&lt;nav class="menu_main"&gt;
-            &lt;a href="#go_nav" class="link_nav"&gt;Menu&lt;/a&gt;
-            &lt;ul id="go_nav"&gt;
-              &lt;li class="active"&gt;&lt;a href="#"&gt;About&lt;/a&gt;&lt;/li&gt;
-              &lt;li&gt;&lt;a href="#"&gt;Skins&lt;/a&gt;&lt;/li&gt;
-              &lt;li&gt;&lt;a href="#"&gt;Samples&lt;/a&gt;&lt;/li&gt;
-              &lt;li&gt;&lt;a href="#"&gt;Contacts&lt;/a&gt;&lt;/li&gt;
-            &lt;/ul&gt;
-          &lt;/nav&gt;</pre></div></div>
-      
-        </div>
-        <div class="clearfix"></div>
-        
-        <div class="col_66">        
-          <h2>CSS</h2>
-          <p>You will need more CSS than scripts to make this work. And on Webkit browsers flyout happens with animation, using CSS transitions.</p>
-          
-          <div class="snippet-container"><div class="sh_default snippet-wrap"><div class="snippet-menu sh_sourceCode"><a class="snippet-window sh_url" href="#">pop-up</a><a class="snippet-text sh_url" href="#">text</a></div><pre class="shi_pre sh_css snippet-formatted sh_sourceCode"><ol class="snippet-num"><li><span class="sh_selector">.link_nav</span> <span class="sh_cbracket">{</span></li><li>  <span class="sh_property">display:</span><span class="sh_value">none</span>;</li><li><span class="sh_cbracket">}</span></li><li><span class="sh_selector">.link_nav</span><span class="sh_symbol">:</span>before <span class="sh_cbracket">{</span></li><li>  <span class="sh_property">content:</span>"» ";</li><li><span class="sh_cbracket">}</span></li><li>  </li><li>@media only screen and <span class="sh_symbol">(</span>max<span class="sh_symbol">-</span>width<span class="sh_symbol">:</span>480px<span class="sh_symbol">)</span> <span class="sh_cbracket">{</span> <span class="sh_comment">/* Smartphone custom styles */</span></li><li>  <span class="sh_value">.js</span> <span class="sh_value">.link_nav</span> {</li><li>    <span class="sh_property">display:</span><span class="sh_value">block</span>;</li><li>    <span class="sh_property">position:</span><span class="sh_value">fixed</span>;</li><li>    <span class="sh_property">left:</span><span class="sh_value">0px</span>;</li><li>    <span class="sh_property">top:</span><span class="sh_value">5px</span>;</li><li>    <span class="sh_property">margin:</span> <span class="sh_value">0</span> <span class="sh_value">0</span> <span class="sh_value">0</span> <span class="sh_value">-1px</span>;</li><li>    </li><li>    <span class="sh_property">background:</span><span class="sh_string">#fff</span>;</li><li>    <span class="sh_property">background:</span><span class="sh_value">rgba</span>(<span class="sh_value">255</span>,<span class="sh_value">255</span>,<span class="sh_value">255</span>,<span class="sh_value">0.9</span>);</li><li>    <span class="sh_property">border:</span><span class="sh_value">1px</span> <span class="sh_value">solid</span> <span class="sh_string">#666</span>;</li><li>    <span class="sh_property">border:</span><span class="sh_value">1px</span> <span class="sh_value">solid</span> <span class="sh_value">rgba</span>(<span class="sh_value">0</span>,<span class="sh_value">0</span>,<span class="sh_value">0</span>,<span class="sh_value">0.6</span>);</li><li>    <span class="sh_property">border-left:</span> <span class="sh_value">0</span> <span class="sh_value">none</span>;    </li><li>    <span class="sh_property">z-index:</span> <span class="sh_value">100</span>;    </li><li>    </li><li>    <span class="sh_property">-moz-transition:</span> <span class="sh_value">all</span> <span class="sh_value">1s</span>; </li><li>    <span class="sh_property">-webkit-transition:</span> <span class="sh_value">all</span> <span class="sh_value">1s</span>;  </li><li>    <span class="sh_property">-ms-transition:</span> <span class="sh_value">all</span> <span class="sh_value">1s</span>;  </li><li>    <span class="sh_property">-o-transition:</span> <span class="sh_value">all</span> <span class="sh_value">1s</span>;  </li><li>    <span class="sh_property">transition:</span> <span class="sh_value">all</span> <span class="sh_value">1s</span>;</li><li>  <span class="sh_cbracket">}</span></li><li></li><li>  <span class="sh_selector">.js</span> <span class="sh_selector">.menu_main</span> <span class="sh_symbol">&gt;</span> ul <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">position:</span><span class="sh_value">fixed</span>;</li><li>    <span class="sh_property">width:</span><span class="sh_value">65%</span>;</li><li>    <span class="sh_property">left:</span><span class="sh_value">-65%</span>;</li><li>    <span class="sh_property">top:</span><span class="sh_value">0</span>;</li><li>    <span class="sh_property">margin-left:</span><span class="sh_value">-1px</span>;</li><li>    </li><li>    <span class="sh_property">background:</span><span class="sh_string">#fff</span>;</li><li>    <span class="sh_property">background:</span><span class="sh_value">rgba</span>(<span class="sh_value">255</span>,<span class="sh_value">255</span>,<span class="sh_value">255</span>,<span class="sh_value">0.9</span>);</li><li>    <span class="sh_property">border:</span><span class="sh_value">1px</span> <span class="sh_value">solid</span> <span class="sh_string">#666</span>;</li><li>    <span class="sh_property">border:</span><span class="sh_value">1px</span> <span class="sh_value">solid</span> <span class="sh_value">rgba</span>(<span class="sh_value">0</span>,<span class="sh_value">0</span>,<span class="sh_value">0</span>,<span class="sh_value">0.6</span>);</li><li>    <span class="sh_property">border-left:</span><span class="sh_value">0</span>;</li><li>    </li><li>    <span class="sh_property">-moz-transition:</span> <span class="sh_value">all</span> <span class="sh_value">1s</span>; </li><li>    <span class="sh_property">-webkit-transition:</span> <span class="sh_value">all</span> <span class="sh_value">1s</span>;  </li><li>    <span class="sh_property">-ms-transition:</span> <span class="sh_value">all</span> <span class="sh_value">1s</span>;  </li><li>    <span class="sh_property">-o-transition:</span> <span class="sh_value">all</span> <span class="sh_value">1s</span>;  </li><li>    <span class="sh_property">transition:</span> <span class="sh_value">all</span> <span class="sh_value">1s</span>;</li><li>  <span class="sh_cbracket">}</span>  </li><li>  <span class="sh_selector">.js</span> <span class="sh_selector">.menu_main</span> ul li <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">display:</span><span class="sh_value">block</span>;</li><li>    <span class="sh_property">text-align:</span><span class="sh_value">left</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  <span class="sh_comment">/* Second level menu */</span></li><li>  <span class="sh_selector">.js</span> <span class="sh_selector">.menu_main</span> ul ul <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">display:</span><span class="sh_value">block</span>;</li><li>    <span class="sh_property">margin-left:</span><span class="sh_value">1.5em</span>;</li><li>    <span class="sh_property">position:</span><span class="sh_value">static</span>;</li><li>  <span class="sh_cbracket">}</span>  </li><li>  </li><li>  <span class="sh_selector">.js</span> <span class="sh_selector">.header</span><span class="sh_symbol">,</span></li><li>  <span class="sh_selector">.js</span> <span class="sh_selector">.info</span><span class="sh_symbol">,</span></li><li>  <span class="sh_selector">.js</span> <span class="sh_selector">.footer</span> <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">width:</span><span class="sh_value">96%</span>;</li><li>    <span class="sh_property">margin-left:</span><span class="sh_value">0%</span>;</li><li>    </li><li>    <span class="sh_property">-moz-transition:</span> <span class="sh_value">margin</span> <span class="sh_value">1s</span>; </li><li>    <span class="sh_property">-webkit-transition:</span> <span class="sh_value">margin</span> <span class="sh_value">1s</span>;  </li><li>    <span class="sh_property">-ms-transition:</span> <span class="sh_value">margin</span> <span class="sh_value">1s</span>;  </li><li>    <span class="sh_property">-o-transition:</span> <span class="sh_value">margin</span> <span class="sh_value">1s</span>;  </li><li>    <span class="sh_property">transition:</span> <span class="sh_value">margin</span> <span class="sh_value">1s</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  </li><li>  </li><li>  <span class="sh_comment">/* Navigation is opened */</span></li><li>  <span class="sh_selector">.mobile_nav</span> <span class="sh_selector">.container</span> <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">overflow-x:</span> <span class="sh_value">hidden</span>;</li><li>    <span class="sh_property">width:</span><span class="sh_value">100%</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  <span class="sh_selector">.mobile_nav</span> <span class="sh_selector">.header</span><span class="sh_symbol">,</span></li><li>  <span class="sh_selector">.mobile_nav</span> <span class="sh_selector">.info</span><span class="sh_symbol">,</span></li><li>  <span class="sh_selector">.mobile_nav</span> <span class="sh_selector">.footer</span> <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">margin-left:</span> <span class="sh_value">70%</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  </li><li>  <span class="sh_selector">.mobile_nav</span> <span class="sh_selector">.menu_main</span> <span class="sh_symbol">&gt;</span> ul <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">display:</span><span class="sh_value">block</span>;</li><li>    <span class="sh_property">top:</span><span class="sh_value">0</span>;</li><li>    <span class="sh_property">left:</span><span class="sh_value">0%</span>;</li><li>    <span class="sh_property">width:</span><span class="sh_value">65%</span>;</li><li><span class="sh_cbracket">}</span></li><li>  </li><li>  <span class="sh_selector">.mobile_nav</span> <span class="sh_selector">.link_nav</span> <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">left:</span><span class="sh_value">65%</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  <span class="sh_selector">.mobile_nav</span> <span class="sh_selector">.link_nav</span><span class="sh_symbol">:</span>before <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">content:</span>"« ";</li><li>  <span class="sh_cbracket">}</span></li><li>}</li></ol></pre><pre class="snippet-textonly sh_sourceCode" style="display:none;" tabindex="0" contenteditable="">.link_nav {
-            display:none;
-          }
-          .link_nav:before {
-            content:"» ";
-          }
-            
-          @media only screen and (max-width:480px) { /* Smartphone custom styles */
-            .js .link_nav {
-              display:block;
-              position:fixed;
-              left:0px;
-              top:5px;
-              margin: 0 0 0 -1px;
-              
-              background:#fff;
-              background:rgba(255,255,255,0.9);
-              border:1px solid #666;
-              border:1px solid rgba(0,0,0,0.6);
-              border-left: 0 none;    
-              z-index: 100;    
-              
-              -moz-transition: all 1s; 
-              -webkit-transition: all 1s;  
-              -ms-transition: all 1s;  
-              -o-transition: all 1s;  
-              transition: all 1s;
-            }
-
-            .js .menu_main &gt; ul {
-              position:fixed;
-              width:65%;
-              left:-65%;
-              top:0;
-              margin-left:-1px;
-              
-              background:#fff;
-              background:rgba(255,255,255,0.9);
-              border:1px solid #666;
-              border:1px solid rgba(0,0,0,0.6);
-              border-left:0;
-              
-              -moz-transition: all 1s; 
-              -webkit-transition: all 1s;  
-              -ms-transition: all 1s;  
-              -o-transition: all 1s;  
-              transition: all 1s;
-            }  
-            .js .menu_main ul li {
-              display:block;
-              text-align:left;
-            }
-            /* Second level menu */
-            .js .menu_main ul ul {
-              display:block;
-              margin-left:1.5em;
-              position:static;
-            }  
-            
-            .js .header,
-            .js .info,
-            .js .footer {
-              width:96%;
-              margin-left:0%;
-              
-              -moz-transition: margin 1s; 
-              -webkit-transition: margin 1s;  
-              -ms-transition: margin 1s;  
-              -o-transition: margin 1s;  
-              transition: margin 1s;
-            }
-            
-            
-            /* Navigation is opened */
-            .mobile_nav .container {
-              overflow-x: hidden;
-              width:100%;
-            }
-            .mobile_nav .header,
-            .mobile_nav .info,
-            .mobile_nav .footer {
-              margin-left: 70%;
-            }
-            
-            .mobile_nav .menu_main &gt; ul {
-              display:block;
-              top:0;
-              left:0%;
-              width:65%;
-          }
-            
-            .mobile_nav .link_nav {
-              left:65%;
-            }
-            .mobile_nav .link_nav:before {
-              content:"« ";
-            }
-          }</pre></div></div>       
-          
-        </div>
-        
         <div class="col_33">
-          <h2>CSS for too long menu</h2>
-          <p>In this demo there is not many links in navigation. So using fixed positioning can't hurt. But if your menu will be tall, you will need to use absolute positioning on <strong>.js .menu_main > ul</strong>, so it will be possible to scroll the page.</p>
-          
-<div class="snippet-container"><div class="sh_default snippet-wrap"><div class="snippet-menu sh_sourceCode"><a class="snippet-window sh_url" href="#">pop-up</a><a class="snippet-text sh_url" href="#">text</a></div><pre class="shi_pre sh_css snippet-formatted sh_sourceCode"><ol class="snippet-num"><li><span class="sh_selector">.js</span> <span class="sh_selector">.menu_main</span> <span class="sh_symbol">&gt;</span> ul <span class="sh_cbracket">{</span></li><li><span class="sh_property">position:</span><span class="sh_value">absolute</span>;</li><li><span class="sh_cbracket">}</span></li></ol></pre><pre class="snippet-textonly sh_sourceCode" style="display: none;" tabindex="0" contenteditable="">.js .menu_main &gt; ul {
-position:absolute;
-}</pre></div></div>
+          <h2>Clean code</h2>
+          <p>HTML5 and CSS3 made live of web developers easier than ever. Welcome to the world where less code and less files required. “Simpliste” has different skins and all of them are created with no images for styling at all.</p>
+          <p>Template contains CSS-reset based on the reset file from <a href="http://html5boilerplate.com/" target="_blank">HTML5 boilerplate</a> which makes appearens of “Simpliste” skins consistent in different browsers.</p>
+          <p>Print styles and styles for mobile devices are already included in the stylesheet.</p>
         </div>
+
+        <div class="col_33">
+          <h2>Responsive markup</h2>
+          <p>You know that now it's time to think more about your users with mobile devices. This template will make your site respond to your client's browser with no effort on your part.</p>
+          <p>Multi-column layout becomes one column for viewers with tablets, navigation elements become bigger for users with smartphones. And your desktop browser users will see just a normal web site.</p>
+          <p>Try changing the width of your browser window and you'll see how “Simpliste” works.</p>
+        </div>
+
+        <div class="col_33">
+          <h2>Easy to use</h2>
+          <p>“Simpliste” is not a template for a CMS. You can use its code right away after downloading without reading any documentation. Place your content, make customisations and voilà the site is ready to upload to the server.</p>
+          <p>All content management can be done by using existing sample blocks and styles. Almost every template style is represented among <a href="#samples">samples</a> on this page. Off course you can create your own styles, which is easy as well.</p>
+        </div>
+
         <div class="clearfix"></div>
-        
-        <div class="col_66">
-          <h2>Javascript</h2>
-          
-          <p>Don't forget to include jQuery</p>
-<div class="snippet-container"><div class="sh_default snippet-wrap"><div class="snippet-menu sh_sourceCode"><a class="snippet-window sh_url" href="#">pop-up</a><a class="snippet-text sh_url" href="#">text</a></div><pre class="shi_pre sh_html snippet-formatted sh_sourceCode"><ol class="snippet-num"><li><span class="sh_keyword">&lt;script</span> <span class="sh_type">src</span><span class="sh_symbol">=</span><span class="sh_string">"https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"</span><span class="sh_keyword">&gt;&lt;/script&gt;</span></li></ol></pre><pre class="snippet-textonly sh_sourceCode" style="display: none;" tabindex="0" contenteditable="">&lt;script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"&gt;&lt;/script&gt;</pre></div></div>
-          
-          <p>And make it work</p>
-          
-<div class="snippet-container"><div class="sh_default snippet-wrap"><div class="snippet-menu sh_sourceCode"><a class="snippet-window sh_url" href="#">pop-up</a><a class="snippet-text sh_url" href="#">text</a></div><pre class="shi_pre sh_javascript snippet-formatted sh_sourceCode"><ol class="snippet-num"><li>$<span class="sh_symbol">(</span></li><li>  <span class="sh_keyword">function</span><span class="sh_symbol">()</span><span class="sh_cbracket">{</span></li><li>    $<span class="sh_symbol">(</span><span class="sh_string">"body"</span><span class="sh_symbol">).</span><span class="sh_function">addClass</span><span class="sh_symbol">(</span><span class="sh_string">"js"</span><span class="sh_symbol">);</span></li><li>  </li><li>    $<span class="sh_symbol">(</span><span class="sh_string">".link_nav"</span><span class="sh_symbol">).</span><span class="sh_function">click</span><span class="sh_symbol">(</span></li><li>      <span class="sh_keyword">function</span><span class="sh_symbol">()</span><span class="sh_cbracket">{</span></li><li>        $<span class="sh_symbol">(</span><span class="sh_string">"body"</span><span class="sh_symbol">).</span><span class="sh_function">toggleClass</span><span class="sh_symbol">(</span><span class="sh_string">"mobile_nav"</span><span class="sh_symbol">);</span></li><li>      <span class="sh_cbracket">}</span></li><li>    <span class="sh_symbol">);</span></li><li>  <span class="sh_cbracket">}</span></li><li><span class="sh_symbol">)</span></li></ol></pre><pre class="snippet-textonly sh_sourceCode" style="display: none;" tabindex="0" contenteditable="">$(
-  function(){
-    $("body").addClass("js");
-  
-    $(".link_nav").click(
-      function(){
-        $("body").toggleClass("mobile_nav");
-      }
-    );
-  }
-)
-</pre></div></div>
-          
-          
+
+
+        <h1>“Simpliste” in use</h1>
+
+        <div class="col_50">
+          <h2>Sample content</h2>
+
+          <h3>Principles behind “Simpliste”</h3>
+          <ul>
+             <li>Really simple</li>
+             <li>Has ready to use set of simple designs</li>
+             <li>It's written using HTML5 and CSS3</li>
+             <li>It responds to mobile devices</li>
+             <li>No CMS</li>
+             <li>Free</li>
+          </ul>
+
+          <h3>How to use?</h3>
+          <form action="">
+          <select name=skin onchange='reskin(this.form.skin);'>
+          <option>default</option>
+          <option>aim</option>
+          <option>blackberry</option>
+          <option>blue</option>
+          <option>dark-blue</option>
+          <option>fresh</option>
+          <option>fruitjuice</option>
+          <option>glimpse</option>
+          <option>green</option>
+          <option>humble</option>
+          <option>illusion</option>
+          <option>isimple</option>
+          <option>liner</option>
+          <option>maple</option>
+          <option>mentol</option>
+          <option>nightroad</option>
+          <option>orange</option>
+          <option>passion</option>
+          <option>pink</option>
+          <option>purple</option>
+          <option>red</option>
+          <option>simplesoft</option>
+          <option>simpleswiss</option>
+          <option>simploid</option>
+          <option>snobbish</option>
+          <option>solution</option>
+          <option>stylus</option>
+          <option>teawithmilk</option>
+          <option>yellow</option>
+          </select>
+          </form>
+          <script>
+            function reskin(dropdown){
+              var theIndex  = dropdown.selectedIndex;
+              var theValue = dropdown.options[theIndex].value;
+              var sheet  = "skin/" + theValue + ".css";
+              document.getElementById('css_skin').setAttribute('href', sheet);
+              return true;
+            }
+          </script>
+          <ol>
+             <li>Choose one skin from the list above</li>
+             <li>Copy the file from the skin folder</li>
+             <li>Rename it to skin.css</li>
+             <li>Make any customisation you need</li>
+          </ol>
         </div>
-        
+
+        <div class="col_50">
+          <form action="#" method="post" class="form">
+            <h2>Sample form</h2>
+
+            <p class="col_50">
+              <label for="name">Simple name:</label><br/>
+              <input type="text" name="name" id="name" value="" />
+            </p>
+            <p class="col_50">
+              <label for="email">Simple e-mail:</label><br/>
+              <input type="text" name="email" id="email" value="" />
+            </p>
+            <div class="clearfix"></div>
+
+            <h3>Your favorite number</h3>
+            <p>
+              <div class="col_33">
+                <label for="radio-choice-1"><input type="radio" name="radio-choice-1" id="radio-choice-1" tabindex="2" value="choice-1" /> One</label><br/>
+                <label for="radio-choice-2"><input type="radio" name="radio-choice-1" id="radio-choice-2" tabindex="3" value="choice-2" /> Two</label><br/>
+                <label for="radio-choice-3"><input type="radio" name="radio-choice-1" id="radio-choice-3" tabindex="4" value="choice-3" /> Three</label>
+              </div>
+
+              <div class="col_33">
+                <label for="radio-choice-4"><input type="radio" name="radio-choice-1" id="radio-choice-4" tabindex="2" value="choice-1" /> Four</label><br/>
+                <label for="radio-choice-5"><input type="radio" name="radio-choice-1" id="radio-choice-5" tabindex="3" value="choice-2" /> Five</label><br/>
+                <label for="radio-choice-6"><input type="radio" name="radio-choice-1" id="radio-choice-6" tabindex="4" value="choice-3" /> Six</label>
+              </div>
+
+              <div class="col_33">
+                <label for="radio-choice-7"><input type="radio" name="radio-choice-1" id="radio-choice-7" tabindex="2" value="choice-1" /> Seven</label><br/>
+                <label for="radio-choice-8"><input type="radio" name="radio-choice-1" id="radio-choice-8" tabindex="3" value="choice-2" /> Eight</label><br/>
+                <label for="radio-choice-9"><input type="radio" name="radio-choice-1" id="radio-choice-9" tabindex="3" value="choice-2" /> Niine</label>
+              </div>
+
+            <div class="clearfix"></div>
+            </p>
+
+            <p>
+              <label for="select-choice">Simple city:</label>
+              <select name="select-choice" id="select-choice">
+                <option value="Choice 1">London</option>
+                <option value="Choice 2">Paris</option>
+                <option value="Choice 3">Rome</option>
+              </select>
+            </p>
+
+            <p>
+              <label for="textarea">Simple testimonial:</label><br/>
+              <textarea cols="40" rows="8" name="textarea" id="textarea"></textarea>
+            </p>
+
+            <p>
+              <label for="checkbox"><input type="checkbox" name="checkbox" id="checkbox" /> Simple agreement</label><br/>
+            </p>
+
+            <div>
+                <button type="button" class="button">Submit</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="clearfix"></div>
+
+
+        <div class="col_33">
+          <h2>More elements</h2>
+
+          <p>Use <code>strong</code> tag for information with <strong>strong importance</strong>. Use <code>em</code> tag to <em>stress emphasis</em> on a word or phrase.</p>
+
+          <p class="warning">Sample <code>.warning</code></p>
+          <p class="success">Sample <code>.success</code></p>
+          <p class="message">Sample <code>.message</code></p>
+        </div>
+
+        <div class="col_66">
+          <h2>CSS classes table</h2>
+
+          <table class="table">
+            <tr>
+              <th>Class</th>
+              <th>Description</th>
+            </tr>
+
+            <tr>
+              <td><code>.col_33</code></td>
+              <td>Column with 33% width</td>
+            </tr>
+            <tr>
+              <td><code>.col_50</code></td>
+              <td>Column with 50% width</td>
+            </tr>
+            <tr>
+              <td><code>.col_66</code></td>
+              <td>Column with 66% width</td>
+            </tr>
+            <tr>
+              <td><code>.col_100</code></td>
+              <td>Full width column with proper margins</td>
+            </tr>
+            <tr>
+              <td><code>.clearfix</code></td>
+              <td>Use after or wrap a block of floated columns</td>
+            </tr>
+            <tr>
+              <td><code>.left</code></td>
+              <td>Left text alignment</td>
+            </tr>
+            <tr>
+              <td><code>.right</code></td>
+              <td>Right text alignment</td>
+            </tr>
+            <tr>
+              <td><code>.center</code></td>
+              <td>Centered text alignment</td>
+            </tr>
+            <tr>
+              <td><code>.img_floatleft</code></td>
+              <td>Left alignment for images in content</td>
+            </tr>
+            <tr>
+              <td><code>.img_floatright</code></td>
+              <td>Right alignment for images in content</td>
+            </tr>
+            <tr>
+              <td><code>.img</code></td>
+              <td>Makes image change its width when browser window width is changed</td>
+            </tr>
+          </table>
+        </div>
+
         <div class="clearfix"></div>
 
       </article>
+      <!-- endsection primary -->
+      <!-- section secondary -->
+      <!-- endsection secondary -->
     </div>
-    
+
     <footer class="footer clearfix">
-      <div class="copyright"><a href="http://cssr.ru/simpliste/">Keep it simplest</a></div>
+      <div class="copyright">Keep it simplest</div>
 
       <nav class="menu_bottom">
         <ul>
           <li class="active"><a href="#">About</a></li>
           <li><a href="#">Skins</a></li>
           <li><a href="#">Samples</a></li>
-          <li><a href="#">Contacts</a></li>
         </ul>
       </nav>
     </footer>
 
   </div>
-  
-<!-- Don't copy. For demo only -->
-<link rel="stylesheet" href="http://syntaxhighlight.in/shi/css/shi_default.min.css">
-<script src="http://syntaxhighlight.in/shi/js/shi_jquery.min.js"></script>
 </body>
 </html>
 #>>> copy text xtensions/snippets/responsive_navigation/toggle_menu.html
@@ -9903,184 +10630,13 @@ position:absolute;
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="favicon.ico" rel="shortcut icon">
-  <link rel="stylesheet" href="../../../_www/css/style.css">
-  <title></title>  
+  <link rel="stylesheet" id="css_reset" href="reset.css">
+  <link rel="stylesheet" id="css_skin" href="skin.css">
+  <link rel="stylesheet" id="css_style" href="style.css">
   <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
-  
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-<script>
-var menuText = "Menu";
-
-$(
-  function(){
-    $("body").addClass("js");
-
-    $(".menu_main").prepend("<a href='#' class='link_nav'>"+ menuText +"</a>");
-    
-    $(".menu_main li:has(ul)").addClass("menu_parent");
-    
-    $(".link_nav").click(
-      function(){
-        $(".menu_main > ul").toggleClass("menu_expanded");
-        $(this).toggleClass("menu_parent_exp");
-        return false;
-      }
-    )
-    $(".menu_parent").click(
-      function(){
-        $(this).find(">ul").toggleClass("menu_expanded");
-        $(this).toggleClass("menu_parent_exp");
-        return false;
-      }
-    )    
-  }
-)
-</script>
-<style>
-/* Dropdown menu */
-.menu_main li {
-  position:relative;
-}
-.menu_main li ul {
-  display:none;
-  background:#fff;
-  padding:10px 3px;
-  border:1px solid #ddd;
-  text-align:left;
-  width:6em;
-  -webkit-box-shadow:rgba(0,0,0,0.2) 0px 4px 6px;
-  -moz-box-shadow:rgba(0,0,0,0.2) 0px 4px 6px;
-  box-shadow:rgba(0,0,0,0.2) 0px 4px 6px;
-}
-.menu_main li ul li {
-  display:block;
-  margin:0;
-  line-height:1.1;
-}
-.menu_main li ul a{
-  display:block;
-  padding:3px;
-}
-.menu_main li ul a:hover{
-  background:#f1f1f1;
-}
-.menu_main li:hover ul {
-  display:block;
-  position:absolute;
-  right:-1em;
-  top:100%;
-}
-/* End dropdown menu */
-
-.menu_parent ul {
-  display:none;
-}
-  
-.link_nav {
-  display:none;
-  color: #fff;
-  background:#666;
-  text-align:left;
-  text-decoration:none;
-}
-.link_nav:after {
-  content:"▼";
-}
-
-  
-@media only screen and (max-width:480px) { /* Smartphone custom styles */
-  .menu_main > ul {
-    border-bottom:1px solid #666;
-    background:#fff;
-  }
-
-  .menu_main li ul,
-  .menu_main li:hover ul {
-    display:block;
-    position:static;
-    background:#fff;
-    padding:0;
-    border:0;
-    text-align:left;
-    width:auto;
-    -webkit-box-shadow:none;
-    -moz-box-shadow:none;
-    box-shadow:none;
-    width:auto;
-  }
-
-  .menu_main li{
-    display:block;
-    text-align:left;
-    width:auto;
-    margin:0;
-    padding:0;
-    border:1px solid #666;
-    border-bottom:0;
-    line-height:1.2;
-  }
-  .menu_main li:hover{
-    background:#f1f1f1;
-  }
-  .menu_main li.active:hover{
-    background:transparent;
-  }
-  
-  .menu_main li li {
-    border:0;
-    border-top:1px solid #666;
-    line-height:1.2;
-    background:#F9F9F9;
-  }
-  
-  .menu_main li a,
-  .menu_main li ul a {
-    display:block;
-    padding:12px;
-    margin-right:30px;
-  }
-  
-  .menu_main li ul a {
-      padding-left:26px;
-  }
-  .menu_main li ul a:hover {
-    background:transparent;
-  }
-  
-  .menu_main li ul ul a {
-    padding-left:36px;
-  }
-  
-  a.link_nav {
-    display:none;
-  }
-  
-  .js a.link_nav {
-    display:block;
-  }
-  
-  .js .menu_main ul,
-  .js .menu_main li:hover ul  {
-    display:none;
-  }
-  
-  .js .menu_main ul.menu_expanded,
-  .js .menu_main li:hover ul.menu_expanded {
-    display:block;
-  }
-  
-  .menu_parent:after {
-    content:"▼";
-    position:absolute;
-    right:10px;
-    top:0.9em;
-  }
-  
-  .menu_parent_exp:after {
-    content:"▲";
-  }
-}
-  </style>
+  <!-- section meta -->
+  <title></title>
+  <!-- endsection meta -->
 </head>
 
 <body>
@@ -10092,243 +10648,265 @@ $(
       <nav class="menu_main">
         <ul>
           <li class="active"><a href="#">About</a></li>
-          <li><a href="#">Skins</a>
-            <ul>
-              <li><a href="#">Simple</a></li>
-              <li><a href="#">iSimple</a></li>
-              <li><a href="#">Simploid</a></li>
-              <li><a href="#">Simple Soft</a></li>
-            </ul>
-          </li>
+          <li><a href="#">Skins</a></li>
           <li><a href="#">Samples</a></li>
-          <li><a href="#">Contacts</a></li>
         </ul>
       </nav>
     </header>
 
 
     <div class="info">
+      <!-- section primary -->
       <article class="hero clearfix">
         <div class="col_100">
-          <h1>Toggling navigation</h1>
-          <p>If navigation on your site is complicated and even has submenus, it's better not to show everything on the top of the page when user with mobile device comes to your site. We can hide menu and open levels of navigation on click.</p>
-          
-          <p>Try <strong>changing width of your browser window</strong> to see this method in action. And use the <strong>source code of this page</strong> as your guide.</p>
+          <h1>Simplest solution for your simple tasks</h1>
+          <p>You don't always need to make difficult work of running management system with administrative panel to have a web site. “Simpliste” is a very simple and easy to use HTML template for web projects where you only need to create one or couple of pages with simple layout. If you are working on a lightweight information page with as less efforts for you to code and as less kilobytes  for the user to download as possible, “Simpliste” is what you need.</p>
+          <p>No CMS required and it's free. Clean code will make your task even easier. HTML5 and CSS3 bring all their features for your future site. This template has skins which you can choose from. No images are used for styling.</p>
+          <p>Are you worried about convenience of your site users with mobile devices? “Simpliste” responds to the width of user's device and makes information more accessible.</p>
         </div>
       </article>
 
 
       <article class="article clearfix">
-        <div class="col_66">
-          <h2>CSS</h2>
-          <p>We will use one of the code snippets available for Simpliste HTML5 template. It's CSS dropdown menu /_xtensions/snippets/dropdown_menu.txt</p>
-          
-<div class="snippet-container"><div class="sh_default snippet-wrap"><div class="snippet-menu sh_sourceCode"><a class="snippet-window sh_url" href="#">pop-up</a><a class="snippet-text sh_url" href="#">text</a></div><pre class="shi_pre sh_css snippet-formatted sh_sourceCode"><ol class="snippet-num"><li><span class="sh_comment">/* Dropdown menu */</span></li><li><span class="sh_selector">.menu_main</span> li <span class="sh_cbracket">{</span></li><li>  <span class="sh_property">position:</span><span class="sh_value">relative</span>;</li><li><span class="sh_cbracket">}</span></li><li><span class="sh_selector">.menu_main</span> li ul <span class="sh_cbracket">{</span></li><li>  <span class="sh_property">display:</span><span class="sh_value">none</span>;</li><li>  <span class="sh_property">background:</span><span class="sh_string">#fff</span>;</li><li>  <span class="sh_property">padding:</span><span class="sh_value">10px</span> <span class="sh_value">3px</span>;</li><li>  <span class="sh_property">border:</span><span class="sh_value">1px</span> <span class="sh_value">solid</span> <span class="sh_string">#ddd</span>;</li><li>  <span class="sh_property">text-align:</span><span class="sh_value">left</span>;</li><li>  <span class="sh_property">width:</span><span class="sh_value">6em</span>;</li><li>  <span class="sh_property">-webkit-box-shadow:</span><span class="sh_value">rgba</span>(<span class="sh_value">0</span>,<span class="sh_value">0</span>,<span class="sh_value">0</span>,<span class="sh_value">0.2</span>) <span class="sh_value">0px</span> <span class="sh_value">4px</span> <span class="sh_value">6px</span>;</li><li>  <span class="sh_property">-moz-box-shadow:</span><span class="sh_value">rgba</span>(<span class="sh_value">0</span>,<span class="sh_value">0</span>,<span class="sh_value">0</span>,<span class="sh_value">0.2</span>) <span class="sh_value">0px</span> <span class="sh_value">4px</span> <span class="sh_value">6px</span>;</li><li>  <span class="sh_property">box-shadow:</span><span class="sh_value">rgba</span>(<span class="sh_value">0</span>,<span class="sh_value">0</span>,<span class="sh_value">0</span>,<span class="sh_value">0.2</span>) <span class="sh_value">0px</span> <span class="sh_value">4px</span> <span class="sh_value">6px</span>;</li><li><span class="sh_cbracket">}</span></li><li><span class="sh_selector">.menu_main</span> li ul li <span class="sh_cbracket">{</span></li><li>  <span class="sh_property">display:</span><span class="sh_value">block</span>;</li><li>  <span class="sh_property">margin:</span><span class="sh_value">0</span>;</li><li>  <span class="sh_property">line-height:</span><span class="sh_value">1.1</span>;</li><li><span class="sh_cbracket">}</span></li><li><span class="sh_selector">.menu_main</span> li ul a<span class="sh_cbracket">{</span></li><li>  <span class="sh_property">display:</span><span class="sh_value">block</span>;</li><li>  <span class="sh_property">padding:</span><span class="sh_value">3px</span>;</li><li><span class="sh_cbracket">}</span></li><li><span class="sh_selector">.menu_main</span> li ul a<span class="sh_symbol">:</span>hover<span class="sh_cbracket">{</span></li><li>  <span class="sh_property">background:</span><span class="sh_string">#f1f1f1</span>;</li><li><span class="sh_cbracket">}</span></li><li><span class="sh_selector">.menu_main</span> li<span class="sh_symbol">:</span>hover ul <span class="sh_cbracket">{</span></li><li>  <span class="sh_property">display:</span><span class="sh_value">block</span>;</li><li>  <span class="sh_property">position:</span><span class="sh_value">absolute</span>;</li><li>  <span class="sh_property">right:</span><span class="sh_value">-1em</span>;</li><li>  <span class="sh_property">top:</span><span class="sh_value">100%</span>;</li><li><span class="sh_cbracket">}</span></li><li><span class="sh_comment">/* End dropdown menu */</span></li></ol></pre><pre class="snippet-textonly sh_sourceCode" style="display:none;" tabindex="0" contenteditable="">/* Dropdown menu */
-.menu_main li {
-  position:relative;
-}
-.menu_main li ul {
-  display:none;
-  background:#fff;
-  padding:10px 3px;
-  border:1px solid #ddd;
-  text-align:left;
-  width:6em;
-  -webkit-box-shadow:rgba(0,0,0,0.2) 0px 4px 6px;
-  -moz-box-shadow:rgba(0,0,0,0.2) 0px 4px 6px;
-  box-shadow:rgba(0,0,0,0.2) 0px 4px 6px;
-}
-.menu_main li ul li {
-  display:block;
-  margin:0;
-  line-height:1.1;
-}
-.menu_main li ul a{
-  display:block;
-  padding:3px;
-}
-.menu_main li ul a:hover{
-  background:#f1f1f1;
-}
-.menu_main li:hover ul {
-  display:block;
-  position:absolute;
-  right:-1em;
-  top:100%;
-}
-/* End dropdown menu */
-</pre></div></div>
-          
-          <p>Now we will add some styles specific for toggle navigation on mobile phones. You can indicate submenus by using background images instead of pseudo elements (in this demo ▼).</p>
-          
-<div class="snippet-container"><div class="sh_default snippet-wrap"><div class="snippet-menu sh_sourceCode"><a class="snippet-window sh_url" href="#">pop-up</a><a class="snippet-text sh_url" href="#">text</a></div><pre class="shi_pre sh_css snippet-formatted sh_sourceCode"><ol class="snippet-num"><li><span class="sh_selector">.menu_parent</span> ul <span class="sh_cbracket">{</span></li><li>  <span class="sh_property">display:</span><span class="sh_value">none</span>;</li><li><span class="sh_cbracket">}</span></li><li>  </li><li><span class="sh_selector">.link_nav</span> <span class="sh_cbracket">{</span></li><li>  <span class="sh_property">display:</span><span class="sh_value">none</span>;</li><li>  <span class="sh_property">color:</span> <span class="sh_string">#fff</span>;</li><li>  <span class="sh_property">background:</span><span class="sh_string">#666</span>;</li><li>  <span class="sh_property">text-align:</span><span class="sh_value">left</span>;</li><li>  <span class="sh_property">text-decoration:</span><span class="sh_value">none</span>;</li><li><span class="sh_cbracket">}</span></li><li><span class="sh_selector">.link_nav</span><span class="sh_symbol">:</span>after <span class="sh_cbracket">{</span></li><li>  <span class="sh_property">content:</span>"▼";</li><li><span class="sh_cbracket">}</span></li><li></li><li>  </li><li>@media only screen and <span class="sh_symbol">(</span>max<span class="sh_symbol">-</span>width<span class="sh_symbol">:</span>480px<span class="sh_symbol">)</span> <span class="sh_cbracket">{</span> <span class="sh_comment">/* Smartphone custom styles */</span></li><li>  <span class="sh_value">.menu_main</span> &gt; <span class="sh_value">ul</span> {</li><li>    <span class="sh_property">border-bottom:</span><span class="sh_value">1px</span> <span class="sh_value">solid</span> <span class="sh_string">#666</span>;</li><li>    <span class="sh_property">background:</span><span class="sh_string">#fff</span>;</li><li>  <span class="sh_cbracket">}</span></li><li></li><li>  <span class="sh_selector">.menu_main</span> li ul<span class="sh_symbol">,</span></li><li>  <span class="sh_selector">.menu_main</span> li<span class="sh_symbol">:</span>hover ul <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">display:</span><span class="sh_value">block</span>;</li><li>    <span class="sh_property">position:</span><span class="sh_value">static</span>;</li><li>    <span class="sh_property">background:</span><span class="sh_string">#fff</span>;</li><li>    <span class="sh_property">padding:</span><span class="sh_value">0</span>;</li><li>    <span class="sh_property">border:</span><span class="sh_value">0</span>;</li><li>    <span class="sh_property">text-align:</span><span class="sh_value">left</span>;</li><li>    <span class="sh_property">width:</span><span class="sh_value">auto</span>;</li><li>    <span class="sh_property">-webkit-box-shadow:</span><span class="sh_value">none</span>;</li><li>    <span class="sh_property">-moz-box-shadow:</span><span class="sh_value">none</span>;</li><li>    <span class="sh_property">box-shadow:</span><span class="sh_value">none</span>;</li><li>    <span class="sh_property">width:</span><span class="sh_value">auto</span>;</li><li>  <span class="sh_cbracket">}</span></li><li></li><li>  <span class="sh_selector">.menu_main</span> li<span class="sh_cbracket">{</span></li><li>    <span class="sh_property">display:</span><span class="sh_value">block</span>;</li><li>    <span class="sh_property">text-align:</span><span class="sh_value">left</span>;</li><li>    <span class="sh_property">width:</span><span class="sh_value">auto</span>;</li><li>    <span class="sh_property">margin:</span><span class="sh_value">0</span>;</li><li>    <span class="sh_property">padding:</span><span class="sh_value">0</span>;</li><li>    <span class="sh_property">border:</span><span class="sh_value">1px</span> <span class="sh_value">solid</span> <span class="sh_string">#666</span>;</li><li>    <span class="sh_property">border-bottom:</span><span class="sh_value">0</span>;</li><li>    <span class="sh_property">line-height:</span><span class="sh_value">1.2</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  <span class="sh_selector">.menu_main</span> li<span class="sh_symbol">:</span>hover<span class="sh_cbracket">{</span></li><li>    <span class="sh_property">background:</span><span class="sh_string">#f1f1f1</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  <span class="sh_selector">.menu_main</span> li<span class="sh_selector">.active</span><span class="sh_symbol">:</span>hover<span class="sh_cbracket">{</span></li><li>    <span class="sh_property">background:</span><span class="sh_value">transparent</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  </li><li>  <span class="sh_selector">.menu_main</span> li li <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">border:</span><span class="sh_value">0</span>;</li><li>    <span class="sh_property">border-top:</span><span class="sh_value">1px</span> <span class="sh_value">solid</span> <span class="sh_string">#666</span>;</li><li>    <span class="sh_property">line-height:</span><span class="sh_value">1.2</span>;</li><li>    <span class="sh_property">background:</span><span class="sh_string">#F9F9F9</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  </li><li>  <span class="sh_selector">.menu_main</span> li a<span class="sh_symbol">,</span></li><li>  <span class="sh_selector">.menu_main</span> li ul a <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">display:</span><span class="sh_value">block</span>;</li><li>    <span class="sh_property">padding:</span><span class="sh_value">12px</span>;</li><li>    <span class="sh_property">margin-right:</span><span class="sh_value">30px</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  </li><li>  <span class="sh_selector">.menu_main</span> li ul a <span class="sh_cbracket">{</span></li><li>      <span class="sh_property">padding-left:</span><span class="sh_value">26px</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  <span class="sh_selector">.menu_main</span> li ul a<span class="sh_symbol">:</span>hover <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">background:</span><span class="sh_value">transparent</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  </li><li>  <span class="sh_selector">.menu_main</span> li ul ul a <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">padding-left:</span><span class="sh_value">36px</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  </li><li>  a<span class="sh_selector">.link_nav</span> <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">display:</span><span class="sh_value">none</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  </li><li>  <span class="sh_selector">.js</span> a<span class="sh_selector">.link_nav</span> <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">display:</span><span class="sh_value">block</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  </li><li>  <span class="sh_selector">.js</span> <span class="sh_selector">.menu_main</span> ul<span class="sh_symbol">,</span></li><li>  <span class="sh_selector">.js</span> <span class="sh_selector">.menu_main</span> li<span class="sh_symbol">:</span>hover ul  <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">display:</span><span class="sh_value">none</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  </li><li>  <span class="sh_selector">.js</span> <span class="sh_selector">.menu_main</span> ul<span class="sh_selector">.menu_expanded</span><span class="sh_symbol">,</span></li><li>  <span class="sh_selector">.js</span> <span class="sh_selector">.menu_main</span> li<span class="sh_symbol">:</span>hover ul<span class="sh_selector">.menu_expanded</span> <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">display:</span><span class="sh_value">block</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  </li><li>  <span class="sh_selector">.menu_parent</span><span class="sh_symbol">:</span>after <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">content:</span>"▼";</li><li>    <span class="sh_property">position:</span><span class="sh_value">absolute</span>;</li><li>    <span class="sh_property">right:</span><span class="sh_value">10px</span>;</li><li>    <span class="sh_property">top:</span><span class="sh_value">0.9em</span>;</li><li>  <span class="sh_cbracket">}</span></li><li>  </li><li>  <span class="sh_selector">.menu_parent_exp</span><span class="sh_symbol">:</span>after <span class="sh_cbracket">{</span></li><li>    <span class="sh_property">content:</span>"▲";</li><li>  <span class="sh_cbracket">}</span></li><li>}</li></ol></pre><pre class="snippet-textonly sh_sourceCode" style="display:none;" tabindex="0" contenteditable="">.menu_parent ul {
-  display:none;
-}
-  
-.link_nav {
-  display:none;
-  color: #fff;
-  background:#666;
-  text-align:left;
-  text-decoration:none;
-}
-.link_nav:after {
-  content:"▼";
-}
-
-  
-@media only screen and (max-width:480px) { /* Smartphone custom styles */
-  .menu_main &gt; ul {
-    border-bottom:1px solid #666;
-    background:#fff;
-  }
-
-  .menu_main li ul,
-  .menu_main li:hover ul {
-    display:block;
-    position:static;
-    background:#fff;
-    padding:0;
-    border:0;
-    text-align:left;
-    width:auto;
-    -webkit-box-shadow:none;
-    -moz-box-shadow:none;
-    box-shadow:none;
-    width:auto;
-  }
-
-  .menu_main li{
-    display:block;
-    text-align:left;
-    width:auto;
-    margin:0;
-    padding:0;
-    border:1px solid #666;
-    border-bottom:0;
-    line-height:1.2;
-  }
-  .menu_main li:hover{
-    background:#f1f1f1;
-  }
-  .menu_main li.active:hover{
-    background:transparent;
-  }
-  
-  .menu_main li li {
-    border:0;
-    border-top:1px solid #666;
-    line-height:1.2;
-    background:#F9F9F9;
-  }
-  
-  .menu_main li a,
-  .menu_main li ul a {
-    display:block;
-    padding:12px;
-    margin-right:30px;
-  }
-  
-  .menu_main li ul a {
-      padding-left:26px;
-  }
-  .menu_main li ul a:hover {
-    background:transparent;
-  }
-  
-  .menu_main li ul ul a {
-    padding-left:36px;
-  }
-  
-  a.link_nav {
-    display:none;
-  }
-  
-  .js a.link_nav {
-    display:block;
-  }
-  
-  .js .menu_main ul,
-  .js .menu_main li:hover ul  {
-    display:none;
-  }
-  
-  .js .menu_main ul.menu_expanded,
-  .js .menu_main li:hover ul.menu_expanded {
-    display:block;
-  }
-  
-  .menu_parent:after {
-    content:"▼";
-    position:absolute;
-    right:10px;
-    top:0.9em;
-  }
-  
-  .menu_parent_exp:after {
-    content:"▲";
-  }
-}</pre></div></div>
-          
-          <h2>Javascript</h2>
-          
-          <p>Don't forget to include jQuery</p>
-<div class="snippet-container"><div class="sh_default snippet-wrap"><div class="snippet-menu sh_sourceCode"><a class="snippet-window sh_url" href="#">pop-up</a><a class="snippet-text sh_url" href="#">text</a></div><pre class="shi_pre sh_html snippet-formatted sh_sourceCode"><ol class="snippet-num"><li><span class="sh_keyword">&lt;script</span> <span class="sh_type">src</span><span class="sh_symbol">=</span><span class="sh_string">"https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"</span><span class="sh_keyword">&gt;&lt;/script&gt;</span></li></ol></pre><pre class="snippet-textonly sh_sourceCode" style="display: none;" tabindex="0" contenteditable="">&lt;script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"&gt;&lt;/script&gt;</pre></div></div>
-          
-          <p>And code to make the work. You can customize label on the open button, in this demo it's <strong>Menu</strong>.</p>
-          
-<div class="snippet-container"><div class="sh_default snippet-wrap"><div class="snippet-menu sh_sourceCode"><a class="snippet-window sh_url" href="#">pop-up</a><a class="snippet-text sh_url" href="#">text</a></div><pre class="shi_pre sh_css snippet-formatted sh_sourceCode"><ol class="snippet-num"><li>var menuText <span class="sh_symbol">=</span> "Menu"<span class="sh_symbol">;</span></li><li></li><li>$<span class="sh_symbol">(</span></li><li>  function<span class="sh_symbol">()</span><span class="sh_cbracket">{</span></li><li>    $("<span class="sh_value">body</span>")<span class="sh_value">.addClass</span>("<span class="sh_value">js</span>");</li><li></li><li>    $("<span class="sh_value">.menu_main</span>")<span class="sh_value">.prepend</span>("&lt;<span class="sh_value">a</span> <span class="sh_value">href</span>='#' <span class="sh_value">class</span>='<span class="sh_value">link_nav</span>'&gt;"+ <span class="sh_value">menuText</span> +"&lt;/<span class="sh_value">a</span>&gt;");</li><li>    </li><li>    $("<span class="sh_value">.menu_main</span> <span class="sh_property">li:</span><span class="sh_value">has</span>(<span class="sh_value">ul</span>)")<span class="sh_value">.addClass</span>("<span class="sh_value">menu_parent</span>");</li><li>    </li><li>    $("<span class="sh_value">.link_nav</span>")<span class="sh_value">.click</span>(</li><li>      <span class="sh_value">function</span>(){</li><li>        $("<span class="sh_value">.menu_main</span> &gt; <span class="sh_value">ul</span>")<span class="sh_value">.toggleClass</span>("<span class="sh_value">menu_expanded</span>");</li><li>        $(<span class="sh_value">this</span>)<span class="sh_value">.toggleClass</span>("<span class="sh_value">menu_parent_exp</span>");</li><li>        <span class="sh_value">return</span> <span class="sh_value">false</span>;</li><li>      <span class="sh_cbracket">}</span></li><li>    <span class="sh_symbol">)</span></li><li>    $<span class="sh_symbol">(</span>"<span class="sh_selector">.menu_parent</span>"<span class="sh_symbol">)</span><span class="sh_selector">.click</span><span class="sh_symbol">(</span></li><li>      function<span class="sh_symbol">()</span><span class="sh_cbracket">{</span></li><li>        $(<span class="sh_value">this</span>)<span class="sh_value">.find</span>("&gt;<span class="sh_value">ul</span>")<span class="sh_value">.toggleClass</span>("<span class="sh_value">menu_expanded</span>");</li><li>        $(<span class="sh_value">this</span>)<span class="sh_value">.toggleClass</span>("<span class="sh_value">menu_parent_exp</span>");</li><li>        <span class="sh_value">return</span> <span class="sh_value">false</span>;</li><li>      <span class="sh_cbracket">}</span></li><li>    <span class="sh_symbol">)</span>    </li><li>  }</li><li><span class="sh_symbol">)</span></li></ol></pre><pre class="snippet-textonly sh_sourceCode" style="display:none;" tabindex="0" contenteditable="">var menuText = "Menu";
-
-$(
-  function(){
-    $("body").addClass("js");
-
-    $(".menu_main").prepend("&lt;a href='#' class='link_nav'&gt;"+ menuText +"&lt;/a&gt;");
-    
-    $(".menu_main li:has(ul)").addClass("menu_parent");
-    
-    $(".link_nav").click(
-      function(){
-        $(".menu_main &gt; ul").toggleClass("menu_expanded");
-        $(this).toggleClass("menu_parent_exp");
-        return false;
-      }
-    )
-    $(".menu_parent").click(
-      function(){
-        $(this).find("&gt;ul").toggleClass("menu_expanded");
-        $(this).toggleClass("menu_parent_exp");
-        return false;
-      }
-    )    
-  }
-)</pre></div></div>
-          
+        <div class="col_33">
+          <h2>Clean code</h2>
+          <p>HTML5 and CSS3 made live of web developers easier than ever. Welcome to the world where less code and less files required. “Simpliste” has different skins and all of them are created with no images for styling at all.</p>
+          <p>Template contains CSS-reset based on the reset file from <a href="http://html5boilerplate.com/" target="_blank">HTML5 boilerplate</a> which makes appearens of “Simpliste” skins consistent in different browsers.</p>
+          <p>Print styles and styles for mobile devices are already included in the stylesheet.</p>
         </div>
 
+        <div class="col_33">
+          <h2>Responsive markup</h2>
+          <p>You know that now it's time to think more about your users with mobile devices. This template will make your site respond to your client's browser with no effort on your part.</p>
+          <p>Multi-column layout becomes one column for viewers with tablets, navigation elements become bigger for users with smartphones. And your desktop browser users will see just a normal web site.</p>
+          <p>Try changing the width of your browser window and you'll see how “Simpliste” works.</p>
+        </div>
+
+        <div class="col_33">
+          <h2>Easy to use</h2>
+          <p>“Simpliste” is not a template for a CMS. You can use its code right away after downloading without reading any documentation. Place your content, make customisations and voilà the site is ready to upload to the server.</p>
+          <p>All content management can be done by using existing sample blocks and styles. Almost every template style is represented among <a href="#samples">samples</a> on this page. Off course you can create your own styles, which is easy as well.</p>
+        </div>
+
+        <div class="clearfix"></div>
+
+
+        <h1>“Simpliste” in use</h1>
+
+        <div class="col_50">
+          <h2>Sample content</h2>
+
+          <h3>Principles behind “Simpliste”</h3>
+          <ul>
+             <li>Really simple</li>
+             <li>Has ready to use set of simple designs</li>
+             <li>It's written using HTML5 and CSS3</li>
+             <li>It responds to mobile devices</li>
+             <li>No CMS</li>
+             <li>Free</li>
+          </ul>
+
+          <h3>How to use?</h3>
+          <form action="">
+          <select name=skin onchange='reskin(this.form.skin);'>
+          <option>default</option>
+          <option>aim</option>
+          <option>blackberry</option>
+          <option>blue</option>
+          <option>dark-blue</option>
+          <option>fresh</option>
+          <option>fruitjuice</option>
+          <option>glimpse</option>
+          <option>green</option>
+          <option>humble</option>
+          <option>illusion</option>
+          <option>isimple</option>
+          <option>liner</option>
+          <option>maple</option>
+          <option>mentol</option>
+          <option>nightroad</option>
+          <option>orange</option>
+          <option>passion</option>
+          <option>pink</option>
+          <option>purple</option>
+          <option>red</option>
+          <option>simplesoft</option>
+          <option>simpleswiss</option>
+          <option>simploid</option>
+          <option>snobbish</option>
+          <option>solution</option>
+          <option>stylus</option>
+          <option>teawithmilk</option>
+          <option>yellow</option>
+          </select>
+          </form>
+          <script>
+            function reskin(dropdown){
+              var theIndex  = dropdown.selectedIndex;
+              var theValue = dropdown.options[theIndex].value;
+              var sheet  = "skin/" + theValue + ".css";
+              document.getElementById('css_skin').setAttribute('href', sheet);
+              return true;
+            }
+          </script>
+          <ol>
+             <li>Choose one skin from the list above</li>
+             <li>Copy the file from the skin folder</li>
+             <li>Rename it to skin.css</li>
+             <li>Make any customisation you need</li>
+          </ol>
+        </div>
+
+        <div class="col_50">
+          <form action="#" method="post" class="form">
+            <h2>Sample form</h2>
+
+            <p class="col_50">
+              <label for="name">Simple name:</label><br/>
+              <input type="text" name="name" id="name" value="" />
+            </p>
+            <p class="col_50">
+              <label for="email">Simple e-mail:</label><br/>
+              <input type="text" name="email" id="email" value="" />
+            </p>
+            <div class="clearfix"></div>
+
+            <h3>Your favorite number</h3>
+            <p>
+              <div class="col_33">
+                <label for="radio-choice-1"><input type="radio" name="radio-choice-1" id="radio-choice-1" tabindex="2" value="choice-1" /> One</label><br/>
+                <label for="radio-choice-2"><input type="radio" name="radio-choice-1" id="radio-choice-2" tabindex="3" value="choice-2" /> Two</label><br/>
+                <label for="radio-choice-3"><input type="radio" name="radio-choice-1" id="radio-choice-3" tabindex="4" value="choice-3" /> Three</label>
+              </div>
+
+              <div class="col_33">
+                <label for="radio-choice-4"><input type="radio" name="radio-choice-1" id="radio-choice-4" tabindex="2" value="choice-1" /> Four</label><br/>
+                <label for="radio-choice-5"><input type="radio" name="radio-choice-1" id="radio-choice-5" tabindex="3" value="choice-2" /> Five</label><br/>
+                <label for="radio-choice-6"><input type="radio" name="radio-choice-1" id="radio-choice-6" tabindex="4" value="choice-3" /> Six</label>
+              </div>
+
+              <div class="col_33">
+                <label for="radio-choice-7"><input type="radio" name="radio-choice-1" id="radio-choice-7" tabindex="2" value="choice-1" /> Seven</label><br/>
+                <label for="radio-choice-8"><input type="radio" name="radio-choice-1" id="radio-choice-8" tabindex="3" value="choice-2" /> Eight</label><br/>
+                <label for="radio-choice-9"><input type="radio" name="radio-choice-1" id="radio-choice-9" tabindex="3" value="choice-2" /> Niine</label>
+              </div>
+
+            <div class="clearfix"></div>
+            </p>
+
+            <p>
+              <label for="select-choice">Simple city:</label>
+              <select name="select-choice" id="select-choice">
+                <option value="Choice 1">London</option>
+                <option value="Choice 2">Paris</option>
+                <option value="Choice 3">Rome</option>
+              </select>
+            </p>
+
+            <p>
+              <label for="textarea">Simple testimonial:</label><br/>
+              <textarea cols="40" rows="8" name="textarea" id="textarea"></textarea>
+            </p>
+
+            <p>
+              <label for="checkbox"><input type="checkbox" name="checkbox" id="checkbox" /> Simple agreement</label><br/>
+            </p>
+
+            <div>
+                <button type="button" class="button">Submit</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="clearfix"></div>
+
+
+        <div class="col_33">
+          <h2>More elements</h2>
+
+          <p>Use <code>strong</code> tag for information with <strong>strong importance</strong>. Use <code>em</code> tag to <em>stress emphasis</em> on a word or phrase.</p>
+
+          <p class="warning">Sample <code>.warning</code></p>
+          <p class="success">Sample <code>.success</code></p>
+          <p class="message">Sample <code>.message</code></p>
+        </div>
+
+        <div class="col_66">
+          <h2>CSS classes table</h2>
+
+          <table class="table">
+            <tr>
+              <th>Class</th>
+              <th>Description</th>
+            </tr>
+
+            <tr>
+              <td><code>.col_33</code></td>
+              <td>Column with 33% width</td>
+            </tr>
+            <tr>
+              <td><code>.col_50</code></td>
+              <td>Column with 50% width</td>
+            </tr>
+            <tr>
+              <td><code>.col_66</code></td>
+              <td>Column with 66% width</td>
+            </tr>
+            <tr>
+              <td><code>.col_100</code></td>
+              <td>Full width column with proper margins</td>
+            </tr>
+            <tr>
+              <td><code>.clearfix</code></td>
+              <td>Use after or wrap a block of floated columns</td>
+            </tr>
+            <tr>
+              <td><code>.left</code></td>
+              <td>Left text alignment</td>
+            </tr>
+            <tr>
+              <td><code>.right</code></td>
+              <td>Right text alignment</td>
+            </tr>
+            <tr>
+              <td><code>.center</code></td>
+              <td>Centered text alignment</td>
+            </tr>
+            <tr>
+              <td><code>.img_floatleft</code></td>
+              <td>Left alignment for images in content</td>
+            </tr>
+            <tr>
+              <td><code>.img_floatright</code></td>
+              <td>Right alignment for images in content</td>
+            </tr>
+            <tr>
+              <td><code>.img</code></td>
+              <td>Makes image change its width when browser window width is changed</td>
+            </tr>
+          </table>
+        </div>
 
         <div class="clearfix"></div>
 
       </article>
+      <!-- endsection primary -->
+      <!-- section secondary -->
+      <!-- endsection secondary -->
     </div>
-    
+
     <footer class="footer clearfix">
-      <div class="copyright"><a href="http://cssr.ru/simpliste/">Keep it simplest</a></div>
+      <div class="copyright">Keep it simplest</div>
 
       <nav class="menu_bottom">
         <ul>
           <li class="active"><a href="#">About</a></li>
           <li><a href="#">Skins</a></li>
           <li><a href="#">Samples</a></li>
-          <li><a href="#">Contacts</a></li>
         </ul>
       </nav>
     </footer>
 
   </div>
-  
-<!-- Don't copy. For demo only -->
-<link rel="stylesheet" href="http://syntaxhighlight.in/shi/css/shi_default.min.css">
-<script src="http://syntaxhighlight.in/shi/js/shi_jquery.min.js"></script>
 </body>
 </html>

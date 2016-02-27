@@ -15,6 +15,8 @@ sub new {
     my ($pkg, $data) = @_;
 
     my %self = %$data;
+    $self{cache} = {};
+
     return bless(\%self, $pkg);
 }
 

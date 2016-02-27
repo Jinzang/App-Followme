@@ -205,12 +205,12 @@ sub update_file {
 # Perform all updates on the directory
 
 sub update_folder {
-    my ($self, $folder, $prototype_file, $prototype) = @_;
+    my ($self, $folder, $prototype_file) = @_;
 
     my $index_file = $self->to_file($folder);
     ($folder) = fio_split_filename($folder);
 
-    my $prototype_path;
+    my ($prototype_path, $prototype);
     my $modtime = fio_get_date($folder);
 
     my $files = $self->{data}->build('files', $index_file);
@@ -224,7 +224,7 @@ sub update_folder {
 
         if ($prototype_file) {
             $prototype_path = $self->get_prototype_path($prototype_file);
-            $prototype = fio_read_page($prototype_file);
+            my $prototype = fio_read_page($prototype_file);
 
             eval {$self->update_file($file, $prototype, $prototype_path)};
             $self->check_error($@, $file);
@@ -256,7 +256,7 @@ sub update_folder {
         my $folders = $self->{data}->build('folders', $index_file);
 
         foreach my $subfolder (@$folders) {
-            $self->update_folder($subfolder, $prototype, $prototype_path);
+            $self->update_folder($subfolder, $prototype_file);
         }
     }
 

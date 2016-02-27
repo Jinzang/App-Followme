@@ -35,7 +35,7 @@ sub run {
 
     $self->update_folder($directory,
                          $configuration_files,
-                         %$self);
+                         %{$self->{configuration}});
 
     return;
 }
@@ -99,6 +99,16 @@ sub set_directories {
     my ($directory, $file) = fio_split_filename($configuration_files[0]);
     $self->{base_directory} = $directory;
     $self->{top_directory} = $directory;
+    return;
+}
+
+#----------------------------------------------------------------------
+#  Save the configuration for other modules
+
+sub setup {
+    my ($self, %configuration) = @_;
+
+    $self->{configuration} = \%configuration;
     return;
 }
 

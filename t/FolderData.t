@@ -80,7 +80,7 @@ do {
     is($url, 'index.html', 'Build directory url'); #test 10
 
     my $date = $obj->calculate_date('two.html');
-    like($date, qr(^\d{10}$), 'Calculate date'); # test 11
+    like($date, qr(^20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$), 'Calculate date'); # test 11
 
     $date = $obj->format_date(0, time());
     like($date, qr(\d+, 20\d\d \d+:\d+$), 'Format date'); # test 12
