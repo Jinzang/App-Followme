@@ -8,7 +8,7 @@ use lib '../..';
 use base qw(App::Followme::Module);
 
 use Text::Markdown;
-use File::Spec::Functions qw(catfile);
+use File::Spec::Functions qw(catfile rel2abs);
 use App::Followme::FIO;
 
 our $VERSION = "1.16";
@@ -36,12 +36,37 @@ sub run {
 }
 
 #----------------------------------------------------------------------
+# Construct a filename that represents the title
+
+sub title_to_filename {
+    my ($self, $filename) = @_;
+
+    my ($dir, $base) = fio_split_filename($filename);
+    return $filename if $base =~ /^index\./;
+
+    my @parts = split(/\./, $base);
+    my $ext = pop(@parts);
+
+    my $new_filename = ${$self->{data}->build('title', $filename)};
+    return $filename unless $new_filename;
+
+    $new_filename = lc($new_filename);
+    $new_filename =~ s/[^\w\-\_]+/ /g;
+
+    $new_filename =~ s/^ +//;
+    $new_filename =~ s/ +$//;
+    $new_filename =~ s/ +/\-/g;
+
+    $new_filename = catfile($dir, join('.', $new_filename, $ext));
+
+    return $new_filename;
+}
+
+#----------------------------------------------------------------------
 # Convert a single file
 
 sub update_file {
     my ($self, $prototype, $file) = @_;
-
-    ##my $date = $self->{data}->build('date', $file);
 
     my $new_file = $file;
     $new_file =~ s/\.[^\.]*$/.$self->{web_extension}/;
@@ -49,8 +74,7 @@ sub update_file {
     my $page = $self->render_file($self->{template_file}, $file);
     $page = $self->reformat_file($prototype, $new_file, $page);
 
-    fio_write_page($new_file, $page);
-    ##fio_set_date($new_file, $$date);
+    $self->write_file($new_file, $page);
     unlink($file);
 
     return;
@@ -82,6 +106,23 @@ sub update_folder {
     return;
 }
 
+#----------------------------------------------------------------------
+# Write a file, setting folder level metadata
+
+sub write_file {
+    my ($self, $filename, $page, $binmode) = @_;
+
+    $filename = rel2abs($filename);
+    my $date = ${$self->{data}->build('$mdate', $filename)};
+    my $new_filename = $self->title_to_filename($filename);
+
+    fio_write_page($new_filename, $page, $binmode);
+    unlink($filename) if -e $filename && $filename ne $new_filename;
+    fio_set_date($new_filename, $date);
+
+    return;
+}
+
 1;
 __END__
 
@@ -99,14 +140,14 @@ App::Followme::ConvertPage - Convert Markdown files to html
 
 =head1 DESCRIPTION
 
-If there are any markdown files in the directory, they are converted into html
-files by substituting the content into a template. After the conversion the
-original file is deleted. Markdown files are identified by their extension,
-which by default is 'md'.
+This module converts text files into web files by substtuting the content into
+a template. The type of file converted is determined by the value of the
+parameter data_pkg. By default, it converts Markdown files.  After the
+conversion the original file is deleted.
 
 Along with the content, other variables are calculated from the file name and
-modification date. Variables in the template are preceded by a sigil, most usually
-a dollar sign. Thus a link would look like:
+modification date. Variables in the template are preceded by a sigil, most
+usually a dollar sign. Thus a link would look like:
 
     <li><a href="$url">$title</a></li>
 
@@ -120,7 +161,13 @@ The following parameters are used from the configuration:
 
 The name of the template file. The template file is either in the current
 directory, in the same directory as the configuration file used to invoke this
-method, or if not there, in the templates subdirectory.
+method, or if not there, in the _templates subdirectory of the top directory.
+The default value is 'convert_page.htm'.
+
+=item data_pkg
+
+The name of the module that parses and retrieves data from the text file. The
+default value is 'App::Followme::MarkdownData', which parses Markdown files.
 
 =back
 

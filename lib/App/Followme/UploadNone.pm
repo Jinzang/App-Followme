@@ -23,7 +23,7 @@ sub add_directory {
 # Add a file to the remote site
 
 sub add_file {
-    my ($self, $filename) = @_;
+    my ($self, $local_filename, $remote_filename) = @_;
     return 1;
 }
 
@@ -72,7 +72,7 @@ App::Followme::UploadNone - Go through the motions of uploading files
     my $uploader = App::Followme::UploadNone->new(\%configuration);
     $uploader->open($user, $password);
     $uploader->add_directory($dir);
-    $uploader->add_file($filename);
+    $uploader->add_file($local_filename, $remote_filename);
     $uploader->delete_directory($dir);
     $uploader->delete_file($filename);
     $uploader->close();
@@ -97,7 +97,7 @@ indicates if the operation was successful.
 
 Create a new directory
 
-=item $flag = $self->add_file($filename);
+=item $flag = $self->add_file($locl_filename, $remote_filename);
 
 Upload a new file. If it already exists, delete it.
 

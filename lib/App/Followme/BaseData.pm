@@ -291,9 +291,9 @@ class.
 
 Followme uses templates to construct web pages. These templates contain
 variables whose values are computed by calling the build method of the metadata
-object, which is passed an argument to the template function. The build method
-returns either a reference to a scalar or list. The names correspond to the
-variable names in the template. This class contains the build method, which
+object, which is passed as an argument to the template function. The build
+method returns either a reference to a scalar or list. The names correspond to
+the variable names in the template. This class contains the build method, which
 couples the variable name to the metadata object method that computes the value
 of the variable.
 
@@ -322,12 +322,12 @@ can only be used inside a for block.
 
 =item @loop
 
-A list with all the loop itemss from the ommediately enclosing for block.
+A list with all the loop items from the immediately enclosing for block.
 
 =item @sequence
 
-A two item list containing the previous and next utems in the for block. If the
-current item is first or lat, the corrsponding itm in the sequence list will
+A two item list containing the previous and next items in the for block. If the
+current item is first or last, the corrsponding item in the sequence list will
 be the empty string.
 
 =item $count

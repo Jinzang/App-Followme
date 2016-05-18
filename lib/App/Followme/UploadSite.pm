@@ -9,8 +9,10 @@ use lib '../..';
 use base qw(App::Followme::Module);
 
 use Cwd;
-use File::Spec::Functions qw(abs2rel splitdir catfile);
+use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
+
 use App::Followme::FIO;
+use App::Followme::Web;
 
 our $VERSION = "1.16";
 
@@ -25,6 +27,7 @@ sub parameters {
     return (
             verbose => 0,
             max_errors => 5,
+            remote_url => '',
             hash_file => 'upload.hash',
             credentials => 'upload.cred',
             state_directory => '_state',
@@ -209,6 +212,29 @@ sub read_word {
 }
 
 #----------------------------------------------------------------------
+# Rewrite the base tag of an html page
+
+sub rewrite_base_tag {
+    my ($self, $page) = @_;
+
+    my $base_parser = sub {
+        my ($metadata, @tokens) = @_;
+       return "<base href=\"$self->{remote_url}\">";
+    };
+
+    my $global = 0;
+    my $metadata = [];
+    my $new_page = web_substitute_tags('<base href="*">',
+                                $page,
+                                $base_parser,
+                                $metadata,
+                                $global
+                                );
+
+    return $new_page;
+}
+
+#----------------------------------------------------------------------
 # Load the modules that will upload the file and convert the filename
 
 sub setup {
@@ -240,6 +266,46 @@ sub unobfuscate {
     }
 
     return split(/:/, $str, 2);
+}
+
+#----------------------------------------------------------------------
+# Update an individual file
+
+sub update_file {
+    my ($self, $file, $hash) = @_;
+
+    my $local_file = $file;
+
+    # If there is a remote url, rewrite it into a new file
+    if ($self->{remote_url}) {
+
+        # Check extension, skip if not a web file
+        my ($dir, $basename) = fio_split_filename($file);
+        my ($ext) = $basename =~ /\.([^\.]*)$/;
+        next if $ext ne $self->{web_extension};
+
+        my $page = fio_read_page($file);
+        my $new_page = $self->rewrite_base_tag($page) if $page;
+
+        $local_file = rel2abs(catfile($self->{state_directory}, $basename));
+        fio_write_page($local_file, $new_page);
+    }
+
+    # Upload the file and return the status of the upload
+
+    my $status = 0;
+    my $remote_file = abs2rel($file, $self->{top_directory});
+    if ($self->{upload}->add_file($local_file, $remote_file)) {
+        $status = 1;
+
+    } else {
+        die "Too many upload errors\n" if $self->{max_errors} == 0;
+        $self->{max_errors} --;
+    }
+
+    # Remove any temporary file
+    unlink($local_file) if $file ne $local_file;
+    return $status;
 }
 
 #----------------------------------------------------------------------
@@ -290,13 +356,9 @@ sub update_folder {
         # Add file if new or changed
 
         if (! exists $hash->{$file} || $hash->{$file} ne $value) {
-            if ($self->{upload}->add_file($file)) {
+            if ($self->update_file($file)) {
                 $hash->{$file} = $value;
                 print "add $file\n" if $self->{verbose};
-
-            } else {
-                die "Too many upload errors\n" if $self->{max_errors} == 0;
-                $self->{max_errors} --;
             }
         }
     }
@@ -351,7 +413,7 @@ __END__
 
 =head1 NAME
 
-App::Followme::Uploadme - Upload changed and new files
+App::Followme::UploadSite - Upload changed and new files
 
 =head1 SYNOPSIS
 

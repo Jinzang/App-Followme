@@ -79,7 +79,7 @@ remote site and the checksums for each file.
 
 All data classes are first instantiated by calling new and data items are
 retrieved by calling the build method with the item name as the first argument
-and the file or folder
+and the file or folder as the second argument.
 
 =head1 VARIABLES
 

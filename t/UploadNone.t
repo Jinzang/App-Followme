@@ -38,19 +38,20 @@ do {
     my $password = 'password';
 
     my $dir = 'subdir';
-    my $filename = catfile($dir, 'filename');
+    my $remote_file = 'filename';
+    my $local_file = catfile($dir, $remote_file);
 
     $up->open($user, $password);
     my $flag =$up->add_directory($dir);
     is($flag, 1, 'Mock add directory'); # test 1
 
-    $flag = $up->add_file($filename);
+    $flag = $up->add_file($local_file, $remote_file);
     is($flag, 1, 'Mock add file'); # test 2
 
     $flag = $up->delete_directory($dir);
     is($flag, 1, 'Mock delete directory'); # test 3
 
-    $flag = $up->delete_file($filename);
+    $flag = $up->delete_file($remote_file);
     is($flag, 1, 'Mock delete file'); # test 4
 
     $up->close();

@@ -18,13 +18,11 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(fio_filename_to_url fio_full_file_name fio_format_date
                  fio_get_date fio_get_size fio_glob_patterns fio_is_newer
-                 fio_match_patterns fio_most_recent_file fio_pushdir fio_popdir
-                 fio_read_page fio_same_file fio_set_date fio_split_filename
+                 fio_match_patterns fio_most_recent_file fio_read_page
+                 fio_same_file fio_set_date fio_split_filename
                  fio_to_file fio_visit fio_write_page);
 
 our $VERSION = "1.16";
-
-our @fio_directory_stack = (); # for fio_pushdir and fio_popdir
 
 #----------------------------------------------------------------------
 # Convert filename to url
@@ -360,7 +358,6 @@ App::Followme::FIO - File IO routines used by followme
 =head1 SYNOPSIS
 
     use App::Followme::FIO;
-    TODO more examples
 
 =head1 DESCRIPTION
 
@@ -370,11 +367,48 @@ This module contains the subroutines followme uses to access the file system
 
 =over 4
 
-=item $test = fio_is_newer($target, @sources);
+=item $url = fio_filename_to_url($directory, $filename, $ext);
+
+Convert a filename into a url. The directory is the top directory of the
+website. The optional extension, if passed, replaces the extension on the file.
+
+=item $date_string = fio_format_date($date, $format);
+
+Convert a date to a new formt. If the format is omitted, the ISO format is used.
+
+=item $filename = fio_full_file_name(@path);
+
+Construct a filename from a list of path components.
+
+=item $date = $date = fio_get_date($filename);
+
+Get the modification date of a file as seconds since 1970 (Unix standard.)
+
+=item $size =fio_get_size($filename);
+
+Get the size of a file in bytes.
+
+=item $globbed_patterns = fio_glob_patterns($pattern);
+
+Convert a comma separated list of Unix style filename patterns into a reference
+to an array of Perl regular expressions.
+
+item $test = fio_is_newer($target, @sources);
 
 Compare the modification date of the target file to the modification dates of
 the source files. If the target file is newer than all of the sources, return
 1 (true).
+
+=item $flag = fio_match_patterns($filename, $patterns);
+
+Return 1 (Perl true) if a filename matches a Perl pattern in a list of
+patterns.
+
+=item $filename = fio_most_recent_file($directory, $patterns);
+
+
+Return the most recently modified file in a directory whose name matches
+a comma separated list of Unix wildcard patterns.
 
 =item $str = fio_read_page($filename, $binmode);
 
@@ -383,15 +417,31 @@ line at a time IO. This is because files are typically small and the parsing
 done is not line oriented. Binmode is an optional parameter that indicates file
 type if it is not a plain text file.
 
+=item fio_set_date($filename, $date);
+
+Set the modification date of a file.nDate is either in seconds or
+is in ISO format.
+
+=item ($directory, $filename) = fio_split_filename($filename);
+
+Split an absolute filename into a directory and the filename it contains. If
+the input filename is a directory, the filename is the empty string.
+
+=item $filename = fio_to_file($directory, $ext);
+
+Convert a directory name to the index file it contains. The extension
+is used in the index name. If the directory name is a file name,
+return it unchnged.
+
+=item ($filenames, $directories) = fio_visit($top_directory);
+
+Return a list of filenames and directories in a directory,
+
 =item fio_write_page($filename, $str, $binmode);
 
 Write a file from a string. An the entire file is written from a string, there
 is no line at a time IO. This is because files are typically small. Binmode is
 an optional parameter that indicates file type if it is not a plain text file.
-
-=item ($filenames, $directories) = fio_visit($top_directory);
-
-Return a list of filenames and directories in a directory,
 
 =back
 

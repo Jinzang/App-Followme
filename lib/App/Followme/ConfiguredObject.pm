@@ -68,8 +68,10 @@ sub add_subpackages {
 
         if ($subpkg->isa('App::Followme::ConfiguredObject')) {
             $self->{$field} = $subpkg->new(%configuration);
-        } else {
+        } elsif ($subpkg->can('new')) {
             $self->{$field} = $subpkg->new();
+        } else {
+            $self->{$field} = $subpkg;
         }
     }
 
@@ -155,18 +157,18 @@ parameters from the configuration file.
 Create a new object from the configuration. The configuration is a reference to
 a hash containing fields with the same names as the object parameters. Fields
 in the configuration whose name does not match an object parameter are ignored.
+If a configuration field ends in "_pkg", its value is assumed to be the name of
+a subpackage, which is is created and stored in a field whose name is stripped
+of the "_pkg" suffix.
 
 =item %parameters = $self->parameters();
 
 Returns a hash of the default values of the object's parameters.
 
-=item $self->run($directory);
+=item $self->setup(%configuration);
 
-Run the object on the files in a directory.
-
-=item $self->setup($configuration);
-
-Sets computed parameters of the object.
+Sets those parameters of the object which are computed when the object is
+initialized.
 
 =back
 

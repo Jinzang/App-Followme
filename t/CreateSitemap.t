@@ -50,7 +50,7 @@ do {
 EOQ
 
     my %configuration = (
-            site_url => 'http://www.example.com',
+            remote_url => 'http://www.example.com',
             sitemap => 'sitemap.txt',
             web_extension => 'html',
             );
@@ -66,7 +66,7 @@ EOQ
         fio_write_page($filename, $output);
 
         my $absolute_url = $map->{data}->build('absolute_url', $filename);
-        my $webpage = $configuration{site_url} . $$absolute_url;
+        my $webpage = $configuration{remote_url} . $$absolute_url;
         push(@webpages, $webpage);
     }
 

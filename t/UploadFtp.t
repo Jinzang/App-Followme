@@ -40,14 +40,15 @@ SKIP: {
     my $user = '';
     my $password = '';
     $configuration{ftp_url} = '';
-    $configuration{ftp_directory} = '';
+    $configuration{remote_directory} = '';
 
     skip('Ftp connection not configured', 5) unless $configuration{ftp_url};
 
     # Test files
 
     my $dir = 'subdir';
-    my $filename = 'filename.html';
+    my $remote_file = 'filename.html';
+    my $local_file = rel2abs($remote_file);
 
     my $file = <<EOQ;
 <html>
@@ -60,7 +61,7 @@ SKIP: {
 </html>
 EOQ
 
-    my $fd = IO::File->new($filename, 'w');
+    my $fd = IO::File->new($local_file, 'w');
     print $fd $file;
     close($fd);
 
@@ -72,13 +73,13 @@ EOQ
     my $flag =$up->add_directory($dir);
     is($flag, 1, 'Add directory'); # test 1
 
-    $flag = $up->add_file($filename);
+    $flag = $up->add_file($local_file, $remote_file);
     is($flag, 1, 'Add file'); # test 2
 
-    $flag = $up->add_file($filename);
+    $flag = $up->add_file($local_file, $remote_file);
     is($flag, 1, 'Add file again'); # test 3
 
-    $flag = $up->delete_file($filename);
+    $flag = $up->delete_file($remote_file);
     is($flag, 1, 'Delete file'); # test 4
 
     $flag = $up->delete_directory($dir);

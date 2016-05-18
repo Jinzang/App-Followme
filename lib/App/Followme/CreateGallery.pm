@@ -197,21 +197,6 @@ App::Followme::CreateGallery - Create a photo gallery page
 This package builds an index for a directory which serves as a photo gallery.
 The variables described below are substituted into a template to produce the
 gallery.
-=over 4
-
-=item @thumb_file
-
-The name of the thumb file for a photo
-
-=item $height
-
-The height of the photo
-
-=item $width
-
-The width of the photo
-
-=back
 
 =head1 CONFIGURATION
 
@@ -222,7 +207,7 @@ The following fields in the configuration file are used:
 =item template_file
 
 The name of the template used to produce the photo gallery. The default is
-'gallery.htm'.
+'create_gallery.htm'.
 
 =item thumb_suffix
 
@@ -250,6 +235,11 @@ proportional to the height.
 The height of the photo after resizing. Leave at 0 if the height is defined to
 be proportional to the width. If both photo_width and photo_height are zero,
 the image will not be resized.
+
+=item data_pkg
+
+The name of the package used to retrieve data from the photos. The default value
+is 'App::Followme::JpegData'.
 
 =back
 

@@ -74,7 +74,7 @@ App::Followme::MarkdownData - Convert Markdown files to html
 =head1 DESCRIPTION
 
 This module contains the methods that build metadata values from a Markdown
-file.  The markdown file is optionally preced by a section containing Yaml
+file.  The markdown file is optionally preceded by a section containing Yaml
 formatted data.
 
 =head1 METHODS
@@ -85,13 +85,13 @@ All data are accessed through the build method.
 
 Build a variable's value. The first argument is the name of the variable. The
 second argument is the name of the file the metadata is being computed for. If
-it is undefined, the filename in the object
-is used.
+it is undefined, the filename stored in the object is used.
 
 =head1 VARIABLES
 
 The markdown metadata class can evaluate the following variables. When passing
 a name to the build method, the sigil should not be used.
+
 =over 4
 
 =item $body

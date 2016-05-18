@@ -47,10 +47,10 @@ sub add_directory {
 # Add a file to the remote site
 
 sub add_file {
-    my ($self, $filename) = @_;
+    my ($self, $local_filename, $remote_filename) = @_;
 
-    my $new_file = catfile($self->{remote_directory}, $filename);
-    my $status = copy($filename, $new_file);
+    my $new_file = catfile($self->{remote_directory}, $remote_filename);
+    my $status = copy($local_filename, $new_file);
 
     chmod($self->{permissions}, $new_file) if $status;
     return $status;

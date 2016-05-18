@@ -192,6 +192,7 @@ sub render_file {
     return $renderer->($self->{data}, $file);
 }
 
+
 #----------------------------------------------------------------------
 # Convert filename to index file if it is a directory
 
@@ -230,7 +231,7 @@ be invoked itself.
 =head1 METHODS
 
 Packages loaded as modules get a consistent behavior by subclassing
-App::Foolowme:Module. It is not invoked directly. It provides methods for i/o,
+App::Followme:Module. It is not invoked directly. It provides methods for i/o,
 handling templates and prototypes.
 
 A template is a file containing commands and variables for making a web page.
@@ -242,34 +243,46 @@ look as the other pages in the directory.
 
 =over 4
 
+=item $flag = $self->check_error($error, $folder);
+
+Provides common error formatting and checking for modules. It generates a
+warning message if $error is set. $folder is the name of the file or folder
+that the operation that generated the error was invoked on. The return value
+is Perl true  if $error was set.
+
 =item $filename = $self->find_prototype($directory, $uplevel);
 
 Return the name of the most recently modified web page in a directory. If
 $uplevel is defined, search that many directory levels up from the directory
 passed as the first argument.
 
-=item $sub = $self->make_template($filename, $template_name);
+=item $filename = $self->get_template_name($template_file);
 
-Generate a compiled subroutine to render a file by combining a prototype, the
-current version of the file, and template. The prototype is the most recently
-modified file in the directory containing the filename passed as the first
-argument. The method first searches for the template file in the directory
-containing the filename and if it is not found there, in the templates folder,
-which is an object parameter,
+Searches in the standard places for a template file and returns the full
+filename if it is found. Throws an error if the template is not found.
 
-The data supplied to the compiled subroutine should be a hash reference. fields
-in the hash are substituted into variables in the template. Variables in the
-template are preceded by Perl sigils, so that a link would look like:
+=item %configuration = $self->read_configuration($filename, %configuration);
 
-    <li><a href="$url">$title</a></li>
+Update the configuraion parameters by reading the contents of a configuration
+file.
 
-The data hash may contain a list of hashes, which by convention the modules in
-App::Followme name loop. Text in between for and endfor comments will be
-repeated for each hash in the list and each hash will be interpolated into the
-text. For comments look like
+=item $page = $self->reformat_file(@files);
 
-    <!-- for @loop -->
-    <!-- endfor -->
+Reformat a file using one or more prototypes. The first file is the
+prototype, the second, the subprototype, and the last file is the file to
+be updated.
+
+=item $page = $self->render_file($template_file, $file);
+
+Render a file as html using a template. The data subpackage is used to
+retrieve the data from the file.
+
+=item $file = $self->to_file($file);
+
+A convenience method that converts a folder name to an index file name,
+otherwise passthe file name.
+
+unchaned.
 
 =back
 
@@ -280,6 +293,34 @@ class based on it:
 
 =over 4
 
+=item template_file
+
+The name of the template file used by this module.
+
+=item web_extension
+
+The extension used by web files. The default value is 'html'.
+
+=item configuration_file
+
+The name of the file containing the configuration. The default value is
+'followme.cfg'.
+
+=item template_directory
+
+The name of the directory containing the template files. The name is relative
+to the top directory of the web site. The default value is '_templates'.
+
+=item data_pkg
+
+The name of the Perl module that generates data to be put into the template.
+It should be a subclass of App::Followme::BaseData. The default value is
+'App::Followme::WebData'.
+
+=item template_pkg
+
+The name of the Perl Module used to generate web pages from templates.
+The default value is 'App::Followme::Template'.
 
 =back
 

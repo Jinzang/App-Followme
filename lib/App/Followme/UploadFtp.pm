@@ -20,7 +20,7 @@ sub parameters {
 
     return (
             ftp_url => '',
-            ftp_directory => '',
+            remote_directory => '',
             ftp_debug => 0,
             remote_pkg => 'File::Spec::Unix',
            );
@@ -48,10 +48,10 @@ sub add_directory {
 # Add a file to the remote site
 
 sub add_file {
-    my ($self, $filename) = @_;
+    my ($self, $local_filename, $remote_filename) = @_;
 
     my $status;
-    my $remote_filename = $self->remote_name($filename);
+    $remote_filename = $self->remote_name($remote_filename);
 
     # Delete file if already there
     if ($self->{ftp}->mdtm($remote_filename)) {
@@ -59,7 +59,7 @@ sub add_file {
     }
 
     # Change upload mode if necessary
-    if (-B $filename) {
+    if (-B $local_filename) {
         if ($self->{ascii}) {
             $self->{ftp}->binary();
             $self->{ascii} = 0;
@@ -71,7 +71,7 @@ sub add_file {
     }
 
     # Upload the file
-    if ($self->{ftp}->put($filename, $remote_filename)) {
+    if ($self->{ftp}->put($local_filename, $remote_filename)) {
         $status = 1;
     }
 
@@ -145,7 +145,7 @@ sub open {
 
     $ftp->login($user, $password) or die "Cannot login ", $ftp->message;
 
-    $ftp->cwd($self->{ftp_directory})
+    $ftp->cwd($self->{remote_directory})
         or die "Cannot change remote directory ", $ftp->message;
 
     $ftp->binary();
@@ -160,11 +160,11 @@ sub open {
 # Get the name of the file on the remote system
 
 sub remote_name {
-    my ($self, $filename) = @_;
+    my ($self, $remote_filename) = @_;
 
-    my @path = splitdir($filename);
-    $filename = $self->{remote}->catfile(@path);
-    return $filename;
+    my @path = splitdir($remote_filename);
+    $remote_filename = $self->{remote}->catfile(@path);
+    return $remote_filename;
 }
 
 1;
@@ -180,7 +180,7 @@ App::Followme::UploadFtp - Upload files using ftp
     my $ftp = App::Followme::UploadNone->new(\%configuration);
     $ftp->open($user, $password);
     $ftp->add_directory($dir);
-    $ftp->add_file($filename);
+    $ftp->add_file($local_filename, $remote_filename);
     $ftp->delete_file($filename);
     $ftp->delete_dir($dir);
     $ftp->close();
@@ -201,7 +201,7 @@ The following are the public methods of the interface
 
 Create a new directory.
 
-=item $flag = $self->add_file($filename);
+=item $flag = $self->add_file($local_filename, $remote_filename);
 
 Upload a file.
 
@@ -231,7 +231,7 @@ will prompt for and save the user name and password.
 Set to one to trace the ftp commands issued. Useful to diagnose problems
 with ftp uploads. The default value is zero.
 
-=item ftp_directory
+=item remote_directory
 
 The top directory of the remote site
 

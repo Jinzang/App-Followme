@@ -188,7 +188,7 @@ App::Followme::EditSections - Edit the section tags on an html page
 
 =head1 SYNOPSIS
 
-    use App::Followme::Sitemap;
+    use App::Followme::EditSection;
     my $edit = App::Followme::EditSection->new();
     $edit->run($directory);
 
@@ -214,6 +214,11 @@ The following field in the configuration file are used:
 
 Remove all html comments that are in a file, not just the section and endsection
 tags.
+
+=item data_pkg
+
+The package used to retrieve information from each file. The default value is
+'App::Followme::WebData'.
 
 =back
 

@@ -388,7 +388,7 @@ sub get_files {
     return \@files;
 }
 
-#---------e-------------------------------------------------------------
+#-----------------------------------------------------------------------
 # Get a list of matching directories
 
 sub get_folders {
@@ -793,8 +793,7 @@ build method.
 
 =item directory
 
-The directory used to retrieve metadatafro. This is used by list valued
-variables.
+The directory used to retrieve metadata. This is used by list valued variables.
 
 =item extension
 
@@ -841,8 +840,6 @@ value of this parameter is '.*,_*',
 
 The extension used by web pages. This controls which files are returned. The
 default value is 'html'.
-
-=item TODO
 
 =back
 

@@ -220,8 +220,8 @@ App::Followme::FileData
 =head1 SYNOPSIS
 
     use App::Followme::FileData;
-    my $meta = App::Followme::FileData->new(filename => 'example.txt');
-    my $html = App::Followme::Template->new('example.htm', $meta);
+    my $data = App::Followme::FileData->new();
+    my $html = App::Followme::Template->new('example.htm', $data);
 
 =head1 DESCRIPTION
 
@@ -245,11 +245,11 @@ a name to the build method, the sigil should not be used.
 
 =over 4
 
-=item body
+=item $body
 
 The main content of the file.
 
-=item description
+=item $description
 
 A one sentence description of the file contents
 

@@ -5,7 +5,7 @@ use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
 use Test::Requires 'Text::Markdown';
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 use lib '../..';
 
@@ -116,12 +116,21 @@ EOQ
 };
 
 #----------------------------------------------------------------------
+# Get filename from title
+
+do {
+   my $filename = rel2abs('one.html');
+   my $new_filename = $cvt->title_to_filename($filename);
+   is($new_filename, $filename, "Title to filename"); #test 3
+};
+
+#----------------------------------------------------------------------
 # Test update file and folder
 do {
     $cvt->update_file($prototype_file, 'four.md');
 
     my $page = fio_read_page('four.html');
-    like($page, qr/<h1>Four<\/h1>/, 'Update file four'); # test 3
+    like($page, qr/<h1>Four<\/h1>/, 'Update file four'); # test 4
 
     $cvt->update_folder($prototype_file);
     foreach my $count (qw(three two one)) {
@@ -130,6 +139,6 @@ do {
         my $kount = ucfirst($count);
 
         like($page, qr/<h1>$kount<\/h1>/,
-             "Update folder file file $count"); # test 4-6
+             "Update folder file $count"); # test 5-7
     }
 };

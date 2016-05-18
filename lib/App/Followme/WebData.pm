@@ -91,139 +91,47 @@ App::Followme::WebData - Read metadatafrom a web file
 =head1 SYNOPSIS
 
     use App::Followme::WebData;
-    my $obj = App::Followme::WebData->new();
-    my $prototype = $obj->find_prototype($directory, 0);
-    my $test = $obj->is_newer($filename, $prototype);
-    if ($test) {
-        my $data = $obj->set_fields($directory, $filename);
-        my $sub = $obj->make_template($filename, $template_name);
-        my $webppage = $sub->($data);
-        print $webpage;
-    }
+    my $data = App::Followme::WebData->new();
+    my $html = App::Followme::Template->new('example.htm', $data);
 
 =head1 DESCRIPTION
 
-This module contains the methods that build variables and perform template
-and prototype handling. It serves as the basis of all the computations
-performed by App::Followme, and thus is used as the base class for all its
-modules.
+This module extracts data from a web page and uses it to build variables from a
+template.
 
 =head1 METHODS
 
-Packages loaded as modules get a consistent behavior by subclassing
-App::Foolowme:Module. It is not invoked directly. It provides methods for i/o,
-handling templates, and prototypes, and building the variables that are inserted
-into templates.
+All data classes are first instantiated by calling new and the object
+created is passed to a template object. It calls the build method with an
+argument name to retrieve that data item, though for the sake of
+efficiency, all the data are read from the file at once.
 
-A template is a file containing commands and variables for making a web page.
-First, the template is compiled into a subroutine and then the subroutine is
-called with a hash as an argument to fill in the variables and produce a web
-page. A prototype is the most recently modified web page in a directory. It is
-combined with the template so that the web page has the same look as the other
-pages in the directory.
+=head1 VARIABLES
 
-=over 4
-
-=item my $data = $self->build_date($data, $filename);
-
-The variables calculated from the modification time are: C<weekday, month,>
-C<monthnum, day, year, hour24, hour, ampm, minute,> and C<second.>
-
-=item my $data = $self->build_is_index($data, $filename);
-
-The variable C<is_flag> is one of the filename is an index file and zero if
-it is not.
-
-=item my $data = $self->build_title_from_filename($data, $filename);
-
-The title of the page is derived from the file name by removing the filename
-extension, removing any leading digits,replacing dashes with spaces, and
-capitalizing the first character of each word.
-
-=item $data = $self->build_url($data, $filename);
-
-Build the relative and absolute urls of a web page from a filename.
-
-=item $filename = $self->find_prototype($directory, $uplevel);
-
-Return the name of the most recently modified web page in a directory. If
-$uplevel is defined, search that many directory levels up from the directory
-passed as the first argument.
-
-=item my $data = $self->internal_fields($data, $filename);
-
-Compute the fields that you must read the file to calculate: title, body,
-and summary
-
-=item $test = $self->is_newer($target, @sources);
-
-Compare the modification date of the target file to the modification dates of
-the source files. If the target file is newer than all of the sources, return
-1 (true).
-
-=item $sub = $self->make_template($filename, $template_name);
-
-Generate a compiled subroutine to render a file by combining a prototype, the
-current version of the file, and template. The prototype is the most recently
-modified file in the directory containing the filename passed as the first
-argument. The method first searches for the template file in the directory
-containing the filename and if it is not found there, in the templates folder,
-which is an object parameter,
-
-The data supplied to the compiled subroutine should be a hash reference. fields
-in the hash are substituted into variables in the template. Variables in the
-template are preceded by Perl sigils, so that a link would look like:
-
-    <li><a href="$url">$title</a></li>
-
-The data hash may contain a list of hashes, which by convention the modules in
-App::Followme name loop. Text in between for and endfor comments will be
-repeated for each hash in the list and each hash will be interpolated into the
-text. For comments look like
-
-    <!-- for @loop -->
-    <!-- endfor -->
-
-=item $str = $self->read_page($filename);
-
-Read a fie into a string. An the entire file is read from a string, there is no
-line at a time IO. This is because files are typically small and the parsing
-done is not line oriented.
-
-=item $data = $self->set_fields($directory, $filename);
-
-The main method for getting variables. This method calls the build methods
-defined in this class. Filename is the file that the variables are being
-computed for. Directory is used to compute the relative url. The url computed is
-relative to it.
-
-=item $self->write_page($filename, $str);
-
-Write a file from a string. An the entire file is written from a string, there
-is no line at a time IO. This is because files are typically small.
-
-=item ($filenames, $directories) = $self->visit($top_directory);
-
-Return a list of filenames and directories in a directory,
+This class whatever values are returned in metadata section in the header
+as well as the title and body extracted from the body section.
 
 =back
 
 =head1 CONFIGURATION
 
-The following fields in the configuration file are used in this class and every
-class based on it:
+This class has the following configuration variable:
 
 =over 4
 
-=item base_directory
+=item body_tag
 
-The directory the class is invoked from. This controls which files are returned. The
-default value is the current directory.
+The name of the section containing the body text. The default value is
+'primary'.
+
+=item metadata_tag
+
+The name of the section containing the metadata tags. The default value is
+'meta'.
 
 =item web_extension
 
-The extension used by web pages. This controls which files are returned. The
-default value is 'html'.
+The file extension of web pages. The default value is 'html'.
 
 =back
 

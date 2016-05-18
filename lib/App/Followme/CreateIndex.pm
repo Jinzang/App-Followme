@@ -80,7 +80,7 @@ This package builds an index for a directory containing links to all the files
 contained in it with the specified extensions. The variables described below are
 substituted into a template to produce the index. Loop comments that look like
 
-    <!-- for @loop -->
+    <!-- for @files -->
     <!-- endfor -->
 
 indicate the section of the template that is repeated for each file contained
@@ -96,11 +96,12 @@ The following fields in the configuration file are used:
 
 The name of the template file. The template file is either in the same
 directory as the configuration file used to invoke this method, or if not
-there, in the templates subdirectory.
+there, in the templates subdirectory. The default value is 'create_index.htm'.
 
-=item metadata_pkg
+=item data_pkg
 
-The name of the class used to find and parse files included in the index.
+The name of the class used to find and parse files included in the index. The
+default value is 'App::Followme::WebData', which handles html files.
 
 =back
 

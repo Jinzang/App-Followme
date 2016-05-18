@@ -20,7 +20,7 @@ sub parameters {
     my ($pkg) = @_;
 
     return (
-            site_url => '',
+            remote_url => '',
             sitemap => 'sitemap.txt',
             data_pkg => 'App::Followme::WebData',
            );
@@ -54,7 +54,7 @@ sub list_urls {
     foreach my $file (@$files) {
         # build returns a reference, so must dereference
         my $url = $self->{data}->build('absolute_url', $file);
-        my $page_url = $self->{site_url} . $$url;
+        my $page_url = $self->{remote_url} . $$url;
         push(@urls, $page_url);
     }
 
@@ -74,7 +74,7 @@ sub setup {
     my ($self, %configuration) = @_;
 
     # Remove any trailing slash
-    $self->{site_url} =~ s/\/$//;
+    $self->{remote_url} =~ s/\/$//;
     return;
 }
 
@@ -111,9 +111,14 @@ The name of the sitemap file. It is written to the directory this module is
 invoked from. Typically this is the top folder of a site. The default value is
 sitemap.txt.
 
-=item site_url
+=item remote_url
 
 The url of the website, e.g. http://www.example.com.
+
+=item data_pkg
+
+The package used to retrieve information from each file contained in the
+sitemap. The default value is 'App::Followme::WebData'.
 
 =back
 

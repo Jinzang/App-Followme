@@ -20,8 +20,6 @@ sub parameters {
     my ($pkg) = @_;
 
     return (
-            sort_reverse => 1,
-            sort_field => 'mdate',
             data_pkg => 'App::Followme::WebData',
     );
 }
@@ -355,11 +353,11 @@ The following parameters are used from the configuration:
 
 =over 4
 
-=item quick_update
+=item data_pkg
 
-Only check files in current directory
+The name of the module that processes web files. The default value is
+'App::Followme::WebData'.
 
-=item web_extension
 
 The extension used by web pages. The default value is html
 

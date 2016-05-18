@@ -106,42 +106,8 @@ App::Followme::CreateNews - Create an index with the more recent files
 =head1 DESCRIPTION
 
 This package creates an index for files in the current directory that contains
-the text of the most recently modified files together with links to the files,
-It can be used to create a basic weblog. The index is built using a template.
-The template has Loop comments that look like
-
-    <!-- for @loop -->
-    <!-- endfor -->
-
-and indicate the section of the template that is repeated for each file
-contained in the index. The following variables may be used in the template:
-
-=over 4
-
-=item absolute_url
-
-The absolute_url of the web page.
-
-=item body
-
-All the text inside the content tags in an page.
-
-=item title
-
-The title of the page is derived from the file name by removing the filename
-extension, removing any leading digits,replacing dashes with spaces, and
-capitalizing the first character of each word.
-
-=item url
-
-The relative url of a web page.
-
-=item time fields
-
-The variables calculated from the modification time are: C<weekday, month,>
-C<monthnum, day, year, hour24, hour, ampm, minute,> and C<second.>
-
-=back
+the text of the most recently modified files together with links to the files.
+It can be used to create a basic weblog.
 
 =head1 CONFIGURATION
 
@@ -153,9 +119,20 @@ The following fields in the configuration file are used:
 
 The number of pages to include in the index.
 
-=item news_template
+=item news_template_file
 
-The path to the template file, relative to the top directory.
+The news template creates the index in the base directory. The default value is
+'create_news.htm'.
+
+=item index_template_file
+
+The index template creates index files in each of the subdirectories. The
+default value is 'create_news_index.htm'.
+
+=item data_pkg
+
+The class used to extract data from each of the news files. The default value
+is 'App::Followme::WebData'.
 
 =back
 

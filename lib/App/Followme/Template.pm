@@ -234,7 +234,7 @@ command argument. The argument continues up to the command end string.
 Variables in the template have the same format as ordinary Perl variables,
 a string of word characters starting with a sigil character. for example,
 
-    $SUMMARY @data
+    $body @files
 
 are examples of variables. The following commands are supported in templates:
 
@@ -273,14 +273,11 @@ The text until the matching C<endif> is included only if the expression in the
 
 =item else
 
-The "if" command can contain an C<else>, in which case the text before
-the "else" is included if the expression in the "if" command is true and the
-text after the "else" is included if it is false. You can also place an "elsif"
-command in the "if" block, which includes the following text if its expression
-is true.
-
-The "for" command can also contain an C<else>). If the "for" command does
-not execute, the code after the else is executed instead.
+The "if" and "for" commands can contain an C<else>. The text before the "else"
+is included if the expression in the enclosing command is true and the
+text after the "else" is included if the "if" command is false or the "for"
+command does not execute. You can also place an "elsif" command inside a block,
+which includes the following text if its expression is true.
 
 =back
 

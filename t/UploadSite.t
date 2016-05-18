@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 7;
+use Test::More tests => 13;
 
 #----------------------------------------------------------------------
 # Load package
@@ -35,6 +35,7 @@ chdir $local_dir;
 my %configuration = (
                      top_directory => $local_dir,
                      remote_directory => $remote_dir,
+                     remote_url => 'http://www.test.com',
                      upload_pkg => 'App::Followme::UploadLocal',
                     );
 
@@ -94,6 +95,7 @@ do {
 <head>
 <meta name="robots" content="archive">
 <!-- section meta -->
+<base href="file:///test/" />
 <title>Post %%</title>
 <!-- endsection meta -->
 </head>
@@ -130,13 +132,19 @@ EOQ
 
             $local->{$filename} = 1;
             $hash_ok->{$filename} = $up->{data}->build('checksum', $filename);
+
+            my $new_page = $up->rewrite_base_tag($page);
+            like($new_page, qr(<base href="$up->{remote_url}"),
+                 "Rewrite base tag for $filename"); # test 6-11
+
         }
     }
+
 
     my $hash = {};
     my %saved_local = %$local;
     $up->update_folder($up->{top_directory}, $hash, $local);
 
-    is_deeply($local, {}, 'Find local files'); # test 6
-    is_deeply($hash, $hash_ok, 'Compute hash'); # test 7
+    is_deeply($local, {}, 'Find local files'); # test 12
+    is_deeply($hash, $hash_ok, 'Compute hash'); # test 13
 };

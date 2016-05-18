@@ -10,8 +10,8 @@ use Carp;
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(web_match_tags web_parse_sections web_only_tags web_only_text
-                 web_substitute_sections web_substitute_tags);
+our @EXPORT = qw(web_match_tags web_parse_sections web_parse_tag web_only_tags
+                 web_only_text web_substitute_sections web_substitute_tags);
 
 our $VERSION = "1.16";
 
@@ -193,8 +193,9 @@ sub web_same_tag {
     croak "Match not parsed: $match" unless ref $match;
     croak "Tag not parsed: $tag" unless ref $tag;
 
-    while (my ($name, $value) = each %$match) {
+    foreach my $name (keys %$match) {
         return 0 unless exists $tag->{$name};
+        my $value = $match->{$name};
         return 0 if $value ne '*' && $tag->{$name} ne $value;
     }
 
@@ -293,3 +294,75 @@ sub web_substitute_tags {
 }
 
 1;
+
+=pod
+
+=encoding utf-8
+
+=head1 NAME
+
+App::Followme::Web-
+
+=head1 SYNOPSIS
+
+    use App::Followme::Web;
+
+=head1 DESCRIPTION
+
+This module contains the subroutines followme uses to parse html. The code
+is placed in a separate module because it is used by more than one other
+module.
+
+=head1 SUBROUTINES
+
+=over 4
+
+=item $match_count = web_match_tags($pattern, $text, $matcher,
+                                    $metadata, $global);
+
+Match a tag pattern ($pattern) in a text ($text), pass the matched text to a
+function ($matcher), which processes it and places it in a hash ($metadata).
+Repeat this process for the entire text if the flag ($global) is set.
+
+=item $section = web_parse_sections($text);
+
+Place the text inside section tags into a hash indexed by the section names.
+
+=item $parsed_tag = web_parse_tag($tag);
+
+Parse a single html into a hash indexed by attribute name.
+
+=item $tags = web_only_tags(@tokens);
+
+Extract the tags from a text that has been split into tokens.
+
+=item $text = web_only_text(@tokens);
+
+Extract the text from a text that has been split into tokens.
+
+=item $text = web_substitute_sections($text, $section);
+
+Replace sections in a text by sections of the same name stored in a hash.
+
+=item $text = web_substitute_tags($pattern, $text, $substituter,
+                                  $output, $global);
+
+Match a tag pattern ($pattern) in a text ($text), pass the matched text to a
+function ($substituter), which processes it and places it in a hash ($output) as
+well as replaces the matched text. Repeat this process for the entire text if
+the flag ($global) is set. Return the text with the substitutions.
+
+=back
+
+=head1 LICENSE
+
+Copyright (C) Bernie Simon.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 AUTHOR
+
+Bernie Simon E<lt>bernie.simon@gmail.comE<gt>
+
+=cut
