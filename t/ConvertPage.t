@@ -127,12 +127,12 @@ do {
 #----------------------------------------------------------------------
 # Test update file and folder
 do {
-    $cvt->update_file($prototype_file, 'four.md');
+    $cvt->update_file($test_dir, $prototype_file, 'four.md');
 
     my $page = fio_read_page('four.html');
     like($page, qr/<h1>Four<\/h1>/, 'Update file four'); # test 4
 
-    $cvt->update_folder($prototype_file);
+    $cvt->update_folder($test_dir);
     foreach my $count (qw(three two one)) {
         my $file = "$count.html";
         $page = fio_read_page($file);

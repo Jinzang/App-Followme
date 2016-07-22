@@ -7,8 +7,7 @@ use lib '../..';
 
 use base qw(App::Followme::Module);
 
-use Text::Markdown;
-use File::Spec::Functions qw(catfile rel2abs);
+use File::Spec::Functions qw(abs2rel catfile rel2abs);
 use App::Followme::FIO;
 
 our $VERSION = "1.16";
@@ -66,17 +65,16 @@ sub title_to_filename {
 # Convert a single file
 
 sub update_file {
-    my ($self, $prototype, $file) = @_;
+    my ($self, $folder, $prototype, $file) = @_;
 
-    my $new_file = $file;
+    my ($base_directory, $basename) = fio_split_filename($file);
+    my $new_file = catfile($folder, $basename);
     $new_file =~ s/\.[^\.]*$/.$self->{web_extension}/;
 
     my $page = $self->render_file($self->{template_file}, $file);
     $page = $self->reformat_file($prototype, $new_file, $page);
 
     $self->write_file($new_file, $page);
-    unlink($file);
-
     return;
 }
 
@@ -87,18 +85,34 @@ sub update_folder {
     my ($self, $folder) = @_;
 
     my $index_file = $self->to_file($folder);
+    my $base_directory = ${$self->{data}->build('base_directory', $index_file)};
+    my $same_directory = fio_same_file($base_directory, $self->{base_directory});
+
+    my $source_directory;
+    if ($same_directory) {
+        $source_directory = $folder;
+    } else {
+        $source_directory = catfile($base_directory,
+                                    abs2rel($folder, $self->{base_directory}));
+    }
+
+    $index_file = $self->to_file($source_directory);
     my $files = $self->{data}->build('files', $index_file);
 
     my $prototype;
     foreach my $file (@$files) {
         my $prototype ||= $self->find_prototype($folder, 0);
-        eval {$self->update_file($prototype, $file)};
+        eval {$self->update_file($folder, $prototype, $file)};
         $self->check_error($@, $file);
+
+        unlink($file) if $same_directory;
     }
 
     if (! $self->{quick_update}) {
-        my $folders = $self->{data}->build('folders', $folder);
+        my $folders = $self->{data}->build('folders', $source_directory);
         foreach my $subfolder (@$folders) {
+            $subfolder = catfile($folder, abs2rel($subfolder,
+                                                  $source_directory));
             $self->update_folder($subfolder);
         }
     }

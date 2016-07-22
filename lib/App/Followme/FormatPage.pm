@@ -206,8 +206,6 @@ sub update_folder {
     my ($self, $folder, $prototype_file) = @_;
 
     my $index_file = $self->to_file($folder);
-    ($folder) = fio_split_filename($folder);
-
     my ($prototype_path, $prototype);
     my $modtime = fio_get_date($folder);
 

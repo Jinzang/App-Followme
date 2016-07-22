@@ -315,7 +315,6 @@ sub update_folder {
     my ($self, $folder, $hash, $local) = @_;
 
     my $index_file = $self->to_file($folder);
-    ($folder) = fio_split_filename($folder);
 
     # Check if folder is new
 

@@ -60,7 +60,7 @@ my @files_ok;
 foreach my $dir (@dirs) {
     if ($dir) {
         mkdir $dir;
-        push(@folders_ok, catfile($test_dir, $dir, 'index.html'));
+        push(@folders_ok, catfile($test_dir, $dir));
     }
 
     foreach my $count (qw(one two three)) {

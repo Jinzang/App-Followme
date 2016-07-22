@@ -11,7 +11,8 @@ use Carp;
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(web_match_tags web_parse_sections web_parse_tag web_only_tags
-                 web_only_text web_substitute_sections web_substitute_tags);
+                 web_only_text web_split_at_tags web_substitute_sections
+                 web_substitute_tags web_titled_sections);
 
 our $VERSION = "1.16";
 
@@ -293,6 +294,54 @@ sub web_substitute_tags {
     return join('', @all_tokens);
 }
 
+#----------------------------------------------------------------------
+# Divide html into sections based on contents of header tags
+
+sub web_titled_sections {
+    my ($pattern, $text, $titler) = @_;
+
+    my $title;
+    my @tokens;
+    my %section;
+
+    my $in = 0;
+    my @matches = web_extract_tags($pattern);
+
+    foreach my $token (web_split_at_tags($text)) {
+        if (web_is_tag($token)) {
+            my $tag = web_parse_tag($token);
+            if (web_same_tag($matches[$in], $tag)) {
+                $in += 1;
+                if ($in >= @matches) {
+                    push(@tokens, $token);
+                    $title = $titler->(@tokens);
+                    @tokens = ();
+                    undef $token;
+                    $in = 0;
+                }
+            }
+        }
+
+        if ($in > 0) {
+            push(@tokens, $token);
+            undef $title;
+            undef $token;
+        }
+
+        if (defined $token && defined $title) {
+            $section{$title} = [] unless exists $section{$title};
+            push(@{$section{$title}}, $token);
+        }
+    }
+
+    foreach my $title (keys %section) {
+        $section{$title} = join('', @{$section{$title}});
+        $section{$title} =~ s/^\s+//;
+    }
+
+    return \%section;
+}
+
 1;
 
 =pod
@@ -351,6 +400,14 @@ Match a tag pattern ($pattern) in a text ($text), pass the matched text to a
 function ($substituter), which processes it and places it in a hash ($output) as
 well as replaces the matched text. Repeat this process for the entire text if
 the flag ($global) is set. Return the text with the substitutions.
+
+=item $sections = web_titled_sections($pattern, $text, $titler);
+
+Return a hash of sections from html, where the name of each section is derived
+from the header tags that precede it. The title is built by calling the
+subroutine passed in as $titler. It is passed the set of tags matched by
+$pattern. A hash of sections thpreceded by a matching set of header tags is
+returned.
 
 =back
 

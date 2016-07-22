@@ -227,7 +227,7 @@ sub find_newest_file {
 }
 
 #----------------------------------------------------------------------
-# Get the more recently changed files TODO: finish
+# Get the more recently changed files
 
 sub find_top_files {
     my ($self, $folder, $sort_field, $sort_reverse, @augmented_files) = @_;
@@ -288,7 +288,14 @@ sub format_files {
 
 sub format_folders {
     my ($self, $sorted_order, $folders) = @_;
-    return $self->format_files($sorted_order, $folders);
+
+    $folders = $self->format_files($sorted_order, $folders);
+    return $folders if $sorted_order;
+
+    my @folders = map {fio_to_file($_, $self->{web_extension})}
+                  @$folders;
+
+    return \@folders;
 }
 
 #----------------------------------------------------------------------
@@ -400,8 +407,7 @@ sub get_folders {
     my @folders;
     foreach my $subfolder (@$subfolders) {
         next unless $self->match_directory($subfolder);
-        my $index_file = fio_to_file($subfolder, $self->{web_extension});
-        push(@folders, $index_file);
+        push(@folders, $subfolder);
     }
 
     return \@folders;

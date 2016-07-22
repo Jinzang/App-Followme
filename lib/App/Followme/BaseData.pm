@@ -100,6 +100,7 @@ sub format {
 
     return %data;
 }
+
 #----------------------------------------------------------------------
 # Gather the data for building a variable's value
 
@@ -118,6 +119,14 @@ sub gather_data {
 
     my %data = $self->coerce_data($name, @data);
     return %data;
+}
+
+#----------------------------------------------------------------------
+# Return the base directory defined in this object
+
+sub get_base_directory {
+    my ($self) = @_;
+    return $self->{base_directory};
 }
 
 #----------------------------------------------------------------------

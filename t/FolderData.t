@@ -167,7 +167,7 @@ EOQ
     my $breadcrumbs = $obj->get_breadcrumbs($filename);
     is_deeply($breadcrumbs, \@ok_breadcrumbs, 'Build breadcrumbs'); # test 21
 
-    $filename = rel2abs(catfile('archive', 'index.html'));
+    $filename = rel2abs('archive');
     my $folders = $obj->get_folders($test_dir);
     is_deeply($folders, [$filename], 'Build folders'); # test 22
 
