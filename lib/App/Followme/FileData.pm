@@ -21,6 +21,7 @@ sub parameters {
     my ($self) = @_;
 
     return (
+            base_directory => '',
             title_template => '',
            );
 }
@@ -207,6 +208,14 @@ sub format_title {
     return $title;
 }
 
+#----------------------------------------------------------------------
+# Return the base directory defined in this object
+
+sub get_base_directory {
+    my ($self) = @_;
+    return $self->{base_directory};
+}
+
 1;
 
 =pod
@@ -273,6 +282,10 @@ The title of the file, either derived from the content or the file metadata.
 This class has the following configuration variable:
 
 =over 4
+
+=item base_directory
+
+The top directory containing the files o be processed
 
 =item title_template
 

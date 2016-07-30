@@ -117,34 +117,36 @@ sub fio_get_size {
 
 sub fio_glob_patterns {
     my ($patterns) = @_;
+    my @globbed_patterns = ();
 
-    my @globbed_patterns;
-    my @patterns = split(/\s*,\s*/, $patterns);
+    if ($patterns) {
+        my @patterns = split(/\s*,\s*/, $patterns);
 
-    foreach my $pattern (@patterns) {
-        if ($pattern eq '*') {
-            push(@globbed_patterns,  '.');
+        foreach my $pattern (@patterns) {
+            if ($pattern eq '*') {
+                push(@globbed_patterns,  '.');
 
-        } else {
-            my $start;
-            if ($pattern =~ s/^\*//) {
-                $start = '';
             } else {
-                $start = '^';
+                my $start;
+                if ($pattern =~ s/^\*//) {
+                    $start = '';
+                } else {
+                    $start = '^';
+                }
+
+                my $finish;
+                if ($pattern =~ s/\*$//) {
+                    $finish = '';
+                } else {
+                    $finish = '$';
+                }
+
+                $pattern =~ s/\./\\./g;
+                $pattern =~ s/\*/\.\*/g;
+                $pattern =~ s/\?/\.\?/g;
+
+                push(@globbed_patterns, $start . $pattern . $finish);
             }
-
-            my $finish;
-            if ($pattern =~ s/\*$//) {
-                $finish = '';
-            } else {
-                $finish = '$';
-            }
-
-            $pattern =~ s/\./\\./g;
-            $pattern =~ s/\*/\.\*/g;
-            $pattern =~ s/\?/\.\?/g;
-
-            push(@globbed_patterns, $start . $pattern . $finish);
         }
     }
 

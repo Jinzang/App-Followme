@@ -112,8 +112,12 @@ sub initialize {
     initialize($_, $self, $cycle, %configuration) foreach @{"${pkg}::ISA"};
     $cycle->{$pkg} = 1;
 
-    %$self = (%$self, $pkg->parameters());
-    $self = bless($self, $pkg);
+    my %parameters = $pkg->parameters();
+    while (my ($key, $value) = each(%parameters)) {
+        $self->{$key} = $value if length $value;
+    }
+
+     $self = bless($self, $pkg);
 
     $self->add_configurations($pkg, %configuration);
     $self->add_subpackages(%configuration);

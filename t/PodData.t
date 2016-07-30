@@ -5,7 +5,7 @@ use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
 use Test::Requires 'Pod::Simple::XHTML';
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 use lib '../..';
 
@@ -51,14 +51,17 @@ do {
     my $index_file = $obj->dir_to_filename($pod_directory);
     my $files = $obj->build('files', $index_file);
 
+    my $file_list = join(',', @$files);
+    ok(index($file_list, '.pod') > 0, "Build file list"); # test 4
+
     my $file = shift(@$files);
     my $body = $obj->build('body', $file);
 
-    ok(index($$body, "SYNOPSIS") > 0, "Convert Text"); # test 4
+    ok(index($$body, "SYNOPSIS") > 0, "Convert Text"); # test 5
 
     my $title = $obj->build('$title', $file);
-    ok(index($$title, "Followme") > 0, "Build title"); # test 5
+    ok(index($$title, "Followme") > 0, "Build title"); # test 6
 
     my $description = $obj->build('$description', $file);
-    ok(index($$description, "module") > 0, "Get description"); # test 6
+    ok(index($$description, "module") > 0, "Get description"); # test 7
 };

@@ -157,10 +157,11 @@ EOQ
     my $size = $obj->get_size('three.html');
     is($size, 326, 'get file size'); # test 18
 
-    my $files = $obj->get_files();
+    my $index_file = catfile($test_dir,'index.html');
+    my $files = $obj->get_files($index_file);
     is_deeply($files, \@ok_files, 'Build files'); # test 19
 
-    my $all_files = $obj->get_all_files();
+    my $all_files = $obj->get_all_files($index_file);
     is_deeply($all_files, \@ok_all_files, 'Build all files'); # test 20
 
     my $filename = catfile('archive', 'two.html');
@@ -177,7 +178,7 @@ EOQ
                                                sort_cutoff => 2,
                                                );
 
-    my $top_files = $obj->get_top_files();
+    my $top_files = $obj->get_top_files($index_file);
     my $top_files_ok = [catfile($test_dir, 'two.html'),
                         catfile($test_dir, 'archive','two.html')];
 

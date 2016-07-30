@@ -557,8 +557,10 @@ sub match_directory {
 sub match_file {
     my ($self, $filename) = @_;
 
-    $self->{include_file_patterns} ||= fio_glob_patterns("*.$self->{extension}");
+    my @patterns = map {"*.$_"} split(/\s*,\s*/, $self->{extension});
+    my $patterns = join(',', @patterns);
 
+    $self->{include_file_patterns} ||= fio_glob_patterns($patterns);
     $self->{exclude_file_patterns} ||= fio_glob_patterns($self->{exclude});
 
     my ($dir, $file) = fio_split_filename($filename);

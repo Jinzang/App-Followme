@@ -55,7 +55,7 @@ do {
     my $config = 'followme.cfg';
     my @config_files_ok = (catfile($test_dir, $config));
 
-    fio_write_page($config, "site_url = http://www.example.com\n");
+    fio_write_page($config, "remote_url = http://www.example.com\n");
 
     my $directory;
     foreach my $dir (qw(one two three)) {

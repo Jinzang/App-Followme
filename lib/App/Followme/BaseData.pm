@@ -122,14 +122,6 @@ sub gather_data {
 }
 
 #----------------------------------------------------------------------
-# Return the base directory defined in this object
-
-sub get_base_directory {
-    my ($self) = @_;
-    return $self->{base_directory};
-}
-
-#----------------------------------------------------------------------
 # Get the count of the item in the list
 
 sub get_count {
