@@ -22,6 +22,30 @@ addition, the script is run in quick mode, meaning that only the directory
 the file is in is checked for changes. Otherwise, not only that directory, but
 all directories below it are checked.
 
+=head1 CHANGES
+
+This version is the first beta release for version two of followme. The code
+changes have been made and pass test, but I need to update the documentation to
+match the code changes. The major changes are all internal. In the past the code
+qconstructed a hash and passed it to the template, which used the values in the
+hash to produce the web page. In version two the code passes an object to the
+template, which calls the build method for each vaiable in the template, passing
+the name of the variable and a filename to retrieve it from as arguments. The
+module then returns the value, which is used to fill in the template. The major
+user visible change is that the template syntax has changed, the new syntax is a
+subset of the previous syntax. Please see L<App::Followme::Template> for a
+description of the template syntax. The other change is that the configuration
+parameters of some of the modules has changed. The new configuration parameters
+are described in each module. The motivation for the change is that placing the
+variable building in a separate class allows more than one type of file to be
+handled by modules placed in the configurarion file. Each class handles a type
+of file and the name of the class which builds the variables is a configuration
+parameter.
+
+The beta release will be used to build a website documenting followme and the
+process of building the site will be used to debug any remaining problems.
+When this process is finished, the version will be bumped to 2.00.
+
 =head1 INSTALLATION
 
 First, install the App::Followme module from CPAN. It will copy the

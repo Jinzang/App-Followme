@@ -1,6 +1,7 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+    - First beta release for version 2. Code entirely rewritten.
 
 1.16 2015-09-10T00:35:31Z
     - New initial website

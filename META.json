@@ -4,7 +4,7 @@
       "Bernie Simon <bernie.simon@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v2.3.0, CPAN::Meta::Converter version 2.150001",
+   "generated_by" : "Minilla/v3.0.3, CPAN::Meta::Converter version 2.150001",
    "license" : [
       "perl_5"
    ],
@@ -28,7 +28,7 @@
    "prereqs" : {
       "configure" : {
          "requires" : {
-            "Module::Build" : "0.38"
+            "Module::Build::Tiny" : "0.035"
          }
       },
       "develop" : {
@@ -44,12 +44,11 @@
          "recommends" : {
             "GD" : "2.21",
             "Net::FTP" : "0",
-            "Text::Markdown" : "1.000031"
+            "Text::Markdown" : "1.000031",
+            "YAML::Tiny" : "1.69",
          },
          "requires" : {
-            "YAML::Tiny" : "0",
             "Test::Requires" : "0",
-            "Time::Format": "1.02",
             "perl" : "5.008005"
          }
       },

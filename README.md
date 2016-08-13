@@ -17,8 +17,32 @@ no argument is given, it is run on the current directory.
 
 If a file is passed, the script is run on the directory the file is in. In
 addition, the script is run in quick mode, meaning that only the directory
-the file is in is checked for changes. Otherwise not only that directory, but
+the file is in is checked for changes. Otherwise, not only that directory, but
 all directories below it are checked.
+
+# CHANGES
+
+This version is the first beta release for version two of followme. The code
+changes have been made and pass test, but I need to update the documentation to
+match the code changes. The major changes are all internal. In the past the code
+qconstructed a hash and passed it to the template, which used the values in the
+hash to produce the web page. In version two the code passes an object to the
+template, which calls the build method for each vaiable in the template, passing
+the name of the variable and a filename to retrieve it from as arguments. The
+module then returns the value, which is used to fill in the template. The major
+user visible change is that the template syntax has changed, the new syntax is a
+subset of the previous syntax. Please see [App::Followme::Template](https://metacpan.org/pod/App::Followme::Template) for a
+description of the template syntax. The other change is that the configuration
+parameters of some of the modules has changed. The new configuration parameters
+are described in each module. The motivation for the change is that placing the
+variable building in a separate class allows more than one type of file to be
+handled by modules placed in the configurarion file. Each class handles a type
+of file and the name of the class which builds the variables is a configuration
+parameter.
+
+The beta release will be used to build a website documenting followme and the
+process of building the site will be used to debug any remaining problems.
+When this process is finished, the version will be bumped to 2.00.
 
 # INSTALLATION
 
@@ -42,8 +66,8 @@ new content.
 The first page will serve as a prototype for the rest of your site. When you
 look at the html page, you will see that it contains comments looking like
 
-    <!-- section content -->
-    <!-- endsection content -->
+    <!-- section primary -->
+    <!-- endsection primary -->
 
 These comments mark the parts of the prototype that will change from page to
 page from the parts that are constant across the entire site. Everything
@@ -56,7 +80,7 @@ the look of your site, such as the style sheets.
 
 You can also use followme on an existing site. Run the command
 
-    followme --init [template]
+    followme --init
 
 in the top directory of your site. The init option will not overwrite any
 existing files in your site. Then look at the page template it has
@@ -64,8 +88,20 @@ created:
 
     cat templates/page.htm
 
-Edit the existing pages in your site to have all the section comments in this
-template.
+Edit an existing page on your site to have all the section comments in this
+template. In the template shipped with this package there are three section
+names: meta, primary, and secondary. The meta section is in the html header
+and contains the page metadata, although it may also contain other content
+tht varies between pages. The primary section contains the page content that
+is maintained by you. None of this package's modules will change it. The
+secondary section contains content that is updated by the modules in this
+package and you will not normally change it.
+
+After you edit a single page, you can place the App::Followme::EditSections
+module in the configuration file, as described in the next section. If
+you then run followme, it will modify the other pages on your website to
+match the page you have edited. Then remove the EditSections module from
+the configuration file.
 
 # CONFIGURATION
 
@@ -95,6 +131,16 @@ modules which are named in the configuration files in subdirectories. Other
 parameters in the configuration files are written to a hash. This hash is passed
 to the new method of each module as it loaded, overriding the default values of
 the parameters when creating the new object.
+
+Configuration files may also contain module names between square brackets, like
+this:
+
+    [App::Followme::ConvertPage]
+
+Values after a bracketed module name will only apply to that module. Values at
+the top of the file, before any bracketed module name, will apply to all modules.
+The run\_before and run\_after parameters should always be placed before any
+bracketed section names.
 
 These modules are distributed with followme:
 
@@ -139,9 +185,7 @@ These modules are distributed with followme:
     the Markdown file if one is put at the top of the file. If the file has no
     title, it is built from the file name, replacing dashes with blanks and
     capitalizing each word, The url and absolute\_url are built from the html file
-    name. A number of time variables are built from the modification date of the
-    text file: weekday, month, monthnum, day, year, hour24, hour, ampm, minute, and
-    second. To change the look of the html page, edit the page template. Only blocks
+    name. To change the look of the html page, edit the page template. Only blocks
     inside the section comments will be in the resulting page, editing the text
     outside it will have no effect on the resulting page.
 
@@ -151,7 +195,7 @@ These modules are distributed with followme:
     with the specified extension contained in it. The same variables mentioned above
     are calculated for each file, with the exception of body. Comments that look like
 
-        <!-- for @loop -->
+        <!-- for @filenames -->
         <!-- endfor -->
 
     indicate the section of the template that is repeated for each file contained
@@ -174,7 +218,7 @@ These modules are distributed with followme:
 - [App::Followme::UploadSite](https://metacpan.org/pod/App::Followme::UploadSite)
 
     This module uploads changed files to a remote site. The default method to do the
-    uploads is ftp, but that can be changed by changing the parameter upload\_pkg.
+    uploads is local copy, but that can be changed by changing the parameter upload\_pkg.
     This package computes a checksum for every file in the site. If the checksum has
     changed since the last time it was run, the file is uploaded to the remote site.
     If there is a checksum, but no local file, the file is deleted from the remote
@@ -196,151 +240,81 @@ are only run on the folder it is run from and subfolders of it. Followme only
 looks at the folder it is run from to determine if other files in the folder
 need to be updated. So after changing a file, followme should be run from the
 directory containing the file.
+Templates support the basic control structures in Perl: "for" loops and
+"if-else" blocks. Creating output is a two step process. First you generate a
+subroutine from one or more templates, then you call the subroutine with your
+data to generate the output.
 
-# TEMPLATES
-
-Templates are read either from the same directory as the configuration file
-containing the name of the module being run or from the templates subdirectory
-of the top directory of the site.
-
-Templates support the control structures in Perl: "for" and "while" loops,
-"if-else" blocks, and some others. Creating output is a two step process. First
-followme generates a subroutine from one or more templates, then you call the
-subroutine with your data to generate the output.
-
-The template format is line oriented. Commands are enclosed in an html comment
-(<!-- -->) on its own line. A command may be preceded or followed by white
-space. If a command is a block command, it is terminated by the word "end"
-followed by the command name. For example, the "for" command is terminated by an
-"endfor" command and the "if" command by an "endif" command.
+The template format is line oriented. Commands are enclosed in html comments
+(&lt;!-- -->). A command may be preceded by white space. If a command is a block
+command, it is terminated by the word "end" followed by the command name. For
+example, the "for" command is terminated by an "endfor" command and the "if"
+command by an "endif" command.
 
 All lines may contain variables. As in Perl, variables are a sigil character
-('$,' '@,' or '%') followed by one or more word characters. For example,
-`$name` or `@names`. To indicate a literal character instead of a variable,
-precede the sigil with a backslash. When followme runs the subroutine that is
-generated, it is passed a reference to a hash generated from the file or files
-examined by the module. By convention if more than one file is examined, the
-data is in an array referenced by a hash field named 'loop'. The subroutine
-replaces variables in the template with the value in the field of the same name
-in the hash. If the types of the two disagree, the code will coerce the data to
-the type of the sigil.
+('$' or '@') followed by one or more word characters. For example, `$name` or
+`@names`. To indicate a literal character instead of a variable, precede the
+sigil with a backslash. When you run the subroutine that this module generates,
+you pass it a metadata object. The subroutine replaces variables in the template
+with the value in the field built by the metadata object.
 
-If the first non-white characters on a line are the comment start string, the
+If the first non-white characters on a line are the command start string, the
 line is interpreted as a command. The command name continues up to the first
 white space character. The text following the initial span of white space is the
-command argument. The argument continues up to the comment end string.
+command argument. The argument continues up to the command end string.
 
 Variables in the template have the same format as ordinary Perl variables,
 a string of word characters starting with a sigil character. for example,
 
-    $summary @loop %dictionary
+    $body @files
 
-are examples of variables. The subroutine this module generates will substitute
-values in the data it is passed for the variables in the template. New variables
-can be added with the "set" command.
-
-Arrays and hashes are rendered as unordered lists and definition lists when
-interpolating them. This is done recursively, so arbitrary structures can be
-rendered. This is mostly intended for debugging, as it does not provide fine
-control over how the structures are rendered. For finer control, use the
-commands described below so that the scalar fields in the structures can be
-accessed. Undefined fields are replaced with the empty string when rendering. If
-the type of data passed to the subroutine differs from the sigil on the variable
-the variable is coerced to the type of the sigil. This works the same as an
-assignment. If an array is referenced as a scalar, the length of the array is
-output.
-
-The following commands are supported in templates:
+are examples of variables. The following commands are supported in templates:
 
 - do
 
-    The remainder of the line is interpreted as Perl code. For assignments, use
-    the set command.
-
-- if
-
-    The text until the matching `endif` is included only if the expression in the
-    "if" command is true. If false, the text is skipped. The "if" command can contain
-    an `else`, in which case the text before the "else" is included if the
-    expression in the "if" command is true and the text after the "else" is included
-    if it is false. You can also place an "elsif" command in the "if" block, which
-    includes the following text if its expression is true.
-
-        <!-- if $highlight eq 'y' -->
-        <em>$text</em>
-        <!-- else -->
-        $text
-        <!-- endif -->
+    The remainder of the line is interpreted as Perl code.
 
 - for
 
     Expand the text between the "for" and "endfor" commands several times. The
-    "for" command takes a name of a field in a hash as its argument. The value of this
-    name should be a reference to a list. It will expand the text in the for block
-    once for each element in the list. Within the "for" block, any element of the list
-    is accessible. This is especially useful for displaying lists of hashes. For
-    example, suppose the data field name phonelist points to an array. This array is
-    a list of hashes, and each hash has two entries, name and phone. Then the code
+    argument to the "for" command should be an expression evaluating to a list. The
+    code will expand the text in the for block once for each element in the list.
 
-        <!-- for @phonelist -->
-        <p>$name<br>
-        $phone</p>
-        <!-- endfor -->
+        <ul>
+        <!-- for @files -->
+            <li><a href="$url">$title</a></li>
+            <!-- endfor -->
+            </ul>
 
-    displays the entire phone list.
+- if
 
-- section
+    The text until the matching `endif` is included only if the expression in the
+    "if" command is true. If false, the text is skipped.
 
-    If a template contains a section, the text until the endsection command will be
-    replaced by the section block with the same name in one the subtemplates. For
-    example, if the main template has the code
+            <div class="column">
+        <!-- for @files -->
+        <!-- if $count % 20 == 0 -->
+        </div>
+            <div class="column">
+        <!-- endif -->
+            $title<br />
+            <!-- endfor -->
+            </div>
 
-        <!-- section footer -->
-        <div></div>
-        <!-- endsection -->
+- else
 
-    and the subtemplate has the lines
+    The "if" and "for" commands can contain an `else`. The text beforethe "else"
+    is included if the expression in the enclosing command is true and the
+    text after the "else" is included if the "if" command is false or the "for"
+    command does not execute. You can also place an "elsif" command inside a block,
+    which includes the following text if its expression
+    is true.
 
-        <!-- section footer -->
-        <div>This template is copyright with a Creative Commons License.</div>
-        <!-- endsection -->
+# TEMPLATES
 
-    The text will be copied from a section in the subtemplate into a section of the
-    same name in the template. If there is no block with the same name in the
-    subtemplate, the text is used unchanged.
-
-- set
-
-    Adds a new variable or updates the value of an existing variable. The argument
-    following the command name looks like any Perl assignment statement minus the
-    trailing semicolon. For example,
-
-        <!-- set $link = "<a href=\"$url\">$title</a>" -->
-
-- while
-
-    Expand the text between the `while` and `endwhile` as long as the
-    expression following the `while` is true.
-
-        <!-- set $i = 10 -->
-        <p>Countdown ...<br>
-        <!-- while $i >= 0 -->
-        $i<br>
-        <!-- set $i = $i - 1 -->
-        <!-- endwhile -->
-
-- with
-
-    Lists within a hash can be accessed using the "for" command. Hashes within a
-    hash are accessed using the "with" command. For example:
-
-        <!-- with %address -->
-        <p><i>$street<br />
-        $city, $state $zip</i></p.
-        <!-- endwith -->
-
-More information on the syntax of template is in the documentation of
-the [App::Followme::Template](https://metacpan.org/pod/App::Followme::Template) module.
+Templates are read either from the same directory as the configuration file
+containing the name of the module being run or from the \_templates subdirectory
+of the top directory of the site.
 
 # MODULES
 
@@ -387,3 +361,11 @@ it under the same terms as Perl itself.
 # AUTHOR
 
 Bernie Simon <bernie.simon@gmail.com>
+
+# POD ERRORS
+
+Hey! **The above document had some coding errors, which are explained below:**
+
+- Around line 321:
+
+    You forgot a '=back' before '=head1'
