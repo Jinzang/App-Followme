@@ -48,10 +48,10 @@
          },
          "requires" : {
             "Test::Requires" : "0",
-            "perl" : "5.008005",
-            "YAML::Tiny" : "1.60",
             "Time::Format" : "1.04",
             "Time::Local" : "1.18",
+            "YAML::Tiny" : "1.60",
+            "perl" : "5.008005"
          }
       },
       "test" : {
@@ -72,5 +72,5 @@
          "web" : "https://github.com/Jinzang/App-Followme"
       }
    },
-   "version" : "1.90"
+   "version" : "1.91"
 }

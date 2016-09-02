@@ -12,7 +12,7 @@ use base qw(App::Followme::FolderData);
 use App::Followme::FIO;
 use App::Followme::Web;
 
-our $VERSION = "1.90";
+our $VERSION = "1.91";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
