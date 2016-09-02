@@ -48,7 +48,10 @@
          },
          "requires" : {
             "Test::Requires" : "0",
-            "perl" : "5.008005"
+            "perl" : "5.008005",
+            "YAML::Tiny" : "1.60",
+            "Time::Format" : "1.04",
+            "Time::Local" : "1.18",
          }
       },
       "test" : {

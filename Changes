@@ -1,6 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+    - Added required Perl Modules to cpanfile
+    - Fixes for PodData
 
 1.90 2016-08-29T00:26:28Z
     - First beta release for version 2. Code entirely rewritten.
