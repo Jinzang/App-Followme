@@ -54,14 +54,15 @@ do {
     my $file_list = join(',', @$files);
     ok(index($file_list, '.pod') > 0, "Build file list"); # test 4
 
-    my $file = shift(@$files);
+    my @files = sort(@$files);
+    my $file = shift(@files);
     my $body = $obj->build('body', $file);
 
     ok(index($$body, "SYNOPSIS") > 0, "Convert Text"); # test 5
 
     my $title = $obj->build('$title', $file);
-    ok(index($$title, "Followme") > 0, "Build title"); # test 6
+    is($$title, "App::Followme::BaseData", "Get title"); # test 6
 
     my $description = $obj->build('$description', $file);
-    ok(index($$description, "module") > 0, "Get description"); # test 7
+    ok(index($$description, "base class") > 0, "Get description"); # test 7
 };

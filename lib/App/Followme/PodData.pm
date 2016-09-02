@@ -68,10 +68,15 @@ sub fetch_content {
                        );
 
         while (my ($cname, $sname) = each %mapping) {
-            my @tokens = web_split_at_tags($section->{$sname});
+            $content{$cname} = $section->{$sname};
+        }
+
+        foreach my $cname (qw(title)) {
+            my @tokens = web_split_at_tags($content{$cname});
             $content{$cname} = web_only_text(@tokens);
         }
     }
+
 
     return %content;
 }
