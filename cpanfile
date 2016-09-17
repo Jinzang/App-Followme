@@ -7,6 +7,7 @@ requires 'Time::Local', '1.18';
 recommends 'GD', 2.21;
 recommends 'Net::FTP', '0';
 recommends 'Text::Markdown', '1.000031';
+recommends 'Pod::Simple::XHTML', '3.20';
 
 on 'test' => sub {
     requires 'Test::More', '0.98';
