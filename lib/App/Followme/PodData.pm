@@ -87,21 +87,12 @@ sub fetch_content {
 sub fetch_as_html {
     my ($self, $text) = @_;
 
-    my ($h_level) = $self->{title_template} =~ /\d+/;
-    $h_level = 1 unless defined $h_level;
-
-    my $psx = Pod::Simple::XHTML->new();
-
-    $psx->html_charset('UTF-8');
-    $psx->html_encode_chars('&<>"');
-    $psx->html_h_level($h_level);
-    $psx->perldoc_url_prefix($self->{site_url});
+    my $psx = $self->initialize_parser();
 
     my $html;
     $psx->output_string(\$html);
     $psx->parse_string_document($text);
-
-     return $self->extract_body($html);
+    return $self->extract_body($html);
 }
 
 #----------------------------------------------------------------------
@@ -143,19 +134,16 @@ sub find_pod_directory {
 # Initialize the pod parser
 
 sub initialize_parser {
-    my ($self, $html) = @_;
+    my ($self) = @_;
 
-    my $psx;
-    my ($h_level) = $self->{title_template} =~ /\d+/;
+    my ($h_level) = $self->{title_template} =~ /(\d+)/;
     $h_level = 1 unless defined $h_level;
 
-    $psx = Pod::Simple::XHTML->new();
+    my $psx = Pod::Simple::XHTML->new();
 
-    $psx->html_charset('UTF-8');
     $psx->html_encode_chars('&<>"');
     $psx->html_h_level($h_level);
     $psx->perldoc_url_prefix($self->{site_url});
-    $psx->output_string(\$html);
 
     return $psx;
 }
