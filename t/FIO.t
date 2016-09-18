@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 27;
+use Test::More tests => 26;
 
 use Cwd;
 use IO::File;
@@ -70,15 +70,11 @@ do {
 # Test set and get date
 
 do {
-    my $ok_date = 12345;
-    fio_set_date($test_dir, $ok_date);
     my $date = fio_get_date($test_dir);
-    is($date, $ok_date, "set and get date"); # test 6
-
-    fio_set_date($test_dir, $date);
+    my $ok_date = $date - 100;
+    fio_set_date($test_dir, $ok_date);
     $date = fio_get_date($test_dir);
-    is($date, $ok_date, "set and get date"); # test 7
-
+    is($date, $ok_date, "set and get date"); # test 6
 };
 
 #----------------------------------------------------------------------
@@ -128,13 +124,13 @@ EOQ
             fio_write_page($filename, $output);
 
             my $input = fio_read_page($filename);
-            is($input, $output, "Read and write page $filename"); #tests 8-16
+            is($input, $output, "Read and write page $filename"); #tests 7-15
         }
     }
 
     my ($files, $folders) = fio_visit($test_dir);
-    is_deeply($folders, \@ok_folders, 'get list of folders'); # test 17
-    is_deeply($files, \@ok_filenames, 'get list of files'); # test 18
+    is_deeply($folders, \@ok_folders, 'get list of folders'); # test 16
+    is_deeply($files, \@ok_filenames, 'get list of files'); # test 17
 };
 
 #----------------------------------------------------------------------
@@ -144,11 +140,11 @@ do {
     my $filename = 'foobar.txt';
     my $filename_ok = catfile($test_dir, $filename);
     my $test_filename = fio_full_file_name($test_dir, $filename);
-    is($test_filename, $filename_ok, 'Full file name relative path'); # test 19
+    is($test_filename, $filename_ok, 'Full file name relative path'); # test 18
 
     $filename = $filename_ok;
     $test_filename = fio_full_file_name($test_dir, $filename);
-    is($test_filename, $filename_ok, 'Full file name absolute path'); # test 20
+    is($test_filename, $filename_ok, 'Full file name absolute path'); # test 19
 };
 
 #----------------------------------------------------------------------
@@ -191,16 +187,16 @@ EOQ
     }
 
     my $newer = fio_is_newer('three.html', 'two.html', 'one.html');
-    is($newer, undef, 'Source is  newer'); # test 21
+    is($newer, undef, 'Source is  newer'); # test 20
 
     $newer = fio_is_newer('one.html', 'two.html', 'three.html');
-    is($newer, 1, "Target is newer"); # test 22
+    is($newer, 1, "Target is newer"); # test 21
 
     $newer = fio_is_newer('five.html', 'one.html');
-    is($newer, undef, 'Target is undefined'); # test 23
+    is($newer, undef, 'Target is undefined'); # test 22
 
     $newer = fio_is_newer('six.html', 'five.html');
-    is($newer, 1, 'Source and target undefined'); # test 24
+    is($newer, 1, 'Source and target undefined'); # test 23
 };
 
 #----------------------------------------------------------------------
@@ -210,16 +206,16 @@ do {
     my $url_ok = 'index.html';
     my $filename = catfile($test_dir, $url_ok);
     my $url = fio_filename_to_url($test_dir, $filename);
-    is($url, $url_ok, 'Simple url'); # test 25
+    is($url, $url_ok, 'Simple url'); # test 24
 
     $filename = catfile($test_dir, 'index.md');
     $url = fio_filename_to_url($test_dir, $filename, 'html');
-    is($url, $url_ok, 'Url from filename'); # test 26
+    is($url, $url_ok, 'Url from filename'); # test 25
 
     $url_ok = 'subdir/foobar.html';
     my @path = split(/\//, $url_ok);
     $filename = catfile($test_dir, @path);
     $url = fio_filename_to_url($test_dir, $filename, 'html');
-    is($url, $url_ok, 'Url in subdirectory'); # test 27
+    is($url, $url_ok, 'Url in subdirectory'); # test 26
 
 };
