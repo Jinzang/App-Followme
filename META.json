@@ -44,6 +44,7 @@
          "recommends" : {
             "GD" : "2.21",
             "Net::FTP" : "0",
+            "Pod::Simple::XHTML" : "3.20",
             "Text::Markdown" : "1.000031"
          },
          "requires" : {
@@ -72,5 +73,5 @@
          "web" : "https://github.com/Jinzang/App-Followme"
       }
    },
-   "version" : "1.91"
+   "version" : "1.92"
 }

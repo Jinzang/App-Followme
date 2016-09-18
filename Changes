@@ -2,6 +2,9 @@ Revision history for Perl extension App::Followme
 
 {{$NEXT}}
 
+1.92 2016-09-18T00:10:22Z
+    - Fixes to pass tests on Wndows and BSD
+
 1.91 2016-09-02T19:08:15Z
     - Added required Perl Modules to cpanfile
     - Fixes for PodData
