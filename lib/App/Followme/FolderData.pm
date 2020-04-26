@@ -735,7 +735,7 @@ above the filename passed as the argument.
 
 =item @files
 
-A list of matching filles in a directory.
+A list of matching files in a directory.
 
 =item @folders
 

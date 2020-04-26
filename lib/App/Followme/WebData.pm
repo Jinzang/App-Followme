@@ -86,7 +86,7 @@ sub fetch_sections {
 
 =head1 NAME
 
-App::Followme::WebData - Read metadatafrom a web file
+App::Followme::WebData - Read metadata from a web file
 
 =head1 SYNOPSIS
 

@@ -92,7 +92,7 @@ Edit an existing page on your site to have all the section comments in this
 template. In the template shipped with this package there are three section
 names: meta, primary, and secondary. The meta section is in the html header
 and contains the page metadata, although it may also contain other content
-tht varies between pages. The primary section contains the page content that
+that varies between pages. The primary section contains the page content that
 is maintained by you. None of this package's modules will change it. The
 secondary section contains content that is updated by the modules in this
 package and you will not normally change it.
@@ -303,7 +303,7 @@ are examples of variables. The following commands are supported in templates:
 
 - else
 
-    The "if" and "for" commands can contain an `else`. The text beforethe "else"
+    The "if" and "for" commands can contain an `else`. The text before the "else"
     is included if the expression in the enclosing command is true and the
     text after the "else" is included if the "if" command is false or the "for"
     command does not execute. You can also place an "elsif" command inside a block,
@@ -361,11 +361,3 @@ it under the same terms as Perl itself.
 # AUTHOR
 
 Bernie Simon <bernie.simon@gmail.com>
-
-# POD ERRORS
-
-Hey! **The above document had some coding errors, which are explained below:**
-
-- Around line 321:
-
-    You forgot a '=back' before '=head1'

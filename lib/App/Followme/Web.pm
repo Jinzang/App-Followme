@@ -142,7 +142,7 @@ sub web_parse_sections {
 
 sub web_parse_tag {
     my ($tag) = @_;
-    croak "Npt a tag: ($tag)" unless web_is_tag($tag);
+    croak "Not a tag: ($tag)" unless web_is_tag($tag);
 
     my @pattern;
     my $side = 0;
@@ -216,7 +216,7 @@ sub web_split_at_tags {
 }
 
 #----------------------------------------------------------------------
-# Substitue comment delimeted sections for same blacks in template
+# Substitue comment delimeted sections for same blocks in template
 
 sub web_substitute_sections {
     my ($text, $section) = @_;
@@ -379,7 +379,7 @@ Place the text inside section tags into a hash indexed by the section names.
 
 =item $parsed_tag = web_parse_tag($tag);
 
-Parse a single html into a hash indexed by attribute name.
+Parse a single html tag into a hash indexed by attribute name.
 
 =item $tags = web_only_tags(@tokens);
 
@@ -406,7 +406,7 @@ the flag ($global) is set. Return the text with the substitutions.
 Return a hash of sections from html, where the name of each section is derived
 from the header tags that precede it. The title is built by calling the
 subroutine passed in as $titler. It is passed the set of tags matched by
-$pattern. A hash of sections thpreceded by a matching set of header tags is
+$pattern. A hash of sections that preceded by a matching set of header tags is
 returned.
 
 =back

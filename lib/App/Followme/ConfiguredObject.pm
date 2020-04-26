@@ -117,7 +117,7 @@ sub initialize {
         $self->{$key} = $value if length $value;
     }
 
-     $self = bless($self, $pkg);
+    $self = bless($self, $pkg);
 
     $self->add_configurations($pkg, %configuration);
     $self->add_subpackages(%configuration);

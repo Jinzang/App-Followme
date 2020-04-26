@@ -118,7 +118,7 @@ configuration files.
 =item exclude_dirs
 
 A filename pattern or comma separated list of filename patterns that match
-folders that should not be uploaded/ The default value is '.*,_*' whicj\h
+folders that should not be uploaded/ The default value is '.*,_*' which
 matches folders starting with a dot (hiddern folders) and starting with an
 underscore character.
 

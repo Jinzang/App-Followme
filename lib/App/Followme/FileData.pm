@@ -285,7 +285,7 @@ This class has the following configuration variable:
 
 =item base_directory
 
-The top directory containing the files o be processed
+The top directory containing the files to be processed
 
 =item title_template
 

@@ -280,9 +280,7 @@ retrieve the data from the file.
 =item $file = $self->to_file($file);
 
 A convenience method that converts a folder name to an index file name,
-otherwise passthe file name.
-
-unchaned.
+otherwise pass the file name unchanged.
 
 =back
 
