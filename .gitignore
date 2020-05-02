@@ -13,6 +13,7 @@ nytprof/
 cover_db/
 
 test/
+test2/
 
 *.bak
 *.old
@@ -27,6 +28,3 @@ test/
 MYMETA.*
 
 /App-Followme-*
-
-lib/App/Followme/DoubleDown.pm
-lib/App/Followme/Metadata.pm

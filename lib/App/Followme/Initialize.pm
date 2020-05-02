@@ -8,7 +8,7 @@ use IO::File;
 use MIME::Base64  qw(decode_base64);
 use File::Spec::Functions qw(splitdir catfile);
 
-our $VERSION = "1.92";
+our $VERSION = "1.93";
 
 require Exporter;
 our @ISA = qw(Exporter);
