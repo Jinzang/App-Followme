@@ -2,7 +2,7 @@ Revision history for Perl extension App::Followme
 
 {{$NEXT}}
 
-1.93 2020-05-02T14:39:17Z
+1.93 2020-05-02T14:45:16Z
 	- revised css for single column site and removed javascript
 	- CreateGallery no longer resizes images, must be done externally
 	- revised templates to use semantic html
