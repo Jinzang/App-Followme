@@ -141,7 +141,6 @@ sub initialize_parser {
 
     my $psx = Pod::Simple::XHTML->new();
 
-    $psx->html_encode_chars('&<>"');
     $psx->html_h_level($h_level);
     $psx->perldoc_url_prefix($self->{site_url});
 
