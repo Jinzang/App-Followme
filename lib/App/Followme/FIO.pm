@@ -338,7 +338,7 @@ sub fio_write_page {
     my ($filename, $page, $binmode) = @_;
 
     my $fd = IO::File->new($filename, 'w');
-    die "Couldn't write $filename" unless $fd;
+    die "Couldn't write $filename: $!" unless $fd;
 
     binmode($fd, $binmode) if defined $binmode;
     print $fd $page;
