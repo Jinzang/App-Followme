@@ -44,14 +44,14 @@
          "recommends" : {
             "Image::Size" : "3.3",
             "Net::FTP" : "0",
-            "Pod::Simple::XHTML" : "3.20",
-            "Text::Markdown" : "1.000031"
+            "Pod::Simple::XHTML" : "3.20"
          },
          "requires" : {
             "Digest::MD5" : "2.55",
             "File::Path" : "2.16",
             "File::Spec::Functions" : "3.75",
             "Test::Requires" : "0",
+            "Text::Markdown" : "1.000031",
             "Time::Format" : "1.04",
             "Time::Local" : "1.18",
             "YAML::Tiny" : "1.60",
@@ -76,7 +76,7 @@
          "web" : "https://github.com/Jinzang/App-Followme"
       }
    },
-   "version" : "1.93",
-   "x_serialization_backend" : "JSON::PP version 2.97001",
+   "version" : "1.94",
+   "x_serialization_backend" : "JSON::PP version 4.02",
    "x_static_install" : 1
 }
