@@ -26,9 +26,10 @@ require App::Followme::Initialize;
 my $test_dir = catdir(@path, 'test');
 
 rmtree($test_dir);
-mkdir $test_dir;
+mkdir $test_dir or die $!;
 chmod 0755, $test_dir;
-chdir $test_dir;
+
+chdir $test_dir or die $!;
 $test_dir = cwd();
 
 #----------------------------------------------------------------------
@@ -45,7 +46,7 @@ do {
 # Create index page
 
 do {
-    chdir($test_dir);
+    chdir($test_dir) or die $!;
     my $followme = App::Followme->new();
 
     my $text = "This is the top page\n";
@@ -66,7 +67,7 @@ do {
 # Create archive pages
 
 do {
-    chdir($test_dir);
+    chdir($test_dir) or die $!;
     my $followme = App::Followme->new();
 
     my $path = catfile($test_dir, 'archive');
