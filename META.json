@@ -76,7 +76,7 @@
          "web" : "https://github.com/Jinzang/App-Followme"
       }
    },
-   "version" : "1.94",
+   "version" : "1.95",
    "x_serialization_backend" : "JSON::PP version 4.02",
    "x_static_install" : 1
 }
