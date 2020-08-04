@@ -12,7 +12,7 @@ use File::Spec::Functions qw(abs2rel catfile rel2abs splitdir);
 use base qw(App::Followme::BaseData);
 use App::Followme::FIO;
 
-our $VERSION = "1.94";
+our $VERSION = "1.95";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
@@ -708,6 +708,8 @@ classes that build metadata for specific file types.
 =head1 METHODS
 
 All data are accessed through the build method.
+
+=over 4
 
 =item my %data = $obj->build($name, $filename);
 
