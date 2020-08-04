@@ -724,6 +724,7 @@ is used.
 
 The folder metadata class can evaluate the following variables. When passing
 a name to the build method, the sigil should not be used.
+
 =over 4
 
 =item @all_files
