@@ -25,7 +25,7 @@ sub parameters {
             site_url => '',
             author => '',
             size_format => 'kb',
-            date_format => 'Mon d, yyyy h:m',
+            date_format => 'Mon d, yyyy h:mm',
             sort_field => '',
             sort_reverse => 0,
             sort_cutoff => 5,
@@ -44,7 +44,7 @@ sub calculate_author {
 }
 
 #----------------------------------------------------------------------
-# Calculate the creation dat from the modification date
+# Calculate the creation date from the modification date
 
 sub calculate_date {
     my ($self, $filename) = @_;
@@ -515,7 +515,7 @@ sub get_top_files {
 sub get_url {
     my ($self, $filename) = @_;
 
-    return $self->filename_to_url($self->{base_directory},
+    return $self->filename_to_url($self->{top_directory},
                                   $filename,
                                   $self->{web_extension});
 }
@@ -832,7 +832,7 @@ parameter is 0.
 =item sort_cutoff
 
 This determons the number of filenames returned by @top_files. The default
-value of this parameter id 5
+value of this parameter is 5
 
 =item exclude
 
