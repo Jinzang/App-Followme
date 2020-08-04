@@ -38,7 +38,7 @@ $test_dir = cwd();
 do {
     App::Followme::Initialize::initialize($test_dir);
     ok(-e '_templates', 'Created templates directory'); # test 1
-    ok(-e 'archive', 'Created archive directory'); # test 2
+    ok(-e 'essays', 'Created essays directory'); # test 2
     ok(-e 'followme.cfg', 'Created configuration file'); # test 3
 };
 
@@ -64,13 +64,13 @@ do {
 };
 
 #----------------------------------------------------------------------
-# Create archive pages
+# Create essay pages
 
 do {
     chdir($test_dir) or die $!;
     my $followme = App::Followme->new();
 
-    my $path = catfile($test_dir, 'archive');
+    my $path = catfile($test_dir, 'essays');
     foreach my $dir (qw(2013 12december)) {
         $path = catfile($path, $dir);
         mkdir($path);
@@ -94,9 +94,9 @@ do {
            "Generated $count blog post"); # test 8-10
     }
 
-    $path = catfile($test_dir, 'archive');
+    $path = catfile($test_dir, 'essays');
     my $file = catfile($path, 'index.html'); # test 11
-    ok(-e $file, "archive index file created");
+    ok(-e $file, "essays index file created");
 
     foreach my $dir (qw(2013 12december)) {
         my $page = fio_read_page($file);
