@@ -27,13 +27,11 @@ rmtree($test_dir);
 mkdir $test_dir  or die $!;
 chmod 0755, $test_dir;
 
-my $archive_dir = catfile(@path, 'test', 'archive');
-mkdir($archive_dir)  or die $!;
-chmod 0755, $archive_dir;
-
 chdir $test_dir or die $!;
 $test_dir = cwd();
 
+my $archive_dir = catfile(@path, 'test', 'archive');
+	
 #----------------------------------------------------------------------
 # Create object
 
@@ -107,10 +105,12 @@ EOQ
 
     fio_write_page($template_file, $index_template);
 
+    mkdir($archive_dir) unless -e $archive_dir;
     chdir($archive_dir) or die $!;
+
     $archive_dir = cwd();
     my @archived_files;
-
+	
     foreach my $count (qw(four three two one)) {
         my $output = $page;
         $output =~ s/%%/$count/g;
