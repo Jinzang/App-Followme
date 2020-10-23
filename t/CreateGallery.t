@@ -74,7 +74,7 @@ EOQ
     fio_write_page($template_name, $gallery_template);
 
     my $gallery_dir = catfile($test_dir, 'gallery');
-    mkdir($gallery_dir);
+    mkdir($gallery_dir) unless -e $gallery_dir;
     chmod 0755, $gallery_dir;
 
     chdir($gallery_dir);
