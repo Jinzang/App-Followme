@@ -139,6 +139,7 @@ sub fetch_metadata {
 
     my %metadata;
     if ($metadata_block) {
+		## TODO update with NestedText, set $flatten to true
         my $yaml = YAML::Tiny->read_string($metadata_block);
         %metadata = %{$yaml->[0]};
    } else {
@@ -155,6 +156,7 @@ sub fetch_sections {
     my ($self, $text) = @_;
 
     my %section;
+    ## TODO replace dashes with dots
     my @sections = split(/-{3,}\s*\n/, $text, 3);
 
     if ($sections[0] =~ /\S/) {

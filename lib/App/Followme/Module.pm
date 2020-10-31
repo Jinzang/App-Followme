@@ -106,6 +106,7 @@ sub get_template_name {
 
 #----------------------------------------------------------------------
 # Read the configuration from a file
+## TODO rewrite using NestedText
 
 sub read_configuration {
     my ($self, $filename, %configuration) = @_;

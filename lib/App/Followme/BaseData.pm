@@ -230,6 +230,7 @@ sub ref_value {
     my ($check, $ref_value);
     if ($sigil eq '$'){
         $value = '' unless defined $value;
+        # TODO: call nt_flatten if ref $value
         $ref_value = ref $value ? $value : \$value;
         $check = ref $ref_value eq 'SCALAR';
 
