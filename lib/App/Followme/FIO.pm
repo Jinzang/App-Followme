@@ -16,11 +16,12 @@ use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(fio_filename_to_url fio_full_file_name fio_format_date
-                 fio_get_date fio_get_size fio_glob_patterns fio_is_newer
-                 fio_match_patterns fio_most_recent_file fio_read_page
-                 fio_same_file fio_set_date fio_split_filename
-                 fio_to_file fio_visit fio_write_page);
+our @EXPORT = qw(fio_filename_to_url fio_flatten fio_full_file_name 
+                 fio_format_date fio_get_date fio_get_size 
+                 fio_glob_patterns fio_is_newer fio_match_patterns 
+                 fio_most_recent_file fio_read_page fio_same_file 
+                 fio_set_date fio_split_filename fio_to_file fio_visit 
+                 fio_write_page);
 
 our $VERSION = "1.95";
 
@@ -40,6 +41,34 @@ sub fio_filename_to_url {
     $url =~ s/\.[^\.]*$/.$ext/ if defined $ext;
 
     return $url;
+}
+
+#----------------------------------------------------------------------
+# Flatten a data structure to a string
+
+sub fio_flatten {
+	my ($data) = @_;
+
+	if (ref($data) eq 'HASH') {
+		my @buffer;
+		foreach my $key (sort keys %$data) {
+			my $value = fio_flatten($data->{$key});
+			push(@buffer, "$key: $value");
+		}
+		
+		$data = \@buffer;
+	}
+	
+	if (ref($data) eq 'ARRAY') {
+		my @buffer;
+		foreach my $value (@$data) {
+			push(@buffer, fio_flatten($value));
+		}
+		
+		$data = join(", ", @buffer);
+	}
+	
+	return $data;
 }
 
 #----------------------------------------------------------------------
@@ -379,6 +408,13 @@ This module contains the subroutines followme uses to access the file system
 
 Convert a filename into a url. The directory is the top directory of the
 website. The optional extension, if passed, replaces the extension on the file.
+
+=item $str = fio_flatten($data);
+
+Converted a nested data sructure containing hashes, arrays, and strings 
+to a string by representing hash key value pairs as a colon separated 
+pairs and then joining the pairs with commas and also joining array
+elements with commas.  
 
 =item $date_string = fio_format_date($date, $format);
 

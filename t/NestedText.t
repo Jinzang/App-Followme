@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 20;
+use Test::More tests => 15;
 
 use Cwd;
 use IO::File;
@@ -267,39 +267,4 @@ EOQ
 	eval{%config = nt_parse_string($text)};
 	($err, $msg) = split(/ at /, $@);
 	is($err, "Bad tag", "missing tag"); # test 15
-};
-	
-#----------------------------------------------------------------------
-# Flatten a data structure into a string
-
-do {
-	my $data = {
-				name1 => 'value1',
-				name2 => 'value2',
-				name3 => {subname1 => 'subvalue1',
-						  subname2 => 'subvalue2'},
-				name4 => ['subvalue3',
-						  'subvalue4',
-						 ],
-		};
-
-	my $str1 = nt_flatten($data->{name1});
-	my $val1 = 'value1'; 
-	is($str1, $val1, "flatten a string"); # test 16
-
-	my $str2 = nt_flatten($data->{name2});
-	my $val2 = 'value2'; 
-	is($str2, $val2, "flatten another string"); # test 17
-		
-	my $str4 = nt_flatten($data->{name4});
-	my $val4 = 'subvalue3, subvalue4'; 
-	is($str4, $val4, "flatten an array"); # test18
-	
-	my $str3 = nt_flatten($data->{name3});
-	my $val3 = 'subname1: subvalue1, subname2: subvalue2';
-	is($str3, $val3, "flatten a hash"); # test19
-	
-	my $total = "name1: $val1, name2: $val2, name3: $val3, name4: $val4";
-	my $str = nt_flatten($data);
-	is($str, $total, "flatten a complex structure"); # test20
 };

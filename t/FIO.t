@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 26;
+use Test::More tests => 31;
 
 use Cwd;
 use IO::File;
@@ -240,4 +240,39 @@ do {
     $url = fio_filename_to_url($test_dir, $filename, 'html');
     is($url, $url_ok, 'Url in subdirectory'); # test 26
 
+};
+
+#----------------------------------------------------------------------
+# Flatten a data structure into a string
+
+do {
+	my $data = {
+				name1 => 'value1',
+				name2 => 'value2',
+				name3 => {subname1 => 'subvalue1',
+						  subname2 => 'subvalue2'},
+				name4 => ['subvalue3',
+						  'subvalue4',
+						 ],
+		};
+
+	my $str1 = fio_flatten($data->{name1});
+	my $val1 = 'value1'; 
+	is($str1, $val1, "flatten a string"); # test 27
+
+	my $str2 = fio_flatten($data->{name2});
+	my $val2 = 'value2'; 
+	is($str2, $val2, "flatten another string"); # test 28
+		
+	my $str4 = fio_flatten($data->{name4});
+	my $val4 = 'subvalue3, subvalue4'; 
+	is($str4, $val4, "flatten an array"); # test29
+	
+	my $str3 = fio_flatten($data->{name3});
+	my $val3 = 'subname1: subvalue1, subname2: subvalue2';
+	is($str3, $val3, "flatten a hash"); # test30
+	
+	my $total = "name1: $val1, name2: $val2, name3: $val3, name4: $val4";
+	my $str = fio_flatten($data);
+	is($str, $total, "flatten a complex structure"); # test31
 };

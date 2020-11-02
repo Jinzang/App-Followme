@@ -11,35 +11,7 @@ use App::Followme::FIO;
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(nt_flatten nt_parse_file nt_parse_string);
-
-#----------------------------------------------------------------------
-# Flatten a data structure to a string
-
-sub nt_flatten {
-	my ($data) = @_;
-
-	if (ref($data) eq 'HASH') {
-		my @buffer;
-		foreach my $key (sort keys %$data) {
-			my $value = nt_flatten($data->{$key});
-			push(@buffer, "$key: $value");
-		}
-		
-		$data = \@buffer;
-	}
-	
-	if (ref($data) eq 'ARRAY') {
-		my @buffer;
-		foreach my $value (@$data) {
-			push(@buffer, nt_flatten($value));
-		}
-		
-		$data = join(", ", @buffer);
-	}
-	
-	return $data;
-}
+our @EXPORT = qw(nt_parse_file nt_parse_string);
 
 #----------------------------------------------------------------------
 # Read file in NestedText Format
