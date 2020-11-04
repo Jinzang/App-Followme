@@ -7,6 +7,7 @@ use integer;
 use lib '../..';
 
 use base qw(App::Followme::ConfiguredObject);
+use App::Followme::FIO;
 
 #----------------------------------------------------------------------
 # Default values of parameters
@@ -230,8 +231,13 @@ sub ref_value {
     my ($check, $ref_value);
     if ($sigil eq '$'){
         $value = '' unless defined $value;
-        # TODO: call nt_flatten if ref $value
-        $ref_value = ref $value ? $value : \$value;
+        if (ref $value ne 'SCALAR') {
+			# Convert data structures for inclusion in template
+			$value = fio_flatten($value);
+			$ref_value = \$value;
+		} else {
+			$ref_value = $value;
+		}
         $check = ref $ref_value eq 'SCALAR';
 
     } elsif ($sigil eq '@') {
