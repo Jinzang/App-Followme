@@ -51,10 +51,9 @@ do {
     my @count = qw(one two three);
 
     $code[0] = <<'EOQ';
------
 title: The Page %%
 author: Bernie Simon
------
+......
 <h1>Count %%</h1>
 
 <p>This is the description. This is the rest of the content.</p>
@@ -90,8 +89,8 @@ EOQ
     is($data{body}, "<p>This is the description. This is the rest of the content.</p>\n",
        'get body from content'); #test 4
 
-    is($data{title}, 'The Page One', 'get title from yaml'); # test 5
-    is($data{author}, 'Bernie Simon', 'get author from yaml'); # test 6
+    is($data{title}, 'The Page One', 'get title from metadata'); # test 5
+    is($data{author}, 'Bernie Simon', 'get author from metadata'); # test 6
 
     %data = $obj->format(1, %data);
     is($data{title}, 'page one', 'format sortable title'); # test 7
