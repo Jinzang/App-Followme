@@ -522,6 +522,18 @@ sub get_url {
 }
 
 #----------------------------------------------------------------------
+# Get a url with no extension from a filename
+
+sub get_url_base {
+    my ($self, $filename) = @_;
+
+    my $url_base =  $self->filename_to_url($self->{top_directory},
+										   $filename, '');
+	chop($url_base); # remove trailing dot
+	return $url_base;
+}
+
+#----------------------------------------------------------------------
 # Augment the list of filenames with the sort field
 
 sub make_augmented {
@@ -686,8 +698,6 @@ sub strip_augmented {
 
 App::Followme::FolderData - Build metadata from folder information
 
-TODO rewrite
-
 =head1 SYNOPSIS
 
     use Cwd;
@@ -788,6 +798,10 @@ capitalizing the first character of each word.
 =item $url
 
 Build the relative url of a web page from a filename.
+
+=item $url_base
+
+Build the relative url of a filename minus any extension and trailing dot
 
 =back
 
