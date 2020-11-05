@@ -511,7 +511,6 @@ sub get_top_files {
 
 #----------------------------------------------------------------------
 # Get a url from a filename
-## TODO: add get_url_root, which sets the extension to ''
 
 sub get_url {
     my ($self, $filename) = @_;
