@@ -57,7 +57,7 @@ do {
     my $config = 'followme.cfg';
     my @config_files_ok = (catfile($test_dir, $config));
 
-    fio_write_page($config, "remote_url = http://www.example.com\n");
+    fio_write_page($config, "remote_url: http://www.example.com\n");
 
     my $directory;
     foreach my $dir (qw(one two three)) {
@@ -69,7 +69,7 @@ do {
         $config = catfile($directory, 'followme.cfg');
         push(@config_files_ok, $config);
 
-        fio_write_page($config, "run_after = App::Followme::CreateSitemap\n");
+        fio_write_page($config, "run_after:\n  - App::Followme::CreateSitemap\n");
 
         foreach my $file (qw(first.html second.html third.html)) {
             fio_write_page($file, "Fake data\n");

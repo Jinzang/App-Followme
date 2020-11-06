@@ -171,10 +171,11 @@ do {
     my $source = <<'EOQ';
 # Test configuration file
 
-three = 3
-four = 4
+three: 3
+four:  4
 
-run_after = App::Followme::CreateSitemap
+run_after:
+    - App::Followme::CreateSitemap
 
 EOQ
 

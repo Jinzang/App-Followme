@@ -11,6 +11,7 @@ use IO::File;
 use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
                              no_upwards rel2abs splitdir updir);
 use App::Followme::FIO;
+use App::Followme::NestedText;
 use App::Followme::Web;
 
 use base qw(App::Followme::ConfiguredObject);
@@ -106,56 +107,27 @@ sub get_template_name {
 
 #----------------------------------------------------------------------
 # Read the configuration from a file
-## TODO rewrite using NestedText
+# TODO: temporary until we make other changes
 
 sub read_configuration {
     my ($self, $filename, %configuration) = @_;
-
-    $configuration{''}{run_before} = [];
-    $configuration{''}{run_after} = [];
-
-    my $fd = IO::File->new($filename, 'r');
-    my $class = '';
-
-    if ($fd) {
-        while (my $line = <$fd>) {
-            # Ignore comments and blank lines
-            next if $line =~ /^\s*\#/ || $line !~ /\S/;
-
-            if ($line =~ /=/) {
-                # Split line into name and value, remove leading and
-                # trailing whitespace
-
-                my ($name, $value) = split (/\s*=\s*/, $line, 2);
-                $value =~ s/\s+$//;
-
-                # Insert the name and value into the hash
-
-                if ($name eq 'run_before') {
-                    die "Cannot set run_before inside of $class\n" if $class;
-                    push(@{$configuration{''}->{run_before}}, $value);
-
-                } elsif ($name eq 'run_after') {
-                    die "Cannot set run_after inside of $class\n" if $class;
-                    push(@{$configuration{''}->{run_after}}, $value);
-
-                } else {
-                    $configuration{$class}->{$name} = $value;
-                }
-
-
-            } elsif ($line =~ /^\s*\[([\w:]+)\]\s*$/) {
-                $class = $1;
-                $configuration{$class} = {};
-
-            } else {
-                die "Bad line in config file: " . substr($line, 30) . "\n";
-            }
-        }
-
-        close($fd);
-    }
-
+	
+	my %new_configuration = nt_parse_file($filename);
+	
+	my $old_run_before = $configuration{''}{run_before} || [];
+	my $new_run_before = $new_configuration{run_before} || [];
+	push(@$old_run_before, @$new_run_before);
+	$new_configuration{run_before} = $old_run_before;
+	
+	my $old_run_after = $configuration{''}{run_after} || [];
+	my $new_run_after = $new_configuration{run_after} || [];
+	push(@$old_run_after, @$new_run_after);
+	$new_configuration{run_after} = $old_run_after;
+	
+	my $old_configuration = $configuration{''};
+	%new_configuration = (%$old_configuration, %new_configuration);
+	$configuration{''} = \%new_configuration;
+	
     return %configuration;
 }
 

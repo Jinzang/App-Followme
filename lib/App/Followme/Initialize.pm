@@ -352,8 +352,9 @@ sub write_var {
 1;
 __DATA__
 #>>> copy configuration followme.cfg 0
-run_before = App::Followme::FormatPage
-run_before = App::Followme::ConvertPage
+run_before:
+    - App::Followme::FormatPage
+    - App::Followme::ConvertPage
 
 #>>> copy text index.html
 <!doctype html>
@@ -1202,4 +1203,5 @@ $body
 </body>
 </html>
 #>>> copy configuration essays/followme.cfg 0
-run_before = App::Followme::CreateNews
+run_before:
+    - App::Followme::CreateNews
