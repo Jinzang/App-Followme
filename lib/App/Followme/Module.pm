@@ -107,27 +107,23 @@ sub get_template_name {
 
 #----------------------------------------------------------------------
 # Read the configuration from a file
-# TODO: temporary until we make other changes
 
 sub read_configuration {
     my ($self, $filename, %configuration) = @_;
 	
 	my %new_configuration = nt_parse_file($filename);
 	
-	my $old_run_before = $configuration{''}{run_before} || [];
+	my $old_run_before = $configuration{run_before} || [];
 	my $new_run_before = $new_configuration{run_before} || [];
 	push(@$old_run_before, @$new_run_before);
 	$new_configuration{run_before} = $old_run_before;
 	
-	my $old_run_after = $configuration{''}{run_after} || [];
+	my $old_run_after = $configuration{run_after} || [];
 	my $new_run_after = $new_configuration{run_after} || [];
 	push(@$old_run_after, @$new_run_after);
 	$new_configuration{run_after} = $old_run_after;
-	
-	my $old_configuration = $configuration{''};
-	%new_configuration = (%$old_configuration, %new_configuration);
-	$configuration{''} = \%new_configuration;
-	
+
+	%configuration = (%configuration, %new_configuration);
     return %configuration;
 }
 

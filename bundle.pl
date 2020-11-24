@@ -90,16 +90,9 @@ sub append_text_file {
 sub bundle_file {
     my ($out, $file) = @_;
 
-    my ($type, $cmd);
-    if ($file =~ /\.cfg$/) {
-        $type = 'configuration';
-        my ($new_file, $version) = get_version($file);
-        $cmd = join(' ', CMD_PREFIX, 'copy', $type, $new_file, $version);
 
-    } else {
-        $type = -B $file ? 'binary' : 'text';
-        $cmd = join(' ', CMD_PREFIX, 'copy', $type, $file);
-    }
+    $type = -B $file ? 'binary' : 'text';
+    $cmd = join(' ', CMD_PREFIX, 'copy', $type, $file);
 
     print $out $cmd, "\n";
     if ($type eq 'binary') {
@@ -135,26 +128,6 @@ sub copy_script {
 
     close($in);
     return $out;
-}
-
-#----------------------------------------------------------------------
-# Set the maximum version of any file
-
-sub get_version {
-    my ($file) = @_;
-
-    my $version;
-    if ($file =~ /_vsn\d+\./) {
-        my $ext;
-        my ($base, $rest) = split(/_vsn/, $file, 2);
-        ($version, $ext) = split(/\./, $rest, 2);
-        $file = "$base.$ext";
-
-    } else {
-        $version = 0;
-    }
-
-    return ($file, $version);
 }
 
 #----------------------------------------------------------------------

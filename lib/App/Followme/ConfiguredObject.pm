@@ -34,18 +34,10 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Update an object's fields from all the configuration hashes
+# Update an object's fields from the configuration hash
 
 sub add_configurations {
     my ($self, $pkg, %configuration) = @_;
-
-    foreach my $field ($self->all_fields($configuration{''})) {
-        $self->{$field} = $configuration{''}->{$field};
-    }
-
-    foreach my $field ($self->all_fields($configuration{$pkg})) {
-        $self->{$field} = $configuration{$pkg}->{$field};
-    }
 
     foreach my $field ($self->all_fields(\%configuration)) {
         $self->{$field} = $configuration{$field};
