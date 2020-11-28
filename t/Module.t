@@ -165,7 +165,7 @@ do {
 # Test read configuration
 
 do {
-    my %configuration = ('' => {one => 1, two => 2});
+    my %configuration = (one => 1, two => 2);
     my $app = App::Followme::Module->new();
 
     my $source = <<'EOQ';
@@ -186,11 +186,10 @@ EOQ
 
     %configuration = $app->read_configuration($filename, %configuration);
 
-    my %configuration_ok = ('' => {one => 1, two => 2,
-                                   three => 3, four => 4,
-                                   run_before => [],
-                                   run_after => ['App::Followme::CreateSitemap'],
-                                  }
+    my %configuration_ok = (one => 1, two => 2,
+                            three => 3, four => 4,
+                            run_before => [],
+                            run_after => ['App::Followme::CreateSitemap'],
                            );
 
     is_deeply(\%configuration, \%configuration_ok,

@@ -4,6 +4,7 @@ use 5.008005;
 use strict;
 use warnings;
 use integer;
+use lib '../..';
 
 our $VERSION = "1.95";
 
@@ -11,7 +12,51 @@ use App::Followme::FIO;
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(nt_parse_file nt_parse_string);
+our @EXPORT = qw(nt_merge_items nt_parse_file 
+                 nt_parse_string nt_write_file);
+
+#----------------------------------------------------------------------
+# Merge items from two configurations
+
+sub nt_merge_items {
+    my ($old_config, $new_config) = @_;
+
+    my $final_config;
+    my $ref = ref $old_config;
+
+    if ($ref eq ref $new_config) {
+        if ($ref eq 'ARRAY') {
+            $final_config = [];
+            @$final_config = @$old_config;
+            my %old = map {$_ => 1} @$old_config;
+
+            foreach my $item (@$new_config) {
+                push(@$final_config, $item) unless $old{$item};    
+            }
+
+        } elsif ($ref eq 'HASH') {
+            $final_config = {};
+            %$final_config = %$old_config;
+
+            foreach my $name (keys %$new_config) {
+                if (exists $old_config->{$name}) {
+                    $final_config->{$name} = nt_merge_items($old_config->{$name},
+                                                            $new_config->{$name});
+                } else {
+                    $final_config->{$name} = $new_config->{$name};
+                }
+            }
+
+        } else {
+            $final_config = $new_config;
+        }
+
+    } else {
+        $final_config = $new_config;
+    }
+
+    return $final_config;
+}
 
 #----------------------------------------------------------------------
 # Read file in NestedText Format
@@ -47,6 +92,70 @@ sub nt_parse_string {
 	}
 
 	return %$block;
+}
+
+#----------------------------------------------------------------------
+# Write file in NestedText Format
+
+sub nt_write_file {
+	my ($filename, %configuration) = @_;
+
+	my ($type, $page) = format_value(\%configuration);
+    $page .= "\n";
+
+	fio_write_page($filename, $page);
+	return;
+}
+
+#----------------------------------------------------------------------
+# Format a value as a string for writing
+
+sub format_value {
+	my ($value, $level) = @_;
+	$level = 0 unless defined $level;
+
+	my $text;
+    my $type = ref $value;
+	my $leading = ' ' x (4 * $level);
+	if ($type eq 'ARRAY') {
+		my @subtext;
+		foreach my $subvalue (@$value) {
+			my ($subtype, $subtext) = format_value($subvalue, $level+1);
+			if ($subtype) {
+				$subtext = $leading . "-\n" . $subtext;
+			} else {
+				$subtext = $leading . "- " . $subtext;
+			}
+			push (@subtext, $subtext);
+		} 
+		$text = join("\n", @subtext);
+
+	} elsif ($type eq 'HASH') {
+		my @subtext;
+		foreach my $name (sort keys %$value) {
+			my $subvalue = $value->{$name};
+			my ($subtype, $subtext) = format_value($subvalue, $level+1);
+			if ($subtype) {
+				$subtext = $leading . "$name:\n" . $subtext;
+			} else {
+				$subtext = $leading . "$name: " . $subtext;
+			}
+			push (@subtext, $subtext);
+		} 
+		$text = join("\n", @subtext);
+
+	} elsif (length($value) > 60) {
+        $type = 'SCALAR';
+		my @subtext = split(/(\S.{0,59}\S*)/, $value);
+		@subtext = grep( /\S/, @subtext);
+		@subtext = map("$leading> $_", @subtext);
+		$text = join("\n", @subtext);
+		
+	} else {
+		$text = $value;
+	}
+
+	return ($type, $text);
 }
 
 #----------------------------------------------------------------------
@@ -126,6 +235,8 @@ sub parse_block {
 
 sub parse_line {
 	my ($line) = @_;
+    
+    $line =~ s/\t/    /g;
 	$line .= ' ';
 
 	my ($indent, $value);
@@ -174,8 +285,9 @@ App::Followme::NestedText - Read a file or string using a subset of yaml
 =head1 SYNOPSIS
 
 	use App::Followme::NestedText
-    my $config = nt_parse_file($filename);
-    $config = nt_parse_string($str);
+    my %config = nt_parse_file($filename);
+    %config = nt_parse_string($str);
+	nt_write_file($filename, %config)
 
 =head1 DESCRIPTION
 
@@ -243,6 +355,10 @@ Load a configuration from a file into a hash.
 =item my %config = nt_parse_string($string);
 
 Load a configuration from a string into a hash.
+
+=item nt_write_file($filename, %config);
+
+Write a configuration back to a file
 
 =back
 

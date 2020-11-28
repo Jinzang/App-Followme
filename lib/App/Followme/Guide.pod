@@ -24,9 +24,7 @@ all directories below it are checked.
 
 =head1 CHANGES
 
-This version is the first beta release for version two of followme. The code
-changes have been made and pass test, but I need to update the documentation to
-match the code changes. The major changes are all internal. In the past the code
+This version is a beta release for version two of followme. In the past the code
 constructed a hash and passed it to the template, which used the values in the
 hash to produce the web page. In version two the code passes an object to the
 template, which calls the build method for each variable in the template, passing
@@ -34,13 +32,14 @@ the name of the variable and a filename to retrieve it from as arguments. The
 module then returns the value, which is used to fill in the template. The major
 user visible change is that the template syntax has changed, the new syntax is a
 subset of the previous syntax. Please see L<App::Followme::Template> for a
-description of the template syntax. The other change is that the configuration
+description of the template syntax. The second change is that the configuration
 parameters of some of the modules has changed. The new configuration parameters
 are described in each module. The motivation for the change is that placing the
 variable building in a separate class allows more than one type of file to be
 handled by modules placed in the configurarion file. Each class handles a type
 of file and the name of the class which builds the variables is a configuration
-parameter.
+parameter. The third change is that the configuration file format has changed
+to use a subset of yaml. The new configuration file format is decribed below.
 
 The beta release will be used to build a website documenting followme and the
 process of building the site will be used to debug any remaining problems.
@@ -108,11 +107,21 @@ the configuration file.
 =head1 CONFIGURATION
 
 The configuration file for followme is followme.cfg in the top directory of
-your site. Configuration file lines are organized as lines containing
+your site. Configuration file lines are in a subset of yaml format. The format
+is described in L<App::Followme::NestedText>. Briefy, the top level is a hash,
+with name-value pairs in the format
 
-    NAME = VALUE
+    name: value
 
-pairs. Configuration files may also contain blank lines or comment lines
+There should be no space between the name and the colon and one space between
+the colon and value. The value may also be an array. The array elements are listed
+one per line preceded by a dash:
+
+    name:
+        - first value
+        - second value
+
+Configuration files may also contain blank lines or comment lines
 starting with a C<#>. Subdirectories of the top directory may also contain
 configuration files. Values in these configuration files are combined with those
 set in the configuration files in directories above it, If it has a parameter of
@@ -120,11 +129,15 @@ the same name as a configuration file in a higher directory, it overrides it for
 that directory and its subdirectories.
 
 Configuration files contain the names of the Perl modules to be run by followme
-in the parameters named run_before and run_after
+in the parameters named run_before and run_after. These parameters should be 
+arrays, and thus are listed one per line indented from the field name and preceded
+by a dash: 
 
-    run_before = App::Followme::FormatPage
-    run_before = App::Followme::ConvertPage
-    run_after = App::Followme::CreateSitemap
+    run_before:
+        - App::Followme::FormatPage
+        - App::Followme::ConvertPage
+    run_after:
+        - App::Followme::CreateSitemap
 
 Perl modules are run in the order they appear in the configuration file. If they
 are named run_before then they are run before modules in any configuration files
@@ -133,16 +146,6 @@ modules which are named in the configuration files in subdirectories. Other
 parameters in the configuration files are written to a hash. This hash is passed
 to the new method of each module as it loaded, overriding the default values of
 the parameters when creating the new object.
-
-Configuration files may also contain module names between square brackets, like
-this:
-
-    [App::Followme::ConvertPage]
-
-Values after a bracketed module name will only apply to that module. Values at
-the top of the file, before any bracketed module name, will apply to all modules.
-The run_before and run_after parameters should always be placed before any
-bracketed section names.
 
 These modules are distributed with followme:
 
@@ -237,7 +240,7 @@ The followme script is run on the directory or file passed as its argument. If
 no argument is given, it is run on the current directory. If a file is passed,
 the script is run on the directory the file is in and followme is run in
 quick mode. Quick mode is an implicit promise that only the named file has
-been changed since last time. Each module can make up this assumption what it
+been changed since last time. Each module can make of this assumption what it
 will, but it is supposed to shorten the list of files examined.
 
 Followme looks for its configuration files in all the directories above the

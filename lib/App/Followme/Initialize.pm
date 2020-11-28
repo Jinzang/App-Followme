@@ -2,11 +2,15 @@ package App::Followme::Initialize;
 use 5.008005;
 use strict;
 use warnings;
+use lib '../..';
 
 use Cwd;
 use IO::File;
 use MIME::Base64  qw(decode_base64);
 use File::Spec::Functions qw(splitdir catfile);
+
+use App::Followme::FIO;
+use App::Followme::NestedText;
 
 our $VERSION = "1.95";
 
@@ -39,11 +43,6 @@ sub initialize {
         if ($cmd  eq 'copy') {
             write_file($lines, @args);
 
-        } elsif ($cmd eq 'set') {
-            write_error("No name in set command", $command) unless @args;
-            my $name = shift(@args);
-            write_var($name, join(' ', @args));
-
         } else {
             write_error("Error in command name", $command);
         }
@@ -57,6 +56,7 @@ sub initialize {
 
 sub copy_binary {
     my($file, $lines, @args) = @_;
+    return if -e $file;
 
     my $out = IO::File->new($file, 'w') or die "Couldn't write $file: $!\n";
     binmode($out);
@@ -74,15 +74,29 @@ sub copy_binary {
 
 sub copy_configuration {
     my ($file, $lines, @args) = @_;
+    
+    my $config;
+    my %old_config = nt_parse_string(join('', @$lines));
 
-    my $config_version = shift(@args);
-    my $version = read_var('version', $file);
-    return unless $version == 0 || $version == $config_version;
+    if (-e $file) {
+        my $page = fio_read_page($file);
 
-    my $configuration = read_var('configuration', $file);
-    $lines = merge_configuration($configuration, $lines);
+        if ($page =~ /:[ \n]/) {
+            my %new_config = nt_parse_string($page);
+            $config = nt_merge_items(\%old_config, \%new_config);
 
-    copy_text($file, $lines, @args);
+        } else {
+            my $new_file = $file;
+            $new_file =~ s/\.*$/ocfg/;
+            rename($file, $new_file);
+            $config = \%old_config;
+        }
+
+    } else {
+        $config = \%old_config;
+    }
+
+    nt_write_file($file, %$config);
     return;
 }
 
@@ -91,6 +105,7 @@ sub copy_configuration {
 
 sub copy_text {
     my ($file, $lines, @args) = @_;
+    return if -e $file;
 
     my $out = IO::File->new($file, 'w') or die "Couldn't write $file: $!\n";
     foreach my $line (@$lines) {
@@ -147,26 +162,6 @@ sub data_readers {
 }
 
 #----------------------------------------------------------------------
-# Get the confoguration file as a list of lines
-
-sub get_configuration {
-    my ($file) = @_;
-    return read_file($file);
-}
-
-#----------------------------------------------------------------------
-# Get the configuration file version
-
-sub get_version {
-    my ($file) = @_;
-
-    my $configuration = read_var('configuration', $file);
-    return 0 unless defined $configuration;
-
-    return read_configuration('version') || 1;
-}
-
-#----------------------------------------------------------------------
 # Is the line a command?
 
 sub is_command {
@@ -181,36 +176,6 @@ sub is_command {
     }
 
     return $command;
-}
-
-#----------------------------------------------------------------------
-# Merge new lines into configuration file
-
-sub merge_configuration {
-    my ($old_config, $new_config) = @_;
-
-    if ($old_config) {
-        my $parser = parse_configuration($new_config);
-        my $new_variable = {};
-        while (my ($name, $value) = &$parser) {
-            $new_variable->{$name} = $value;
-        }
-
-        $parser = parse_configuration($old_config);
-        while (my ($name, $value) = &$parser) {
-            delete $new_variable->{$name} if exists $new_variable->{$name};
-        }
-
-        while (my ($name, $value) = each %$new_variable) {
-            push(@$old_config, "$name = $value\n");
-        }
-
-    } else {
-        $old_config = [];
-        @$old_config = @$new_config;
-    }
-
-    return $old_config;
 }
 
 #----------------------------------------------------------------------
@@ -240,80 +205,6 @@ sub next_command {
 }
 
 #----------------------------------------------------------------------
-# Parse the configuration and return the next name-value pair
-
-sub parse_configuration {
-    my ($lines) = @_;
-    my @lines = $lines ? @$lines : ();
-
-    return sub {
-        while (my $line = shift(@lines)) {
-            # Ignore comments and blank lines
-            next if $line =~ /^\s*\#/ || $line !~ /\S/;
-
-            # Split line into name and value, remove leading and
-            # trailing whitespace
-
-            my ($name, $value) = split (/\s*=\s*/, $line, 2);
-            next unless defined $value;
-            $value =~ s/\s+$//;
-
-            # Ignore run_before and run_after
-            next if $name eq 'run_before' ||
-                    $name eq 'run_after' ||
-                    $name eq 'module';
-
-            return ($name, $value);
-        }
-
-        return;
-    };
-}
-
-#----------------------------------------------------------------------
-# Read a field in the configuration lines
-
-sub read_configuration {
-    my ($lines, $field) = @_;
-
-    my $parser = parse_configuration($lines);
-    while (my ($name, $value) = &$parser) {
-        return $value if $name eq $field;
-    }
-
-    return;
-}
-
-#----------------------------------------------------------------------
-# Read a file as a list of lines
-
-sub read_file {
-    my ($file) = @_;
-
-    my $fd = IO::File->new($file, 'r');
-    return unless $fd;
-
-    my @lines = <$fd>;
-    $fd->close();
-    return \@lines;
-}
-
-#----------------------------------------------------------------------
-# Read the value of a variable
-
-sub read_var {
-    my ($name, @args) = @_;
-
-    if (! exists $var->{$name}) {
-        no strict;
-        my $sub = "get_$name";
-        write_var($name, &$sub($var, @args));
-    }
-
-    return $var->{$name};
-}
-
-#----------------------------------------------------------------------
 # Die with error
 
 sub write_error {
@@ -336,16 +227,6 @@ sub write_file {
     my $sub = "copy_$type";
     &$sub($file, $lines, @args);
 
-    return;
-}
-
-#----------------------------------------------------------------------
-# Write the value of a variable
-
-sub write_var {
-    my ($name, $value) = @_;
-
-    $var->{$name} = $value;
     return;
 }
 

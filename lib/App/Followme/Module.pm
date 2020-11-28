@@ -111,20 +111,15 @@ sub get_template_name {
 sub read_configuration {
     my ($self, $filename, %configuration) = @_;
 	
-	my %new_configuration = nt_parse_file($filename);
-	
-	my $old_run_before = $configuration{run_before} || [];
-	my $new_run_before = $new_configuration{run_before} || [];
-	push(@$old_run_before, @$new_run_before);
-	$new_configuration{run_before} = $old_run_before;
-	
-	my $old_run_after = $configuration{run_after} || [];
-	my $new_run_after = $new_configuration{run_after} || [];
-	push(@$old_run_after, @$new_run_after);
-	$new_configuration{run_after} = $old_run_after;
+    foreach my $name (qw(run_before run_after)) {
+        $configuration{$name} ||= [];
+    }
 
-	%configuration = (%configuration, %new_configuration);
-    return %configuration;
+	my %new_configuration = nt_parse_file($filename);
+    my $final_configuration = nt_merge_items(\%configuration, 
+                                             \%new_configuration);
+
+    return %$final_configuration;
 }
 
 #----------------------------------------------------------------------
