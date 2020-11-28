@@ -128,11 +128,11 @@ sub update_folder {
         %configuration = $self->read_configuration($configuration_file,
                                                    %configuration);
 
-        $run_before = $configuration{''}->{run_before};
-        delete $configuration{''}->{run_before};
+        $run_before = $configuration{run_before};
+        delete $configuration{run_before};
 
-        $run_after = $configuration{''}->{run_after};
-        delete $configuration{''}->{run_after};
+        $run_after = $configuration{run_after};
+        delete $configuration{run_after};
     }
 
     $self->load_and_run_modules($run_before,
