@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 22;
+use Test::More tests => 36;
 
 use Cwd;
 use IO::File;
@@ -45,7 +45,7 @@ do {
 };
 
 #----------------------------------------------------------------------
-# Test parsing and formatting simple config
+# Test parsing and formatting simple hash in almost yaml 
 
 do {
 	my $text = <<EOQ;
@@ -55,16 +55,16 @@ name3: value3
 EOQ
 
 	my %value = (name1 => 'value1', name2 => 'value2', name3 => 'value3');
-	my %config = nt_parse_string($text);
-	is_deeply(\%config, \%value, "parse simple config"); # test 3
+	my %config = nt_parse_almost_yaml_string($text);
+	is_deeply(\%config, \%value, "parse simple config as yaml"); # test 3
 
-	my ($type, $formatted_text) = App::Followme::NestedText::format_value(\%value);
+	my ($type, $formatted_text) = App::Followme::NestedText::format_almost_yaml_value(\%value);
     $formatted_text .= "\n";
-	is($formatted_text, $text, "format simple config"); # test 4
+	is($formatted_text, $text, "format simple config as yaml"); # test 4
 };
 
 #----------------------------------------------------------------------
-# Test parsing and formatting simple array
+# Test parsing and formatting simple array in almost yaml
 
 do {
 	my $text = <<EOQ;
@@ -78,16 +78,16 @@ EOQ
 	my %value = (name1 => 'value1',
 				 name2 => ["subvalue1", "subvalue2", "subvalue3"],
 				);
-	my %config = nt_parse_string($text);
-	is_deeply(\%config, \%value, "parse simple array"); # test 5
+	my %config = nt_parse_almost_yaml_string($text);
+	is_deeply(\%config, \%value, "parse simple array as yaml"); # test 5
 
-	my ($type, $formatted_text) = App::Followme::NestedText::format_value(\%value);
+	my ($type, $formatted_text) = App::Followme::NestedText::format_almost_yaml_value(\%value);
     $formatted_text .= "\n";
-	is($formatted_text, $text, "format simple array"); # test 6
+	is($formatted_text, $text, "format simple array as yaml"); # test 6
 };
 
 #----------------------------------------------------------------------
-# Test parsing and formatting simple hash
+# Test parsing and formatting simple hash in almost yaml
 
 do {
 	my $text = <<EOQ;
@@ -103,16 +103,16 @@ EOQ
 						   subname2 => "subvalue2", 
 						   subname3 => "subvalue3"},
 				);
-	my %config = nt_parse_string($text);
-	is_deeply(\%config, \%value, "parse simple hash"); # test 7
+	my %config = nt_parse_almost_yaml_string($text);
+	is_deeply(\%config, \%value, "parse simple hash as yaml"); # test 7
 
-	my ($type, $formatted_text) = App::Followme::NestedText::format_value(\%value);
+	my ($type, $formatted_text) = App::Followme::NestedText::format_almost_yaml_value(\%value);
     $formatted_text .= "\n";
-	is($formatted_text, $text, "format simple hash"); # test 8
+	is($formatted_text, $text, "format simple hash as yaml"); # test 8
 };
 
 #----------------------------------------------------------------------
-# Test parsing and formatting long string
+# Test parsing and formatting long string in almost yaml
 
 do {
 	my $text = <<EOQ;
@@ -128,18 +128,18 @@ EOQ
 	my %value = (name1 => 'value1', 
 				 name2 => 'A longer value split across lines however many you may need for the purpose you have', 
 				 name3 => 'value3');
-	my %config = nt_parse_string($text);
-	is_deeply(\%config, \%value, "parse long string"); # test 9
+	my %config = nt_parse_almost_yaml_string($text);
+	is_deeply(\%config, \%value, "parse long string as yaml"); # test 9
 
-	my ($type, $formatted_text) = App::Followme::NestedText::format_value(\%value);
+	my ($type, $formatted_text) = App::Followme::NestedText::format_almost_yaml_value(\%value);
     $formatted_text .= "\n";
 
-	%config = nt_parse_string($formatted_text);
-	is($config{name2}, $value{name2}, "Format long string"); # test 10
+	%config = nt_parse_almost_yaml_string($formatted_text);
+	is($config{name2}, $value{name2}, "Format long string as yaml"); # test 10
 };
 
 #----------------------------------------------------------------------
-# Test parsing comments and blank lines
+# Test parsing comments and blank lines in almost yaml
 
 do {
 	my $text = <<EOQ;
@@ -154,12 +154,12 @@ name3: value3
 EOQ
 
 	my %value = (name1 => 'value1', name2 => 'value2', name3 => 'value3');
-	my %config = nt_parse_string($text);
-	is_deeply(\%config, \%value, "parse blank lines and comments"); # test 11
+	my %config = nt_parse_almost_yaml_string($text);
+	is_deeply(\%config, \%value, "parse blank lines and comments in yaml"); # test 11
 };
 
 #----------------------------------------------------------------------
-# Test parsing and formatting a multi-level hash
+# Test parsing and formatting a multi-level hash in almost yaml
 
 do {
 	my $text = <<EOQ;
@@ -181,16 +181,16 @@ EOQ
 				 name3 => 'value3',
 				);
 				
-	my %config = nt_parse_string($text);
-	is_deeply(\%config, \%value, "parse multi-level hash"); # test 12
+	my %config = nt_parse_almost_yaml_string($text);
+	is_deeply(\%config, \%value, "parse multi-level hash as yaml"); # test 12
 
-	my ($type, $formatted_text) = App::Followme::NestedText::format_value(\%value);
+	my ($type, $formatted_text) = App::Followme::NestedText::format_almost_yaml_value(\%value);
     $formatted_text .= "\n";
-	is($formatted_text, $text, "format multi-level hash"); # test 13
+	is($formatted_text, $text, "format multi-level hash as yaml"); # test 13
 };
 
 #----------------------------------------------------------------------
-# Test merging two cconfigurations
+# Test merging two configurations
 
 do {
 	my $text1 = <<EOQ;
@@ -205,7 +205,7 @@ name2:
 name3: value3
 EOQ
 
-	my %config1 = nt_parse_string($text1);
+	my %config1 = nt_parse_almost_yaml_string($text1);
 
  	my $text2 = <<EOQ;
 name1: value1
@@ -219,7 +219,7 @@ name2:
 name4: value4
 EOQ
 
-	my %config2 = nt_parse_string($text2);
+	my %config2 = nt_parse_almost_yaml_string($text2);
    
 	my %value = (name1 => 'value1',
 				 name2 => {subname1 => "subvalue1", 
@@ -235,7 +235,7 @@ EOQ
 };
 
 #----------------------------------------------------------------------
-# Test parsing and writing file contents
+# Test parsing and writing file contents in almost yaml
 
 do {
 	my $output = <<EOQ;
@@ -260,16 +260,16 @@ EOQ
 	my $filename = catfile($test_dir, 'test.cfg');
     fio_write_page($filename, $output);
     
-	my %config = nt_parse_file($filename);
-	is_deeply(\%config, \%value, "parse file contents"); # test 15
+	my %config = nt_parse_almost_yaml_file($filename);
+	is_deeply(\%config, \%value, "parse file contents as yaml"); # test 15
 
-	nt_write_file($filename, %config);
-	%config = nt_parse_file($filename);
-	is_deeply(\%config, \%value, "write an re-read file contents"); # test 16
+	nt_write_almost_yaml_file($filename, %config);
+	%config = nt_parse_almost_yaml_file($filename);
+	is_deeply(\%config, \%value, "write and re-read file contents as yaml"); # test 16
 };
 
 #----------------------------------------------------------------------
-# Test error cases
+# Test error cases in almost yaml
 
 do {
 	my %config;
@@ -280,9 +280,9 @@ do {
     - 3
 EOQ
 
-	eval{%config = nt_parse_string($text)};
+	eval{%config = nt_parse_almost_yaml_string($text)};
 	is($@, "Configuration must be a hash\n", 
-	   "config is an array"); # test 17
+	   "config is a yaml array"); # test 17
 
 	$text = <<EOQ;
     name1: value1
@@ -292,9 +292,9 @@ EOQ
   name3: value3
 EOQ
 
-	eval{%config = nt_parse_string($text)};
+	eval{%config = nt_parse_almost_yaml_string($text)};
 	my ($err, $msg) = split(/ at /, $@);
-	is($err, "Bad indent", "badly indented data"); # test 18
+	is($err, "Bad indent", "badly indented data in yaml"); # test 18
 
 	$text = <<EOQ;
     name1: value1
@@ -302,9 +302,9 @@ EOQ
     > value3
 EOQ
 
-	eval{%config = nt_parse_string($text)};
+	eval{%config = nt_parse_almost_yaml_string($text)};
 	($err, $msg) = split(/ at /, $@);
-	is($err, "Missing indent", "mixed types in block"); # test 19
+	is($err, "Missing indent", "mixed types in block in yaml"); # test 19
 
 	$text = <<EOQ;
     name1: value1
@@ -312,10 +312,10 @@ EOQ
 	    name3: value3
 EOQ
 
-	eval{%config = nt_parse_string($text)};
+	eval{%config = nt_parse_almost_yaml_string($text)};
 	($err, $msg) = split(/ at /, $@);
 	is($err, "Duplicate value", 
-	   "inconsistent indentation in block"); # test 20
+	   "inconsistent indentation in block in yaml"); # test 20
 
 	$text = <<EOQ;
     name1: value1
@@ -324,10 +324,10 @@ EOQ
 	        > value3
 EOQ
 
-	eval{%config = nt_parse_string($text)};
+	eval{%config = nt_parse_almost_yaml_string($text)};
 	($err, $msg) = split(/ at /, $@);
 	is($err, "Indent under string", 
-	   "inconsistent indentation in string"); # test 21
+	   "inconsistent indentation in string in yaml"); # test 21
 
 	$text = <<EOQ;
     name1: value1
@@ -335,7 +335,183 @@ EOQ
 
 EOQ
 
-	eval{%config = nt_parse_string($text)};
+	eval{%config = nt_parse_almost_yaml_string($text)};
 	($err, $msg) = split(/ at /, $@);
-	is($err, "Bad tag", "missing tag"); # test 22
+	is($err, "Bad tag", "missing tag in yaml"); # test 22
 };
+
+#----------------------------------------------------------------------
+# Test parsing and formatting simple hash in almost xml 
+
+do {
+	my $text = <<EOQ;
+<name1>value1</name1>
+<name2>value2</name2>
+<name3>value3</name3>
+EOQ
+
+	my %value = (name1 => 'value1', name2 => 'value2', name3 => 'value3');
+	my %rss = nt_parse_almost_xml_string($text);
+	is_deeply(\%rss, \%value, "parse simple hash as xml"); # test 23
+
+	my $formatted_text = App::Followme::NestedText::format_almost_xml_value(\%value);
+    $formatted_text .= "\n";
+	is($formatted_text, $text, "format simple rss"); # test 24
+};
+
+#----------------------------------------------------------------------
+# Test parsing and formatting simple array in almost xml
+
+do {
+	my $text = <<EOQ;
+<name1>value1</name1>
+<name2>subvalue1</name2>
+<name2>subvalue2</name2>
+<name2>subvalue3</name2>
+EOQ
+
+	my %value = (name1 => 'value1',
+				 name2 => ["subvalue1", "subvalue2", "subvalue3"],
+				);
+	my %rss = nt_parse_almost_xml_string($text);
+	is_deeply(\%rss, \%value, "parse simple array as xml"); # test 25
+
+	my $formatted_text = App::Followme::NestedText::format_almost_xml_value(\%value);
+    $formatted_text .= "\n";
+	is($formatted_text, $text, "format simple array as xml"); # test 26
+};
+
+#----------------------------------------------------------------------
+# Test parsing and formatting simple hash in almost xml
+
+do {
+	my $text = <<EOQ;
+<name1>value1</name1>
+<name2>
+    <subname1>subvalue1</subname1>
+    <subname2>subvalue2</subname2>
+    <subname3>subvalue3</subname3>
+</name2>
+EOQ
+
+	my %value = (name1 => 'value1',
+				 name2 => {subname1 => "subvalue1", 
+						   subname2 => "subvalue2", 
+						   subname3 => "subvalue3"},
+				);
+	my %rss = nt_parse_almost_xml_string($text);
+	is_deeply(\%rss, \%value, "parse simple hash as xml"); # test 27
+
+	my $formatted_text = App::Followme::NestedText::format_almost_xml_value(\%value);
+    $formatted_text .= "\n";
+	is($formatted_text, $text, "format simple hash as xml"); # test 28
+};
+
+#----------------------------------------------------------------------
+# Test parsing and formatting a multi-level hash in almost xml
+
+do {
+	my $text = <<EOQ;
+<name1>value1</name1>
+<name2>
+    <subname1>subvalue1</subname1>
+    <subname2>10</subname2>
+    <subname2>20</subname2>
+    <subname2>30</subname2>
+    <subname3>subvalue3</subname3>
+</name2>
+<name3>value3</name3>
+EOQ
+
+	my %value = (name1 => 'value1',
+				 name2 => {subname1 => "subvalue1", 
+						   subname2 => [10, 20, 30], 
+						   subname3 => "subvalue3"},
+				 name3 => 'value3',
+				);
+				
+	my %rss = nt_parse_almost_xml_string($text);
+	is_deeply(\%rss, \%value, "parse multi-level hash as xml"); # test 29
+
+	my $formatted_text = App::Followme::NestedText::format_almost_xml_value(\%value);
+    $formatted_text .= "\n";
+	is($formatted_text, $text, "format multi-level hash as xml"); # test 30
+};
+
+#----------------------------------------------------------------------
+# Test parsing and writing file contents in almost xml
+
+do {
+	my $output = <<EOQ;
+<?xml version="1.0"?>
+<name1>value1</name1>
+<name2>
+    <subname1>subvalue1</subname1>
+    <subname2>10</subname2>
+    <subname2>20</subname2>
+    <subname2>30</subname2>
+    <subname3>subvalue3</subname3>
+</name2>
+<name3>value3</name3>
+EOQ
+
+	my %value = (name1 => 'value1',
+				 name2 => {subname1 => "subvalue1", 
+						   subname2 => [10, 20, 30], 
+						   subname3 => "subvalue3"},
+				 name3 => 'value3',
+				);
+				
+	my $filename = catfile($test_dir, 'test.rss');
+    fio_write_page($filename, $output);
+    
+	my %rss = nt_parse_almost_xml_file($filename);
+	is_deeply(\%rss, \%value, "parse file contents as xml"); # test 31
+
+	nt_write_almost_xml_file($filename, %rss);
+	%rss = nt_parse_almost_xml_file($filename);
+	is_deeply(\%rss, \%value, "write and re-read file contents as xml"); # test 32
+};
+
+#----------------------------------------------------------------------
+# Test error cases in almost xml
+
+do {
+	my $text = <<EOQ;
+<name1>
+    <subname1>subvalue1</subname1>
+    subvalue2
+</name1>
+EOQ
+
+    my %rss;
+	eval{%rss = nt_parse_almost_xml_string($text)};
+	my ($err, $msg) = split(/ at /, $@);
+	is($err, "Unexpected text", "data after brackets"); # test 33
+
+	my $text = <<EOQ;
+<name1>
+    subvalue1
+    <subname2>subvalue2</subname2>
+</name1>
+EOQ
+
+	eval{%rss = nt_parse_almost_xml_string($text)};
+	($err, $msg) = split(/ at /, $@);
+	is($err, "Unexpected text", "data before brackets"); # test 34
+	$text = <<EOQ;
+<name1>value1</name2>
+EOQ
+
+	eval{%rss = nt_parse_almost_xml_string($text)};
+	my ($err, $msg) = split(/ at /, $@);
+	is($err, "Mismatched tags", "mismatched tags"); # test 35
+
+	$text = <<EOQ;
+<name1>value1</name1></name2>
+EOQ
+
+	eval{%rss = nt_parse_almost_xml_string($text)};
+	my ($err, $msg) = split(/ at /, $@);
+	is($err, "Unexpected closing tag", "extra closing tag"); # test 36
+}

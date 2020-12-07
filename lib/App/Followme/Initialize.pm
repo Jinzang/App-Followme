@@ -76,13 +76,13 @@ sub copy_configuration {
     my ($file, $lines, @args) = @_;
     
     my $config;
-    my %old_config = nt_parse_string(join('', @$lines));
+    my %old_config = nt_parse_almost_yaml_string(join('', @$lines));
 
     if (-e $file) {
         my $page = fio_read_page($file);
 
         if ($page =~ /:[ \n]/) {
-            my %new_config = nt_parse_string($page);
+            my %new_config = nt_parse_almost_yaml_string($page);
             $config = nt_merge_items(\%old_config, \%new_config);
 
         } else {
@@ -96,7 +96,7 @@ sub copy_configuration {
         $config = \%old_config;
     }
 
-    nt_write_file($file, %$config);
+    nt_write_almost_yaml_file($file, %$config);
     return;
 }
 

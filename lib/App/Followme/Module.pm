@@ -115,7 +115,7 @@ sub read_configuration {
         $configuration{$name} ||= [];
     }
 
-	my %new_configuration = nt_parse_file($filename);
+	my %new_configuration = nt_parse_almost_yaml_file($filename);
     my $final_configuration = nt_merge_items(\%configuration, 
                                              \%new_configuration);
 

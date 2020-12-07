@@ -137,7 +137,7 @@ sub fetch_from_file {
 sub fetch_metadata {
     my ($self, $metadata_block) = @_;
 
-    my %metadata = nt_parse_string($metadata_block);
+    my %metadata = nt_parse_almost_yaml_string($metadata_block);
     return %metadata;
 }
 
