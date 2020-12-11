@@ -413,14 +413,14 @@ EOQ
 do {
 	my $text = <<EOQ;
 <name1>value1</name1>
+<name3>value3</name3>
 <name2>
     <subname1>subvalue1</subname1>
+    <subname3>subvalue3</subname3>
     <subname2>10</subname2>
     <subname2>20</subname2>
     <subname2>30</subname2>
-    <subname3>subvalue3</subname3>
 </name2>
-<name3>value3</name3>
 EOQ
 
 	my %value = (name1 => 'value1',

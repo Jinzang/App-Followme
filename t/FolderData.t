@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 26;
+use Test::More tests => 27;
 
 use Cwd;
 use File::Path qw(rmtree);
@@ -63,9 +63,13 @@ can_ok($obj, qw(new build)); # test 2
 # Test builders
 
 do {
+    my $site_url = 'http://www.example.com';
+    my $remote_url = 'http://www.cloud.com';
+
     my %configuration = (directory => $test_dir,
                          author => 'Bernie Simon',
-                         site_url => 'http://www.example.com',
+                         site_url => $site_url,
+                         remote_url => $remote_url,
                          );
 
     my $obj = App::Followme::FolderData->new(%configuration);
@@ -96,38 +100,42 @@ do {
     is($url, $url_ok, 'Build a relative file url'); # test 8
 
     $url = $obj->get_absolute_url($filename);
-    $url_ok = '/' . $url_ok;
+    $url_ok = $site_url . '/archive/one.html';
     is($url, $url_ok, 'Build an absolute file url'); # test 9
+
+    $url = $obj->get_remote_url($filename);
+    $url_ok = $remote_url . '/archive/one.html';
+    is($url, $url_ok, 'Build a remote file url'); # test 10
 
     my $url_base = $obj->get_url_base($filename);
     my $url_base_ok = 'archive/one';
-    is($url_base, $url_base_ok, 'Build a file url base'); # test 10
+    is($url_base, $url_base_ok, 'Build a file url base'); # test 11
 
     $url = $obj->get_url($test_dir);
-    is($url, 'index.html', 'Build directory url'); #test 11
+    is($url, 'index.html', 'Build directory url'); #test 12
 
     my $date = $obj->calculate_date('two.html');
-    like($date, qr(^20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$), 'Calculate date'); # test 12
+    like($date, qr(^20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$), 'Calculate date'); # test 13
 
     $date = $obj->format_date(0, time());
-    like($date, qr(\d+, 20\d\d \d+:\d+$), 'Format date'); # test 13
+    like($date, qr(\d+, 20\d\d \d+:\d+$), 'Format date'); # test 14
 
     $date = $obj->format_date(1, time());
     like($date, qr(^20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$),
-         'Format date in sort order'); # test 14
+         'Format date in sort order'); # test 15
 
     my $size = $obj->format_size(0, 2500);
-    is($size, '2kb', 'Format size'); # test 15
+    is($size, '2kb', 'Format size'); # test 16
 
     $size = $obj->format_size(1, 2500);
     my $ok_size = sprintf("%012d", $size);
-    is($size, $ok_size, 'Format size'); # test 16
+    is($size, $ok_size, 'Format size'); # test 17
 
     my $author = $obj->calculate_author($test_dir);
-    is($author, $configuration{author}, "Get author"); # test 17
+    is($author, $configuration{author}, "Get author"); # test 18
 
     my $site_url = $obj->get_site_url($test_dir);
-    is($site_url, $configuration{site_url}, "Get site url"); # test 18
+    is($site_url, $configuration{site_url}, "Get site url"); # test 19
 };
 
 #----------------------------------------------------------------------
@@ -184,34 +192,34 @@ EOQ
     my $obj = App::Followme::FolderData->new(directory => $test_dir);
 
     my $size = $obj->get_size('three.html');
-    ok($size > 300, 'get file size'); # test 19
+    ok($size > 300, 'get file size'); # test 20
 
     my $index_file = catfile($test_dir,'index.html');
     my $files = $obj->get_files($index_file);
-    is_deeply($files, \@ok_files, 'Build files'); # test 20
+    is_deeply($files, \@ok_files, 'Build files'); # test 21
 
     my $all_files = $obj->get_all_files($index_file);
-    is_deeply($all_files, \@ok_all_files, 'Build all files'); # test 21
+    is_deeply($all_files, \@ok_all_files, 'Build all files'); # test 22
 
     my $filename = catfile('archive', 'two.html');
     my $breadcrumbs = $obj->get_breadcrumbs($filename);
-    is_deeply($breadcrumbs, \@ok_breadcrumbs, 'Build breadcrumbs'); # test 22
+    is_deeply($breadcrumbs, \@ok_breadcrumbs, 'Build breadcrumbs'); # test 23
 
     $filename = rel2abs('archive');
     my $folders = $obj->get_folders($test_dir);
-    is_deeply($folders, [$filename], 'Build folders'); # test 23
+    is_deeply($folders, [$filename], 'Build folders'); # test 24
 
     $obj = App::Followme::FolderData->new(directory => $test_dir,
                                                sort_field => 'title',
                                                sort_reverse => 1,
-                                               sort_cutoff => 2,
+                                               list_length => 2,
                                                );
 
     my $top_files = $obj->get_top_files($index_file);
     my $top_files_ok = [catfile($test_dir, 'two.html'),
                         catfile($test_dir, 'archive','two.html')];
 
-    is_deeply($top_files, $top_files_ok, 'Build top files from field');  # test 24
+    is_deeply($top_files, $top_files_ok, 'Build top files from field');  # test 25
 
     $obj->{sort_field} = '';
     $obj->{sort_reverse} = 0;
@@ -220,9 +228,9 @@ EOQ
     $top_files_ok = [catfile($test_dir, 'archive','four.html'),
                      catfile($test_dir, 'archive', 'index.html')];
 
-    is_deeply($top_files, $top_files_ok, 'Build top files with no field');  # test 25
+    is_deeply($top_files, $top_files_ok, 'Build top files with no field');  # test 26
 
     my $newest_file_ok = [$ok_all_files[-1]];
     my $newest_file = $obj->get_newest_file();
-    is_deeply($newest_file, $newest_file_ok, 'Get newest file'); # test 26
+    is_deeply($newest_file, $newest_file_ok, 'Get newest file'); # test 27
 };

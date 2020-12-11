@@ -227,7 +227,7 @@ sub format_almost_xml_value {
 		my @subtext;
         $level += 1 if length $name;
         push(@subtext, "$leading<$name>") if length $name;
-		foreach my $subname (sort keys %$value) {
+		foreach my $subname (sort_xml_hash($value)) {
 			my $subvalue = $value->{$subname};
 			my $subtext = format_almost_xml_value($subvalue, $subname, $level);
 			push (@subtext, $subtext);
@@ -392,6 +392,19 @@ sub parse_almost_yaml_line {
 	} 
 	
 	return ($indent, $value);
+}
+
+#----------------------------------------------------------------------
+# Sort the keys of an xml hash so that scalars are listed first
+
+sub sort_xml_hash {
+    my ($hash) = @_;
+
+    my @augmented_keys = map {[ref $hash->{$_}, $_]} keys %$hash;
+    @augmented_keys = sort {$a->[0] cmp $b->[0] || $a->[1] cmp $b->[1]} @augmented_keys;
+    my @keys = map {$_->[1]} @augmented_keys;
+
+    return @keys;
 }
 
 #----------------------------------------------------------------------

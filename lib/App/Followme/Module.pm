@@ -156,7 +156,6 @@ sub render_file {
     return $renderer->($self->{data}, $file);
 }
 
-
 #----------------------------------------------------------------------
 # Convert filename to index file if it is a directory
 

@@ -19,7 +19,6 @@ sub parameters {
     my ($pkg) = @_;
 
     return (
-            news_index_length => 5,
             news_template_file => 'create_news.htm',
             index_template_file => 'create_news_index.htm',
             data_pkg => 'App::Followme::WebData',
@@ -114,10 +113,6 @@ It can be used to create a basic weblog.
 The following fields in the configuration file are used:
 
 =over 4
-
-=item news_index_length
-
-The number of pages to include in the index.
 
 =item news_template_file
 

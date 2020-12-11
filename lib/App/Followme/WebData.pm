@@ -70,9 +70,7 @@ sub fetch_sections {
     my %section;
     foreach my $section_name (qw(metadata body)) {
         my $tag = $self->{$section_name . '_tag'};
-        die "Couldn't find $section_name\n" unless exists $section->{$tag};
-
-        $section{$section_name} = $section->{$tag};
+        $section{$section_name} = $section->{$tag} || '';
     }
 
     return \%section;

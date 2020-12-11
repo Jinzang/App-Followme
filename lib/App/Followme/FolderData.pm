@@ -23,12 +23,13 @@ sub parameters {
     return (
             extension => '',
             site_url => '',
+            remote_url => '',
             author => '',
             size_format => 'kb',
             date_format => 'Mon d, yyyy h:mm',
             sort_field => '',
             sort_reverse => 0,
-            sort_cutoff => 5,
+            list_length => 5,
             exclude => '',
             exclude_dirs => '.*,_*',
             web_extension => 'html',
@@ -329,15 +330,14 @@ sub format_size {
 }
 
 #----------------------------------------------------------------------
-# Get the url from a filename
+# Get the  absolute url from a filename and the site url
 
 sub get_absolute_url {
     my ($self, $filename) = @_;
 
-    my $absolute_url = '/' . $self->filename_to_url($self->{top_directory},
-                                                    $filename,
-                                                    $self->{web_extension}
-                                                   );
+    my $site_url = $self->get_site_url($filename);
+    my $relative_url =  $self->get_url($filename);
+    my $absolute_url = "$site_url/$relative_url";
 
     return $absolute_url;
 }
@@ -457,6 +457,24 @@ sub get_newest_file {
 }
 
 #----------------------------------------------------------------------
+# Get the remote url from a filename and the remote url
+
+sub get_remote_url {
+    my ($self, $filename) = @_;
+
+    my $remote_url;
+    if ($self->{remote_url}) {
+        my $relative_url =  $self->get_url($filename);
+        $remote_url = "$self->{remote_url}/$relative_url";
+
+    } else {
+        $remote_url = $self->get_absolute_url($filename);
+    }
+
+    return $remote_url;
+}
+
+#----------------------------------------------------------------------
 # get the site url
 
 sub get_site_url {
@@ -489,19 +507,22 @@ sub get_size {
 sub get_top_files {
     my ($self, $filename) = @_;
 
+    my $sort_field = $self->{sort_field} || 'date';
+    my $sort_reverse = 1;
+
     my @augmented_files = ();
     my ($folder) = fio_split_filename($filename);
     @augmented_files = $self->find_top_files($folder,
-                                             $self->{sort_field},
-                                             $self->{sort_reverse},
+                                             $sort_field,
+                                             $sort_reverse,
                                              @augmented_files);
 
     my @directories = $self->find_matching_directories($folder);
 
     foreach my $subfolder (@directories) {
         @augmented_files = $self->find_top_files($subfolder,
-                                                $self->{sort_field},
-                                                $self->{sort_reverse},
+                                                $sort_field,
+                                                $sort_reverse,
                                                 @augmented_files);
     }
 
@@ -613,29 +634,37 @@ sub merge_augmented {
         } else {
             push(@merged_list, shift @$list1);
         }
-        return @merged_list if @merged_list == $self->{sort_cutoff};
+        return @merged_list if @merged_list == $self->{list_length};
     }
 
     while (@$list1) {
         push(@merged_list, shift @$list1);
-        return @merged_list if @merged_list == $self->{sort_cutoff};
+        return @merged_list if @merged_list == $self->{list_length};
     }
 
     while (@$list2) {
         push(@merged_list, shift @$list2);
-        return @merged_list if @merged_list == $self->{sort_cutoff};
+        return @merged_list if @merged_list == $self->{list_length};
     }
 
      return @merged_list;
 }
 
 #----------------------------------------------------------------------
-# Set the directory if not passed as an argument
+# Initialize the configuration parameters
 
 sub setup {
     my ($self, %configuration) = @_;
 
+    # Set filename extension if unset
     $self->{extension} ||= $self->{web_extension};
+
+    # Remove any trailing slash from urls
+    foreach my $url (qw(remote_url site_url)) {
+        next unless $self->{$url};
+        $self->{$url} =~ s/\/$//;
+    }
+
     return;
 }
 
@@ -784,6 +813,10 @@ One of the filename is an index file and zero if it is not.
 
 A list of keywords describing the file from the filename path.
 
+=item $remote_url
+
+The remote url of a web page from a filename.
+
 =item $site_url
 
 The url of the website. Does not have a trailing slash
@@ -830,6 +863,14 @@ valued metadata. The default value is the same as the web extension.
 The format used to produce date strings. The format is described in the
 POD for L<Time::Format>.
 
+=item remote_url
+
+The url of the remote website, e.g. http://www.cloudhost.com.
+
+=item site_url
+
+The url of the local website, e.g. http://www.example.com.
+
 =item sort_field
 
 The metatdata field to sort list valued variables. The default value is the
@@ -846,7 +887,7 @@ If this field is 0, the data are sorted the first filename has the smallest
 metadata value. If the field is 1, it has the largest. The default value of the
 parameter is 0.
 
-=item sort_cutoff
+=item list_length
 
 This determons the number of filenames returned by @top_files. The default
 value of this parameter is 5
