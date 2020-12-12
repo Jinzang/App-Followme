@@ -94,6 +94,8 @@ sub format {
     my ($self, $sorted_order, %data) = @_;
 
     foreach my $name (keys %data) {
+        next unless $data{$name};
+
         my $method = join('_', 'format', $name);
         $data{$name} = $self->$method($sorted_order, $data{$name})
                        if $self->can($method);

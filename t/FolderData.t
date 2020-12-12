@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 27;
+use Test::More tests => 26;
 
 use Cwd;
 use File::Path qw(rmtree);
@@ -210,27 +210,16 @@ EOQ
     is_deeply($folders, [$filename], 'Build folders'); # test 24
 
     $obj = App::Followme::FolderData->new(directory => $test_dir,
-                                               sort_field => 'title',
-                                               sort_reverse => 1,
                                                list_length => 2,
                                                );
 
     my $top_files = $obj->get_top_files($index_file);
-    my $top_files_ok = [catfile($test_dir, 'two.html'),
-                        catfile($test_dir, 'archive','two.html')];
+    my $top_files_ok = [catfile($test_dir, 'archive','two.html'),
+                        catfile($test_dir, 'archive','three.html')];
 
-    is_deeply($top_files, $top_files_ok, 'Build top files from field');  # test 25
-
-    $obj->{sort_field} = '';
-    $obj->{sort_reverse} = 0;
-
-    $top_files = $obj->get_top_files();
-    $top_files_ok = [catfile($test_dir, 'archive','four.html'),
-                     catfile($test_dir, 'archive', 'index.html')];
-
-    is_deeply($top_files, $top_files_ok, 'Build top files with no field');  # test 26
+    is_deeply($top_files, $top_files_ok, 'Build top files');  # test 25
 
     my $newest_file_ok = [$ok_all_files[-1]];
     my $newest_file = $obj->get_newest_file();
-    is_deeply($newest_file, $newest_file_ok, 'Get newest file'); # test 27
+    is_deeply($newest_file, $newest_file_ok, 'Get newest file'); # test 26
 };

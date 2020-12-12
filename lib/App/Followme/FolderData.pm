@@ -507,7 +507,7 @@ sub get_size {
 sub get_top_files {
     my ($self, $filename) = @_;
 
-    my $sort_field = $self->{sort_field} || 'date';
+    my $sort_field = 'date';
     my $sort_reverse = 1;
 
     my @augmented_files = ();
@@ -769,6 +769,12 @@ a name to the build method, the sigil should not be used.
 =item @all_files
 
 A list of matching files in a directory and its subdirectories.
+
+=item @top_files
+
+A list of the most recently created files in a directory and its
+subdirectory. The length of the list is determined by the 
+configuration parameter list_length. 
 
 =item @breadcrumbs
 
