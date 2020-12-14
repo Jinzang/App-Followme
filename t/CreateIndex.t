@@ -74,12 +74,38 @@ do {
 </html>
 EOQ
 
+   my $index_page = <<'EOQ';
+<html>
+<head>
+<meta name="robots" content="noarchive,follow">
+<!-- section meta -->
+<title>Stuff</title>
+<meta name="date" content="2012-12-12T12:12:12" />
+<meta name="description" content="All my thoughts about stuff." />
+<meta name="keywords" content="stuff, thoughts" />
+<meta name="author" content="Anna Blogger" />
+<!-- endsection meta -->
+</head>
+<body>
+<!-- section primary -->
+<p>All my thoughts about stuff</p>
+<!-- endsection primary -->
+<!-- section secondary -->
+<!-- endsection secondary -->
+</body>
+</html>
+EOQ
+
    my $index_template = <<'EOQ';
 <html>
 <head>
 <meta name="robots" content="noarchive,follow">
 <!-- section meta -->
 <title>$title</title>
+<meta name="date" content="$date" />
+<meta name="description" content="$description" />
+<meta name="keywords" content="$keywords" />
+<meta name="author" content="$author" />
 <!-- endsection meta -->
 </head>
 <body>
@@ -109,8 +135,11 @@ EOQ
     chdir($archive_dir) or die $!;
 
     $archive_dir = cwd();
+
+    my ($index_name) = fio_to_file($archive_dir, $configuration{web_extension});
+    fio_write_page($index_name, $index_page);
+
     my @archived_files;
-	
     foreach my $count (qw(four three two one)) {
         my $output = $page;
         $output =~ s/%%/$count/g;
@@ -123,15 +152,13 @@ EOQ
     chdir($test_dir) or die $!;
 
     $idx->run($archive_dir);
-    my ($index_name) = fio_to_file($archive_dir, $configuration{web_extension});
-
     $page = fio_read_page($index_name);
     ok($page, 'Write index page'); # test 3
 
     like($page, qr/Post four/, 'Index first page title'); # test 4
     like($page, qr/Post two/, 'Index last page title'); # test 5
 
-    like($page, qr/<title>Archive<\/title>/, 'Write index title'); # test 6
+    like($page, qr/<title>Stuff<\/title>/, 'Write index title'); # test 6
     like($page, qr/<li><a href="archive\/two.html">Post two<\/a><\/li>/,
        'Write index link'); #test 7
 

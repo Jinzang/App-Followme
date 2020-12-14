@@ -39,6 +39,16 @@ sub run {
 }
 
 #----------------------------------------------------------------------
+# Set exclude_index to true in the data package
+
+sub setup {
+    my ($self, %configuration) = @_;
+
+    $self->{data}{exclude_index} = 1;
+    return;
+}
+
+#----------------------------------------------------------------------
 # Find files in directory to convert and do that
 
 sub update_folder {

@@ -21,6 +21,7 @@ sub parameters {
 
     return (
             sitemap => 'sitemap.txt',
+            include_index => 1,
             data_pkg => 'App::Followme::WebData',
            );
 }

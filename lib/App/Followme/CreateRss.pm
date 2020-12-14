@@ -45,7 +45,6 @@ sub run {
     return;
 }
 
-
 #----------------------------------------------------------------------
 # Return an rss file of the newest web pages in a directory
 
@@ -81,8 +80,10 @@ sub file_info {
     # build returns a reference, so must dereference
 
     $info->{title} = ${$self->{data}->build('title', $file)};
+    $info->{author} = ${$self->{data}->build('author', $file)};
     $info->{description} = ${$self->{data}->build('description', $file)};
     $info->{pubDate} = ${$self->{data}->build('date', $file)};
+    $info->{pubDate} = fio_format_date($info->{pubDate}, "Day, dd Mon yyyy");
     $info->{link} = ${$self->{data}->build('remote_url', $file)};
 
     my $guid = encode_base64($info->{link});
@@ -93,20 +94,12 @@ sub file_info {
 }
 
 #----------------------------------------------------------------------
-#  Add index file to list of excluded files
+# Set exclude_index to true in the data package
 
 sub setup {
     my ($self, %configuration) = @_;
 
-    my @exclude;
-    if ($self->{data}{exclude}) {
-        @exclude = split(/\s*,\s*/, $self->{data}{exclude});
-    }
-
-    my $index_file = join('.', 'index', $self->{web_extension});
-    push(@exclude, $index_file);
-
-    $self->{data}{exclude} = join(',', @exclude);
+    $self->{data}{exclude_index} = 1;
     return;
 }
 

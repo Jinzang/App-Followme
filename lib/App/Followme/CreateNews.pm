@@ -70,20 +70,12 @@ sub update_folder {
 }
 
 #----------------------------------------------------------------------
-#  Add index file to list of excluded files
+# Set exclude_index to true in the data package
 
 sub setup {
     my ($self, %configuration) = @_;
 
-    my @exclude;
-    if ($self->{data}{exclude}) {
-        @exclude = split(/\s*,\s*/, $self->{data}{exclude});
-    }
-
-    my $index_file = join('.', 'index', $self->{web_extension});
-    push(@exclude, $index_file);
-
-    $self->{data}{exclude} = join(',', @exclude);
+    $self->{data}{exclude_index} = 1;
     return;
 }
 

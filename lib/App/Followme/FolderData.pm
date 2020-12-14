@@ -30,6 +30,7 @@ sub parameters {
             sort_field => '',
             sort_reverse => 0,
             list_length => 5,
+            exclude_index => 0,
             exclude => '',
             exclude_dirs => '.*,_*',
             web_extension => 'html',
@@ -590,13 +591,18 @@ sub match_directory {
 sub match_file {
     my ($self, $filename) = @_;
 
+    my ($dir, $file) = fio_split_filename($filename);
+
+    if ($self->{exclude_index}) {
+        my $index_file = join('.', 'index', $self->{web_extension});
+        return if $file eq $index_file;
+    }
+
     my @patterns = map {"*.$_"} split(/\s*,\s*/, $self->{extension});
     my $patterns = join(',', @patterns);
 
     $self->{include_file_patterns} ||= fio_glob_patterns($patterns);
     $self->{exclude_file_patterns} ||= fio_glob_patterns($self->{exclude});
-
-    my ($dir, $file) = fio_split_filename($filename);
 
     return if $self->match_patterns($file, $self->{exclude_file_patterns});
     return unless $self->match_patterns($file, $self->{include_file_patterns});
@@ -897,6 +903,11 @@ parameter is 0.
 
 This determons the number of filenames returned by @top_files. The default
 value of this parameter is 5
+
+=item exclude_index
+
+If the value of this variable is true (1) exclude the index page in the list
+of files. If it is false (0) include the index page. The default value is 0.
 
 =item exclude
 

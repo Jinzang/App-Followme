@@ -6,7 +6,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 17;
+use Test::More tests => 19;
 
 #----------------------------------------------------------------------
 # Change the modification date of a file
@@ -140,7 +140,7 @@ EOQ
     ok(ref $channel eq 'HASH', "rss tag exists"); # test 3
 
     my @keys = sort keys %$channel;
-    my @keywords = qw(description item link pubDate title);
+    my @keywords = qw(author description item link pubDate title);
     is_deeply(\@keys, \@keywords, "channel has keywords"); # test 4
 
     for my $key (@keywords) {
@@ -156,7 +156,7 @@ EOQ
 
     my $item = $items->[0];
     my @keys = sort keys %$item;
-    my @keywords = qw(description guid link pubDate title);
+    @keywords = qw(author description guid link pubDate title);
     is_deeply(\@keys, \@keywords, "item has keywords"); # test 12
 
     for my $key (@keywords) {
