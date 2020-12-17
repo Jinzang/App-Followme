@@ -117,14 +117,16 @@ do {
     my $date = $obj->calculate_date('two.html');
     like($date, qr(^20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$), 'Calculate date'); # test 13
 
-    $date = $obj->format_date(0, time());
-    like($date, qr(\d+, 20\d\d \d+:\d+$), 'Format date'); # test 14
+    $date = $obj->format_date('sort', 1, time());
+    like($date,  qr(^20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$), 
+        'Format date with default format'); # test 14
 
-    $date = $obj->format_date(1, time());
-    like($date, qr(^20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$),
-         'Format date in sort order'); # test 15
+    $obj->{date_format} = 'Day, dd Mon yyyy';
+    $date = $obj->format_date('', 0, time());
+    like($date, qr(\w\w\w, \d\d \w\w\w \d\d\d\d$),
+         'Format date with user supplied format'); # test 15
 
-    my $size = $obj->format_size(0, 2500);
+    my $size = $obj->format_size('', 0, 2500);
     is($size, '2kb', 'Format size'); # test 16
 
     $size = $obj->format_size(1, 2500);
@@ -211,6 +213,8 @@ EOQ
 
     $obj = App::Followme::FolderData->new(directory => $test_dir,
                                                list_length => 2,
+                                               sort_field => 'mdate',
+                                               sort_reverse => 1,
                                                );
 
     my $top_files = $obj->get_top_files($index_file);

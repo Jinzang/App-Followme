@@ -83,7 +83,6 @@ sub file_info {
     $info->{author} = ${$self->{data}->build('author', $file)};
     $info->{description} = ${$self->{data}->build('description', $file)};
     $info->{pubDate} = ${$self->{data}->build('date', $file)};
-    $info->{pubDate} = fio_format_date($info->{pubDate}, "Day, dd Mon yyyy");
     $info->{link} = ${$self->{data}->build('remote_url', $file)};
 
     my $guid = encode_base64($info->{link});
@@ -99,6 +98,9 @@ sub file_info {
 sub setup {
     my ($self, %configuration) = @_;
 
+    $self->{data}{date_format} = 'Day, dd Mon yyyy';
+    $self->{data}{sort_field} = 'mdate';
+    $self->{data}{sort_reverse} = 1;
     $self->{data}{exclude_index} = 1;
     return;
 }

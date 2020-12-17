@@ -1039,7 +1039,7 @@ $body
 <h3>Archive</h3>
 
 <p>
-<!-- for @folders -->
+<!-- for @indexes -->
 <a href="$url">$title</a>&nbsp;&nbsp;
 <!-- endfor -->
 </p>
@@ -1071,7 +1071,7 @@ $body
 <h2>$title</h2>
 
 <ul>
-<!-- for @folders -->
+<!-- for @indexes -->
 <li><a href="$url">$title</a></li>
 <!-- endfor -->
 <!-- for @files -->

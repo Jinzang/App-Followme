@@ -86,6 +86,17 @@ sub find_location {
 }
 
 #----------------------------------------------------------------------
+# Sort filenames from most to least recently modified
+
+sub setup {
+    my ($self, %configuration) = @_;
+
+    $self->{data}{sort_field} = 'mdate';
+    $self->{data}{sort_reverse} = 1;
+    return;
+}
+
+#----------------------------------------------------------------------
 # Read page and strip comments
 
 sub strip_comments {
