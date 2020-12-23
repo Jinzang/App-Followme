@@ -99,8 +99,6 @@ sub setup {
     my ($self, %configuration) = @_;
 
     $self->{data}{date_format} = 'Day, dd Mon yyyy';
-    $self->{data}{sort_field} = 'mdate';
-    $self->{data}{sort_reverse} = 1;
     $self->{data}{exclude_index} = 1;
     return;
 }

@@ -15,8 +15,10 @@ use App::Followme::FIO;
 sub parameters {
     my ($pkg) = @_;
 
+    ## TODO: sort_field='mdate', sort_reverse=1
     return (
             labels => 'previous,next',
+            sort_field => '',
             );
 }
 
@@ -42,8 +44,9 @@ sub build {
 
     # Build the value associated with a name if it is not in the cache
     unless (exists $cache{$name}) {
-        my $sorted_order = $sigil eq '';
+        my $sorted_order = 0;
         my %data = $self->fetch_data($name, $item, $loop);
+        %data = $self->sort(%data);
         %data = $self->format($sorted_order, %data);
 
         %cache = (%cache, %data);
@@ -88,6 +91,22 @@ sub fetch_data {
 }
 
 #----------------------------------------------------------------------
+# Choose the file comparison routine that matches the configuration
+
+sub file_comparer {
+    my ($self, $sort_reverse) = @_;
+
+    my $comparer;
+    if ($sort_reverse) {
+        $comparer = sub ($$) {$_[1]->[0] cmp $_[0]->[0]};
+    } else {
+        $comparer = sub ($$) {$_[0]->[0] cmp $_[1]->[0]};
+    }
+
+    return $comparer;
+}
+
+#----------------------------------------------------------------------
 # Apply an optional format to the data
 
 sub format {
@@ -96,12 +115,69 @@ sub format {
     foreach my $name (keys %data) {
         next unless $data{$name};
 
-        my $method = join('_', 'format', $name);
-        $data{$name} = $self->$method($sorted_order, $data{$name})
-                       if $self->can($method);
+        my $formatter = join('_', 'format', $name);
+        if ($self->can($formatter)) {
+            if (ref $data{$name} eq 'ARRAY') {
+                for my $value (@{$data{$name}}) {
+                    $value = $self->$formatter($sorted_order,
+                                               $value);
+                }
+
+            } elsif (ref $data{$name} eq 'HASH') {
+                die("Illegal data format for build: $name");
+
+            } else {
+                $data{$name} = $self->$formatter($sorted_order, 
+                                                 $data{$name});
+            }
+        }
     }
 
     return %data;
+}
+
+#----------------------------------------------------------------------
+# Don't format anything
+
+sub format_nothing {
+    my ($self, $sorted_order, $value) = @_;
+    return $value;
+}
+
+#----------------------------------------------------------------------
+# Format the values to sort by so they are in sort order
+
+sub format_sort_column {
+    my ($self, $sort_field, $data) = @_;
+    
+    my $formatter = "format_$sort_field";
+    $formatter = "format_nothing" unless $self->can($formatter);
+
+    my @sort_column;
+    my $sorted_order = 1;
+    if (exists $data->{$sort_field}) {
+        for my $value (@{$data->{$sort_field}}) {
+            push(@sort_column, $self->$formatter($sorted_order, $value));
+        }
+
+    } else {
+        my @keys = keys %$data;
+        if (@keys == 1) {
+            my $key = $keys[0];
+            my $getter = "get_$sort_field";
+            return unless $self->can($getter);
+
+            for my $file (@{$data->{$key}}) {
+                my $value = $self->$getter($file);
+                push(@sort_column, $self->$formatter($sorted_order, $value));
+            }
+
+        } else {
+            return;
+        }
+    }
+
+    return \@sort_column;
 }
 
 #----------------------------------------------------------------------
@@ -225,6 +301,42 @@ sub get_sequence {
 }
 
 #----------------------------------------------------------------------
+# Augment the array to be sorted with the index of its position
+
+sub make_sort_index {
+    my ($self, $sort_column) = @_;
+
+    my $i = 0;
+    my @augmented_sort;
+    for my $value (@$sort_column) {
+        push(@augmented_sort, [$value, $i++]);
+    }
+
+    return @augmented_sort;
+}
+
+#----------------------------------------------------------------------
+# Use the array of indexes to move each hash array to its sorted position
+
+sub move_sort_index {
+    my ($self, $data, @augmented_sort) =  @_;
+
+    for my $field (keys %$data) {
+        my $sorted_values = [];
+        my $values = $data->{$field};
+
+        for my $index (@augmented_sort) {
+            push(@$sorted_values, $values->[$index->[1]]);
+        } 
+
+        $data->{$field} = $sorted_values;
+    }
+
+
+    return $data;
+}
+
+#----------------------------------------------------------------------
 # Get a reference value and check it for agreement with the sigil
 
 sub ref_value {
@@ -262,6 +374,52 @@ sub setup {
     my ($self, %configuration) = @_;
 
     $self->{cache} = {};
+}
+
+#----------------------------------------------------------------------
+# Sort the data if it is in an array
+
+sub sort {
+    my ($self, %data) = @_;
+
+    my $sortable;
+    for my $name (keys %data) {
+        if (ref $data{$name} eq 'ARRAY' && @{$data{$name}}) {
+            $sortable = 1;
+            last;
+        }
+    }
+
+    my $sorted_data;
+    if ($sortable) {
+        my @fields = ($self->{sort_field}, 'mdate', 'date', 'name');
+
+        for my $sort_field (@fields) {
+            next unless $sort_field;
+
+            if (my $sort_column = $self->format_sort_column($sort_field, \%data)) {
+                my $sort_reverse = ($sort_field =~ /date$/) ? 1 : 0;
+
+                $sorted_data = $self->move_sort_index(\%data,
+                               $self->sort_by_index($sort_reverse,
+                               $self->make_sort_index($sort_column)));
+                last;
+            }
+        }
+    }
+
+    $sorted_data ||= \%data;
+    return %$sorted_data;
+}
+
+#----------------------------------------------------------------------
+# Sort array bound to indexes of the array
+
+sub sort_by_index {
+    my ($self, $sort_reverse, @augmented_data) = @_;
+
+    my $comparer = $self->file_comparer($sort_reverse);
+    return sort $comparer @augmented_data;
 }
 
 #----------------------------------------------------------------------
@@ -375,10 +533,14 @@ A comma separated list of strings containing a list of labels to apply
 to the values in a loop. The default value is "previous,next" and is
 meant to be used with @sequence.
 
+=item sort_field
+
+The metatdata field to sort list valued variables. The default value is the
+empty string, which means files are sorted on their filenames.
+
 =back
 
 =head1 LICENSE
-
 Copyright (C) Bernie Simon.
 
 This library is free software; you can redistribute it and/or modify

@@ -127,12 +127,12 @@ sub write_file {
     my ($self, $filename, $page, $binmode) = @_;
 
     $filename = rel2abs($filename);
-    my $date = ${$self->{data}->build('$mdate', $filename)};
+    my $time = ${$self->{data}->build('mtime', $filename)};
     my $new_filename = $self->title_to_filename($filename);
 
     fio_write_page($new_filename, $page, $binmode);
     unlink($filename) if -e $filename && $filename ne $new_filename;
-    fio_set_date($new_filename, $date);
+    fio_set_date($new_filename, $time);
 
     return;
 }

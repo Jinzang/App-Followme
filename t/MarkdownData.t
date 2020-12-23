@@ -96,7 +96,7 @@ do {
            "get description $count"); # test 5, 10, 15, 20
 
         my $date = $obj->build('date', $file);
-        is($$date, '2015-11-22T20:23:13', "get date $count"); # test 6, 11, 16, 21
+        is($$date, 'Nov 22, 2015 20:23', "get date $count"); # test 6, 11, 16, 21
 
         my $author = $obj->build('author', $file);
         is($$author, 'Bernie Simon', "get author $count"); # test 7, 12, 17, 22

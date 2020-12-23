@@ -118,7 +118,7 @@ sub fio_get_date {
         my @stats = stat($filename);
         $date = $stats[9];
     } else {
-        $date =time();
+        $date = time();
     }
 
     return $date;

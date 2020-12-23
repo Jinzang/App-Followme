@@ -132,22 +132,6 @@ sub fetch_data {
 }
 
 #----------------------------------------------------------------------
-# Choose the file comparison routine that matches the configuration
-
-sub file_comparer {
-    my ($self, $sort_reverse) = @_;
-
-    my $comparer;
-    if ($sort_reverse) {
-        $comparer = sub ($$) {$_[1]->[0] cmp $_[0]->[0]};
-    } else {
-        $comparer = sub ($$) {$_[0]->[0] cmp $_[1]->[0]};
-    }
-
-    return $comparer;
-}
-
-#----------------------------------------------------------------------
 # Convert filename to url
 
 sub filename_to_url {
@@ -232,27 +216,36 @@ sub find_newest_file {
 # Get the more recently changed files
 
 sub find_top_files {
-    my ($self, $folder, $sort_field, $sort_reverse, @augmented_files) = @_;
+    my ($self, $folder, $augmented_files) = @_;
 
-    my @filenames = $self->sort_augmented($sort_reverse,
-                    $self->make_augmented($sort_field,
-                    $self->find_matching_files($folder)));
+    my @files = $self->find_matching_files($folder);
+    my $data = {files => \@files};
 
-    return $self->merge_augmented($sort_reverse,
-                                  \@augmented_files,
-                                  \@filenames);
+    my $sorted_files;
+    my @fields = ('mdate', 'date', 'name');
+    for my $sort_field (@fields) {
+        if (my $sort_column = $self->format_sort_column($sort_field, $data)) {
+            my $sort_reverse = ($sort_field =~ /date$/) ? 1 : 0;
+
+            $sorted_files = $self->sort_augmented($sort_reverse,
+                            $self->make_augmented($sort_column, \@files));
+            last;
+        }
+    }
+
+    return $self->merge_augmented($augmented_files, $sorted_files);
 }
 
 #----------------------------------------------------------------------
-# Change the sort order of the files to reverse mdate
+# Make filenames sortable in a cross-os manner
 
 sub format_all_files {
-    my ($self, $sorted_order, $all_files) = @_;
-    return $self->format_files($sorted_order, $all_files);
+    my ($self, $sorted_order, $filename) = @_;
+    return $self->format_name($sorted_order, $filename);
 }
 
 #----------------------------------------------------------------------
-# Format the file date
+# Format the file creation date
 
 sub format_date {
     my ($self, $sorted_order, $date) = @_;
@@ -267,37 +260,58 @@ sub format_date {
 }
 
 #----------------------------------------------------------------------
-# Change the sort order of the files to reverse mdate
+# Make filenames sortable in a cross-os manner 
 
 sub format_files {
-    my ($self, $sorted_order, $files) = @_;
-    my ($sort_field, $sort_reverse);
-
-    if ($sorted_order) {
-        $sort_field = 'mdate';
-        $sort_reverse = 1;
-    } else {
-        $sort_field = $self->{sort_field};
-        $sort_reverse = $self->{sort_reverse};
-    }
-
-    @$files = $self->sort_files($sort_field, $sort_reverse, @$files);
-    return $files;
+    my ($self, $sorted_order, $filename) = @_;
+    return $self->format_name($sorted_order, $filename);
 }
 
 #----------------------------------------------------------------------
-# Change the sort order of the files to reverse mdate
+# Make filenames sortable in a cross-os manner
 
 sub format_folders {
-    my ($self, $sorted_order, $folders) = @_;
+    my ($self, $sorted_order, $filename) = @_;
+    return $self->format_name($sorted_order, $filename);
+}
 
-    $folders = $self->format_files($sorted_order, $folders);
-    return $folders if $sorted_order;
+#----------------------------------------------------------------------
+# Make filenames sortable in a cross-os manner
 
-    my @folders = map {fio_to_file($_, $self->{web_extension})}
-                  @$folders;
+sub format_indexes {
+    my ($self, $sorted_order, $filename) = @_;
+    return $self->format_name($sorted_order, $filename);
+}
 
-    return \@folders;
+#----------------------------------------------------------------------
+# Format the file modification date
+
+sub format_mdate {
+    my ($self, $sorted_order, $date) = @_;
+    return $self->format_date($sorted_order, $date);
+}
+
+#----------------------------------------------------------------------
+# Format the file modification time
+
+sub format_mtime {
+    my ($self, $sorted_order, $time) = @_;
+
+    if (! $sorted_order) {
+        $time = fio_format_date($time);
+    }
+
+    return $time; 
+}
+
+#----------------------------------------------------------------------
+# Make filenames sortable in a cross-os manner
+
+sub format_name {
+    my ($self, $sorted_order, $filename) = @_;
+
+    $filename = join(' ', fio_split_filename($filename)) if $sorted_order;
+    return $filename;
 }
 
 #----------------------------------------------------------------------
@@ -414,6 +428,23 @@ sub get_folders {
     return \@folders;
 }
 
+#-----------------------------------------------------------------------
+# Get a list of index pages
+
+sub get_indexes {
+    my ($self, $filename) = @_;
+
+    my @indexes;
+    my $folders = $self->get_folders($filename);
+    my $index_page = "index.$self->{web_extension}";
+
+    for my $folder (@$folders) {
+        push(@indexes, catfile($folder, $index_page));
+    }
+
+    return \@indexes;
+}
+
 #----------------------------------------------------------------------
 # Set a flag indicating if the the filename is the index file
 
@@ -428,13 +459,22 @@ sub get_is_index {
 }
 
 #----------------------------------------------------------------------
-# Get the modification date in epoch seconds
+# Get the modification date in iso date format
 
 sub get_mdate {
     my ($self, $filename) = @_;
 
     my $date = fio_get_date($filename);
     return fio_format_date($date);
+}
+
+#----------------------------------------------------------------------
+# Get the modification time in epoch seconds
+
+sub get_mtime {
+    my ($self, $filename) = @_;
+
+    return fio_get_date($filename);
 }
 
 #----------------------------------------------------------------------
@@ -454,7 +494,7 @@ sub get_newest_file {
         $newest_file = $self->find_newest_file($newest_file, @files);
     }
 
-    return [$newest_file];
+    return defined $newest_file ? [$newest_file] : [];
 }
 
 #----------------------------------------------------------------------
@@ -508,26 +548,20 @@ sub get_size {
 sub get_top_files {
     my ($self, $filename) = @_;
 
-    my $sort_field = 'date';
-    my $sort_reverse = 1;
-
-    my @augmented_files = ();
+    my $augmented_files = [];
     my ($folder) = fio_split_filename($filename);
-    @augmented_files = $self->find_top_files($folder,
-                                             $sort_field,
-                                             $sort_reverse,
-                                             @augmented_files);
+    
+    $augmented_files = $self->find_top_files($folder,
+                                             $augmented_files);
 
     my @directories = $self->find_matching_directories($folder);
 
     foreach my $subfolder (@directories) {
-        @augmented_files = $self->find_top_files($subfolder,
-                                                $sort_field,
-                                                $sort_reverse,
-                                                @augmented_files);
+        $augmented_files = $self->find_top_files($subfolder,
+                                                 $augmented_files);
     }
 
-    my @top_files = $self->strip_augmented(@augmented_files);
+    my @top_files = $self->strip_augmented(@$augmented_files);
     return \@top_files;
 }
 
@@ -555,22 +589,16 @@ sub get_url_base {
 }
 
 #----------------------------------------------------------------------
-# Augment the list of filenames with the sort field
-
+# Augment the array to be sorted with the column to sort it by
 sub make_augmented {
-    my $self = shift @_;
-    my $sort_field = shift @_;
+    my ($self, $sort_column, $files) = @_;
 
-    my @augmented_files;
-
-    if ($sort_field) {
-        @augmented_files =  map {[$self->sort_value($sort_field, $_), $_]}
-                            @_;
-    } else {
-        @augmented_files = map {[$_, $_]} @_;
+    my @augmented_list;
+    for (my $i = 0; $i < @$sort_column; $i++) {
+        push(@augmented_list, [$sort_column->[$i], $files->[$i]]);
     }
 
-    return @augmented_files;
+    return @augmented_list;
 }
 
 #----------------------------------------------------------------------
@@ -629,31 +657,32 @@ sub match_patterns {
 # Merge two sorted lists of augmented filenames
 
 sub merge_augmented {
-    my ($self, $sort_reverse, $list1, $list2) = @_;
+    my ($self, $list1, $list2) = @_;
 
     my @merged_list = ();
+    my $sort_reverse = 1;
     my $comparer = $self->file_comparer($sort_reverse);
 
     while(@$list1 && @$list2) {
+        last if @merged_list == $self->{list_length};
         if ($comparer->($list1->[0], $list2->[0]) > 0) {
             push(@merged_list, shift @$list2);
         } else {
             push(@merged_list, shift @$list1);
         }
-        return @merged_list if @merged_list == $self->{list_length};
     }
 
     while (@$list1) {
+        last if @merged_list == $self->{list_length}; 
         push(@merged_list, shift @$list1);
-        return @merged_list if @merged_list == $self->{list_length};
     }
 
     while (@$list2) {
+        last if @merged_list == $self->{list_length};
         push(@merged_list, shift @$list2);
-        return @merged_list if @merged_list == $self->{list_length};
     }
 
-     return @merged_list;
+     return \@merged_list;
 }
 
 #----------------------------------------------------------------------
@@ -675,43 +704,14 @@ sub setup {
 }
 
 #----------------------------------------------------------------------
-# Sort a list of files augmented by their sort field
+# Sort augmented list by swartzian transform
 
 sub sort_augmented {
-    my $self = shift @_;
-    my $sort_reverse = shift @_;
+    my ($self, $sort_reverse, @augmented_data) = @_;
 
     my $comparer = $self->file_comparer($sort_reverse);
-    return sort $comparer @_;
-}
-
-#----------------------------------------------------------------------
-# Sort a list of filenames by metadata field
-
-sub sort_files {
-    my $self = shift @_;
-    my $sort_field = shift @_;
-    my $sort_reverse = shift @_;
-
-    return $self->strip_augmented(
-           $self->sort_augmented($sort_reverse,
-           $self->make_augmented($sort_field, @_)));
-}
-
-#----------------------------------------------------------------------
-# Get value to sort on from the the field name
-
-sub sort_value {
-    my ($self, $sort_field, $filename) = @_;
-
-    my $value;
-    if ($sort_field) {
-        $value = ${$self->build($sort_field, $filename)};
-    } else {
-        $value = join(' ', fio_split_filename($filename));
-    }
-
-    return $value;
+    @augmented_data = sort $comparer @augmented_data;
+    return \@augmented_data;
 }
 
 #----------------------------------------------------------------------
@@ -805,13 +805,19 @@ The absolute url of a web page from a filename.
 
 =item $date
 
+A date string built from the creation date of the file. The date is
+built using the template in date_format which contains the fields:
+C<weekday, month,day, year, hour,  minute,> and C<second.>
+
+=item $mtime
+
 A date string built from the modification date of the file. The date is
 built using the template in date_format which contains the fields:
 C<weekday, month,day, year, hour,  minute,> and C<second.>
 
-=item $mdate
+=item $mtime
 
-The epoch is modification date of a file in the number of seconds since 1970
+The modification time in iso format.
 
 =item $is_current
 
@@ -883,21 +889,10 @@ The url of the remote website, e.g. http://www.cloudhost.com.
 
 The url of the local website, e.g. http://www.example.com.
 
-=item sort_field
-
-The metatdata field to sort list valued variables. The default value is the
-empty string, which means files are sorted on their filenames.
-
 =item sort_numeric
 
 If one, use numeric comparisons when sorting. If zero, use string comparisons
 when sorting.
-
-=item sort_reverse
-
-If this field is 0, the data are sorted the first filename has the smallest
-metadata value. If the field is 1, it has the largest. The default value of the
-parameter is 0.
 
 =item list_length
 

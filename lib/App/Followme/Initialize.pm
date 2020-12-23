@@ -908,7 +908,7 @@ label, legend, fieldset {
 <!-- section meta -->
 <base href="$site_url/" />
 <title>$title</title>
-<meta name="date" content="$mdate" />
+<meta name="date" content="$mtime" />
 <meta name="description" content="$description" />
 <meta name="keywords" content="$keywords" />
 <meta name="author" content="$author" />
