@@ -250,12 +250,7 @@ sub format_all_files {
 sub format_date {
     my ($self, $sorted_order, $date) = @_;
 
-    if ($sorted_order) {
-        $date = fio_format_date($date);
-    } else {
-        $date = fio_format_date($date, $self->{date_format});
-    }
-
+    $date = fio_format_date($date, $self->{date_format}) unless $sorted_order;
     return $date;
 }
 
@@ -289,19 +284,6 @@ sub format_indexes {
 sub format_mdate {
     my ($self, $sorted_order, $date) = @_;
     return $self->format_date($sorted_order, $date);
-}
-
-#----------------------------------------------------------------------
-# Format the file modification time
-
-sub format_mtime {
-    my ($self, $sorted_order, $time) = @_;
-
-    if (! $sorted_order) {
-        $time = fio_format_date($time);
-    }
-
-    return $time; 
 }
 
 #----------------------------------------------------------------------
@@ -459,19 +441,9 @@ sub get_is_index {
 }
 
 #----------------------------------------------------------------------
-# Get the modification date in iso date format
-
-sub get_mdate {
-    my ($self, $filename) = @_;
-
-    my $date = fio_get_date($filename);
-    return fio_format_date($date);
-}
-
-#----------------------------------------------------------------------
 # Get the modification time in epoch seconds
 
-sub get_mtime {
+sub get_mdate {
     my ($self, $filename) = @_;
 
     return fio_get_date($filename);
@@ -809,15 +781,11 @@ A date string built from the creation date of the file. The date is
 built using the template in date_format which contains the fields:
 C<weekday, month,day, year, hour,  minute,> and C<second.>
 
-=item $mtime
+=item $mdate
 
 A date string built from the modification date of the file. The date is
 built using the template in date_format which contains the fields:
 C<weekday, month,day, year, hour,  minute,> and C<second.>
-
-=item $mtime
-
-The modification time in iso format.
 
 =item $is_current
 

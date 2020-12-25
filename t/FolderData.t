@@ -115,11 +115,10 @@ do {
     is($url, 'index.html', 'Build directory url'); #test 12
 
     my $date = $obj->calculate_date('two.html');
-    like($date, qr(^20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$), 'Calculate date'); # test 13
+    ok($date > 1000000000, 'Calculate date'); # test 13
 
     $date = $obj->format_date(1, time());
-    like($date,  qr(^20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$), 
-        'Format date with default format'); # test 14
+    ok($date gt '1000000000', 'Format date in sort order'); # test 14
 
     $obj->{date_format} = 'Day, dd Mon yyyy';
     $date = $obj->format_date(0, time());

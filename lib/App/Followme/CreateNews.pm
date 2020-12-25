@@ -75,7 +75,7 @@ sub update_folder {
 sub setup {
     my ($self, %configuration) = @_;
 
-    $self->{data}{date_format} = 'Day, dd Mon yyyy';
+    $self->{data}{date_format} ||= 'Day, dd Mon yyyy';
     $self->{data}{exclude_index} = 1;
     return;
 }

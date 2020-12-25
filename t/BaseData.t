@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 37;
+use Test::More tests => 40;
 
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
@@ -111,6 +111,33 @@ do {
 };
 
 #----------------------------------------------------------------------
+# Check sort and format
+
+do {
+    my %data = (
+        number => [1, 2, 3, 4],
+        name => [qw(one two three four)],
+    );
+
+    my %sorted_ok = (
+        number => [4, 1, 3, 2],
+        name => [qw(four one three two)],
+    );
+
+    $obj->{sort_field} = 'name';
+    my %sorted_data = $obj->sort(%data);
+    is_deeply(\%sorted_data, \%sorted_ok, "Sort data by name"); # test 19
+
+    $obj->{sort_field} = 'number';
+    my %twice_sorted = $obj->sort(%sorted_data); # test 20
+    is_deeply(\%twice_sorted, \%data, "Sort data by number"); # test 20
+
+    $obj->{sort_field} = '';
+    my %formatted_data = $obj->format(0, %data);
+    is_deeply(\%formatted_data, \%data, "Format data (noop)") # test 21
+};
+
+#----------------------------------------------------------------------
 # Check build methods
 
 do {
@@ -144,7 +171,7 @@ do {
     my @loop = qw(first second third);
 
     my $data = $obj->build('loop', $item, \@loop);
-    is_deeply($data, \@loop, 'Build loop'); # test 19
+    is_deeply($data, \@loop, 'Build loop'); # test 22
 
     foreach my $item (@loop) {
         foreach my $name (qw($count $item $is_first $is_last @sequence $label)) {
@@ -152,7 +179,7 @@ do {
             my $data_ok = $data_ok{$name}{$item};
             my $ref_ok = ref $data_ok ? $data_ok : \$data_ok;
 
-            is_deeply($data, $ref_ok, "Build $name for $item"); #test 19-37
+            is_deeply($data, $ref_ok, "Build $name for $item"); #test 23-40
         }
     }
 }

@@ -35,6 +35,16 @@ sub run {
 }
 
 #----------------------------------------------------------------------
+# Set the date format to iso date format, overriding user
+
+sub setup {
+    my ($self, %configuration) = @_;
+
+    $self->{data}{date_format} = 'yyyy-mm-ddThh:mm:ss';
+    return;
+}
+
+#----------------------------------------------------------------------
 # Construct a filename that represents the title
 
 sub title_to_filename {
@@ -127,7 +137,7 @@ sub write_file {
     my ($self, $filename, $page, $binmode) = @_;
 
     $filename = rel2abs($filename);
-    my $time = ${$self->{data}->build('mtime', $filename)};
+    my $time = ${$self->{data}->build('mdate', $filename)};
     my $new_filename = $self->title_to_filename($filename);
 
     fio_write_page($new_filename, $page, $binmode);

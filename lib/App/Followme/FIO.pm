@@ -77,9 +77,8 @@ sub fio_flatten {
 sub fio_format_date {
     my ($date, $format) = @_;
 
-    # Default format is iso date format
-    $format = 'yyyy-mm-ddThh:mm:ss' unless defined $format;
-    return time_format($format, $date);
+    $date = time_format($format, $date) if $format;
+    return $date;
 }
 
 #----------------------------------------------------------------------
