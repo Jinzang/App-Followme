@@ -386,7 +386,6 @@ AAAEAH//2Q==
 run_before:
     - App::Followme::FormatPage
     - App::Followme::ConvertPage
-site_url: file:///C:/Users/berni/OneDrive/Documents/Web/followme
 #>>> copy text index.html
 <!doctype html>
 <html lang="en">
@@ -817,5 +816,4 @@ run_before:
 #>>> copy text photos/followme.cfg
 run_before:
     - App::Followme::CreateGallery
-thumb_suffix: _thumb
 target_prefix: img
