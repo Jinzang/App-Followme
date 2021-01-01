@@ -90,9 +90,8 @@ sub append_text_file {
 sub bundle_file {
     my ($out, $file) = @_;
 
-
-    $type = -B $file ? 'binary' : 'text';
-    $cmd = join(' ', CMD_PREFIX, 'copy', $type, $file);
+    my $type = -B $file ? 'binary' : 'text';
+    my $cmd = join(' ', CMD_PREFIX, 'copy', $type, $file);
 
     print $out $cmd, "\n";
     if ($type eq 'binary') {

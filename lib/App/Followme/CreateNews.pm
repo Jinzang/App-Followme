@@ -20,7 +20,7 @@ sub parameters {
 
     return (
             news_template_file => 'create_news.htm',
-            index_template_file => 'create_news_index.htm',
+            index_template_file => 'create_index.htm',
             data_pkg => 'App::Followme::WebData',
            );
 }

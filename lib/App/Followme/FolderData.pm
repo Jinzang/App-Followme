@@ -58,6 +58,7 @@ sub calculate_date {
 
 sub calculate_keywords {
     my ($self, $filename) = @_;
+    $filename = $self->dir_to_filename($filename);
 
     $filename = abs2rel($filename);
     my @path = splitdir($filename);
@@ -72,6 +73,7 @@ sub calculate_keywords {
 
 sub calculate_title {
     my ($self, $filename) = @_;
+    $filename = $self->dir_to_filename($filename);
 
     my ($dir, $file) = fio_split_filename($filename);
     my ($root, $ext) = split(/\./, $file);
@@ -148,6 +150,31 @@ sub filename_to_url {
     $url =~ s/\.[^\.]*$/.$ext/ if defined $ext;
 
     return $url;
+}
+
+#----------------------------------------------------------------------
+# Find the filename at an offset to the current filename
+
+sub find_filename {
+    my ($self, $offset, $filename, $loop) = @_;
+    die "Can't use \$url_* outside of for\n"  unless $loop;
+
+    my $match = -999;
+    foreach my $i (0 .. @$loop) {
+        if ($loop->[$i] eq $filename) {
+            $match = $i;
+            last;
+        }
+    }
+
+    my $index = $match + $offset;
+    if ($index < 0 || $index > @$loop-1) {
+        $filename = '';
+    } else {
+        $filename = $loop->[$index];
+    }
+
+    return $filename;
 }
 
 #----------------------------------------------------------------------
@@ -250,7 +277,12 @@ sub format_all_files {
 sub format_date {
     my ($self, $sorted_order, $date) = @_;
 
-    $date = fio_format_date($date, $self->{date_format}) unless $sorted_order;
+    if ($sorted_order) {
+        $date = fio_format_date($date);
+    } else {
+        $date = fio_format_date($date, $self->{date_format});
+    }
+
     return $date;
 }
 
@@ -283,7 +315,7 @@ sub format_indexes {
 
 sub format_mdate {
     my ($self, $sorted_order, $date) = @_;
-    return $self->format_date($sorted_order, $date);
+    return fio_format_date($date);
 }
 
 #----------------------------------------------------------------------
@@ -331,6 +363,7 @@ sub format_size {
 
 sub get_absolute_url {
     my ($self, $filename) = @_;
+    $filename = $self->dir_to_filename($filename);
 
     my $site_url = $self->get_site_url($filename);
     my $relative_url =  $self->get_url($filename);
@@ -411,20 +444,16 @@ sub get_folders {
 }
 
 #-----------------------------------------------------------------------
-# Get a list of index pages
+# Get the url of the index page in the same folder as a file
 
-sub get_indexes {
+sub get_index_url {
     my ($self, $filename) = @_;
 
-    my @indexes;
-    my $folders = $self->get_folders($filename);
+    my ($dir, $file) = fio_split_filename($filename);
     my $index_page = "index.$self->{web_extension}";
+    $index_page = catfile($dir, $index_page);
 
-    for my $folder (@$folders) {
-        push(@indexes, catfile($folder, $index_page));
-    }
-
-    return \@indexes;
+    return $self->get_url($index_page);
 }
 
 #----------------------------------------------------------------------
@@ -542,6 +571,7 @@ sub get_top_files {
 
 sub get_url {
     my ($self, $filename) = @_;
+    $filename = $self->dir_to_filename($filename);
 
     return $self->filename_to_url($self->{top_directory},
                                   $filename,
@@ -553,11 +583,32 @@ sub get_url {
 
 sub get_url_base {
     my ($self, $filename) = @_;
+    $filename = $self->dir_to_filename($filename);
 
     my $url_base =  $self->filename_to_url($self->{top_directory},
 										   $filename, '');
 	chop($url_base); # remove trailing dot
 	return $url_base;
+}
+
+#----------------------------------------------------------------------
+# Get a url from the next filename in the loop
+
+sub get_url_next {
+    my ($self, $filename, $loop) = @_;
+
+    $filename = $self->find_filename(1, $filename, $loop);
+    return $filename ? $self->get_url($filename) : '';
+}
+
+#----------------------------------------------------------------------
+# Get a url from the previous filename in the loop
+
+sub get_url_previous {
+    my ($self, $filename, $loop) = @_;
+
+    $filename = $self->find_filename(-1, $filename, $loop);
+    return $filename ? $self->get_url($filename) : '';
 }
 
 #----------------------------------------------------------------------
@@ -807,6 +858,10 @@ The remote url of a web page from a filename.
 
 The url of the website. Does not have a trailing slash
 
+=item $index_url
+
+The url of the index page in the same folder as a file.
+
 =item $title
 
 The title of a file is derived from the file name by removing the filename
@@ -820,6 +875,16 @@ Build the relative url of a web page from a filename.
 =item $url_base
 
 Build the relative url of a filename minus any extension and trailing dot
+
+=item $url_next
+
+Build the relative url of a web page from the next filename in the loop 
+sequence. Empty string if there is no next filename.
+
+=item $url_previous
+
+Build the relative url of a web page from the previous filename in the loop 
+sequence. Empty string if there is no previous filename.
 
 =back
 

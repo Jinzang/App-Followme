@@ -7,7 +7,7 @@ use File::Path qw(rmtree);
 use File::Spec::Functions qw(catfile catdir rel2abs splitdir);
 
 use Test::Requires 'Text::Markdown';
-use Test::More tests => 15;
+use Test::More tests => 13;
 
 #----------------------------------------------------------------------
 # Load package
@@ -71,7 +71,7 @@ do {
     my $followme = App::Followme->new();
 
     my $path = catfile($test_dir, 'essays');
-    foreach my $dir (qw(2013 12december)) {
+    foreach my $dir (qw(cardinals)) {
         $path = catfile($path, $dir);
         mkdir($path);
         chmod 0755, $path;
@@ -98,13 +98,13 @@ do {
     my $file = catfile($path, 'index.html'); # test 11
     ok(-e $file, "essays index file created");
 
-    foreach my $dir (qw(2013 12december)) {
+    foreach my $dir (qw(cardinals)) {
         my $page = fio_read_page($file);
         ok(index($page, "$dir/index.html") > 0,
-           "Link to $dir directory"); # test 12,14
+           "Link to $dir directory"); # test 12
 
         $path = catfile($path, $dir);
         $file = catfile($path, 'index.html');
-        ok(-e $file, "$dir index file created"); # test 13,15
+        ok(-e $file, "$dir index file created"); # test 13
     }
 };

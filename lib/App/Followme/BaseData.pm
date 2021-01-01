@@ -17,8 +17,8 @@ sub parameters {
 
     ## TODO: sort_field='mdate', sort_reverse=1
     return (
-            labels => 'previous,next',
             sort_field => '',
+            target_prefix => 'target',
             );
 }
 
@@ -104,6 +104,26 @@ sub file_comparer {
     }
 
     return $comparer;
+}
+
+#----------------------------------------------------------------------
+# Find the target, return the target plus an offset
+
+sub find_target {
+    my ($self, $offset, $item, $loop) = @_;
+    die "Can't use \$target_* outside of for\n"  unless $loop;
+
+    my $match = -999;
+    foreach my $i (0 .. @$loop) {
+        if ($loop->[$i] eq $item) {
+            $match = $i;
+            last;
+        }
+    }
+
+    my $index = $match + $offset + 1;
+    $index = 0 if $index < 1 || $index > @$loop;
+    return $index ? $self->{target_prefix} . $index : '';
 }
 
 #----------------------------------------------------------------------
@@ -238,28 +258,6 @@ sub get_is_last {
 }
 
 #----------------------------------------------------------------------
-# Return the label for the current list item
-
-sub get_label {
-    my ($self, $item, $loop) = @_;
-
-    die "Can't use \$label outside of for\n" unless $loop;
-
-    my $count = $self->get_count($item, $loop);
-    my @labels = split(/\s*,\s*/, $self->{labels});
-
-    my $label;
-    if (defined $count && $count <= @labels) {
-        my @words = map {ucfirst $_} split(/\s+/, $labels[$count-1]);
-        $label = join(' ', @words);
-    } else {
-        $label = '';
-    }
-
-    return $label;
-}
-
-#----------------------------------------------------------------------
 # Return the current list of loop items
 
 sub get_loop {
@@ -270,34 +268,27 @@ sub get_loop {
 }
 
 #----------------------------------------------------------------------
-# Return previous and next loop items
+# Get the current target
 
-sub get_sequence {
+sub get_target {
     my ($self, $item, $loop) = @_;
-    die "Can't use \@sequence outside of for\n"  unless $loop;
+    return $self->find_target(0, $item, $loop);
+}
 
-    my $match;
-    foreach my $i (0 .. @$loop) {
-        if ($loop->[$i] eq $item) {
-            $match = $i;
-            last;
-        }
-    }
+#----------------------------------------------------------------------
+# Get the next target
 
-    my @sequence;
-    if (defined $match && $match > 0) {
-        $sequence[0] = $loop->[$match-1];
-    } else {
-        $sequence[0] = '';
-    }
+sub get_target_next {
+    my ($self, $item, $loop) = @_;
+    return $self->find_target(1, $item, $loop);
+}
 
-    if (defined $match && $match < @$loop-1) {
-        $sequence[1] = $loop->[$match+1];
-    } else {
-        $sequence[1] = '';
-    }
+#----------------------------------------------------------------------
+# Get the previous target
 
-    return \@sequence;
+sub get_target_previous {
+    my ($self, $item, $loop) = @_;
+    return $self->find_target(-1, $item, $loop);
 }
 
 #----------------------------------------------------------------------
@@ -492,12 +483,6 @@ can only be used inside a for block.
 
 A list with all the loop items from the immediately enclosing for block.
 
-=item @sequence
-
-A two item list containing the previous and next items in the for block. If the
-current item is first or last, the corrsponding item in the sequence list will
-be the empty string.
-
 =item $count
 
 The count of the current item in the for block.The count starts at one.
@@ -514,10 +499,20 @@ One if this is the last item in the for block, zero otherwise
 
 The current item in the for block.
 
-=item $label
+=item $target
 
-The string from the comma separated list of labels that corresponds to the
-current item in a list.
+A string that can be used as a target for the location of the current item
+in the page.
+
+=item $target_next
+
+A string that can be used as a target for the location of the next item
+in the page. Empty if there is no next item.
+
+=item $target_previous
+
+A string that can be used as a target for the location of the previous item
+in the page. Empty if there is no previous item.
 
 =back
 
@@ -537,6 +532,10 @@ meant to be used with @sequence.
 
 The metatdata field to sort list valued variables. The default value is the
 empty string, which means files are sorted on their filenames.
+
+=item target_prefix
+
+The prefix used to build the target names. The default value is 'target'.
 
 =back
 
