@@ -41,9 +41,10 @@ $test_dir = cwd();
 
 do {
    my $text = <<'EOQ';
+----
 author: Bernie Simon
 date: 2015-11-22T20:23:13
-....
+----
 Page %%
 --------
 

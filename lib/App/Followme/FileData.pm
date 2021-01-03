@@ -148,10 +148,17 @@ sub fetch_sections {
     my ($self, $text) = @_;
 
     my %section;
-    my @sections = split(/\n\.{3,}\s*\n/, $text, 2);
+    my $divider = qr(-{3,}\s*\n);
 
-	$section{body} = pop(@sections);
-	$section{metadata} = pop(@sections) || '';
+    if ($text =~ /^$divider/) {
+        my @sections = split($divider, $text, 3);
+        $section{body} = $sections[2];
+        $section{metadata} = $sections[1];
+
+    } else {
+        $section{body} = $text;
+        $section{metadata} = '';
+    }
 
     $section{body} = $self->fetch_as_html($section{body});
     return \%section;

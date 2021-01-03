@@ -51,9 +51,10 @@ do {
     my @count = qw(one two three);
 
     $code[0] = <<'EOQ';
+-----
 title: The Page %%
 author: Bernie Simon
-......
+-----
 <h1>Count %%</h1>
 
 <p>This is the description. This is the rest of the content.</p>
