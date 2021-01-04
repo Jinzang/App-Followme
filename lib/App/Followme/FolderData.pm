@@ -415,6 +415,19 @@ sub get_breadcrumbs {
 }
 
 #----------------------------------------------------------------------
+# Get the extension from a filename
+
+sub get_extension {
+    my ($self, $filename) = @_;
+
+    my ($folder, $file) = fio_split_filename($filename);
+    my ($extension) = ($file =~ /\.([^\.]*)$/);
+
+    return $extension;
+}
+
+
+#----------------------------------------------------------------------
 # Get a list of matching files in a folder
 
 sub get_files {
@@ -496,6 +509,29 @@ sub get_newest_file {
     }
 
     return defined $newest_file ? [$newest_file] : [];
+}
+
+#----------------------------------------------------------------------
+# Get a list of files with the same rootname as another filename
+
+sub get_related_files {
+    my ($self, $filename) = @_;
+    my ($folder, $file) = fio_split_filename($filename);
+
+    my $root;
+    ($root = $file) =~ s/\.[^\.]*$//;
+
+    my @related_files;
+    my ($filenames, $folders) = fio_visit($folder);
+    foreach my $filename (@$filenames) {
+        my ($folder, $file) = fio_split_filename($filename);
+
+        my $rootname;
+        ($rootname = $file) =~ s/\.[^\.]*$//;
+        push(@related_files, $filename) if $root eq $rootname;
+    }
+
+    return \@related_files;
 }
 
 #----------------------------------------------------------------------
@@ -810,6 +846,11 @@ configuration parameter list_length.
 A list of breadcrumb filenames, which are the names of the index files
 above the filename passed as the argument.
 
+=item @related_files
+
+A list of files with the same file root name as a specified file. This
+list is not filtered by the configuration variables extension and exclude.
+
 =item @files
 
 A list of matching files in a directory.
@@ -876,6 +917,10 @@ Build the relative url of a web page from a filename.
 
 Build the relative url of a filename minus any extension and trailing dot
 
+=item $extension
+
+The extension of a filename.
+
 =item $url_next
 
 Build the relative url of a web page from the next filename in the loop 
@@ -906,8 +951,8 @@ The directory used to retrieve metadata. This is used by list valued variables.
 
 =item extension
 
-The extension of the files metadata is retrieved from. This is used by list
-valued metadata. The default value is the same as the web extension.
+A comma separated list of extensions of files to include in a list of files.
+If it is left empty, it is set to the web extension.
 
 =item date_format
 

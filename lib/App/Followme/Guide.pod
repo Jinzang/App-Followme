@@ -11,8 +11,8 @@ App::Followme::Guide - How to install, configure, and run followme
 =head1 DESCRIPTION
 
 Updates a static website after changes. Constant portions of each page are
-updated to match, text files are converted to html, and indexes are created
-for files in the archive.
+updated to match, text files are converted to html, indexes are created
+for files in the archive, and changed files are uploaded to the remote server.
 
 The followme script is run on the directory or file passed as its argument. If
 no argument is given, it is run on the current directory.
@@ -84,10 +84,10 @@ You can also use followme on an existing site. Run the command
    followme --init
 
 in the top directory of your site. The init option will not overwrite any
-existing files in your site. Then look at the page template it has
+existing files in your site. Then look at the convert page template it has
 created:
 
-   cat templates/page.htm
+   cat _templates/convert_page.htm
 
 Edit an existing page on your site to have all the section comments in this
 template. In the template shipped with this package there are three section
@@ -99,8 +99,14 @@ secondary section contains content that is updated by the modules in this
 package and you will not normally change it.
 
 After you edit a single page, you can place the App::Followme::EditSections
-module in the configuration file, as described in the next section. If
-you then run followme, it will modify the other pages on your website to
+module in the configuration file, after the run_efore line:
+
+    run_before:
+        - App::Followme::EditSections
+        - App::Followme::FormatPage
+        - App::Followme::ConvertPage
+
+If you then run followme, it will modify the other pages on your website to
 match the page you have edited. Then remove the EditSections module from
 the configuration file.
 
@@ -194,7 +200,8 @@ title, it is built from the file name, replacing dashes with blanks and
 capitalizing each word, The url and absolute_url are built from the html file
 name. To change the look of the html page, edit the page template. Only blocks
 inside the section comments will be in the resulting page, editing the text
-outside it will have no effect on the resulting page.
+outside it will have no effect on the resulting page. A complete listing of the
+variables is given in the variables section.
 
 =item L<App::Followme::CreateIndex>
 
@@ -202,19 +209,32 @@ This module builds an index for a directory containing links to all the files
 with the specified extension contained in it. The same variables mentioned above
 are calculated for each file, with the exception of body. Comments that look like
 
-    <!-- for @filenames -->
+    <!-- for @files -->
     <!-- endfor -->
 
 indicate the section of the template that is repeated for each file contained
 in the index.
 
+=item L<App::Followme::CreateGallery>
+
+Create a photo gallery for images in a directory. Each image must have a 
+thumbnail image whose name has the suffix "-thumb". The suffix name is a 
+configuration parameter. The code is very similar to 
+L<App::Followme::CreateIndex>, but the template is more complex, so it is a 
+separate module.
+
 =item L<App::Followme::CreateNews>
 
-This module generates an html file from the most recently updated files in the
-news directory. It also creates index files in each directory and
-subdirectory in the news directory. The same variables mentioned under
-L<App::Followme::ConvertPages> are calculated for each file included in the
-indexes.
+This module generates an index file from the most recently updated files in a
+directory and its subdirectories. It also creates index files in each 
+subdirectory listing each file. The variables described below in the variables
+section are calculated for each file included in the indexes.
+
+=item L<App::Followme::CreateRss>
+
+This module creates an rss file from the metadata of the most recently updated 
+files in a directory. It is a companion to App::Followme::CreateNews and should
+be used if you also want an rss file.
 
 =item L<App::Followme::CreateSitemap>
 
@@ -328,6 +348,199 @@ Templates are read either from the same directory as the configuration file
 containing the name of the module being run or from the _templates subdirectory
 of the top directory of the site.
 
+=head1 VARIABLES
+
+Templates contain if commands, for loops and variables. The following variables 
+are arrays that can be used as arguments to for loops:
+
+=over 4
+
+=item @files
+
+An array of files in a directory. The files in the list are controlled by the 
+configuration variables extension, exclude, and exclude_index.
+
+=item @all_files
+
+An array of all files in a directory and its subdirectories. The files are 
+controlled by the same configuration variables as @files.
+
+=item @top_files
+
+An array of the most recently modified files in a directory and its 
+subdirectories. The number of files in the array is controlled by configuration
+variable list_length. The files in the list are controlled by the same
+configuration variables as used by @files.
+
+=item @folders
+
+An array of subdirectories in a directory. The subdirectories in the list are
+controlled by the configuration parameter exclude_dirs.
+
+=item @breadcrumbs
+
+An array of index file urls of the directories above the directory containing
+the current file.
+
+=item @related_files
+
+A list of files with the same file root name as a specified file. This
+list is not filtered by the configuration variables extension and exclude.
+
+=item @newest_file
+
+An array with one element, the most recently modified file in a directory
+or its subdirectories. It is an array so that other variables can be used
+inside its for loop.
+
+=back
+
+The following variables can only be used inside of loops:
+
+=over 4
+
+=item @loop
+
+A copy of the array in the enclosing for loop. This is used to build double
+for loops over the same array.
+
+=item @thumb_file
+
+An array with only one element, the name of the thumbnail file for an image file.
+It is an array so that other variables that are functions of the name can be used
+inside its for loop.
+
+=item $is_first
+
+True for the first pass through the for loop, false for all following passes. Used
+in if statements.
+
+=item $is_last
+
+True for the last pass through the for loop, false for all previous passes. Used in 
+if statements.
+
+=item $count
+
+The count of the pass through the loop. Starts at one and goes up to the number of 
+elements in the array.
+
+=item $target
+
+The count prefixed by a string, which is set by the configuration variable 
+target_prefix. It is used to construct tatgets for links within a web page.
+
+=item $target_previous
+
+The count of the previous pass through the for loop, prefixed by the configuration
+variable target_prefix. It is a zero length string for the first pass through the 
+loop.
+
+=item $target_next
+
+The count of the next pass through the for loop, prefixed by the configuration
+variable target_prefix. It is a zero length string for the last pass through the 
+loop.
+
+=item $url_previous
+
+The relative url of the previous file processed by the for loop. It is a zero 
+length string for the first pass through the for loop.
+
+=item $url_next
+
+The relative url of the next file to be processed by the for loop. It is a zero 
+length string for the last pass through the for loop.
+
+=back
+
+The following variables can be used inside or outside of for loop. If used inside,
+the refer to the filename of the current iteration of the loop. If outside, they 
+refer to the current file being processed.
+
+=over 4
+
+=item $remote_url
+
+The absolute url of the top folder on the site on the remote system. Set by the 
+configuration variable of the same name.
+
+=item $site_url
+
+The absolute url of the top folder on the site on the local system. Set by the 
+configuration variable of the same name. If the configuration variable is not
+set, it is constructed from the name of the top folder of the site.
+
+=item $url
+
+The url of a file, relative to the url of the top folder.
+
+=item $index_url
+
+The relative url of the index file in the same folder
+
+=item $absolute_url
+
+The relative url of a file prefixed by the site url.
+
+=item $url_base
+
+The relative url of a file without any file extension. Used to create the urls of
+any related files.
+
+=item $extension
+
+The extension of a filename.
+
+=item $is_index
+
+True if a file is an index file, that is, its name minus the extension is "index".
+Used in if statements.
+
+=item $date
+
+The creation date of a file, if available, the date of last modification, if not.
+The format of this variable is set by the configuration variable date_format.
+
+=item $mdate
+
+The date of last modification of a file. The format of this variable is set by 
+the configuration variable date_format.
+
+=item $size
+
+The size of the file in bytes.
+
+=item $title
+
+The title of a file. Constructed from the filename if it is not otherwise 
+available.
+
+=item $body
+
+The body text of a file.
+
+=item $summary
+
+A summary of the file, constructed from the first paragraph of the body.
+
+=item $description
+
+A description of the contents of the file, constructed from the first sentence
+of the body if it is not otherwise available.
+
+=item $keywords
+
+A comma separated list of keywords describing a file. Constructed from the name
+of the folder containing the file if it is not otherwise available.
+
+=item author
+
+The name of the author of a file. Taken from the configuration variable of the
+same name if it is not otherwise available.
+
+\
+=back
 
 =head1 MODULES
 
