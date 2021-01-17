@@ -7,7 +7,7 @@ use File::Path qw(rmtree);
 use File::Spec::Functions qw(catfile catdir rel2abs splitdir);
 
 use Test::Requires 'Text::Markdown';
-use Test::More tests => 14;
+use Test::More tests => 18;
 
 #----------------------------------------------------------------------
 # Load package
@@ -108,4 +108,56 @@ do {
         $file = catfile($path, 'index.html');
         ok(-e $file, "$dir index file created"); # test 14
     }
+};
+
+#----------------------------------------------------------------------
+# Create photo gallery
+
+do {
+    my $data_dir = catfile($test_dir, 'tdata');
+    my $gallery_dir = catfile($test_dir, 'photos');
+
+    foreach my $count (qw(first second third)) {
+        my $photo_name = '*-photo.jpg';
+        my $thumb_name = '*-photo-thumb.jpg';
+
+        for my $filename (($photo_name, $thumb_name)) {
+            $filename =~ s/\*/$count/g;
+
+            my $input_file = catfile($data_dir, $filename);
+            my $output_file = catfile($gallery_dir, $filename);
+
+            my $photo = fio_read_page($input_file, ':raw');
+            fio_write_page($output_file, ':raw');
+        }
+    }
+
+    chdir($gallery_dir) or die $!;
+    my $followme = App::Followme->new();
+    $followme->run($gallery_dir);
+
+    my $gallery_name = catfile($gallery_dir, 'index.html'); 
+    ok(-e $gallery_name,  "Gallery index file created"); # test 15
+
+    my $page = fio_read_page($gallery_name);
+    my @items = $page =~ m/(<div class="lightbox")/g;
+    is(@items, 3, 'Index three photos'); # test 16
+};
+
+#----------------------------------------------------------------------
+# Create help
+
+do {
+    my $help_dir = catfile($test_dir, 'help');
+    chdir($help_dir) or die $!;
+
+    my $followme = App::Followme->new();
+    $followme->run($help_dir);
+
+    my $help_name = catfile($help_dir, 'index.html'); 
+    ok(-e $help_name,  "Help index file created"); # test 17
+
+    my $page = fio_read_page($help_name);
+    my @items = $page =~ m/(<h3>)/g;
+    ok(@items > 25, 'Index help'); # test 18
 };

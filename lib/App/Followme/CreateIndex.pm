@@ -10,7 +10,9 @@ use base qw(App::Followme::Module);
 use Cwd;
 use IO::Dir;
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile no_upwards);
+
 use App::Followme::FIO;
+use App::Followme::Web;
 
 our $VERSION = "1.95";
 
@@ -39,6 +41,29 @@ sub run {
 }
 
 #----------------------------------------------------------------------
+# Return true if each section in a file has been filled from the template
+
+sub sections_are_filled {
+    my ($self, $filename) = @_;
+
+    my $page = fio_read_page($filename);
+    return unless $page;
+    my $page_sections = web_parse_sections($page);
+
+    my $template_file = $self->get_template_name($self->{template_file});
+    my $template = fio_read_page($template_file);
+    die "Couldn't read template: $template_file" unless $template;
+    my $template_sections = web_parse_sections($template);
+
+    foreach my $name (keys %$template_sections) {
+        next unless $template_sections->{$name} =~ /\S/;
+        return unless $page_sections->{$name} =~ /\S/;
+    }
+
+    return 1;
+}
+
+#----------------------------------------------------------------------
 # Set exclude_index to true in the data package
 
 sub setup {
@@ -55,13 +80,16 @@ sub update_folder {
     my ($self, $folder) = @_;
 
     my $index_file = $self->to_file($folder);
+    my $base_index_file = $self->to_file($self->{data}{base_directory});
+
     my $template_file = $self->get_template_name($self->{template_file});
-    my $newest_file = $self->{data}->build('newest_file', $index_file);
+    my $newest_file = $self->{data}->build('newest_file', $base_index_file);
 
-    unless (fio_is_newer($index_file, $template_file, @$newest_file)) {
-        my $page = $self->render_file($self->{template_file}, $index_file);
+    unless (fio_is_newer($index_file, $template_file, @$newest_file) &&
+            $self->sections_are_filled($index_file)) {
+
+        my $page = $self->render_file($self->{template_file}, $base_index_file);
         my $prototype_file = $self->find_prototype();
-
         $page = $self->reformat_file($prototype_file, $index_file, $page);
         fio_write_page($index_file, $page);
     }

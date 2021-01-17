@@ -96,7 +96,8 @@ sub update_folder {
 
     my $index_file = $self->to_file($folder);
     my $base_directory = ${$self->{data}->build('base_directory', $index_file)};
-    my $same_directory = fio_same_file($base_directory, $self->{base_directory});
+    my $same_directory = fio_same_file($base_directory, $self->{base_directory},
+                                        $self->{case_sensitivity});
 
     my $source_directory;
     if ($same_directory) {
@@ -140,8 +141,14 @@ sub write_file {
     my $time = ${$self->{data}->build('mdate', $filename)};
     my $new_filename = $self->title_to_filename($filename);
 
+    my $dir = fio_make_dir($new_filename);
+    die "Couldn't create directory for $new_filename" unless $dir;
+
     fio_write_page($new_filename, $page, $binmode);
-    unlink($filename) if -e $filename && $filename ne $new_filename;
+
+    unlink($filename) if -e $filename && 
+        ! fio_same_file($filename, $new_filename, $self->{case_sensitivity});
+
     fio_set_date($new_filename, $time);
 
     return;

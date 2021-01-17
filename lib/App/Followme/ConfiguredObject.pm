@@ -28,6 +28,7 @@ sub parameters {
 
     return (
             quick_update => 0,
+            case_sensitivity => 0,
             top_directory => getcwd(),
             base_directory => getcwd(),
            );
@@ -40,7 +41,8 @@ sub add_configurations {
     my ($self, $pkg, %configuration) = @_;
 
     foreach my $field ($self->all_fields(\%configuration)) {
-        $self->{$field} = $configuration{$field};
+        my $pkg_field = $self->get_pkg_field($field);
+        $self->{$pkg_field} = $configuration{$field};
     }
 
     return;
@@ -83,13 +85,22 @@ sub all_fields {
 
         foreach my $field (keys %$configuration) {
             next if ref $configuration->{$field};
-            next unless exists $parameters{$field};
+            next unless $self->match_all(\%parameters, $field);
 
             push(@fields, $field);
         }
     }
 
     return @fields;
+}
+
+#----------------------------------------------------------------------
+# Extract the package field name from the configuration field name
+
+sub get_pkg_field {
+    my ($self, $field) = @_;
+    my @configuration_fields = split('::', $field);
+    return pop(@configuration_fields);
 }
 
 #----------------------------------------------------------------------
@@ -116,6 +127,29 @@ sub initialize {
 
     $self->setup(%configuration) if defined &{"${pkg}::setup"};
     return;
+}
+
+#----------------------------------------------------------------------
+# Check to see if all the subfields of a configuration field match
+
+sub match_all {
+    my ($self, $parameters, $field) = @_;
+
+    my @configuration_fields = split('::', $field);
+    my $config_field = pop(@configuration_fields);
+    return unless exists $parameters->{$config_field};
+
+    my $pkg = ref $self;
+    my @pkg_fields = split('::', $pkg);
+
+    while (@configuration_fields) {
+        my $config_field = pop(@configuration_fields);
+        my $pkg_field = pop(@pkg_fields);
+
+        return unless $config_field eq $pkg_field;
+    }  
+
+    return 1;
 }
 
 #----------------------------------------------------------------------
@@ -179,6 +213,11 @@ class based on it:
 
 The directory containing the configuration file that loads the class. The
 default value is the current directory.
+
+=item case_sensitvity
+
+Boolean flag that indicates if filenames on this operating system 
+are case sensitive. The default value is false.
 
 =item quick_mode
 

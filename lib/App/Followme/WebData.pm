@@ -21,7 +21,7 @@ sub parameters {
     return (
             body_tag => 'primary',
             metadata_tag => 'meta',
-            web_extension => 'html',
+            extension => '',
            );
 }
 
@@ -76,6 +76,16 @@ sub fetch_sections {
     return \%section;
 }
 
+#----------------------------------------------------------------------
+# Initialize the extension if unset
+
+sub setup {
+    my ($self, %configuration) = @_;
+
+    $self->{extension} ||= $self->{web_extension};
+    return;
+}
+
 1;
 
 =pod
@@ -125,7 +135,7 @@ The name of the section containing the body text. The default value is
 The name of the section containing the metadata tags. The default value is
 'meta'.
 
-=item web_extension
+=item extension
 
 The file extension of web pages. The default value is 'html'.
 

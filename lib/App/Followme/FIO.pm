@@ -16,14 +16,36 @@ use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(fio_filename_to_url fio_flatten fio_full_file_name 
-                 fio_format_date fio_get_date fio_get_size 
-                 fio_glob_patterns fio_is_newer fio_match_patterns 
-                 fio_most_recent_file fio_read_page fio_same_file 
-                 fio_set_date fio_split_filename fio_to_file fio_visit 
+our @EXPORT = qw(fio_filename_to_url fio_flatten 
+                 fio_full_file_name fio_format_date fio_get_date 
+                 fio_get_size fio_glob_patterns fio_is_newer 
+                 fio_make_dir fio_match_patterns fio_most_recent_file 
+                 fio_read_page fio_same_file fio_set_date 
+                 fio_split_filename fio_to_file fio_visit 
                  fio_write_page);
 
 our $VERSION = "1.95";
+
+#----------------------------------------------------------------------
+# Calculate the check sum for a file
+
+sub fio_calculate_checksum {
+    my ($filename) = @_;
+
+    my $checksum;
+    my $page = fio_read_page($filename, ':raw');
+
+    if ($page) {
+        my $md5 = Digest::MD5->new;
+        $md5->add($page);
+        $checksum = $md5->hexdigest;
+        
+    } else {
+        $checksum = '';
+    }
+
+    return $checksum;
+}
 
 #----------------------------------------------------------------------
 # Convert filename to url
@@ -204,6 +226,21 @@ sub fio_is_newer {
 }
 
 #----------------------------------------------------------------------
+# Create a new directory to write a file in if it doesn't exist
+
+sub fio_make_dir {
+    my ($filename) = @_;
+
+    my $flag = 1;
+    my ($dir, $file) = fio_split_filename($filename);
+    if (! -e $dir) {
+        $flag = mkdir($dir);
+    }
+
+    return $flag ? $dir : '';
+}
+
+#----------------------------------------------------------------------
 # Return true if filename matches pattern
 
 sub fio_match_patterns {
@@ -265,8 +302,8 @@ sub fio_read_page {
 # Check if two filenames are the same in an os independent way
 
 sub fio_same_file {
-    my ($filename1, $filename2) = @_;
-
+    my ($filename1, $filename2, $case_sensitivity) = @_;
+    $case_sensitivity = 0 unless defined $case_sensitivity;
     return unless defined $filename1 && defined $filename2;
 
     my @path1 = splitdir(rel2abs($filename1));
@@ -274,7 +311,15 @@ sub fio_same_file {
     return unless @path1 == @path2;
 
     while(@path1) {
-        return unless shift(@path1) eq shift(@path2);
+        my $part1 = shift(@path1);
+        my $part2 = shift(@path2);
+
+        unless ($case_sensitivity) {
+            $part1 = lc($part1);
+            $part2 = lc($part2);
+        }
+
+        return unless $part1 eq $part2;
     }
 
     return 1;
@@ -442,6 +487,12 @@ item $test = fio_is_newer($target, @sources);
 Compare the modification date of the target file to the modification dates of
 the source files. If the target file is newer than all of the sources, return
 1 (true).
+
+=item $dir = fio_make_dir($filename);
+
+Make a new directory for a file to live in if the directory does not already
+exist. Return the name of the directory if the directory already existed
+or was created and the empty string if the directory could not be created.
 
 =item $flag = fio_match_patterns($filename, $patterns);
 

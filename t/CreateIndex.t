@@ -6,7 +6,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 8;
+use Test::More tests => 9;
 
 #----------------------------------------------------------------------
 # Load package
@@ -39,6 +39,8 @@ my $template_file = 'template.htm';
 my $prototype_file = 'index.html';
 
 my %configuration = (
+        top_directory => $test_dir,
+        base__directory => $test_dir,
         template_directory => $test_dir,
         template_file => $template_file,
         web_extension => 'html',
@@ -149,19 +151,24 @@ EOQ
         push(@archived_files, $filename);
     }
 
-    chdir($test_dir) or die $!;
+    chdir($archive_dir) or die $!;
 
+    my $idx = App::Followme::CreateIndex->new(%configuration);
     $idx->run($archive_dir);
+
     $page = fio_read_page($index_name);
     ok($page, 'Write index page'); # test 3
 
-    like($page, qr/Post four/, 'Index first page title'); # test 4
-    like($page, qr/Post two/, 'Index last page title'); # test 5
+    my $filled = $idx->sections_are_filled($index_name);
+    ok($filled, 'Test if sections are filled'); # test 4
 
-    like($page, qr/<title>Stuff<\/title>/, 'Write index title'); # test 6
+    like($page, qr/Post four/, 'Index first page title'); # test 5
+    like($page, qr/Post two/, 'Index last page title'); # test 6
+
+    like($page, qr/<title>Stuff<\/title>/, 'Write index title'); # test 7
     like($page, qr/<li><a href="archive\/two.html">Post two<\/a><\/li>/,
-       'Write index link'); #test 7
+       'Write index link'); #test 8
 
     my $pos = index($page, $index_name);
-    is($pos, -1, 'Exclude index file'); # test 8
+    is($pos, -1, 'Exclude index file'); # test 9
 };

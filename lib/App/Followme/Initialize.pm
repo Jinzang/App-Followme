@@ -386,6 +386,7 @@ AAAEAH//2Q==
 run_before:
     - App::Followme::FormatPage
     - App::Followme::ConvertPage
+site_url: file:///C:/Users/berni/OneDrive/Documents/Code/App-Followme
 #>>> copy text index.html
 <!doctype html>
 <html lang="en">
@@ -404,26 +405,37 @@ run_before:
 <div class="dropdown" style="float:right;">
     <button class="dropbtn">&#9776;</button>
     <nav class="dropdown-content">
-      <a href="#">Link 1</a>
-      <a href="#">Link 2</a>
-      <a href="#">Link 3</a>
+      <a href="essays/index.html">Essays</a>
+      <a href="photos/index.html">Photos</a>
+      <a href="help/index.html">Help</a>
     </nav>
 </div>
 </header>
 <article>
 <section id="primary">
 <!-- section primary -->
-<h2>de Finibus Bonorum et Malorum</h2>
+<h2>Followme</h2>
 
-<p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, 
-totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta
-sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia 
-consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui 
-dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora 
-incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum 
-exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem 
-vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui 
-dolorem eum fugiat quo voluptas nulla pariatur?</p>
+<p>Usage: followme [file or directory]</p>
+
+<p>Update a static website after changes. Constant portions of each page are
+updated to match, text files are converted to html, and indexes are created
+for new files in the archive.</p>
+
+<p>The script is run on the directory or file passed as its argument. If no
+argument is given, it is run on the current directory.</p>
+
+<p>If a file is passed, the script is run on the directory the file is in. In
+addition, the script is run in quick mode, meaning that only the directory
+the file is in is checked for changes. Otherwise not only that directory, but
+all directories below it are checked.</p>
+
+<p>Followme can be downloaded from CPAN as App::Followme.</p>
+
+<p>This file is used as a template for the site. Any markup outside the section 
+comments will be shared between all pages. Modify it to get the desired look for 
+your site. The subdirectories show some of the capabilities of this application.
+Keep or modify them as you wish.</p>
 
 <!-- endsection primary-->
 <section id="secondary">
@@ -433,9 +445,9 @@ dolorem eum fugiat quo voluptas nulla pariatur?</p>
 </article>
 <footer>
     <nav class="footer-content">
-        <a href="#">Link 1</a>
-        <a href="#">Link 2</a>
-        <a href="#">Link 3</a>
+        <a href="essays/index.html">Essays</a>
+        <a href="photos/index.html">Photos</a>
+        <a href="help/index.html">Help</a>
     </nav>
 </footer>
 </body>
@@ -737,6 +749,41 @@ $body
 </article>
 </body>
 </html>
+#>>> copy text _templates/create_help.htm
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!-- section meta -->
+<base href="$site_url/" />
+<title>$title</title>
+<meta name="date" content="$mdate" />
+<meta name="description" content="$description" />
+<meta name="keywords" content="$keywords" />
+<meta name="author" content="$author" />
+<!-- endsection meta -->
+</head>
+<body>
+<header>
+<h1>Site Title</h1>
+</header>
+<article>
+<section id="primary">
+</section>
+<section id="secondary">
+<!-- section secondary -->
+<!-- for @all_files -->
+<h3>$title</h3>
+
+$summary
+<p><a href="$url">More ...</a></p>
+
+<!-- endfor -->
+
+<!-- endsection secondary-->
+</section>
+</article>
+</body>
+</html>
 #>>> copy text _templates/create_index.htm
 <html>
 <head>
@@ -813,7 +860,40 @@ $body
 #>>> copy text essays/followme.cfg
 run_before:
     - App::Followme::CreateNews
+#>>> copy text essays/index.md
+----
+title: Essays directory
+description: A collection of short essays on various topics
+keywords: essays
+----
+This folder is configured (via followme.cfg) to contain short essays 
+on various topics. To use it, create subdirectories for each topic.
+write your essay in Markdown format, and save the file in the appropriate
+subdirectory. You can also include metadata for the essay, such as the 
+title at the top of the file, just as has been done in this file. 
+
+When followme is run, it will create an index for files in the current directory 
+and its subdirectories that contain the text of the most recently modified files 
+together with links to the files. It can also be used to create a basic weblog.
+#>>> copy text help/followme.cfg
+run_before:
+    - App::Followme::ConvertPage
+    - App::Followme::CreateIndex
+package: App::Followme
+data_pkg: App::Followme::PodData
+CreateIndex::template_file: create_help.htm
 #>>> copy text photos/followme.cfg
 run_before:
     - App::Followme::CreateGallery
 target_prefix: img
+#>>> copy text photos/index.md
+----
+title: Photo Gallery
+description: A collection of photos of interest
+----
+This folder is configured (via followme.cfg) to contain a photo 
+gallery. If you add or subtract photos from this folder and run
+followme, it will update the gallery. Each photo must have a 
+thumbnail whose name is related to the photo like this:
+photo-thumb.jpg. The suffix (-thumb) can be set in the configuration
+file.

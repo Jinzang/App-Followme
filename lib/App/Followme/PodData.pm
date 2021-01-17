@@ -23,10 +23,10 @@ sub parameters {
     my ($self) = @_;
 
     return (
-            extension => 'pm,pod',
-            title_template => '<h2></h2>',
             package => '',
             pod_directory => '',
+            extension => 'pm,pod',
+            title_template => '<h2></h2>',
            );
 }
 
@@ -63,15 +63,15 @@ sub fetch_content {
                                           $title_parser);
 
         my %mapping = ('title' => 'name',
-                       'description' => 'description',
                        'summary' => 'description',
+                       'author' => 'author',
                        );
 
         while (my ($cname, $sname) = each %mapping) {
             $content{$cname} = $section->{$sname};
         }
 
-        foreach my $cname (qw(title)) {
+        foreach my $cname (qw(author title)) {
             my @tokens = web_split_at_tags($content{$cname});
             $content{$cname} = web_only_text(@tokens);
         }
@@ -116,9 +116,12 @@ sub find_pod_directory {
 
     my @package_path = split(/::/, $self->{package});
     pop(@package_path);
-
     my $package_folder = catfile(@package_path);
-    my @folders = (split(/\s*,\s*/, $self->{pod_directory}), @INC);
+
+    my @folders;
+    push(@folders, split(/\s*,\s*/, $self->{pod_directory}))
+        if $self->{pod_directory};
+    push(@folders, @INC);
 
     for my $folder (@folders) {
         my $pod_folder = catfile($folder, $package_folder);
@@ -226,10 +229,10 @@ The following parameters are used from the configuration:
 
 =over 4
 
-=item extension
+=item pod_extension
 
-The extension of files that are converted to web pages. The default value
-is pod.
+The extension of files that contain pod documentation. The default value
+is pm,pod.
 
 =item pod_directory
 

@@ -67,6 +67,6 @@ do {
     my $title = $obj->build('$title', $file);
     is($$title, "App::Followme::BaseData", "Get title"); # test 6
 
-    my $description = $obj->build('$description', $file);
-    ok(index($$description, "base class") > 0, "Get description"); # test 7
+    my $summary = $obj->build('$summary', $file);
+    ok(index($$summary, "base class") > 0, "Get summary"); # test 7
 };

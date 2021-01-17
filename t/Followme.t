@@ -36,11 +36,11 @@ do {
     my $app = App::Followme->new();
 
     my $config_file = catfile($test_dir, 'followme.cfg');
-    $app->set_directories($config_file);
+    $app->set_configuration($config_file);
 
     my @dir_ok = splitdir($test_dir);
-    my @base_directory = splitdir($app->{base_directory});
-    my @test_directory = splitdir($app->{top_directory});
+    my @base_directory = splitdir($app->{configuration}{base_directory});
+    my @test_directory = splitdir($app->{configuration}{top_directory});
 
     is_deeply(\@base_directory, \@dir_ok, 'Set base directory'); # test 1
     is_deeply(\@test_directory, \@dir_ok, 'Set top directory'); # test 2

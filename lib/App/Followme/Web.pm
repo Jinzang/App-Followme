@@ -209,8 +209,11 @@ sub web_same_tag {
 sub web_split_at_tags {
     my ($text) = @_;
 
-    my @tokens = split(/(<!--.*?-->|<[^">]*(?:"[^"]*")*[^>]*>)/s, $text);
-    @tokens = grep {length} @tokens;
+    my @tokens;
+    if ($text) {
+        @tokens = split(/(<!--.*?-->|<[^">]*(?:"[^"]*")*[^>]*>)/s, $text);
+        @tokens = grep {length} @tokens;
+    }
 
     return @tokens;
 }

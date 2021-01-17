@@ -41,6 +41,29 @@ sub run {
 }
 
 #----------------------------------------------------------------------
+# Check case sensitivity of this system
+
+sub check_sensitivity {
+    my ($self, $config_file) = @_;
+
+    my ($dir, $filename) = fio_split_filename($config_file);
+    $filename = ucfirst($filename);
+    my $other_config_file = catfile($dir, $filename);
+
+    my $sensitivity;
+    if (-e $other_config_file) {
+        my $date = fio_get_date($config_file);
+        my $other_date = fio_get_date($other_config_file);
+        $sensitivity = $date != $other_date;
+
+    } else {
+        $sensitivity = 1;
+    }
+
+    return $sensitivity;
+}
+
+#----------------------------------------------------------------------
 # Find the configuration files above a directory
 
 sub find_configuration {
@@ -66,7 +89,7 @@ sub find_configuration {
     @configuration_files = reverse @configuration_files;
 
     # The topmost configuration file is the top and base directory
-    $self->set_directories(@configuration_files);
+    $self->set_configuration(@configuration_files);
 
     return \@configuration_files;
 }
@@ -91,14 +114,18 @@ sub load_and_run_modules {
 }
 
 #----------------------------------------------------------------------
-# Set base and top directories to the topmost configuration file
+# Set the initial configuration parameters
 
-sub set_directories {
+sub set_configuration {
     my ($self, @configuration_files) = @_;
 
     my ($directory, $file) = fio_split_filename($configuration_files[0]);
-    $self->{base_directory} = $directory;
-    $self->{top_directory} = $directory;
+    $self->{configuration}{base_directory} = $directory;
+    $self->{configuration}{top_directory} = $directory;
+
+    $self->{configuration}{case_sensitive} = 
+        $self->check_sensitivity($configuration_files[0]);
+
     return;
 }
 
@@ -148,7 +175,6 @@ sub update_folder {
 
     } elsif (! $self->{quick_update}) {
         my ($filenames, $directories) = fio_visit($directory);
-
         foreach my $subdirectory (@$directories) {
             $self->update_folder($subdirectory,
                                  $configuration_files,
