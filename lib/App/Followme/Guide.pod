@@ -488,6 +488,10 @@ The relative url of a file prefixed by the site url.
 The relative url of a file without any file extension. Used to create the urls of
 any related files.
 
+=item $name
+
+The name of a file.
+
 =item $extension
 
 The extension of a filename.
@@ -539,7 +543,6 @@ of the folder containing the file if it is not otherwise available.
 The name of the author of a file. Taken from the configuration variable of the
 same name if it is not otherwise available.
 
-\
 =back
 
 =head1 MODULES
@@ -572,9 +575,9 @@ where $obj is the object created by the new method and $directory is the name
 of the directory the module is being run on. All modules included in
 App::Followme use L<App::Followme::Module> as a base class, so they can use its
 methods, such as visiting all files in a directory and compiling a template. If
-you wish to write your own module, you can use L<App::Followme::Sitemap> as a
-guide. If you use App::Followme::Module as a base class, you should not supply
-your own new method, but rely on the new method in
+you wish to write your own module, you can use L<App::Followme::CreateSitemap> 
+as a guide. If you use App::Followme::Module as a base class, you should not 
+supply your own new method, but rely on the new method in
 L<App::Followme::ConfiguredObject>, which you will inherit.
 
 =head1 LICENSE

@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 39;
+use Test::More tests => 38;
 
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
@@ -95,27 +95,22 @@ do {
 # Check sort and format
 
 do {
-    my %data = (
-        number => [1, 2, 3, 4],
-        name => [qw(one two three four)],
-    );
 
-    my %sorted_ok = (
-        number => [4, 1, 3, 2],
+    my $data = {
+        name => [qw(one two three four)],
+    };
+
+    my $sorted_ok = {
         name => [qw(four one three two)],
-    );
+    };
 
     $obj->{sort_field} = 'name';
-    my %sorted_data = $obj->sort(%data);
-    is_deeply(\%sorted_data, \%sorted_ok, "Sort data by name"); # test 15
-
-    $obj->{sort_field} = 'number';
-    my %twice_sorted = $obj->sort(%sorted_data);
-    is_deeply(\%twice_sorted, \%data, "Sort data by number"); # test 16
+    my $sorted_data = $obj->sort($data);
+    is_deeply($sorted_data, $sorted_ok, "Sort data by name"); # test 15
 
     $obj->{sort_field} = '';
-    my %formatted_data = $obj->format(0, %data);
-    is_deeply(\%formatted_data, \%data, "Format data (noop)") # test 17
+    my $formatted_data = $obj->format(0, $data);
+    is_deeply($formatted_data, $data, "Format data (noop)") # test 16
 };
 
 #----------------------------------------------------------------------
@@ -126,7 +121,7 @@ do {
                                  second => 2,
                                  third => 3,
                                 },
-                    '$item' => {first => 'first',
+                    '$name' => {first => 'first',
                                 second => 'second',
                                 third => 'third',
                                },
@@ -156,16 +151,16 @@ do {
     my @loop = qw(first second third);
 
     my $data = $obj->build('loop', $item, \@loop);
-    is_deeply($data, \@loop, 'Build loop'); # test 18
+    is_deeply($data, \@loop, 'Build loop'); # test 17
 
     foreach my $item (@loop) {
-        foreach my $name (qw($count $item $is_first $is_last $target 
+        foreach my $name (qw($count $name $is_first $is_last $target 
                              $target_previous $target_next)) {
             my $data = $obj->build($name, $item, \@loop);
             my $data_ok = $data_ok{$name}{$item};
             my $ref_ok = ref $data_ok ? $data_ok : \$data_ok;
 
-            is_deeply($data, $ref_ok, "Build $name for $item"); #test 19-39
+            is_deeply($data, $ref_ok, "Build $name for $item"); #test 18-38
         }
     }
 }

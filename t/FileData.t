@@ -93,15 +93,13 @@ EOQ
     is($data{title}, 'The Page One', 'get title from metadata'); # test 5
     is($data{author}, 'Bernie Simon', 'get author from metadata'); # test 6
 
+    my $data = \%data;
     my $sorted_order = 1;
     $obj->{sort_field} = 'title';
-    my %sorted_data = $obj->format($sorted_order, %data);
-    is($sorted_data{title}, 'page one', 'format sortable title'); # test 7
-
-    $sorted_order = 1;
-    $obj->{sort_field} = 'author';
-    %sorted_data = $obj->format($sorted_order, %data);
-    is($sorted_data{author}, 'simon bernie', 'format sortable author'); # test 8
+    my $sorted_data = $obj->format($sorted_order, $data);
+    
+    is($sorted_data->{title}, 'page one', 'format sortable title'); # test 7
+    is($sorted_data->{author}, 'simon bernie', 'format sortable author'); # test 8
 
     %data = $obj->fetch_data('title', 'two.txt');
     is($data{title}, 'Count Two', 'get title from content'); # test 9

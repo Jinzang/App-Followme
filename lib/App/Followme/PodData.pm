@@ -25,9 +25,48 @@ sub parameters {
     return (
             package => '',
             pod_directory => '',
+            final_directory => '',
             extension => 'pm,pod',
             title_template => '<h2></h2>',
            );
+}
+
+#----------------------------------------------------------------------
+# Alter urls in body of pod file to corect final location
+
+sub alter_url {
+    my ($self, $url) = @_;
+
+    my $site_url = $self->get_site_url();
+    $url =~ s/^$site_url//;
+
+    my @podfile_path = split(/::/, $url);
+    my $podfile = pop(@podfile_path);
+
+    my $filename = catfile($self->{pod_directory}, 
+                           @podfile_path, $podfile);
+
+    my $found;
+    foreach my $ext (split(',', $self->{extension})) {
+        if (-e "$filename.$ext") {
+            $podfile = lc("$podfile.$ext");
+            $found = 1;
+            last;
+        }
+    }
+
+    if ($found) {
+        $filename = catfile($self->{pod_directory}, 
+                           @podfile_path, $podfile);
+
+        $url = $self->filename_to_url($self->{top_directory}, 
+                                      $filename,
+                                      $self->{web_extension});
+    } else {
+        $url = '';
+    }
+
+    return $url;
 }
 
 #----------------------------------------------------------------------
@@ -38,8 +77,13 @@ sub extract_body {
 
     my @section = split(/<\s*\/?body[^>]*>/i, $html);
     s/^\s+// foreach @section;
+    
+    my $body = $section[1];
 
-    return $section[1];
+    $body =~ s/src="([^"]*)"/'src="' . $self->alter_url($1) . '"'/ge;
+    $body =~ s/href="([^"]*)"/'href="' . $self->alter_url($1) . '"'/ge;
+
+    return $body;
 }
 
 #----------------------------------------------------------------------
@@ -109,6 +153,20 @@ sub fetch_sections {
 }
 
 #----------------------------------------------------------------------
+# Convert filename to url
+
+sub filename_to_url {
+    my ($self, $directory, $filename, $ext) = @_;
+
+    $filename = rel2abs($filename);
+    $filename = lc(abs2rel($filename, $self->{base_directory}));
+    $filename = catfile($self->{final_directory}, $filename);
+    $filename = fio_shorten_path($filename) if $filename =~ /\.\./;
+
+    return $self->SUPER::filename_to_url($directory, $filename, $ext);
+}
+
+#----------------------------------------------------------------------
 # Find the directory containing the pod files
 
 sub find_pod_directory {
@@ -123,10 +181,10 @@ sub find_pod_directory {
         if $self->{pod_directory};
     push(@folders, @INC);
 
-    for my $folder (@folders) {
-        my $pod_folder = catfile($folder, $package_folder);
-        if (-e $pod_folder) {
-            return $pod_folder;
+    for my $pod_folder (@folders) {
+        my $base_folder = catfile($pod_folder, $package_folder);
+        if (-e $base_folder) {
+            return ($pod_folder, $base_folder);
         }
     }
 
@@ -159,9 +217,13 @@ sub initialize_parser {
 sub setup {
     my ($self, %configuration) = @_;
 
-    my $directory = $self->find_pod_directory();
-    die "Couldn't find folder for $self->{package}" unless defined $directory;
-    $self->{base_directory} = $directory;
+    my ($pod_folder, $base_folder) = $self->find_pod_directory();
+    die "Couldn't find folder for $self->{package}" 
+        unless defined $pod_folder;
+
+    $self->{final_directory} = $self->{base_directory};
+    $self->{base_directory} = $base_folder;
+    $self->{pod_directory} = $pod_folder;
 
     return;
 }

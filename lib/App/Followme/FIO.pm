@@ -21,8 +21,8 @@ our @EXPORT = qw(fio_filename_to_url fio_flatten
                  fio_get_size fio_glob_patterns fio_is_newer 
                  fio_make_dir fio_match_patterns fio_most_recent_file 
                  fio_read_page fio_same_file fio_set_date 
-                 fio_split_filename fio_to_file fio_visit 
-                 fio_write_page);
+                 fio_shorten_path fio_split_filename fio_to_file 
+                 fio_visit fio_write_page);
 
 our $VERSION = "1.95";
 
@@ -233,11 +233,17 @@ sub fio_make_dir {
 
     my $flag = 1;
     my ($dir, $file) = fio_split_filename($filename);
+
     if (! -e $dir) {
+        my @dirs = splitdir($dir);
+        my $last_dir = lc(pop(@dirs));
+        $dir = catfile(@dirs, $last_dir);
+
         $flag = mkdir($dir);
     }
 
-    return $flag ? $dir : '';
+    $filename = catfile($dir, $file);
+    return $flag ? $filename : '';
 }
 
 #----------------------------------------------------------------------
@@ -340,6 +346,29 @@ sub fio_set_date {
     }
 
     return utime($date, $date, $filename);
+}
+
+#----------------------------------------------------------------------
+# Remove dotted directories from directory path
+
+sub fio_shorten_path {
+    my ($filename) = @_;
+    
+    my @path = splitdir($filename);
+    my $file = pop(@path);
+
+    my @newpath;
+    foreach my $dir (@path) {
+        if ($dir eq '.') {
+            ;
+        } elsif ($dir eq '..') {
+            pop(@newpath);
+        } else {
+            push(@newpath, $dir);
+        }
+    }
+
+    return catfile(@newpath, $file);
 }
 
 #----------------------------------------------------------------------
@@ -488,11 +517,11 @@ Compare the modification date of the target file to the modification dates of
 the source files. If the target file is newer than all of the sources, return
 1 (true).
 
-=item $dir = fio_make_dir($filename);
+=item $filename = fio_make_dir($filename);
 
 Make a new directory for a file to live in if the directory does not already
-exist. Return the name of the directory if the directory already existed
-or was created and the empty string if the directory could not be created.
+exist. Return the filename if the directory already existed or was created 
+and the empty string if the directory could not be created.
 
 =item $flag = fio_match_patterns($filename, $patterns);
 
@@ -516,6 +545,10 @@ type if it is not a plain text file.
 
 Set the modification date of a file. Date is either in seconds or
 is in ISO format.
+
+=item $filename = fio_shorten_path($filename);
+
+Remove dotted directories ('.' and '..') from filename path.
 
 =item ($directory, $filename) = fio_split_filename($filename);
 

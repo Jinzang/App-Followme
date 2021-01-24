@@ -882,6 +882,7 @@ run_before:
 package: App::Followme
 data_pkg: App::Followme::PodData
 CreateIndex::template_file: create_help.htm
+CreateIndex::sort_field: name
 #>>> copy text photos/followme.cfg
 run_before:
     - App::Followme::CreateGallery

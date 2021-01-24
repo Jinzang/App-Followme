@@ -44,12 +44,13 @@ sub build {
 
     # Build the value associated with a name if it is not in the cache
     unless (exists $cache{$name}) {
-        my $sorted_order = 0;
         my %data = $self->fetch_data($name, $item, $loop);
-        %data = $self->sort(%data);
-        %data = $self->format($sorted_order, %data);
 
-        %cache = (%cache, %data);
+        my $sorted_order = 0;
+        my $sorted_data = $self->sort(\%data);
+        $sorted_data = $self->format($sorted_order, $sorted_data);
+
+        %cache = (%cache, %$sorted_data);
     }
 
     # Check the value for agreement with the sigil and return reference
@@ -87,7 +88,9 @@ sub coerce_data {
 
 sub fetch_data {
     my ($self, $name, $item, $loop) = @_;
-    return $self->gather_data('get', $name, $item, $loop);
+
+    my %data = $self->gather_data('get', $name, $item, $loop);
+    return %data;
 }
 
 #----------------------------------------------------------------------
@@ -104,6 +107,25 @@ sub file_comparer {
     }
 
     return $comparer;
+}
+
+#----------------------------------------------------------------------
+# Find the index column for the data, which guides the sort column
+
+sub find_index_column {
+    my ($self, $data) = @_;
+
+    my $index_column;
+    my @keys = keys %$data;
+
+    if (@keys == 1 ) {
+        my $key = $keys[0];
+        if (ref $data->{$key} eq 'ARRAY') {
+            $index_column = $data->{$key};
+        }
+    }
+
+    return $index_column;
 }
 
 #----------------------------------------------------------------------
@@ -130,30 +152,30 @@ sub find_target {
 # Apply an optional format to the data
 
 sub format {
-    my ($self, $sorted_order, %data) = @_;
+    my ($self, $sorted_order, $sorted_data) = @_;
 
-    foreach my $name (keys %data) {
-        next unless $data{$name};
+    foreach my $name (keys %$sorted_data) {
+        next unless $sorted_data->{$name};
 
         my $formatter = join('_', 'format', $name);
         if ($self->can($formatter)) {
-            if (ref $data{$name} eq 'ARRAY') {
-                for my $value (@{$data{$name}}) {
+            if (ref $sorted_data->{$name} eq 'ARRAY') {
+                for my $value (@{$sorted_data->{$name}}) {
                     $value = $self->$formatter($sorted_order,
                                                $value);
                 }
 
-            } elsif (ref $data{$name} eq 'HASH') {
+            } elsif (ref $sorted_data->{$name} eq 'HASH') {
                 die("Illegal data format for build: $name");
 
             } else {
-                $data{$name} = $self->$formatter($sorted_order, 
-                                                 $data{$name});
+                $sorted_data->{$name} =
+                    $self->$formatter($sorted_order, $sorted_data->{$name});
             }
         }
     }
 
-    return %data;
+    return $sorted_data;
 }
 
 #----------------------------------------------------------------------
@@ -168,7 +190,7 @@ sub format_nothing {
 # Format the values to sort by so they are in sort order
 
 sub format_sort_column {
-    my ($self, $sort_field, $data) = @_;
+    my ($self, $sort_field, $index_column, $data) = @_;
     
     my $formatter = "format_$sort_field";
     $formatter = "format_nothing" unless $self->can($formatter);
@@ -181,19 +203,12 @@ sub format_sort_column {
         }
 
     } else {
-        my @keys = keys %$data;
-        if (@keys == 1) {
-            my $key = $keys[0];
-            my $getter = "get_$sort_field";
-            return unless $self->can($getter);
+        my $getter = "get_$sort_field";
+        return unless $self->can($getter);
 
-            for my $file (@{$data->{$key}}) {
-                my $value = $self->$getter($file);
-                push(@sort_column, $self->$formatter($sorted_order, $value));
-            }
-
-        } else {
-            return;
+        for my $item (@$index_column) {
+            my $value = $self->$getter($item, $index_column);
+            push(@sort_column, $self->$formatter($sorted_order, $value));
         }
     }
 
@@ -265,6 +280,14 @@ sub get_loop {
 
     die "Can't use \@loop outside of for\n"  unless $loop;
     return $loop;
+}
+
+#----------------------------------------------------------------------
+# Return the name of the current item in a loop
+
+sub get_name {
+    my ($self, $item) = @_;
+    return $item;
 }
 
 #----------------------------------------------------------------------
@@ -371,36 +394,32 @@ sub setup {
 # Sort the data if it is in an array
 
 sub sort {
-    my ($self, %data) = @_;
-
-    my $sortable;
-    for my $name (keys %data) {
-        if (ref $data{$name} eq 'ARRAY' && @{$data{$name}}) {
-            $sortable = 1;
-            last;
-        }
-    }
+    my ($self, $data) = @_;
 
     my $sorted_data;
-    if ($sortable) {
+    my $index_column = $self->find_index_column($data);
+
+    if ($index_column) {
         my @fields = ($self->{sort_field}, 'mdate', 'date', 'name');
 
         for my $sort_field (@fields) {
             next unless $sort_field;
 
-            if (my $sort_column = $self->format_sort_column($sort_field, \%data)) {
+            if (my $sort_column = $self->format_sort_column($sort_field, 
+                                                            $index_column, 
+                                                            $data)) {
                 my $sort_reverse = ($sort_field =~ /date$/) ? 1 : 0;
 
-                $sorted_data = $self->move_sort_index(\%data,
-                               $self->sort_by_index($sort_reverse,
-                               $self->make_sort_index($sort_column)));
+                $sorted_data = $self->move_sort_index($data,
+                                $self->sort_by_index($sort_reverse,
+                                $self->make_sort_index($sort_column)));
                 last;
             }
         }
     }
 
-    $sorted_data ||= \%data;
-    return %$sorted_data;
+    $sorted_data ||= $data;
+    return $sorted_data;
 }
 
 #----------------------------------------------------------------------
@@ -495,9 +514,9 @@ One if this is the first item in the for block, zero otherwise.
 
 One if this is the last item in the for block, zero otherwise
 
-=item $item
+=item $name
 
-The current item in the for block.
+The name of the current item in the for block.
 
 =item $target
 

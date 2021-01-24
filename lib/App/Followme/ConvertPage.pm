@@ -141,8 +141,8 @@ sub write_file {
     my $time = ${$self->{data}->build('mdate', $filename)};
     my $new_filename = $self->title_to_filename($filename);
 
-    my $dir = fio_make_dir($new_filename);
-    die "Couldn't create directory for $new_filename" unless $dir;
+    $new_filename = fio_make_dir($new_filename);
+    die "Couldn't create directory for $new_filename" unless $new_filename;
 
     fio_write_page($new_filename, $page, $binmode);
 

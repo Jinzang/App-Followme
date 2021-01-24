@@ -246,12 +246,15 @@ sub find_top_files {
     my ($self, $folder, $augmented_files) = @_;
 
     my @files = $self->find_matching_files($folder);
-    my $data = {files => \@files};
+    my $index_column = \@files;
 
     my $sorted_files;
+    my $data = {files => $index_column};
     my @fields = ('mdate', 'date', 'name');
     for my $sort_field (@fields) {
-        if (my $sort_column = $self->format_sort_column($sort_field, $data)) {
+        if (my $sort_column = $self->format_sort_column($sort_field, 
+                                                        $index_column, 
+                                                        $data)) {
             my $sort_reverse = ($sort_field =~ /date$/) ? 1 : 0;
 
             $sorted_files = $self->sort_augmented($sort_reverse,
@@ -957,7 +960,7 @@ If it is left empty, it is set to the web extension.
 =item date_format
 
 The format used to produce date strings. The format is described in the
-POD for L<Time::Format>.
+POD for Time::Format.
 
 =item remote_url
 
