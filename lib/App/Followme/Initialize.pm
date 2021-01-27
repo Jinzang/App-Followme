@@ -437,6 +437,9 @@ comments will be shared between all pages. Modify it to get the desired look for
 your site. The subdirectories show some of the capabilities of this application.
 Keep or modify them as you wish.</p>
 
+<p>See <a href="help/index.html">help</a> for more information about this 
+script.</p>
+
 <!-- endsection primary-->
 <section id="secondary">
 <!-- section secondary -->
@@ -772,11 +775,13 @@ $body
 <section id="secondary">
 <!-- section secondary -->
 <!-- for @all_files -->
+<!-- if $body -->
 <h3>$title</h3>
 
 $summary
 <p><a href="$url">More ...</a></p>
 
+<!-- endif -->
 <!-- endfor -->
 
 <!-- endsection secondary-->
@@ -809,7 +814,7 @@ $summary
 <h2>$title</h2>
 
 <ul>
-<!-- for @files -->
+<!-- for @files_by_title -->
 <li><a href="$url">$title</a></li>
 <!-- endfor -->
 </ul>
@@ -840,7 +845,7 @@ $summary
 </section>
 <section id="secondary">
 <!-- section secondary -->
-<!-- for @top_files -->
+<!-- for @top_files_by_mdate_reversed -->
 <p>$summary</p>
 <p><a href="$url">More ...</a></p>
 
@@ -882,7 +887,6 @@ run_before:
 package: App::Followme
 data_pkg: App::Followme::PodData
 CreateIndex::template_file: create_help.htm
-CreateIndex::sort_field: name
 #>>> copy text photos/followme.cfg
 run_before:
     - App::Followme::CreateGallery

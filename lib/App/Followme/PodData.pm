@@ -224,7 +224,7 @@ sub setup {
     $self->{final_directory} = $self->{base_directory};
     $self->{base_directory} = $base_folder;
     $self->{pod_directory} = $pod_folder;
-
+    
     return;
 }
 

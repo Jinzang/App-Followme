@@ -157,17 +157,6 @@ sub parse_page {
 }
 
 #----------------------------------------------------------------------
-# Sort filenames from most to least recently modified
-
-sub setup {
-    my ($self, %configuration) = @_;
-
-    $self->{data}{sort_field} = 'mdate';
-    $self->{data}{sort_reverse} = 1;
-    return;
-}
-
-#----------------------------------------------------------------------
 # Determine if page matches prototype or needs to be updated
 
 sub unchanged_prototype {
@@ -220,7 +209,7 @@ sub update_folder {
     my ($prototype_path, $prototype);
     my $modtime = fio_get_date($folder);
 
-    my $files = $self->{data}->build('files', $index_file);
+    my $files = $self->{data}->build('files_by_mdate_reversed', $index_file);
     my $file = shift(@$files);
 
     if ($file) {

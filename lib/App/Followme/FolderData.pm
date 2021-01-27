@@ -27,9 +27,6 @@ sub parameters {
             author => '',
             size_format => 'kb',
             date_format => 'Mon d, yyyy h:mm',
-            sort_field => '',
-            sort_reverse => 0,
-            list_length => 5,
             exclude_index => 0,
             exclude => '',
             exclude_dirs => '.*,_*',
@@ -246,32 +243,9 @@ sub find_top_files {
     my ($self, $folder, $augmented_files) = @_;
 
     my @files = $self->find_matching_files($folder);
-    my $index_column = \@files;
+    my @sorted_files = $self->sort_with_field(\@files, 'mdate', 1);
 
-    my $sorted_files;
-    my $data = {files => $index_column};
-    my @fields = ('mdate', 'date', 'name');
-    for my $sort_field (@fields) {
-        if (my $sort_column = $self->format_sort_column($sort_field, 
-                                                        $index_column, 
-                                                        $data)) {
-            my $sort_reverse = ($sort_field =~ /date$/) ? 1 : 0;
-
-            $sorted_files = $self->sort_augmented($sort_reverse,
-                            $self->make_augmented($sort_column, \@files));
-            last;
-        }
-    }
-
-    return $self->merge_augmented($augmented_files, $sorted_files);
-}
-
-#----------------------------------------------------------------------
-# Make filenames sortable in a cross-os manner
-
-sub format_all_files {
-    my ($self, $sorted_order, $filename) = @_;
-    return $self->format_name($sorted_order, $filename);
+    return $self->merge_augmented($augmented_files, \@sorted_files);
 }
 
 #----------------------------------------------------------------------
@@ -287,30 +261,6 @@ sub format_date {
     }
 
     return $date;
-}
-
-#----------------------------------------------------------------------
-# Make filenames sortable in a cross-os manner 
-
-sub format_files {
-    my ($self, $sorted_order, $filename) = @_;
-    return $self->format_name($sorted_order, $filename);
-}
-
-#----------------------------------------------------------------------
-# Make filenames sortable in a cross-os manner
-
-sub format_folders {
-    my ($self, $sorted_order, $filename) = @_;
-    return $self->format_name($sorted_order, $filename);
-}
-
-#----------------------------------------------------------------------
-# Make filenames sortable in a cross-os manner
-
-sub format_indexes {
-    my ($self, $sorted_order, $filename) = @_;
-    return $self->format_name($sorted_order, $filename);
 }
 
 #----------------------------------------------------------------------
@@ -590,9 +540,7 @@ sub get_top_files {
 
     my $augmented_files = [];
     my ($folder) = fio_split_filename($filename);
-    
-    $augmented_files = $self->find_top_files($folder,
-                                             $augmented_files);
+    $augmented_files = $self->find_top_files($folder, $augmented_files);
 
     my @directories = $self->find_matching_directories($folder);
 
@@ -651,19 +599,6 @@ sub get_url_previous {
 }
 
 #----------------------------------------------------------------------
-# Augment the array to be sorted with the column to sort it by
-sub make_augmented {
-    my ($self, $sort_column, $files) = @_;
-
-    my @augmented_list;
-    for (my $i = 0; $i < @$sort_column; $i++) {
-        push(@augmented_list, [$sort_column->[$i], $files->[$i]]);
-    }
-
-    return @augmented_list;
-}
-
-#----------------------------------------------------------------------
 # Return true if this is an included directory
 
 sub match_directory {
@@ -716,38 +651,6 @@ sub match_patterns {
 }
 
 #----------------------------------------------------------------------
-# Merge two sorted lists of augmented filenames
-
-sub merge_augmented {
-    my ($self, $list1, $list2) = @_;
-
-    my @merged_list = ();
-    my $sort_reverse = 1;
-    my $comparer = $self->file_comparer($sort_reverse);
-
-    while(@$list1 && @$list2) {
-        last if @merged_list == $self->{list_length};
-        if ($comparer->($list1->[0], $list2->[0]) > 0) {
-            push(@merged_list, shift @$list2);
-        } else {
-            push(@merged_list, shift @$list1);
-        }
-    }
-
-    while (@$list1) {
-        last if @merged_list == $self->{list_length}; 
-        push(@merged_list, shift @$list1);
-    }
-
-    while (@$list2) {
-        last if @merged_list == $self->{list_length};
-        push(@merged_list, shift @$list2);
-    }
-
-     return \@merged_list;
-}
-
-#----------------------------------------------------------------------
 # Initialize the configuration parameters
 
 sub setup {
@@ -763,25 +666,6 @@ sub setup {
     }
 
     return;
-}
-
-#----------------------------------------------------------------------
-# Sort augmented list by swartzian transform
-
-sub sort_augmented {
-    my ($self, $sort_reverse, @augmented_data) = @_;
-
-    my $comparer = $self->file_comparer($sort_reverse);
-    @augmented_data = sort $comparer @augmented_data;
-    return \@augmented_data;
-}
-
-#----------------------------------------------------------------------
-# Return the filenames from an augmented set of files
-
-sub strip_augmented {
-    my $self = shift @_;
-    return map {$_->[1]} @_;
 }
 
 1;
@@ -974,11 +858,6 @@ The url of the local website, e.g. http://www.example.com.
 
 If one, use numeric comparisons when sorting. If zero, use string comparisons
 when sorting.
-
-=item list_length
-
-This determons the number of filenames returned by @top_files. The default
-value of this parameter is 5
 
 =item exclude_index
 

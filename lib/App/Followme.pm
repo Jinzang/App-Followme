@@ -216,8 +216,9 @@ The configuration file for followme is followme.cfg in the top directory of
 your site. It contains the names of the Perl modules that are run when the
 followme command is run:
 
-    run_before = App::Followme::FormatPage
-    run_before = App::Followme::ConvertPage
+    run_before:
+        - App::Followme::FormatPage
+        - App::Followme::ConvertPage
 
 Perl modules are run in the order they appear in the configuration file. If they
 are named run_before then they are run before modules in configuration files in
@@ -247,7 +248,7 @@ is run from.
 
 Configuration file lines are organized as lines containing
 
-    NAME = VALUE
+    NAME: VALUE
 
 and may contain blank lines or comment lines starting with a C<#>. Values in
 configuration files are combined with those set in the files in directories

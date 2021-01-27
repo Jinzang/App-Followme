@@ -15,9 +15,8 @@ use App::Followme::FIO;
 sub parameters {
     my ($pkg) = @_;
 
-    ## TODO: sort_field='mdate', sort_reverse=1
     return (
-            sort_field => '',
+            list_length => 5,
             target_prefix => 'target',
             );
 }
@@ -31,6 +30,17 @@ sub build {
     # Extract the sigil from the variable name, if present
     my ($sigil, $name) = $self->split_name($variable_name);
 
+    # Extract the sort field from the variable name
+    my ($data_field, $sort_field, $sort_reverse);
+    ($data_field, $sort_field) = split('_by_', $name);
+    if (defined $sort_field) {
+        if ($sort_field =~ s/_reversed$//) {
+            $sort_reverse = 1;
+        } else {
+            $sort_reverse = 0;
+        }
+    }
+
     my %cache = ();
     if ($sigil eq '$') {
         if (defined $item &&
@@ -43,18 +53,18 @@ sub build {
     }
 
     # Build the value associated with a name if it is not in the cache
-    unless (exists $cache{$name}) {
-        my %data = $self->fetch_data($name, $item, $loop);
+    unless (exists $cache{$data_field}) {
+        my %data = $self->fetch_data($data_field, $item, $loop);
 
         my $sorted_order = 0;
-        my $sorted_data = $self->sort(\%data);
+        my $sorted_data = $self->sort(\%data, $sort_field, $sort_reverse);
         $sorted_data = $self->format($sorted_order, $sorted_data);
 
         %cache = (%cache, %$sorted_data);
     }
 
     # Check the value for agreement with the sigil and return reference
-    my $ref_value = $self->ref_value($cache{$name}, $sigil, $name);
+    my $ref_value = $self->ref_value($cache{$data_field}, $sigil, $data_field);
     $self->{cache} = \%cache if $sigil eq '$';
     return $ref_value;
 }
@@ -110,22 +120,50 @@ sub file_comparer {
 }
 
 #----------------------------------------------------------------------
-# Find the index column for the data, which guides the sort column
+# If there is omly a single field containing data, return its name
 
-sub find_index_column {
+sub find_data_field {
     my ($self, $data) = @_;
 
-    my $index_column;
     my @keys = keys %$data;
 
+    my $field;
     if (@keys == 1 ) {
         my $key = $keys[0];
         if (ref $data->{$key} eq 'ARRAY') {
-            $index_column = $data->{$key};
+            $field = $key;
         }
     }
 
-    return $index_column;
+    return $field;
+}
+
+#----------------------------------------------------------------------
+# Find the values to sort by and format them so they are in sort order
+
+sub find_sort_column {
+    my ($self, $data_column, $sort_field) = @_;
+    
+    my $formatter = "format_$sort_field";
+    $formatter = "format_nothing" unless $self->can($formatter);
+
+    my @sort_column;
+    my $sorted_order = 1;
+
+    for my $data_item (@$data_column) {
+        my %data = $self->fetch_data($sort_field, $data_item, $data_column);
+
+        if (exists $data{$sort_field}) {
+            push(@sort_column, $self->$formatter($sorted_order, 
+                                                 $data{$sort_field}));
+        } else {
+            warn "Sort field not found: $sort_field";
+            push(@sort_column, $data_item);
+        }
+        
+    }
+
+    return \@sort_column;
 }
 
 #----------------------------------------------------------------------
@@ -184,35 +222,6 @@ sub format {
 sub format_nothing {
     my ($self, $sorted_order, $value) = @_;
     return $value;
-}
-
-#----------------------------------------------------------------------
-# Format the values to sort by so they are in sort order
-
-sub format_sort_column {
-    my ($self, $sort_field, $index_column, $data) = @_;
-    
-    my $formatter = "format_$sort_field";
-    $formatter = "format_nothing" unless $self->can($formatter);
-
-    my @sort_column;
-    my $sorted_order = 1;
-    if (exists $data->{$sort_field}) {
-        for my $value (@{$data->{$sort_field}}) {
-            push(@sort_column, $self->$formatter($sorted_order, $value));
-        }
-
-    } else {
-        my $getter = "get_$sort_field";
-        return unless $self->can($getter);
-
-        for my $item (@$index_column) {
-            my $value = $self->$getter($item, $index_column);
-            push(@sort_column, $self->$formatter($sorted_order, $value));
-        }
-    }
-
-    return \@sort_column;
 }
 
 #----------------------------------------------------------------------
@@ -314,47 +323,57 @@ sub get_target_previous {
     return $self->find_target(-1, $item, $loop);
 }
 
+
 #----------------------------------------------------------------------
-# Augment the array to be sorted with the index of its position
+# Augment the array to be sorted with the column to sort it by
+sub make_augmented {
+    my ($self, $sort_column, $data_column) = @_;
 
-sub make_sort_index {
-    my ($self, $sort_column) = @_;
-
-    my $i = 0;
-    my @augmented_sort;
-    for my $value (@$sort_column) {
-        push(@augmented_sort, [$value, $i++]);
+    my @augmented_list;
+    for (my $i = 0; $i < @$sort_column; $i++) {
+        push(@augmented_list, [$sort_column->[$i], $data_column->[$i]]);
     }
 
-    return @augmented_sort;
+    return @augmented_list;
 }
 
 #----------------------------------------------------------------------
-# Use the array of indexes to move each hash array to its sorted position
+# Merge two sorted lists of augmented filenames
 
-sub move_sort_index {
-    my ($self, $data, @augmented_sort) =  @_;
+sub merge_augmented {
+    my ($self, $list1, $list2) = @_;
 
-    for my $field (keys %$data) {
-        my $sorted_values = [];
-        my $values = $data->{$field};
+    my @merged_list = ();
+    my $sort_reverse = 1;
+    my $comparer = $self->file_comparer($sort_reverse);
 
-        for my $index (@augmented_sort) {
-            push(@$sorted_values, $values->[$index->[1]]);
-        } 
-
-        $data->{$field} = $sorted_values;
+    while(@$list1 && @$list2) {
+        last if @merged_list == $self->{list_length};
+        if ($comparer->($list1->[0], $list2->[0]) > 0) {
+            push(@merged_list, shift @$list2);
+        } else {
+            push(@merged_list, shift @$list1);
+        }
     }
 
+    while (@$list1) {
+        last if @merged_list == $self->{list_length}; 
+        push(@merged_list, shift @$list1);
+    }
 
-    return $data;
+    while (@$list2) {
+        last if @merged_list == $self->{list_length};
+        push(@merged_list, shift @$list2);
+    }
+
+     return \@merged_list;
 }
 
 #----------------------------------------------------------------------
 # Get a reference value and check it for agreement with the sigil
 
 sub ref_value {
-    my ($self, $value, $sigil, $name) = @_;
+    my ($self, $value, $sigil, $data_field) = @_;
 
     my ($check, $ref_value);
     if ($sigil eq '$'){
@@ -377,7 +396,7 @@ sub ref_value {
         $check = 1;
     }
 
-    die "Unknown variable: $sigil$name\n" unless $check;
+    die "Unknown variable: $sigil$data_field\n" unless $check;
     return $ref_value;
 }
 
@@ -394,42 +413,57 @@ sub setup {
 # Sort the data if it is in an array
 
 sub sort {
-    my ($self, $data) = @_;
+    my ($self, $data, $sort_field, $sort_reverse) = @_;
 
     my $sorted_data;
-    my $index_column = $self->find_index_column($data);
+    my $data_field = $self->find_data_field($data);
 
-    if ($index_column) {
-        my @fields = ($self->{sort_field}, 'mdate', 'date', 'name');
+    if ($data_field) {
+        my @augmented_data = $self->sort_with_field($data->{$data_field},
+                                                    $sort_field, 
+                                                    $sort_reverse);
 
-        for my $sort_field (@fields) {
-            next unless $sort_field;
+        my @stripped_data = $self->strip_augmented(@augmented_data);
+        $sorted_data = {$data_field => \@stripped_data};
 
-            if (my $sort_column = $self->format_sort_column($sort_field, 
-                                                            $index_column, 
-                                                            $data)) {
-                my $sort_reverse = ($sort_field =~ /date$/) ? 1 : 0;
-
-                $sorted_data = $self->move_sort_index($data,
-                                $self->sort_by_index($sort_reverse,
-                                $self->make_sort_index($sort_column)));
-                last;
-            }
-        }
+    } else {
+        $sorted_data = $data;
     }
 
-    $sorted_data ||= $data;
     return $sorted_data;
 }
 
 #----------------------------------------------------------------------
-# Sort array bound to indexes of the array
+# Sort augmented list by swartzian transform
 
-sub sort_by_index {
+sub sort_augmented {
     my ($self, $sort_reverse, @augmented_data) = @_;
 
     my $comparer = $self->file_comparer($sort_reverse);
-    return sort $comparer @augmented_data;
+    @augmented_data = sort $comparer @augmented_data;
+    return @augmented_data;
+}
+
+#----------------------------------------------------------------------
+# Sort data retaining the field you sort with
+
+sub sort_with_field {
+    my ($self, $data_column, $sort_field, $sort_reverse) = @_;
+    $sort_field = 'name' unless defined $sort_field;
+    $sort_reverse = 0 unless defined $sort_reverse;
+
+    my $sort_column = $self->find_sort_column($data_column, $sort_field);
+
+    return $self->sort_augmented($sort_reverse,
+           $self->make_augmented($sort_column, $data_column));
+}
+
+#----------------------------------------------------------------------
+# Return the filenames from an augmented set of files
+
+sub strip_augmented {
+    my $self = shift @_;
+    return map {$_->[1]} @_;
 }
 
 #----------------------------------------------------------------------
@@ -537,20 +571,14 @@ in the page. Empty if there is no previous item.
 
 =head1 CONFIGURATION
 
-There is one parameter:
+There are two parameters:
 
 =over 4
 
-=item labels
+=item list_length
 
-A comma separated list of strings containing a list of labels to apply
-to the values in a loop. The default value is "previous,next" and is
-meant to be used with @sequence.
-
-=item sort_field
-
-The metatdata field to sort list valued variables. The default value is the
-empty string, which means files are sorted on their filenames.
+This determines the number of filenames in a merged list. The default
+value of this parameter is 5
 
 =item target_prefix
 

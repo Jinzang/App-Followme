@@ -86,17 +86,6 @@ sub find_location {
 }
 
 #----------------------------------------------------------------------
-# Sort filenames from most to least recently modified
-
-sub setup {
-    my ($self, %configuration) = @_;
-
-    $self->{data}{sort_field} = 'mdate';
-    $self->{data}{sort_reverse} = 1;
-    return;
-}
-
-#----------------------------------------------------------------------
 # Read page and strip comments
 
 sub strip_comments {
@@ -166,7 +155,7 @@ sub update_folder {
     my ($self, $folder, $prototype_file, $prototype) = @_;
 
     my $index_file = $self->to_file($folder);
-    my $files = $self->{data}->build('files', $index_file);
+    my $files = $self->{data}->build('files_by_mdate_reversed', $index_file);
 
     unless (defined $prototype_file) {
         if (@$files) {

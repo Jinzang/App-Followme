@@ -104,11 +104,9 @@ do {
         name => [qw(four one three two)],
     };
 
-    $obj->{sort_field} = 'name';
-    my $sorted_data = $obj->sort($data);
+    my $sorted_data = $obj->sort($data, 'name');
     is_deeply($sorted_data, $sorted_ok, "Sort data by name"); # test 15
 
-    $obj->{sort_field} = '';
     my $formatted_data = $obj->format(0, $data);
     is_deeply($formatted_data, $data, "Format data (noop)") # test 16
 };
@@ -150,13 +148,15 @@ do {
     my $item;
     my @loop = qw(first second third);
 
-    my $data = $obj->build('loop', $item, \@loop);
+    my $data = $obj->build('loop_by_name', $item, \@loop);
     is_deeply($data, \@loop, 'Build loop'); # test 17
 
     foreach my $item (@loop) {
         foreach my $name (qw($count $name $is_first $is_last $target 
                              $target_previous $target_next)) {
-            my $data = $obj->build($name, $item, \@loop);
+                                 
+            my $by_name = $name . '_by_name';
+            my $data = $obj->build($by_name, $item, \@loop);
             my $data_ok = $data_ok{$name}{$item};
             my $ref_ok = ref $data_ok ? $data_ok : \$data_ok;
 

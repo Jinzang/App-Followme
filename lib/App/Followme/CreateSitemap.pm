@@ -49,7 +49,7 @@ sub list_urls {
 
     my @urls;
     my $index_file = $self->to_file($folder);
-    my $files = $self->{data}->build('files', $index_file);
+    my $files = $self->{data}->build('files_by_name', $index_file);
 
     foreach my $file (@$files) {
         # build returns a reference, so must dereference

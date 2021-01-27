@@ -224,9 +224,8 @@ EOQ
     is_deeply($related_files, $related_ok, 'Build list of related files'); # test 27
 
     $obj = App::Followme::FolderData->new(directory => $test_dir,
-                                               list_length => 2,
-                                               sort_field => 'mdate',
-                                               );
+                                          list_length => 2,
+                                         );
 
     my $top_files = $obj->get_top_files($index_file);
     my $top_files_ok = [catfile($test_dir, 'archive','two.html'),
