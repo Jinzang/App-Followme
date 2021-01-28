@@ -386,7 +386,7 @@ AAAEAH//2Q==
 run_before:
     - App::Followme::FormatPage
     - App::Followme::ConvertPage
-site_url: file:///C:/Users/berni/OneDrive/Documents/Code/App-Followme
+site_url: file:///C:/Users/berni/OneDrive/Documents/Code/App-Followme/test
 #>>> copy text index.html
 <!doctype html>
 <html lang="en">
@@ -775,13 +775,9 @@ $body
 <section id="secondary">
 <!-- section secondary -->
 <!-- for @all_files -->
-<!-- if $body -->
-<h3>$title</h3>
+<h2>$title</h2>
 
-$summary
-<p><a href="$url">More ...</a></p>
-
-<!-- endif -->
+$body
 <!-- endfor -->
 
 <!-- endsection secondary-->
@@ -887,6 +883,8 @@ run_before:
 package: App::Followme
 data_pkg: App::Followme::PodData
 CreateIndex::template_file: create_help.htm
+ConvertPage::extension: pm
+CreateIndex::extension: pod
 #>>> copy text photos/followme.cfg
 run_before:
     - App::Followme::CreateGallery

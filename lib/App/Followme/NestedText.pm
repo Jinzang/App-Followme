@@ -428,7 +428,8 @@ __END__
 
 =head1 NAME
 
-App::Followme::NestedText - Read a file or string using a subset of yaml
+App::Followme::NestedText - Read a file or string using a subset of yaml or xml
+
 =head1 SYNOPSIS
 
 	use App::Followme::NestedText

@@ -47,7 +47,7 @@ When this process is finished, the version will be bumped to 2.00.
 
 =head1 INSTALLATION
 
-First, install the App::Followme module from CPAN. It will copy the
+First, install the L<App::Followme> module from CPAN. It will copy the
 followme script to /usr/local/bin, so it will be on your search path.
 
     sudo cpanm App::Followme
@@ -297,7 +297,25 @@ a string of word characters starting with a sigil character. for example,
 
     $body @files
 
-are examples of variables. The following commands are supported in templates:
+are examples of variables. Array variable names (variable names starting with 
+a C<@>) may have a suffix that indicates how the array is sorted. You can add
+a suffix to a scalar variable (variable names strting with a C<$>) but it
+will have no effect. The format for the name is:
+
+    @data_field[_by_$sort_field][_reversed]
+
+the brackets are not part of the variable name. They are there to indicate that 
+these sections are optional. Two examples of variables with sort suffixes are
+
+    @files_by_size
+    @all_files_by_mdate_reversed
+
+The second suffix, _reversed, indicates that the variable is sorted from 
+largest to smallest instead of the usual format, from smallest to largest.
+When used with date fields _reversed indicates the variable is sorted from 
+most recent to oldest.
+
+The following commands are supported in templates:
 
 =over 4
 
@@ -346,7 +364,8 @@ which includes the following text if its expression is true.
 
 Templates are read either from the same directory as the configuration file
 containing the name of the module being run or from the _templates subdirectory
-of the top directory of the site.
+of the top directory of the site. For more information about the use of 
+templates, see L<App::Followme::Template>.
 
 =head1 VARIABLES
 
@@ -538,7 +557,7 @@ of the body if it is not otherwise available.
 A comma separated list of keywords describing a file. Constructed from the name
 of the folder containing the file if it is not otherwise available.
 
-=item author
+=item $author
 
 The name of the author of a file. Taken from the configuration variable of the
 same name if it is not otherwise available.

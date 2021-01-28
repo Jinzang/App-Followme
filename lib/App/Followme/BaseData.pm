@@ -587,6 +587,7 @@ The prefix used to build the target names. The default value is 'target'.
 =back
 
 =head1 LICENSE
+
 Copyright (C) Bernie Simon.
 
 This library is free software; you can redistribute it and/or modify

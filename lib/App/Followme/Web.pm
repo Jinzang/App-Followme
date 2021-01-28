@@ -353,7 +353,7 @@ sub web_titled_sections {
 
 =head1 NAME
 
-App::Followme::Web-
+App::Followme::Web - Functions to parse html
 
 =head1 SYNOPSIS
 

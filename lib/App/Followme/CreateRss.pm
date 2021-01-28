@@ -111,6 +111,7 @@ __END__
 =head1 NAME
 
 App::Followme::CreateRss - Create an rss file for a directory
+
 =head1 SYNOPSIS
 
     use App::Followme::CreateRss;

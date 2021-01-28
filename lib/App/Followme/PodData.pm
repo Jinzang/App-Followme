@@ -121,7 +121,6 @@ sub fetch_content {
         }
     }
 
-
     return %content;
 }
 
