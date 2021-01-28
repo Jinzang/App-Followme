@@ -158,6 +158,6 @@ do {
     ok(-e $help_name,  "Help index file created"); # test 17
 
     my $page = fio_read_page($help_name);
-    my @items = $page =~ m/(<h3>)/g;
+    my @items = $page =~ m/(<h2>)/g;
     ok(@items > 25, 'Index help'); # test 18
 };
