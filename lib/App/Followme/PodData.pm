@@ -47,7 +47,7 @@ sub alter_url {
                            @podfile_path, $podfile);
 
     my $found;
-    foreach my $ext (split(',', $self->{extension})) {
+    foreach my $ext ('pod', 'pm', 'pl') {
         if (-e "$filename.$ext") {
             $podfile = lc("$podfile.$ext");
             $found = 1;
