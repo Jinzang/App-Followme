@@ -41,6 +41,19 @@ sub run {
 }
 
 #----------------------------------------------------------------------
+# Return a flag indicating that recursion on folders is not needed
+
+sub no_recurse {
+    my ($self) = @_;
+
+    my $template_file = $self->get_template_name($self->{template_file});
+    my $template = fio_read_page($template_file);
+    die "Couldn't read template: $template_file" unless $template;
+
+    return web_has_variables($template, '@all_files', '@top_files');
+}
+
+#----------------------------------------------------------------------
 # Return true if each section in a file has been filled from the template
 
 sub sections_are_filled {
@@ -80,18 +93,28 @@ sub update_folder {
     my ($self, $folder) = @_;
 
     my $index_file = $self->to_file($folder);
-    my $base_index_file = $self->to_file($self->{data}{base_directory});
+    my $base_index_file = $self->to_file($self->{data}{base_directory}); 
 
     my $template_file = $self->get_template_name($self->{template_file});
     my $newest_file = $self->{data}->build('newest_file', $base_index_file);
+
 
     unless (fio_is_newer($index_file, $template_file, @$newest_file) &&
             $self->sections_are_filled($index_file)) {
 
         my $page = $self->render_file($self->{template_file}, $base_index_file);
-        my $prototype_file = $self->find_prototype();
+
+        my $prototype_file = $self->find_prototype($folder, 0);
         $page = $self->reformat_file($prototype_file, $index_file, $page);
         fio_write_page($index_file, $page);
+    }
+
+    unless ($self->no_recurse) {
+        my $folders = $self->{data}->build('folders', $index_file);
+        foreach my $subfolder (@$folders) {
+            eval {$self->update_folder($subfolder)};
+            $self->check_error($@, $subfolder);
+        }
     }
 
     return;
