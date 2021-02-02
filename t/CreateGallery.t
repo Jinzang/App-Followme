@@ -86,9 +86,9 @@ EOQ
 
     my @photo_files;
     my @thumb_files;
-    foreach my $count (qw(first second third)) {
-        my $filename = '*-photo.jpg';
-        $filename =~ s/\*/$count/g;
+    foreach my $color (qw(red green blue)) {
+        my $filename = '*.jpg';
+        $filename =~ s/\*/$color/g;
 
         my $input_file = catfile($data_dir, $filename);
         my $output_file = catfile($gallery_dir, $filename);
@@ -102,13 +102,13 @@ EOQ
     }
 
     my $title = $gal->{data}->build('$title', $photo_files[0]);
-    is($$title, 'First Photo', 'First page title'); # test 1
+    is($$title, 'Red', 'Red page title'); # test 1
 
     my $url = $gal->{data}->build('url', $photo_files[1]);
-    is($$url, 'second-photo.jpg', 'Second page url'); # test 2
+    is($$url, 'green.jpg', 'Green photo url'); # test 2
 
     $url = $gal->{data}->build('url', $thumb_files[2]);
-    is($$url, 'third-photo-thumb.jpg', 'Third page thumb url'); # test 3
+    is($$url, 'blue-thumb.jpg', 'Blue photo thumb url'); # test 3
 
     $gal->run($gallery_dir);
 

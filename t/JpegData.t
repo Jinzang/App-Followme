@@ -50,9 +50,9 @@ can_ok($data, qw(new build)); # test 2
 
 do {
     my @files;
-    foreach my $count (qw(first second third)) {
-        my $filename = '*-photo.jpg';
-        $filename =~ s/\*/$count/g;
+    foreach my $color (qw(red blue green)) {
+        my $filename = '*.jpg';
+        $filename =~ s/\*/$color/g;
         push(@files, $filename);
     }
 
@@ -83,10 +83,10 @@ do {
 
     is($data->{exclude}, '*-thumb.jpg', 'excluded files'); # test 13
 
-    $filename = catfile($data_dir, 'first-photo.jpg');
+    $filename = catfile($data_dir, 'red.jpg');
     my %dimension = $data->fetch_from_file($filename);
 
-    is($dimension{height}, 750, 'fetch photo height'); # test 14
-    is($dimension{width}, 750, 'fetch photo width'); # test 15
+    is($dimension{height}, 200, 'fetch photo height'); # test 14
+    is($dimension{width}, 200, 'fetch photo width'); # test 15
 }
 ;

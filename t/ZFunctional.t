@@ -72,7 +72,7 @@ do {
     my $followme = App::Followme->new();
 
     my $path = catfile($test_dir, 'essays');
-    foreach my $dir (qw(cardinals)) {
+    foreach my $dir (qw(archive)) {
         $path = catfile($path, $dir);
         mkdir($path);
         chmod 0755, $path;
@@ -99,7 +99,7 @@ do {
     my $file = catfile($path, 'index.html'); # test 12
     ok(-e $file, "essays index file created");
 
-    foreach my $dir (qw(cardinals)) {
+    foreach my $dir (qw(archive)) {
         my $page = fio_read_page($file);
         ok(index($page, "$dir/index.html") > 0,
            "Link to $dir directory"); # test 13
@@ -117,12 +117,12 @@ do {
     my $data_dir = catfile($test_dir, 'tdata');
     my $gallery_dir = catfile($test_dir, 'photos');
 
-    foreach my $count (qw(first second third)) {
-        my $photo_name = '*-photo.jpg';
+    foreach my $color (qw(red green blue)) {
+        my $photo_name = '*.jpg';
         my $thumb_name = '*-photo-thumb.jpg';
 
         for my $filename (($photo_name, $thumb_name)) {
-            $filename =~ s/\*/$count/g;
+            $filename =~ s/\*/$color/g;
 
             my $input_file = catfile($data_dir, $filename);
             my $output_file = catfile($gallery_dir, $filename);
@@ -158,6 +158,6 @@ do {
     ok(-e $help_name,  "Help index file created"); # test 17
 
     my $page = fio_read_page($help_name);
-    my @items = $page =~ m/(<h2>)/g;
+    my @items = $page =~ m/(<dt>)/g;
     ok(@items > 25, 'Index help'); # test 18
 };
