@@ -223,17 +223,10 @@ configuration parameter. The code is very similar to
 L<App::Followme::CreateIndex>, but the template is more complex, so it is a 
 separate module.
 
-=item L<App::Followme::CreateNews>
-
-This module generates an index file from the most recently updated files in a
-directory and its subdirectories. It also creates index files in each 
-subdirectory listing each file. The variables described below in the variables
-section are calculated for each file included in the indexes.
-
 =item L<App::Followme::CreateRss>
 
 This module creates an rss file from the metadata of the most recently updated 
-files in a directory. It is a companion to App::Followme::CreateNews and should
+files in a directory. It is a companion to App::Followme::CreateIndex and should
 be used if you also want an rss file.
 
 =item L<App::Followme::CreateSitemap>
