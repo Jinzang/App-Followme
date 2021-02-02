@@ -61,7 +61,7 @@ sub calculate_keywords {
     my @path = splitdir($filename);
     pop(@path);
 
-    my $keywords = @path ? join(', ', @path) : '';
+    my $keywords = pop(@path) || '';
     return $keywords;
 }
 
