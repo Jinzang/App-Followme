@@ -860,10 +860,11 @@ $body
 </html>
 #>>> copy text essays/followme.cfg
 run_before:
-    - App::Followme::CreateNews
+    - App::Followme::CreateIndex
+template_file: create_news.htm
 #>>> copy text essays/index.md
 ----
-title: Essays directory
+title: Essays Directory
 description: A collection of short essays on various topics
 keywords: essays
 ----
@@ -876,6 +877,20 @@ title at the top of the file, just as has been done in this file.
 When followme is run, it will create an index for files in the current directory 
 and its subdirectories that contain the text of the most recently modified files 
 together with links to the files. It can also be used to create a basic weblog.
+#>>> copy text essays/archive/followme.cfg
+run_before:
+    - App::Followme::CreateIndex
+template_file: create_index.htm
+#>>> copy text essays/archive/index.md
+----
+title: Archive Directory
+description: Archive of short essays
+keywords: essays, archive
+----
+This folder is configured (via followme.cfg) to contain an archive of
+previously written essays. When followme is run, it will create an index 
+for files in the current directory  containing a link to each essay in the 
+archive.
 #>>> copy text help/followme.cfg
 run_before:
     - App::Followme::ConvertPage
@@ -885,6 +900,14 @@ data_pkg: App::Followme::PodData
 CreateIndex::template_file: create_help.htm
 ConvertPage::extension: pm
 CreateIndex::extension: pod
+#>>> copy text help/index.md
+----
+title: Help Directory
+description: Help files for followme
+keywords: help
+----
+This folder contains an html version of the main help file for
+followme.
 #>>> copy text photos/followme.cfg
 run_before:
     - App::Followme::CreateGallery
