@@ -9,7 +9,7 @@ use Cwd;
 use IO::Dir;
 use IO::File;
 use MIME::Base64  qw(encode_base64);
-use File::Spec::Functions qw(catfile no_upwards rel2abs splitdir);
+use File::Spec::Functions qw(catfile no_upwards rel2abs splitdir updir);
 
 #----------------------------------------------------------------------
 # Configuration
@@ -22,15 +22,15 @@ use constant CMD_PREFIX => '#>>>';
 my $index_file = 'index.html';
 
 # The location of the initialization module relative to this file
-my $output = 'lib/App/Followme/Initialize.pm';
+my $output = '../lib/App/Followme/Initialize.pm';
 
 #----------------------------------------------------------------------
 # Main routine
 
 my $dir = shift(@ARGV) or die "Must supply site directory\n";
-$dir  = rel2abs($dir);
 
 chdir ($Bin);
+$dir  = rel2abs($dir);
 my $out = copy_script($output);
 
 chdir($dir);
