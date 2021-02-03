@@ -11,8 +11,8 @@ use IO::Dir;
 use IO::File;
 use Time::Local;
 use Time::Format;
-use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
-                             no_upwards rel2abs splitdir);
+use File::Spec::Functions qw(abs2rel catfile curdir file_name_is_absolute
+                             no_upwards rel2abs splitdir updir);
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -359,9 +359,9 @@ sub fio_shorten_path {
 
     my @newpath;
     foreach my $dir (@path) {
-        if ($dir eq '.') {
+        if ($dir eq curdir()) {
             ;
-        } elsif ($dir eq '..') {
+        } elsif ($dir eq updir()) {
             pop(@newpath);
         } else {
             push(@newpath, $dir);
