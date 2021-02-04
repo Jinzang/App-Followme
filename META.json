@@ -4,7 +4,7 @@
       "Bernie Simon <bernie.simon@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.1.10, CPAN::Meta::Converter version 2.150010",
+   "generated_by" : "Minilla/v3.1.11, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
@@ -43,8 +43,7 @@
       "runtime" : {
          "recommends" : {
             "Image::Size" : "3.3",
-            "Net::FTP" : "0",
-            "Pod::Simple::XHTML" : "3.20"
+            "Net::FTP" : "0"
          },
          "requires" : {
             "Digest::MD5" : "2.55",
@@ -54,7 +53,6 @@
             "Text::Markdown" : "1.000031",
             "Time::Format" : "1.04",
             "Time::Local" : "1.18",
-            "YAML::Tiny" : "1.60",
             "perl" : "5.008005"
          }
       },
@@ -76,7 +74,7 @@
          "web" : "https://github.com/Jinzang/App-Followme"
       }
    },
-   "version" : "1.95",
+   "version" : "1.96",
    "x_serialization_backend" : "JSON::PP version 4.02",
    "x_static_install" : 1
 }

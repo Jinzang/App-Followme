@@ -1,6 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+
+1.96 2021-02-04T13:55:26Z
     - Rewrote sort code
     - Added variables $extension and @related_files
     - Rewrote gallery template to use new css

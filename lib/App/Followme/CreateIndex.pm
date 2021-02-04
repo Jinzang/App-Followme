@@ -14,7 +14,7 @@ use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile no_upwards);
 use App::Followme::FIO;
 use App::Followme::Web;
 
-our $VERSION = "1.95";
+our $VERSION = "1.96";
 
 #----------------------------------------------------------------------
 # Read the default parameter values

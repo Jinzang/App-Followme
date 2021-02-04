@@ -16,7 +16,7 @@ use App::Followme::Web;
 
 use base qw(App::Followme::ConfiguredObject);
 
-our $VERSION = "1.95";
+our $VERSION = "1.96";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
