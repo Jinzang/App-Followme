@@ -13,5 +13,5 @@ mkdir -p $PERL_ENV/App/Followme
 cp  ../lib/App/Followme/*.pm $PERL_ENV/App/Followme
 chmod -w  $PERL_ENV/App/Followme/*.pm
 
-cp ./followme /usr/local/bin
+cp ../script/followme /usr/local/bin
 chmod -w /usr/local/bin/followme
