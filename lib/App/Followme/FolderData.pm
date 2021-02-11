@@ -96,6 +96,26 @@ sub check_filename {
     return;
 }
 
+#-----------------------------------------------------------------------
+# Get the name of the web file a file will be converted to
+
+sub convert_filename {
+    my ($self, $filename) = @_;
+
+    $filename =~ s/\.[^\.]*$/.$self->{web_extension}/;
+    return $filename;
+}
+
+#-----------------------------------------------------------------------
+# Get the name of the source directory for ConvertPage
+
+sub convert_source_directory {
+    my ($self, $directory) = @_;
+
+    # Defaults to same as output directory 
+    return $directory;
+}
+
 #----------------------------------------------------------------------
 # Get a filename if the directory happens to be a directory
 
