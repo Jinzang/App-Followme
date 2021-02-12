@@ -148,6 +148,11 @@ sub fetch_content {
         }
     }
 
+    if ($content{title}) {
+        my @title_parts = split(/\s+-+\s+/, $content{title}, 2);
+        $content{title} = $title_parts[0];
+    }
+
     return %content;
 }
 
