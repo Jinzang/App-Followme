@@ -24,7 +24,7 @@ our @EXPORT = qw(fio_filename_to_url fio_flatten
                  fio_split_filename fio_to_file 
                  fio_visit fio_write_page);
 
-our $VERSION = "1.96";
+our $VERSION = "1.97";
 
 #----------------------------------------------------------------------
 # Calculate the check sum for a file
