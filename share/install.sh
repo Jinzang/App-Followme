@@ -1,10 +1,10 @@
 #!/usr/bin/sh
-# install.sh -- A script to install followme on Linux. 
-# Must be run with sudo 
+# install.sh -- A script to install followme on Linux. Must be run with sudo 
 
 # Update for a new version of Perl
 PERL_ENV=/usr/local/share/perl/5.30.0
-cd $(dirname $0)
+
+cd `dirname $0`
 
 mkdir -p $PERL_ENV/App
 cp ../lib/App/Followme.pm $PERL_ENV/App
