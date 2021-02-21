@@ -54,16 +54,20 @@ do {
 
     chdir($test_dir) or die $!;
     $test_dir = cwd();
-    my $config = 'followme.cfg';
-    my @config_files_ok = (catfile($test_dir, $config));
+    my $config = catfile($test_dir, 'followme.cfg');
+    my @config_files_ok = ($config);
 
     fio_write_page($config, "remote_url: http://www.example.com\n");
 
     my $directory;
+    my @directories = ($test_dir);
     foreach my $dir (qw(one two three)) {
-        mkdir($dir) or die $!;
-        chmod 0755, $dir;
-        chdir ($dir) or die $!;
+        push(@directories, $dir);
+
+        $directory = catfile(@directories);
+        mkdir($directory) or die $!;
+        chmod 0755, $directory;
+        chdir ($directory) or die $!;
         $directory = getcwd();
 
         $config = catfile($directory, 'followme.cfg');
@@ -72,7 +76,7 @@ do {
         fio_write_page($config, "run_after:\n  - App::Followme::CreateSitemap\n");
 
         foreach my $file (qw(first.html second.html third.html)) {
-            fio_write_page($file, "Fake data\n");
+            fio_write_page(catfile($directory, $file), "Fake data\n");
         }
     }
 
@@ -83,10 +87,16 @@ do {
     my $count = 9;
     chdir($test_dir) or die $!;
     $test_dir = cwd();
-    foreach my $dir (qw(one two three)) {
-        chdir ($dir) or die $!;
 
-        my $filename = rel2abs('sitemap.txt');
+    @directories = ($test_dir);
+    foreach my $dir (qw(one two three)) {
+        push(@directories, $dir);
+
+        $directory = catfile(@directories);
+        chdir ($directory) or die $!;
+        $directory = getcwd();
+
+        my $filename = catfile($directory, 'sitemap.txt');
         ok(-e $filename, 'Ran create sitemap'); # test 4, 6, 8
 
         my $page = fio_read_page($filename);
