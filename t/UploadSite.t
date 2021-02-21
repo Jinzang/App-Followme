@@ -140,7 +140,7 @@ EOQ
             fio_write_page($filename, $output);
 
             $local->{$file} = 1;
-            $hash_ok->{$file} = $up->{data}->build('checksum', $filename);
+            $hash_ok->{$file} = ${$up->{data}->build('checksum', $filename)};
 
             my $new_page = $up->rewrite_base_tag($page);
             like($new_page, qr(<base href="$up->{remote_url}"),

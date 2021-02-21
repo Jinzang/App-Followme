@@ -9,7 +9,7 @@ use lib '../..';
 use base qw(App::Followme::Module);
 
 use Cwd;
-use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
+use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile catdir);
 
 use App::Followme::FIO;
 use App::Followme::Web;
@@ -120,8 +120,16 @@ sub clean_files {
 sub get_state {
     my ($self) = @_;
 
-    my $hash_file = catfile($self->{top_directory},
-                            $self->{state_directory},
+    my $state_directory = catdir($self->{top_directory},
+                                 $self->{state_directory});
+
+    if (! -e $state_directory) {
+        if (! mkdir($state_directory)) {
+            die "Couldn't create state directory: $state_directory";
+        }
+    }
+
+    my $hash_file = catfile($state_directory,
                             $self->{hash_file});
 
     if (-e $hash_file) {
@@ -345,22 +353,22 @@ sub update_folder {
 
     my $files = $self->{data}->build('files', $index_file);
 
-    foreach my $file (@$files) {
+    foreach my $filename (@$files) {
         # Skip check if in quick mode and modification date is old
 
         if ($self->{quick_update}) {
-            next if $self->{target_date} > fio_get_date($file);
+            next if $self->{target_date} > fio_get_date($filename);
         }
 
-        $file = abs2rel($file, $self->{top_directory});
+        my $file = abs2rel($filename, $self->{top_directory});
         delete $local->{$file} if exists $local->{$file};
 
-        my $value = $self->{data}->build('checksum', $file);
+        my $value = ${$self->{data}->build('checksum', $file)};
 
         # Add file if new or changed
 
         if (! exists $hash->{$file} || $hash->{$file} ne $value) {
-            if ($self->update_file($file)) {
+            if ($self->update_file($filename)) {
                 $hash->{$file} = $value;
                 print "add $file\n" if $self->{verbose};
             }
