@@ -48,7 +48,7 @@ date: 2015-11-22T20:23:13
 Page %%
 --------
 
-This is a paragraph
+This is a paragraph.
 
 
     This is preformatted text.
@@ -93,7 +93,7 @@ do {
         is($$title, "Page $count", "get title $count"); # test 4, 9. 14, 19
 
         my $description = $obj->build('description', $file);
-        is($$description, 'This is a paragraph',
+        is($$description, 'This is a paragraph.',
            "get description $count"); # test 5, 10, 15, 20
 
         my $date = $obj->build('date', $file);
