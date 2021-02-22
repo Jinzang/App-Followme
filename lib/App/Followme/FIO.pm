@@ -6,7 +6,6 @@ use warnings;
 use integer;
 use lib '../..';
 
-use Cwd;
 use IO::Dir;
 use IO::File;
 use Time::Local;

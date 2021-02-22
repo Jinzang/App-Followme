@@ -6,7 +6,6 @@ use warnings;
 use integer;
 use lib '../..';
 
-use Cwd;
 use File::Spec::Functions qw(abs2rel catfile rel2abs splitdir);
 
 use base qw(App::Followme::BaseData);

@@ -4,7 +4,6 @@ use strict;
 use warnings;
 use lib '../..';
 
-use Cwd;
 use IO::File;
 use MIME::Base64  qw(decode_base64);
 use File::Spec::Functions qw(splitdir catfile);

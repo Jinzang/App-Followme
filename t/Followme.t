@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
 use strict;
 
-use Cwd;
 use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
@@ -23,11 +22,10 @@ require App::Followme;
 
 my $test_dir = catdir(@path, 'test');
 rmtree($test_dir);
+
 mkdir $test_dir or die $!;
 chmod 0755, $test_dir;
-
 chdir $test_dir or die $!;
-$test_dir = getcwd();
 
 #----------------------------------------------------------------------
 # Test set directory
@@ -52,8 +50,6 @@ do {
 do {
     my $app = App::Followme->new();
 
-    chdir($test_dir) or die $!;
-    $test_dir = cwd();
     my $config = catfile($test_dir, 'followme.cfg');
     my @config_files_ok = ($config);
 
@@ -67,8 +63,6 @@ do {
         $directory = catfile(@directories);
         mkdir($directory) or die $!;
         chmod 0755, $directory;
-        chdir ($directory) or die $!;
-        $directory = getcwd();
 
         $config = catfile($directory, 'followme.cfg');
         push(@config_files_ok, $config);
@@ -85,16 +79,10 @@ do {
     $app->run($test_dir);
 
     my $count = 9;
-    chdir($test_dir) or die $!;
-    $test_dir = cwd();
-
     @directories = ($test_dir);
     foreach my $dir (qw(one two three)) {
         push(@directories, $dir);
-
         $directory = catfile(@directories);
-        chdir ($directory) or die $!;
-        $directory = getcwd();
 
         my $filename = catfile($directory, 'sitemap.txt');
         ok(-e $filename, 'Ran create sitemap'); # test 4, 6, 8

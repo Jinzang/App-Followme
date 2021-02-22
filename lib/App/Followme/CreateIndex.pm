@@ -7,7 +7,6 @@ use lib '../..';
 
 use base qw(App::Followme::Module);
 
-use Cwd;
 use IO::Dir;
 use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile no_upwards);
 

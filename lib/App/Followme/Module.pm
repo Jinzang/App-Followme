@@ -6,7 +6,6 @@ use warnings;
 use integer;
 use lib '../..';
 
-use Cwd;
 use IO::File;
 use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
                              no_upwards rel2abs splitdir updir);

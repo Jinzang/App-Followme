@@ -120,6 +120,7 @@ sub clean_files {
 sub get_state {
     my ($self) = @_;
 
+
     my $hash_file = catfile($self->{top_directory},
                             $self->{state_directory},
                             $self->{hash_file});
