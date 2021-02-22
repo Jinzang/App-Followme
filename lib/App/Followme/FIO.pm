@@ -397,10 +397,12 @@ sub fio_write_page {
     my ($filename, $page, $binmode) = @_;
 
 	my ($dir, $base) = fio_split_filename($filename);
+
 	if (! -e $dir) {
 		$dir = rel2abs($dir);
-		die "Couldn't write $filename, no directory $dir\n";
-	}
+        die "Couldn't create directory $dir for $filename: $!" 
+            unless mkdir($dir);
+    }
 	
     my $fd = IO::File->new($filename, 'w');
     die "Couldn't write $filename: $!\n" unless $fd;

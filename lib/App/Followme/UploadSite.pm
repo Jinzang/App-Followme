@@ -120,16 +120,8 @@ sub clean_files {
 sub get_state {
     my ($self) = @_;
 
-    my $state_directory = catdir($self->{top_directory},
-                                 $self->{state_directory});
-
-    if (! -e $state_directory) {
-        if (! mkdir($state_directory)) {
-            die "Couldn't create state directory: $state_directory";
-        }
-    }
-
-    my $hash_file = catfile($state_directory,
+    my $hash_file = catfile($self->{top_directory},
+                            $self->{state_directory},
                             $self->{hash_file});
 
     if (-e $hash_file) {
