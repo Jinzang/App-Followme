@@ -1,3 +1,39 @@
+package App::Followme::Guide;
+
+use 5.008005;
+use strict;
+use warnings;
+use integer;
+
+use base qw(Pod::Text);
+
+#----------------------------------------------------------------------
+# Create a new object to display the pod in this document
+
+sub new {
+    my ($pkg) = @_;
+
+    my $self = Pod::Text->new();
+    return bless($self, $pkg);
+}
+
+#----------------------------------------------------------------------
+# Print the pod from this file into a string
+
+sub print {
+    my ($self) = @_;
+
+    my $result;
+    $self->output_string(\$result);
+    $self->parse_file(__FILE__);
+    
+    return $result;
+}
+
+1;
+
+=pod
+
 =encoding utf-8
 
 =head1 NAME

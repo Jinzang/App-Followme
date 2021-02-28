@@ -772,10 +772,12 @@ $body
 </section>
 <section id="secondary">
 <!-- section secondary -->
-<!-- for @all_files -->
+<!-- for @files -->
+<!-- if $title eq 'App::Followme::Guide' -->
 <h2>$title</h2>
 
 $body
+<!-- endif -->
 <!-- endfor -->
 
 <!-- endsection secondary-->
@@ -894,10 +896,11 @@ run_before:
     - App::Followme::ConvertPage
     - App::Followme::CreateIndex
 package: App::Followme
-data_pkg: App::Followme::PodData
-CreateIndex::template_file: create_help.htm
+ConvertPage::data_pkg: App::Followme::PodData
 ConvertPage::extension: pm
-CreateIndex::extension: pod
+CreateIndex::data_pkg: App::Followme::WebData
+CreateIndex::extension: html
+CreateIndex::template_file: create_help.htm
 #>>> copy text help/index.md
 ----
 title: Help Directory
