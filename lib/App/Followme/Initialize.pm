@@ -11,7 +11,7 @@ use File::Spec::Functions qw(splitdir catfile);
 use App::Followme::FIO;
 use App::Followme::NestedText;
 
-our $VERSION = "1.98";
+our $VERSION = "1.99";
 
 require Exporter;
 our @ISA = qw(Exporter);

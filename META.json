@@ -49,6 +49,7 @@
             "File::Path" : "2.16",
             "File::Spec::Functions" : "3.75",
             "Image::Size" : "3.300",
+            "Pod::Text" : "4.14",
             "Test::Requires" : "0",
             "Text::Markdown" : "1.000031",
             "Time::Format" : "1.04",
@@ -74,7 +75,7 @@
          "web" : "https://github.com/Jinzang/App-Followme"
       }
    },
-   "version" : "1.98",
+   "version" : "1.99",
    "x_contributors" : [
       "root <root@mars.localdomain>"
    ],
