@@ -1,6 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+    - Revised test of format_date to be locale independent
+    - Removed help directory from initial install and its tests in ZFunctional.t
 
 1.99 2021-03-01T13:06:28Z
     - Converted Guide.pod to Guide.pm so that it is installed properly
