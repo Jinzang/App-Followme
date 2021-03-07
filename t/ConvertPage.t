@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
 use strict;
 
-use Cwd;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
@@ -52,11 +51,8 @@ chmod 0755, $sub;
 my $template_directory = $sub;
 mkdir($template_directory) unless -e $template_directory;
 chmod 0755, $template_directory;
-chdir $template_directory or die $!;
-$template_directory = cwd();
 	
 chdir $test_dir or die $!;
-$test_dir = cwd();
 
 #----------------------------------------------------------------------
 # Create object

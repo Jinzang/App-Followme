@@ -3,7 +3,6 @@ use strict;
 
 use Test::More tests => 8;
 
-use Cwd;
 use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
@@ -46,9 +45,7 @@ chmod 0755, $test_dir;
 my $subdir = catfile(@path, 'test', 'sub');
 mkdir ($subdir) or die $!;
 chmod 0755, $subdir;
-
 chdir $test_dir or die $!;
-$test_dir = cwd();
 
 my $template_file = 'template.htm';
 

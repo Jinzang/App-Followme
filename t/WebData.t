@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
 use strict;
 
-use Cwd;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
@@ -27,9 +26,7 @@ my $test_dir = catdir(@path, 'test');
 rmtree($test_dir);
 mkdir $test_dir or die $!;
 chmod 0755, $test_dir;
-
 chdir $test_dir or die $!;
-$test_dir = cwd();
 
 #----------------------------------------------------------------------
 # Create test data
@@ -60,7 +57,8 @@ my $index = <<'EOQ';
 </html>,
 EOQ
 
-fio_write_page('index.html', $index);
+my $index_name = catfile($test_dir, 'index.html');
+fio_write_page($index_name, $index);
 
 #----------------------------------------------------------------------
 # Create object

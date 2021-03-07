@@ -3,7 +3,6 @@ use strict;
 
 use Test::More tests => 31;
 
-use Cwd;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(abs2rel catdir catfile rel2abs splitdir);
 
@@ -48,9 +47,7 @@ chmod 0755, $test_dir;
 my $archive = catfile(@path, 'test', 'archive'); 
 mkdir $archive or die $!;
 chmod 0755, $archive;
-
 chdir($test_dir) or die $!;
-$test_dir = cwd();
 
 #----------------------------------------------------------------------
 # Create object
