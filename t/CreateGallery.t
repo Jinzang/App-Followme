@@ -77,6 +77,7 @@ EOQ
     chdir($gallery_dir);
  
     my $gal = App::Followme::CreateGallery->new(%configuration);
+    $gal->locate($gallery_dir);
 
     my @photo_files;
     my @thumb_files;

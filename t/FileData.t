@@ -38,6 +38,8 @@ chdir($test_dir) or die $!;
 # Create object
 
 my $obj = App::Followme::FileData->new(title_template => '<h1></h1>');
+$obj->locate($test_dir);
+
 isa_ok($obj, "App::Followme::FileData"); # test 1
 can_ok($obj, qw(new build)); # test 2
 
@@ -70,6 +72,7 @@ EOQ
 
     my $obj = App::Followme::FileData->new(directory => $test_dir,
                                            title_template => '<h1></h1>');
+    $obj->locate($test_dir);
 
     for (my $i=0 ; $i < 3; ++ $i) {
         my $output = $code[$i];

@@ -56,6 +56,7 @@ EOQ
             );
 
     my $map = App::Followme::CreateSitemap->new(%configuration);
+    $map->locate($test_dir);
 
     my @webpages;
     foreach my $count (qw(first second third)) {

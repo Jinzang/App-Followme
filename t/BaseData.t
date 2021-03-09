@@ -31,6 +31,8 @@ chmod 0755, $test_dir;
 # Create object
 
 my $obj = App::Followme::BaseData->new();
+$obj->locate($test_dir);
+
 isa_ok($obj, "App::Followme::BaseData"); # test 1
 can_ok($obj, qw(new build)); # test 2
 

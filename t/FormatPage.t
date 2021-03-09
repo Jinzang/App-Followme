@@ -54,6 +54,7 @@ my %configuration = ();
 # Create object
 
 my $up = App::Followme::FormatPage->new();
+$up->locate($test_dir);
 
 isa_ok($up, "App::Followme::FormatPage"); # test 1
 can_ok($up, qw(new run)); # test 2
@@ -164,6 +165,8 @@ do {
 
     my $page = join("\n", @page) . "\n";
     my $up = App::Followme::FormatPage->new;
+    $up->locate($test_dir);
+
     my $blocks = $up->parse_page($page);
 
     my $ok_blocks = {
@@ -204,6 +207,8 @@ do {
 
     my $prototype_path = {folder => 1};
     my $up = App::Followme::FormatPage->new;
+    $up->locate($test_dir);
+
     my $output = $up->update_page($page, $prototype, $prototype_path);
     my @output = split(/\n/, $output);
 
@@ -245,6 +250,7 @@ do {
 EOQ
 
     my $up = App::Followme::FormatPage->new(%configuration);
+    $up->locate($test_dir);
 
 	my $sec = 80;
     foreach my $dir (('sub', '')) {
@@ -273,6 +279,8 @@ EOQ
 
 do {
     my $up = App::Followme::FormatPage->new(%configuration);
+    $up->locate($test_dir);
+
     my $bottom = catfile($test_dir, 'sub');
     chdir($bottom) or die $!;
 
@@ -287,6 +295,7 @@ do {
 do {
     chdir ($test_dir) or die $!;
     my $up = App::Followme::FormatPage->new(%configuration);
+    $up->locate($test_dir);
 
     foreach my $dir (('sub', '')) {
         my $path = $dir ? catfile($test_dir, $dir) : $test_dir;

@@ -69,6 +69,8 @@ EOQ
 
 my $obj = App::Followme::MarkdownData->new(current_directory => $test_dir,
                                            title_template => '<h2></h2>',);
+$obj->locate($test_dir);
+
 isa_ok($obj, "App::Followme::MarkdownData"); # test 1
 can_ok($obj, qw(new build)); # test 2
 

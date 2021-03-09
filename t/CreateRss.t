@@ -59,6 +59,7 @@ my %configuration = (
         );
 
 my $idx = App::Followme::CreateRss->new(%configuration);
+$idx->locate($test_dir);
 
 isa_ok($idx, "App::Followme::CreateRss"); # test 1
 can_ok($idx, qw(new run)); # test 2

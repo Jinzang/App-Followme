@@ -53,6 +53,7 @@ my $prototype_file = catfile($test_dir, 'index.html');
 
 my $cvt = App::Followme::ConvertPage->new(template_directory => $test_dir,
                                           template_file => $template_file);
+$cvt->locate($test_dir);
 
 isa_ok($cvt, "App::Followme::ConvertPage"); # test 1
 can_ok($cvt, qw(new run)); # test 2
@@ -117,6 +118,7 @@ EOQ
                          template_file => $template_file);
 
     my $cvt = App::Followme::ConvertPage->new(%configuration);
+    $cvt->locate($test_dir);
 
     fio_write_page($prototype_file, $index);
     fio_write_page($template_file, $template);

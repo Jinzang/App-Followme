@@ -78,6 +78,7 @@ do {
 EOQ
 
     my $es = App::Followme::EditSections->new(%configuration);
+    $es->locate($test_dir);
 
     foreach my $dir (('sub', '')) {
         foreach my $count (qw(four three two one)) {
@@ -112,6 +113,7 @@ EOQ
 
 do {
     my $es = App::Followme::EditSections->new(%configuration);
+    $es->locate($test_dir);
 
     my $filename = catfile($test_dir, 'one.html');
     my $output = $es->strip_comments($filename, 1);
@@ -141,6 +143,7 @@ do {
 
 do {
     my $es = App::Followme::EditSections->new(%configuration);
+    $es->locate($test_dir);
 
     my $filename = catfile($test_dir, 'one.html');
     my $prototype = $es->strip_comments($filename, 1);
