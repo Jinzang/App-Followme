@@ -52,7 +52,18 @@ chdir($test_dir) or die $!;
 #----------------------------------------------------------------------
 # Create object
 
-my $obj = App::Followme::FolderData->new();
+my $site_url = 'http://www.example.com';
+my $remote_url = 'http://www.cloud.com';
+
+my %configuration = (directory => $test_dir,
+                        top_directory => $test_dir,
+                        base_directory => $test_dir,
+                        author => 'Bernie Simon',
+                        site_url => $site_url,
+                        remote_url => $remote_url,
+                        );
+
+my $obj = App::Followme::FolderData->new(%configuration);
 isa_ok($obj, "App::Followme::FolderData"); # test 1
 can_ok($obj, qw(new build)); # test 2
 
@@ -60,15 +71,6 @@ can_ok($obj, qw(new build)); # test 2
 # Test builders
 
 do {
-    my $site_url = 'http://www.example.com';
-    my $remote_url = 'http://www.cloud.com';
-
-    my %configuration = (directory => $test_dir,
-                         author => 'Bernie Simon',
-                         site_url => $site_url,
-                         remote_url => $remote_url,
-                         );
-
     my $obj = App::Followme::FolderData->new(%configuration);
 
     my $filename = catfile($test_dir, 'archive','one.txt');
@@ -194,7 +196,7 @@ EOQ
         }
     }
 
-    my $obj = App::Followme::FolderData->new(directory => $test_dir);
+    my $obj = App::Followme::FolderData->new(%configuration);
 
     my $size = $obj->get_size(catfile($test_dir, 'three.html'));
     ok($size > 300, 'get file size'); # test 22
@@ -218,9 +220,7 @@ EOQ
     my $related_ok = [catfile($test_dir, 'one.html'), catfile($test_dir, 'one.xhtml')];
     is_deeply($related_files, $related_ok, 'Build list of related files'); # test 27
 
-    $obj = App::Followme::FolderData->new(directory => $test_dir,
-                                          list_length => 2,
-                                         );
+    $obj->{list_length} = 2;
 
     my $top_files = $obj->get_top_files($index_file);
     my $top_files_ok = [catfile($test_dir, 'archive','two.html'),
