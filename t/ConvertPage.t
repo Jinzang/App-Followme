@@ -43,24 +43,15 @@ my $test_dir = catdir(@path, 'test');
 rmtree($test_dir);
 mkdir $test_dir or die $!;
 chmod 0755, $test_dir;
-
-my $sub = catfile(@path, 'test', 'sub');
-mkdir $sub  or die $!;
-chmod 0755, $sub;
-
-my $template_directory = $sub;
-mkdir($template_directory) unless -e $template_directory;
-chmod 0755, $template_directory;
-	
 chdir $test_dir or die $!;
 
 #----------------------------------------------------------------------
 # Create object
 
-my $template_file = catfile($template_directory, 'template.htm');
+my $template_file = catfile($test_dir, 'template.htm');
 my $prototype_file = catfile($test_dir, 'index.html');
 
-my $cvt = App::Followme::ConvertPage->new(template_directory => $template_directory,
+my $cvt = App::Followme::ConvertPage->new(template_directory => $test_dir,
                                           template_file => $template_file);
 
 isa_ok($cvt, "App::Followme::ConvertPage"); # test 1
@@ -122,7 +113,9 @@ This is a paragraph
 * third %%
 EOQ
 
-    my %configuration = (template_file => 'template.htm');
+    my %configuration = (template_directory => $test_dir,
+                         template_file => $template_file);
+
     my $cvt = App::Followme::ConvertPage->new(%configuration);
 
     fio_write_page($prototype_file, $index);
