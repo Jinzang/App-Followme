@@ -123,9 +123,10 @@ EOQ
 
     foreach my $dir (('', 'sub-one', 'sub-two')) {
         if ($dir ne '') {
-            mkdir $dir or die $!;
-            chmod 0755, $dir;
-            push(@ok_folders, catfile($test_dir, $dir));
+            my $subdir = catfile($test_dir, $dir);
+            mkdir $subdir or die $!;
+            chmod 0755, $subdir;
+            push(@ok_folders, $subdir);
         }
 
         foreach my $count (qw(first second third)) {
