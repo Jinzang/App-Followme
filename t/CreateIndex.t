@@ -37,7 +37,7 @@ my $prototype_file = 'index.html';
 
 my %configuration = (
         top_directory => $test_dir,
-        base__directory => $test_dir,
+        base_directory => $test_dir,
         template_directory => $test_dir,
         template_file => $template_file,
         web_extension => 'html',
@@ -146,6 +146,7 @@ EOQ
 
     chdir($archive_dir) or die $!;
 
+    $configuration{base_directory} = $archive_dir;
     my $idx = App::Followme::CreateIndex->new(%configuration);
     $idx->run($archive_dir);
 

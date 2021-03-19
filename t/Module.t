@@ -52,9 +52,13 @@ my $template_file = 'template.htm';
 #----------------------------------------------------------------------
 # Create object
 
-my $obj = App::Followme::Module->new(template_directory => 'sub',
-                                     template_file => $template_file);
-$obj->locate($test_dir);
+my %configuration = (top_directory => $test_dir,
+                     base_directory => $test_dir,
+                     template_directory => 'sub',
+                     template_file => $template_file
+                    );
+
+my $obj = App::Followme::Module->new(%configuration);
 
 isa_ok($obj, "App::Followme::Module"); # test 1
 can_ok($obj, qw(new run)); # test 2
@@ -165,7 +169,6 @@ do {
 do {
     my %configuration = (one => 1, two => 2);
     my $app = App::Followme::Module->new();
-    $app->locate($test_dir);
 
     my $source = <<'EOQ';
 # Test configuration file

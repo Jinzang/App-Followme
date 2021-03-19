@@ -56,12 +56,12 @@ my $site_url = 'http://www.example.com';
 my $remote_url = 'http://www.cloud.com';
 
 my %configuration = (directory => $test_dir,
-                        top_directory => $test_dir,
-                        base_directory => $test_dir,
-                        author => 'Bernie Simon',
-                        site_url => $site_url,
-                        remote_url => $remote_url,
-                        );
+                     top_directory => $test_dir,
+                     base_directory => $test_dir,
+                     author => 'Bernie Simon',
+                     site_url => $site_url,
+                     remote_url => $remote_url,
+                    );
 
 my $obj = App::Followme::FolderData->new(%configuration);
 isa_ok($obj, "App::Followme::FolderData"); # test 1

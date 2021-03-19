@@ -63,8 +63,11 @@ fio_write_page($index_name, $index);
 #----------------------------------------------------------------------
 # Create object
 
-my $obj = App::Followme::WebData->new();
-$obj->locate($test_dir);
+my %configuration = (top_directory => $test_dir,
+                     base_directory => $test_dir,
+                    );
+
+my $obj = App::Followme::WebData->new(%configuration);
 
 isa_ok($obj, "App::Followme::WebData"); # test 1
 can_ok($obj, qw(new build)); # test 2

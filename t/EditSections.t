@@ -47,6 +47,8 @@ chmod 0755, $sub_dir;
 chdir $test_dir or die $!;
 
 my %configuration = (
+                    top_directory => $test_dir,
+                    base_directory => $test_dir,
                     remove_comments => 0,
                     data_pkg => 'App::Followme::WebData',
                     );
@@ -78,7 +80,6 @@ do {
 EOQ
 
     my $es = App::Followme::EditSections->new(%configuration);
-    $es->locate($test_dir);
 
     foreach my $dir (('sub', '')) {
         foreach my $count (qw(four three two one)) {
@@ -113,7 +114,6 @@ EOQ
 
 do {
     my $es = App::Followme::EditSections->new(%configuration);
-    $es->locate($test_dir);
 
     my $filename = catfile($test_dir, 'one.html');
     my $output = $es->strip_comments($filename, 1);
@@ -143,7 +143,6 @@ do {
 
 do {
     my $es = App::Followme::EditSections->new(%configuration);
-    $es->locate($test_dir);
 
     my $filename = catfile($test_dir, 'one.html');
     my $prototype = $es->strip_comments($filename, 1);

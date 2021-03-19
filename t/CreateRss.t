@@ -51,6 +51,8 @@ my $site_url = 'http://www.example.com';
 my $remote_url = 'http://cloudhost.com';
 
 my %configuration = (
+        top_directory => $test_dir,
+        base_directory => $test_dir,
         author => 'Bernie Simon',
         site_url => $site_url,
         remote_url => $remote_url,
@@ -59,7 +61,6 @@ my %configuration = (
         );
 
 my $idx = App::Followme::CreateRss->new(%configuration);
-$idx->locate($test_dir);
 
 isa_ok($idx, "App::Followme::CreateRss"); # test 1
 can_ok($idx, qw(new run)); # test 2

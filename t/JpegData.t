@@ -31,6 +31,8 @@ chdir $test_dir or die $!;
 
 
 my %configuration = (
+                    top_directory => $test_dir,
+                    base_directory => $test_dir,
                     extension => 'jpg',
                     target_prefix => 'img',
                     thumb_suffix => '-thumb',
@@ -40,7 +42,6 @@ my %configuration = (
 # Create object
 
 my $data = App::Followme::JpegData->new(%configuration);
-$data->locate($test_dir);
 
 isa_ok($data, "App::Followme::JpegData"); # test 1
 can_ok($data, qw(new build)); # test 2

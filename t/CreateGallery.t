@@ -30,9 +30,14 @@ mkdir $test_dir or die $!;
 chmod 0755, $test_dir;
 chdir $test_dir  or die $!;
 
+my $gallery_dir = catfile($test_dir, 'gallery');
+mkdir($gallery_dir) unless -e $gallery_dir;
+chmod 0755, $gallery_dir;
+
 my $template_name = catfile($test_dir, 'gallery_template.htm');
 
-my %configuration = (
+my %configuration = (top_directory => $test_dir,
+                    base_directory => $gallery_dir,
                     template_file => $template_name,
                     thumb_suffix => '-thumb',
                     web_extension => 'html',
@@ -69,15 +74,10 @@ do {
 </html>
 EOQ
 
-    fio_write_page($template_name, $gallery_template);
+    fio_write_page($template_name, $gallery_template); 
 
-    my $gallery_dir = catfile($test_dir, 'gallery');
-    mkdir($gallery_dir) unless -e $gallery_dir;
-    chmod 0755, $gallery_dir;
     chdir($gallery_dir);
- 
     my $gal = App::Followme::CreateGallery->new(%configuration);
-    $gal->locate($gallery_dir);
 
     my @photo_files;
     my @thumb_files;
@@ -100,10 +100,10 @@ EOQ
     is($$title, 'Red', 'Red page title'); # test 1
 
     my $url = $gal->{data}->build('url', $photo_files[1]);
-    is($$url, 'green.jpg', 'Green photo url'); # test 2
+    is($$url, 'gallery/green.jpg', 'Green photo url'); # test 2
 
     $url = $gal->{data}->build('url', $thumb_files[2]);
-    is($$url, 'blue-thumb.jpg', 'Blue photo thumb url'); # test 3
+    is($$url, 'gallery/blue-thumb.jpg', 'Blue photo thumb url'); # test 3
 
     $gal->run($gallery_dir);
 

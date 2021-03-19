@@ -50,13 +50,14 @@ do {
 EOQ
 
     my %configuration = (
+            top_directory => $test_dir,
+            base_directory => $test_dir,
             remote_url => 'http://www.example.com',
             sitemap => 'sitemap.txt',
             web_extension => 'html',
             );
 
     my $map = App::Followme::CreateSitemap->new(%configuration);
-    $map->locate($test_dir);
 
     my @webpages;
     foreach my $count (qw(first second third)) {

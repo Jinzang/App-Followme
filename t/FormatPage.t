@@ -53,8 +53,11 @@ my %configuration = ();
 #----------------------------------------------------------------------
 # Create object
 
-my $up = App::Followme::FormatPage->new();
-$up->locate($test_dir);
+my %configuration = (top_directory => $test_dir,
+                     base_directory => $test_dir,
+                    );
+
+my $up = App::Followme::FormatPage->new(%configuration);
 
 isa_ok($up, "App::Followme::FormatPage"); # test 1
 can_ok($up, qw(new run)); # test 2
@@ -164,9 +167,6 @@ do {
                );
 
     my $page = join("\n", @page) . "\n";
-    my $up = App::Followme::FormatPage->new;
-    $up->locate($test_dir);
-
     my $blocks = $up->parse_page($page);
 
     my $ok_blocks = {
@@ -206,9 +206,6 @@ do {
     $page =~ s/block/section/g;
 
     my $prototype_path = {folder => 1};
-    my $up = App::Followme::FormatPage->new;
-    $up->locate($test_dir);
-
     my $output = $up->update_page($page, $prototype, $prototype_path);
     my @output = split(/\n/, $output);
 
@@ -249,9 +246,6 @@ do {
 </html>
 EOQ
 
-    my $up = App::Followme::FormatPage->new(%configuration);
-    $up->locate($test_dir);
-
 	my $sec = 80;
     foreach my $dir (('sub', '')) {
         foreach my $count (qw(four three two one)) {
@@ -278,9 +272,6 @@ EOQ
 # Test get prototype path
 
 do {
-    my $up = App::Followme::FormatPage->new(%configuration);
-    $up->locate($test_dir);
-
     my $bottom = catfile($test_dir, 'sub');
     chdir($bottom) or die $!;
 
@@ -294,14 +285,11 @@ do {
 
 do {
     chdir ($test_dir) or die $!;
-    my $up = App::Followme::FormatPage->new(%configuration);
-    $up->locate($test_dir);
-
     foreach my $dir (('sub', '')) {
         my $path = $dir ? catfile($test_dir, $dir) : $test_dir;
         chdir($path) or die $!;
 
-        $up->run($path);
+        $up->run($path, $test_dir);
         foreach my $count (qw(two one)) {
             my $filename = "$count.html";
             my $input = fio_read_page($filename);

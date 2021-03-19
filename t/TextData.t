@@ -20,7 +20,7 @@ my $lib = catdir(@path, 'lib');
 unshift(@INC, $lib);
 
 eval "use App::Followme::FIO";
-require App::Followme::MarkdownData;
+require App::Followme::TextData;
 
 my $test_dir = catdir(@path, 'test');
 
@@ -67,11 +67,14 @@ EOQ
 #----------------------------------------------------------------------
 # Create object
 
-my $obj = App::Followme::MarkdownData->new(current_directory => $test_dir,
-                                           title_template => '<h2></h2>',);
-$obj->locate($test_dir);
+my %configuration = (top_directory => $test_dir,
+                     base_directory => $test_dir,
+                     title_template => '<h2></h2>',
+                    );
 
-isa_ok($obj, "App::Followme::MarkdownData"); # test 1
+my $obj = App::Followme::TextData->new(%configuration);
+
+isa_ok($obj, "App::Followme::TextData"); # test 1
 can_ok($obj, qw(new build)); # test 2
 
 #----------------------------------------------------------------------

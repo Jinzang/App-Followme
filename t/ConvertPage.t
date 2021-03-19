@@ -51,9 +51,13 @@ chdir $test_dir or die $!;
 my $template_file = catfile($test_dir, 'template.htm');
 my $prototype_file = catfile($test_dir, 'index.html');
 
-my $cvt = App::Followme::ConvertPage->new(template_directory => $test_dir,
-                                          template_file => $template_file);
-$cvt->locate($test_dir);
+my %configuration = (top_directory => $test_dir,
+                     base_directory => $test_dir,
+                     template_directory => $test_dir,
+                     template_file => $template_file,
+                    );
+
+my $cvt = App::Followme::ConvertPage->new(%configuration);
 
 isa_ok($cvt, "App::Followme::ConvertPage"); # test 1
 can_ok($cvt, qw(new run)); # test 2
@@ -114,12 +118,6 @@ This is a paragraph
 * third %%
 EOQ
 
-    my %configuration = (template_directory => $test_dir,
-                         template_file => $template_file);
-
-    my $cvt = App::Followme::ConvertPage->new(%configuration);
-    $cvt->locate($test_dir);
-
     fio_write_page($prototype_file, $index);
     fio_write_page($template_file, $template);
 
@@ -147,9 +145,10 @@ do {
 #----------------------------------------------------------------------
 # Test update file and folder
 do {
-    $cvt->update_file($test_dir, $prototype_file, 'four.md');
+    my $file = catfile($test_dir, 'four.md');
+    $cvt->update_file($test_dir, $prototype_file, $file);
 
-    my $file = catfile($test_dir, 'four.html');
+    $file = catfile($test_dir, 'four.html');
     my $page = fio_read_page($file);
     like($page, qr/<h1>Four<\/h1>/, 'Update file four'); # test 4
 

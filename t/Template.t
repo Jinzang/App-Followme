@@ -33,8 +33,11 @@ chmod 0755, $test_dir;
 #----------------------------------------------------------------------
 # Create object
 
-my $pp = App::Followme::Template->new();
-$pp->locate($test_dir);
+my %configuration = (top_directory => $test_dir,
+                     base_directory => $test_dir,
+                    );
+
+my $pp = App::Followme::Template->new(%configuration);
 
 isa_ok($pp, "App::Followme::Template"); # test 1
 can_ok($pp, qw(new compile)); # test 2
