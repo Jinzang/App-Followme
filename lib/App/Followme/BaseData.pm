@@ -405,7 +405,7 @@ sub ref_value {
 # Set up the cache for data
 
 sub setup {
-    my ($self, %configuration) = @_;
+    my ($self) = @_;
 
     $self->{cache} = {};
 }

@@ -79,7 +79,7 @@ sub sections_are_filled {
 # Set exclude_index to true in the data package
 
 sub setup {
-    my ($self, %configuration) = @_;
+    my ($self) = @_;
 
     $self->{data}{exclude_index} = 1;
     return;

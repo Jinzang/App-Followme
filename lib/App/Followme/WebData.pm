@@ -80,7 +80,7 @@ sub fetch_sections {
 # Initialize the extension if unset
 
 sub setup {
-    my ($self, %configuration) = @_;
+    my ($self) = @_;
 
     $self->{extension} ||= $self->{web_extension};
     return;

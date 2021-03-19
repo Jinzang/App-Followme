@@ -70,7 +70,7 @@ sub get_url {
 # Set up exclude
 
 sub setup {
-    my ($self, %configuration) = @_;
+    my ($self) = @_;
 
     my $dir;
     my $thumb_files = $self->get_thumb_file("*.$self->{extension}");
