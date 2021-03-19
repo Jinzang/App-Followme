@@ -1,4 +1,4 @@
-package App::Followme::MarkdownData;
+package App::Followme::TextData;
 
 use 5.008005;
 use strict;
@@ -7,7 +7,6 @@ use integer;
 use lib '../..';
 
 use base qw(App::Followme::FileData);
-use Text::Markdown;
 use App::Followme::FIO;
 use App::Followme::Web;
 
@@ -21,9 +20,8 @@ sub parameters {
 
     return (
             extension => 'md',
-            empty_element_suffix => '/>',
-            tab_width => 4,
-            trust_list_start_value => 0,
+            text_pkg => 'Text::Markdown',
+            text_method => 'markdown',
            );
 }
 
@@ -32,24 +30,9 @@ sub parameters {
 
 sub fetch_as_html {
     my ($self, $content_block) = @_;
-    return $self->{md}->markdown($content_block);
-}
 
-#----------------------------------------------------------------------
-# Create markdown object and add it to self
-
-sub setup {
-    my ($self, %configuration) = @_;
-
-    my %params;
-    for my $field (qw(empty_element_suffix tab_width
-                      trust_list_start_value)) {
-        $params{$field} = $self->{$field};
-    }
-
-    $self->{md} = Text::Markdown->new(%params);
-
-    return;
+    my $method = $self->{text_method};
+    return $self->{text}->$method($content_block);
 }
 
 1;
@@ -58,23 +41,19 @@ __END__
 
 =head1 NAME
 
-App::Followme::MarkdownData - Convert Markdown files to html
+App::Followme::TextData - Convert text files to html
 
 =head1 SYNOPSIS
 
-    use Cwd;
-    use App::Followme::FolderData;
-    my $directory = cwd();
-    my $data = App::Followme::MarkdownData->new(directory => $directory);
-    @filenames = $data->get_files();
-    foreach my $filename (@filename) {
-        # read and process file
-    }
+    use FIO;
+    my $data = App::Followme::TextData->new();
+    my $page = fio_read_page('new_file.md');
+    my $html = $data_fetch_as_html($page);
 
 =head1 DESCRIPTION
 
-This module contains the methods that build metadata values from a Markdown
-file.  The markdown file is optionally preceded by a section containing Yaml
+This module contains the methods that build metadata values from a text
+file.  The text file is optionally preceded by a section containing Yaml
 formatted data.
 
 =head1 METHODS
@@ -93,14 +72,14 @@ it is undefined, the filename stored in the object is used.
 
 =head1 VARIABLES
 
-The markdown metadata class can evaluate the following variables. When passing
+The text metadata class can evaluate the following variables. When passing
 a name to the build method, the sigil should not be used.
 
 =over 4
 
 =item $body
 
-All the contents of the file, minus the title if there is one. Markdown is
+All the contents of the file, minus the title if there is one. Text is
 called on the file's content to generate html before being stored in the body
 variable.
 
@@ -127,8 +106,14 @@ The following parameters are used from the configuration:
 The extension of files that are converted to web pages. The default value
 is md.
 
-The remaining parameters are passed unchanged to Text::Markdown. You
-should not need to change them.
+=item text_pkg
+
+The name of the package which converts text to html. The default value 
+is 'Text::Markdown'.
+
+=item text_method
+
+The name of the method that does the conversion. The default value is 'markdown'.
 
 =back
 
