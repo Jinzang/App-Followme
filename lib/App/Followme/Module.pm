@@ -37,7 +37,9 @@ sub parameters {
 # Main method of all module subclasses (stub)
 
 sub run {
-    my ($self, $folder) = @_;
+    my ($self, $folder, $base_folder, $top_folder) = @_;
+    $base_folder ||= $folder;
+    $top_folder ||= $base_folder;
 
     my $pkg = ref $self;
     die "Run method not implemented by $pkg\n";
@@ -179,7 +181,7 @@ App::Followme::Module - Base class for modules invoked from configuration
 
     use Cwd;
     use App::Followme::Module;
-    my $obj = App::Followme::Module->new($configuration);
+    my $obj = App::Followme::Module->new();
     my $directory = getcwd();
     $obj->run($directory);
 
