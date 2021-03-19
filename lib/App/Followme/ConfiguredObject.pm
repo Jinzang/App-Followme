@@ -5,6 +5,7 @@ use strict;
 use warnings;
 
 use Cwd;
+
 our $VERSION = "2.00";
 
 #----------------------------------------------------------------------
@@ -164,24 +165,10 @@ sub initialize {
 }
 
 #----------------------------------------------------------------------
-# Update the top and base directory fields
-
-sub locate {
-    my ($self, $folder) = @_;
-
-    if (defined $folder) {
-        $self->{top_directory} = $folder;
-        $self->{base_directory} = $folder;
-    }
-
-    return;
-}
-
-#----------------------------------------------------------------------
 # Set up object fields (stub)
 
 sub setup {
-    my ($self, %configuration) = @_;
+    my ($self) = @_;
     return;
 }
 
