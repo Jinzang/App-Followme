@@ -354,7 +354,7 @@ sub update_folder {
         my $file = abs2rel($filename, $self->{top_directory});
         delete $local->{$file} if exists $local->{$file};
 
-        my $value = ${$self->{data}->build('checksum', $file)};
+        my $value = ${$self->{data}->build('checksum', $filename)};
 
         # Add file if new or changed
 
