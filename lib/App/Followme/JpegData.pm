@@ -9,7 +9,7 @@ use lib '../..';
 use base qw(App::Followme::FileData);
 
 use Image::Size;
-use File::Spec::Functions qw(abs2rel rel2abs splitdir catfile);
+use File::Spec::Functions qw(catfile);
 use App::Followme::FIO;
 
 our $VERSION = "2.01";

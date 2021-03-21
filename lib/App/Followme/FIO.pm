@@ -363,6 +363,7 @@ sub fio_to_file {
 
 sub fio_visit {
     my ($directory) = @_;
+    $directory = rel2abs($directory);
 
     my @filenames;
     my @directories;
@@ -398,7 +399,6 @@ sub fio_write_page {
 	my ($dir, $base) = fio_split_filename($filename);
 
 	if (! -e $dir) {
-		$dir = rel2abs($dir);
         die "Couldn't create directory $dir for $filename: $!" 
             unless mkdir($dir);
     }

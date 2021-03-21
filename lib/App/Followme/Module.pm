@@ -8,7 +8,7 @@ use lib '../..';
 
 use IO::File;
 use File::Spec::Functions qw(abs2rel catfile file_name_is_absolute
-                             no_upwards rel2abs splitdir updir);
+                             no_upwards splitdir updir);
 use App::Followme::FIO;
 use App::Followme::NestedText;
 use App::Followme::Web;
