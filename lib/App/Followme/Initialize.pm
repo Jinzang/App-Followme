@@ -129,9 +129,8 @@ sub create_dirs {
         push(@path, shift(@dirs));
         my $path = catfile(@path);
 
-        if (! -d $path) {
-            mkdir($path) or die "Couldn't create $path: $!\n";
-            chmod(0755, $path) or die "Couldn't set permissions: $!\n";
+        if ($path && ! -d $path) {
+            mkdir($path, 0755) or die "Couldn't create $path: $!\n";
         }
     }
 
