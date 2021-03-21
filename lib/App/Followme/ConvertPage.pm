@@ -125,7 +125,6 @@ sub update_folder {
 sub write_file {
     my ($self, $filename, $page, $binmode) = @_;
 
-    $filename = rel2abs($filename);
     my $time = ${$self->{data}->build('mdate', $filename)};
     my $new_filename = $self->title_to_filename($filename);
 
