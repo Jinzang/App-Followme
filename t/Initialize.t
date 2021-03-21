@@ -51,7 +51,7 @@ EOQ
 
     my @ok_lines = map {"$_\n"} split("\n", $text);
     my $type = 'text';
-    my $file = 'license.txt';
+    my $file = catfile($test_dir, 'license.txt');
 
     App::Followme::Initialize::write_file(\@ok_lines, $type, $file);
     my $page = fio_read_page($file);
@@ -72,7 +72,7 @@ EOQ
 
     @ok_lines = map {"$_\n"} split("\n", $text);
     $type = 'configuration';
-    $file = 'followme.cfg';
+    $file = catfile($test_dir, 'followme.cfg');
 
     App::Followme::Initialize::write_file(\@ok_lines, $type, $file);
     my $page = fio_read_page($file);
@@ -90,7 +90,7 @@ EOQ
 
     my @lines = map {"$_\n"} split("\n", $text);
     $type = 'binary';
-    $file = 'transparent.gif';
+    $file = catfile($test_dir, 'transparent.gif');
     App::Followme::Initialize::write_file(\@lines, $type, $file);
 
     ok(-e $file, 'write binary file'); # test 6

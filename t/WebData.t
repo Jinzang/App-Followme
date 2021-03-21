@@ -74,7 +74,7 @@ can_ok($obj, qw(new build)); # test 2
 
 #----------------------------------------------------------------------
 
-my %data = $obj->fetch_data('title', 'index.html');
+my %data = $obj->fetch_data('title', $index_name);
 
 is($data{title}, 'Home Page', 'get title'); # test 3
 is($data{description}, 'This is a test.', 'get description'); # test 4

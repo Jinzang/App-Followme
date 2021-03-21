@@ -134,7 +134,8 @@ EOQ
     # Create and test rss file
 
     $idx->run($test_dir);
-    my %rss = nt_parse_almost_xml_file('test.rss');
+    my $rss_file = catfile($test_dir, 'test.rss');
+    my %rss = nt_parse_almost_xml_file($rss_file);
     
     my $channel = $rss{rss}{channel};
     ok(ref $channel eq 'HASH', "rss tag exists"); # test 3

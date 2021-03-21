@@ -59,7 +59,7 @@ EOQ
         my $output = $text;
         $output =~ s/%%/$count/g;
 
-        my $filename = "$count.md";
+        my $filename = catfile($test_dir, "$count.md");
         fio_write_page($filename, $output);
     }
 };

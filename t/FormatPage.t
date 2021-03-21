@@ -275,7 +275,8 @@ do {
     my $bottom = catfile($test_dir, 'sub');
     chdir($bottom) or die $!;
 
-    my $prototype_path = $up->get_prototype_path('one.html');
+    my $filename = catfile($bottom, 'one.html');
+    my $prototype_path = $up->get_prototype_path($filename);
 
     is_deeply($prototype_path, {sub => 1}, 'Get prototype path'); # test 13
 };
@@ -284,14 +285,13 @@ do {
 # Test run
 
 do {
-    chdir ($test_dir) or die $!;
     foreach my $dir (('sub', '')) {
         my $path = $dir ? catfile($test_dir, $dir) : $test_dir;
         chdir($path) or die $!;
 
         $up->run($path, $test_dir);
         foreach my $count (qw(two one)) {
-            my $filename = "$count.html";
+            my $filename = catfile($path, "$count.html");
             my $input = fio_read_page($filename);
 
             like($input, qr(Page $count),
