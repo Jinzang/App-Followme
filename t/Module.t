@@ -38,7 +38,7 @@ require App::Followme::Module;
 
 my $test_dir = catdir(@path, 'test');
 
-rmtree($test_dir);
+rmtree($test_dir) if -e $test_dir;
 mkdir $test_dir;
 chmod 0755, $test_dir;
 

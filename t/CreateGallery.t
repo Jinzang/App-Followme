@@ -25,7 +25,7 @@ my $test_dir = catdir(@path, 'test');
 my $data_dir = catdir(@path, 'tdata');
 my $photo_dir = catdir($test_dir, 'photos');
 
-rmtree($test_dir);
+rmtree($test_dir) if -e $test_dir;
 mkdir $test_dir or die $!;
 chmod 0755, $test_dir;
 chdir $test_dir  or die $!;
