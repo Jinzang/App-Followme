@@ -399,7 +399,7 @@ sub fio_write_page {
 	my ($dir, $base) = fio_split_filename($filename);
 
 	if (! -e $dir) {
-        die "Couldn't create directory $dir for $filename: $!" 
+        die "Couldn't create directory $dir for $filename: $!\n" 
             unless mkdir($dir);
     }
 	
