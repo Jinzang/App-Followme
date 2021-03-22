@@ -34,10 +34,12 @@ my $gallery_dir = catfile($test_dir, 'gallery');
 mkdir($gallery_dir) unless -e $gallery_dir;
 chmod 0755, $gallery_dir;
 
-my $template_name = catfile($test_dir, 'gallery_template.htm');
+my $template_name = 'gallery_template.htm';
+my $template_file = catfile($gallery_dir, $template_name);
 
 my %configuration = (top_directory => $test_dir,
                     base_directory => $gallery_dir,
+                    template_directory => 'gallery',
                     template_file => $template_name,
                     thumb_suffix => '-thumb',
                     web_extension => 'html',
@@ -74,7 +76,7 @@ do {
 </html>
 EOQ
 
-    fio_write_page($template_name, $gallery_template); 
+    fio_write_page($template_file, $gallery_template); 
 
     chdir($gallery_dir);
     my $gal = App::Followme::CreateGallery->new(%configuration);
