@@ -119,14 +119,20 @@ sub fetch_data {
 sub fetch_from_file {
     my ($self, $filename) = @_;
 
+    my (%metadata, %content);
     my $text = fio_read_page($filename);
-    return () unless $text;
+ 
+    if (length $text) {
+        my $section = $self->fetch_sections($text);
 
-    my $section = $self->fetch_sections($text);
+        # First look in the metadata and then the content
+        %metadata = $self->fetch_metadata($section->{metadata});
+        %content = $self->fetch_content($section->{body});
 
-    # First look in the metadata and then the content
-    my %metadata = $self->fetch_metadata($section->{metadata});
-    my %content = $self->fetch_content($section->{body});
+    } else {
+        %metadata = ();
+        %content = ();
+    }
 
     return (%content, %metadata);
 }
@@ -160,6 +166,7 @@ sub fetch_sections {
         $section{metadata} = '';
     }
 
+    die "Could not fetch body of text\n" unless $section{body};
     $section{body} = $self->fetch_as_html($section{body});
     return \%section;
 }
