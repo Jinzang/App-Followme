@@ -185,7 +185,7 @@ sub update_file {
     my ($self, $file, $prototype, $prototype_path) = @_;
 
     my $page = fio_read_page($file);
-    die "Couldn't read $file" unless defined $page;
+    return unless defined $page;
 
     # Check for changes before updating page
     return 0 if $self->unchanged_prototype($prototype, $page, $prototype_path);
