@@ -121,18 +121,13 @@ sub fetch_from_file {
 
     my (%metadata, %content);
     my $text = fio_read_page($filename);
- 
-    if (length $text) {
-        my $section = $self->fetch_sections($text);
+    return () unless length $text;
 
-        # First look in the metadata and then the content
-        %metadata = $self->fetch_metadata($section->{metadata});
-        %content = $self->fetch_content($section->{body});
+    my $section = $self->fetch_sections($text);
 
-    } else {
-        %metadata = ();
-        %content = ();
-    }
+    # First look in the metadata and then the content
+    %metadata = $self->fetch_metadata($section->{metadata});
+    %content = $self->fetch_content($section->{body});
 
     return (%content, %metadata);
 }
