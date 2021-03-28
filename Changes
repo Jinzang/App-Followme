@@ -1,6 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+    - only uae absolute filenames in test scripts
+    - additional tests for the existence of files in test scripts
 
 2.01 2021-03-19T21:50:49Z
     - Replace MarkdownData with TextData, which generalizes it
