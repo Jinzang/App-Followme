@@ -28,7 +28,9 @@ chmod 0755, $test_dir;
 chdir $test_dir or die $!;
 
 my $archive_dir = catfile(@path, 'test', 'archive');
-	
+mkdir($archive_dir) unless -e $archive_dir;
+chmod 0755, $archive_dir;
+
 #----------------------------------------------------------------------
 # Create object
 
@@ -130,7 +132,6 @@ EOQ
    $template_file = catfile($test_dir, $template_file);
    fio_write_page($template_file, $index_template);
 
-   mkdir($archive_dir) unless -e $archive_dir;
    chdir($archive_dir) or die $!;
 
    my ($index_name) = fio_to_file($archive_dir, $configuration{web_extension});
