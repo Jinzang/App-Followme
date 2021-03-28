@@ -1,6 +1,8 @@
 Revision history for Perl extension App::Followme
 
 {{$NEXT}}
+
+2.02 2021-03-28T13:53:57Z
     - only uae absolute filenames in test scripts
     - additional tests for the existence of files in test scripts
 

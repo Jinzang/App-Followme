@@ -12,7 +12,7 @@ use Image::Size;
 use File::Spec::Functions qw(catfile);
 use App::Followme::FIO;
 
-our $VERSION = "2.01";
+our $VERSION = "2.02";
 
 #----------------------------------------------------------------------
 # Read the default parameter values

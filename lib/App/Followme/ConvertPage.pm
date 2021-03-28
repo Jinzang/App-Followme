@@ -10,7 +10,7 @@ use base qw(App::Followme::Module);
 use File::Spec::Functions qw(abs2rel rel2abs catfile splitdir);
 use App::Followme::FIO;
 
-our $VERSION = "2.01";
+our $VERSION = "2.02";
 
 #----------------------------------------------------------------------
 # Read the default parameter values

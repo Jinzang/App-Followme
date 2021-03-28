@@ -7,7 +7,7 @@ use lib '../..';
 
 use base qw(App::Followme::CreateIndex);
 
-our $VERSION = "2.01";
+our $VERSION = "2.02";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
