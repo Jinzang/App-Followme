@@ -38,13 +38,13 @@ require App::Followme::Module;
 
 my $test_dir = catdir(@path, 'test');
 
-rmtree($test_dir) if -e $test_dir;
+rmtree($test_dir, 0, 1) if -e $test_dir;
 mkdir $test_dir;
-chmod 0755, $test_dir;
+ 
 
 my $subdir = catfile(@path, 'test', 'sub');
 mkdir ($subdir) or die $!;
-chmod 0755, $subdir;
+  
 chdir $test_dir or die $!;
 
 my $template_file = catfile($test_dir, 'template.htm');
