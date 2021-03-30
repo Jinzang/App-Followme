@@ -42,10 +42,9 @@ my $test_dir = catdir(@path, 'test');
 rmtree($test_dir, 0, 1)  if -e $test_dir;
 
 mkdir($test_dir) unless -e $test_dir;
- 
 
 my $archive = catfile(@path, 'test', 'archive'); 
-mkdir $archive or die $!;
+mkdir $archive unless -e $archive;
   
 chdir($test_dir) or die $!;
 

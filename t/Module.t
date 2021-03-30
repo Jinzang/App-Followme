@@ -40,10 +40,9 @@ my $test_dir = catdir(@path, 'test');
 
 rmtree($test_dir, 0, 1) if -e $test_dir;
 mkdir $test_dir;
- 
 
 my $subdir = catfile(@path, 'test', 'sub');
-mkdir ($subdir) or die $!;
+mkdir ($subdir) unless -e $subdir;
   
 chdir $test_dir or die $!;
 
