@@ -410,6 +410,8 @@ sub fio_write_page {
     print $fd $page;
     close($fd);
 
+    die "Didn't write page $filename\n" unless -e $filename;
+
     return;
 }
 
