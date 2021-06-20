@@ -111,12 +111,23 @@ sub strip_comments {
 }
 
 #----------------------------------------------------------------------
-# Parse prototype and page and combine them
+# Strip file of comments and combine with prototype
 
 sub update_file {
     my ($self, $file, $prototype) = @_;
 
     my $page = $self->strip_comments($file, 0);
+    $page = $self->update_page($page, $prototype);
+    fio_write_page($file, $page);
+
+    return;
+}
+
+#----------------------------------------------------------------------
+# Parse prototype and page and combine them
+
+sub update_page {
+    my ($self, $page, $prototype) = @_;
 
     my @output;
     my $notfound;
@@ -144,8 +155,7 @@ sub update_file {
 
     die "Could not locate tags\n" if $notfound;
 
-    fio_write_page($file, join('', @output));
-    return;
+    return join('', @output);
 }
 
 #----------------------------------------------------------------------
