@@ -57,7 +57,8 @@ sub build_rss {
     delete $channel{guid};
 
     my @items;
-    my $files = $self->{data}->build('top_files', $index_file);
+    my $files = $self->{data}->build('top_files_by_mdate_reversed', 
+                                     $index_file);
 
     foreach my $file (@$files) {
         push(@items, $self->file_info($file));
