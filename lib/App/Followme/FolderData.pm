@@ -34,7 +34,7 @@ sub parameters {
 }
 
 #----------------------------------------------------------------------
-# Return the author's name stored in theconfiguration file
+# Return the author's name stored in the configuration file
 
 sub calculate_author {
     my ($self, $filename) = @_;
@@ -80,7 +80,7 @@ sub calculate_title {
     }
 
     $root =~ s/^\d+// unless $root =~ /^\d+$/;
-    my @words = map {ucfirst $_} split(/\-/, $root);
+    my @words = map {ucfirst $_} split(/[\-\_]/, $root);
 
     return join(' ', @words);
 }
