@@ -241,7 +241,7 @@ sub fio_match_patterns {
 # Get the most recently modified web file in a directory
 
 sub fio_most_recent_file {
-    my ($directory, $pattern) = @_;
+    my ($directory, $pattern, $exclude_index) = @_;
 
     my ($filenames, $directories) = fio_visit($directory);
 
@@ -252,6 +252,11 @@ sub fio_most_recent_file {
     foreach my $filename (@$filenames) {
         my ($dir, $file) = fio_split_filename($filename);
         next unless fio_match_patterns($file, $globs);
+
+        if ($exclude_index) {
+            my ($base, $ext) = split(/\./, $file, 2);
+            next if $base eq 'index';
+        }
 
         my $file_date = fio_get_date($filename);
 
@@ -487,11 +492,12 @@ and the empty string if the directory could not be created.
 Return 1 (Perl true) if a filename matches a Perl pattern in a list of
 patterns.
 
-=item $filename = fio_most_recent_file($directory, $patterns);
+=item $filename = fio_most_recent_file($directory, $patterns, $exclude_index);
 
 
 Return the most recently modified file in a directory whose name matches
-a comma separated list of Unix wildcard patterns.
+a comma separated list of Unix wildcard patterns. Exclude the index if 
+the last argument is true.
 
 =item $str = fio_read_page($filename, $binmode);
 

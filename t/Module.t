@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 8;
+use Test::More tests => 9;
 
 use IO::File;
 use File::Path qw(rmtree);
@@ -141,14 +141,23 @@ EOQ
 
 do {
     my $subdir = catfile($test_dir, 'sub');
-    my $prototype = $obj->find_prototype($subdir, 0);
-
     my $prototype_ok = catfile($subdir, 'one.html');
+    my $prototype = $obj->find_prototype($subdir, 0);
     is($prototype, $prototype_ok, 'Find prototype in current directory'); # test 3
 
+    my $index_file = catfile($subdir, 'index.html');
+    rename($prototype_ok, $index_file);
+    $prototype_ok = catfile($subdir, 'two.html');
+    $obj->{exclude_index} = 1;
+
+    my $prototype = $obj->find_prototype($subdir, 0);
+    is($prototype, $prototype_ok, 'Find prototype with exclude_index'); # test 4
+
+    $obj->{exclude_index} = 0;
     $prototype = $obj->find_prototype($subdir, 1);
     $prototype_ok = catfile($test_dir, 'one.html');
-    is($prototype, $prototype_ok, 'Find prototype in directory above'); # test 4
+    is($prototype, $prototype_ok, 'Find prototype in directory above'); # test 5
+
 
 };
 
@@ -159,7 +168,7 @@ do {
     my $template_file = 'three.html';
     my $template = $obj->get_template_name($template_file);
     my $template_ok = catfile($test_dir, $template_file);
-    is($template, $template_ok, 'Get template name'); # test 5
+    is($template, $template_ok, 'Get template name'); # test 6
 };
 
 #----------------------------------------------------------------------
@@ -194,7 +203,7 @@ EOQ
                            );
 
     is_deeply(\%configuration, \%configuration_ok,
-              'Read configuration'); # test 6
+              'Read configuration'); # test 7
 };
 
 #----------------------------------------------------------------------
@@ -206,7 +215,7 @@ do {
     my $file = catfile($subdir, $three);
 
     my $page = $obj->reformat_file($prototype, $file);
-    like($page, qr(top link), 'Reformat file'); # test 7
+    like($page, qr(top link), 'Reformat file'); # test 8
 };
 
 #----------------------------------------------------------------------
@@ -216,5 +225,5 @@ do {
     my $filename = catfile($test_dir, 'one.html');
     my $page = $obj->render_file($filename);
 
-    like($page, qr(Page one), 'render file'); # test 8
+    like($page, qr(Page one), 'render file'); # test 9
 };

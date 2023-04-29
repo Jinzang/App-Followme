@@ -351,6 +351,12 @@ The following parameters are used from the configuration:
 
 =over 4
 
+=item exclude_index
+
+If this value is non-zero, the index page in a folder will not change when other
+pages in its folder change and vice versa. The default value of this variable is 
+zero.
+
 =item data_pkg
 
 The name of the module that processes web files. The default value is
