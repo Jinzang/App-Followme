@@ -77,7 +77,8 @@
    },
    "version" : "2.03",
    "x_contributors" : [
-      "root <root@mars.localdomain>"
+      "root <root@mars.localdomain>",
+      "root <root@mars>"
    ],
    "x_serialization_backend" : "JSON::PP version 4.02",
    "x_static_install" : 1
