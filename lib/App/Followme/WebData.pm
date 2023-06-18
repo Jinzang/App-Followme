@@ -21,7 +21,6 @@ sub parameters {
     return (
             body_tag => 'primary',
             metadata_tag => 'meta',
-            extension => '',
            );
 }
 
@@ -74,16 +73,6 @@ sub fetch_sections {
     }
 
     return \%section;
-}
-
-#----------------------------------------------------------------------
-# Initialize the extension if unset
-
-sub setup {
-    my ($self) = @_;
-
-    $self->{extension} ||= $self->{web_extension};
-    return;
 }
 
 1;

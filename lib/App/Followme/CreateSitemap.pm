@@ -66,6 +66,16 @@ sub list_urls {
     return @urls;
 }
 
+#----------------------------------------------------------------------
+# Initialize the extension
+
+sub setup {
+    my ($self) = @_;
+
+    $self->{extension} = $self->{web_extension};
+    return;
+}
+
 1;
 __END__
 

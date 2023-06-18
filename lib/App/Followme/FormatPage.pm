@@ -157,6 +157,16 @@ sub parse_page {
 }
 
 #----------------------------------------------------------------------
+# Initialize the extension
+
+sub setup {
+    my ($self) = @_;
+
+    $self->{extension} = $self->{web_extension};
+    return;
+}
+
+#----------------------------------------------------------------------
 # Determine if page matches prototype or needs to be updated
 
 sub unchanged_prototype {
@@ -362,6 +372,7 @@ zero.
 The name of the module that processes web files. The default value is
 'App::Followme::WebData'.
 
+=item web_extension
 
 The extension used by web pages. The default value is html
 

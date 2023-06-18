@@ -99,6 +99,7 @@ sub file_info {
 sub setup {
     my ($self) = @_;
 
+    $self->{extension} = $self->{web_extension};
     $self->{data}{date_format} ||= 'Day, dd Mon yyyy';
     $self->{data}{exclude_index} = 1;
     return;

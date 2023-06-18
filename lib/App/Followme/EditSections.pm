@@ -86,6 +86,16 @@ sub find_location {
 }
 
 #----------------------------------------------------------------------
+# Initialize the extension
+
+sub setup {
+    my ($self) = @_;
+
+    $self->{extension} = $self->{web_extension};
+    return;
+}
+
+#----------------------------------------------------------------------
 # Read page and strip comments
 
 sub strip_comments {
