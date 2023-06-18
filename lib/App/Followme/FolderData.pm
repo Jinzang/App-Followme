@@ -11,7 +11,7 @@ use File::Spec::Functions qw(abs2rel catfile rel2abs splitdir);
 use base qw(App::Followme::BaseData);
 use App::Followme::FIO;
 
-our $VERSION = "2.02";
+our $VERSION = "2.03";
 
 #----------------------------------------------------------------------
 # Read the default parameter values

@@ -15,7 +15,7 @@ our @EXPORT = qw(web_has_variables web_is_tag web_match_tags web_parse_sections
                  web_parse_tag web_only_tags web_only_text web_split_at_tags 
                  web_titled_sections);
 
-our $VERSION = "2.02";
+our $VERSION = "2.03";
 
 #----------------------------------------------------------------------
 # Extract a list of parsed tags from a text

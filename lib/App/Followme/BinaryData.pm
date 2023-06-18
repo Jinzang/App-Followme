@@ -8,7 +8,7 @@ use lib '../..';
 
 use base qw(App::Followme::FileData);
 
-our $VERSION = "2.02";
+our $VERSION = "2.03";
 
 #----------------------------------------------------------------------
 # Read the default parameter values
