@@ -95,10 +95,8 @@ sub update_folder {
     my $base_index_file = $self->to_file($self->{data}{base_directory}); 
 
     my $template_file = $self->get_template_name($self->{template_file});
-    my $newest_file = $self->{data}->build('newest_file', $base_index_file);
 
-
-    unless (fio_is_newer($index_file, $template_file, @$newest_file) &&
+    unless (fio_is_newer($index_file, $template_file, $folder) &&
             $self->sections_are_filled($index_file)) {
 
         my $page = $self->render_file($self->{template_file}, $base_index_file);
