@@ -47,6 +47,18 @@ sub fio_calculate_checksum {
 }
 
 #----------------------------------------------------------------------
+# Check directory name to see if it is excluded
+
+sub fio_exclude_dir {
+    my ($directory) = @_;
+
+    my @path = splitdir($directory);
+    my $file = pop(@path);
+
+    return $file =~ /^\./ || $file =~ /^_/;
+} 
+
+#----------------------------------------------------------------------
 # Convert filename to url
 
 sub fio_filename_to_url {
@@ -381,7 +393,7 @@ sub fio_visit {
         my $path = catfile($directory, $file);
 
         if (-d $path) {
-            push(@directories, $path);
+            push(@directories, $path) unless fio_exclude_dir($path);
         } else {
             push(@filenames, $path);
         }

@@ -254,8 +254,7 @@ sub find_matching_files {
     }
 
     foreach my $folder (@$folders) {
-        push(@files, $self->find_matching_files($folder)) 
-            if $self->match_directory($folder);
+        push(@files, $self->find_matching_files($folder));
     }
 
     return @files;

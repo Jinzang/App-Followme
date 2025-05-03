@@ -438,8 +438,7 @@ configuration variables as used by @files.
 
 =item @folders
 
-An array of subdirectories in a directory. The subdirectories in the list are
-controlled by the configuration parameter exclude_dirs.
+An array of subdirectories in a directory. 
 
 =item @breadcrumbs
 

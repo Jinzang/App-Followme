@@ -28,7 +28,6 @@ sub parameters {
             date_format => 'Mon d, yyyy h:mm',
             exclude_index => 0,
             exclude => '',
-            exclude_dirs => '.*,_*',
             web_extension => 'html',
            );
 }
@@ -203,7 +202,6 @@ sub find_matching_directories {
 
     my @directories;
     foreach my $subdirectory (@$subdirectories) {
-        next unless $self->match_directory($subdirectory);
         push(@directories, $subdirectory);
     }
 
@@ -421,7 +419,6 @@ sub get_folders {
 
     my @folders;
     foreach my $subfolder (@$subfolders) {
-        next unless $self->match_directory($subfolder);
         push(@folders, $subfolder);
     }
 
@@ -615,18 +612,6 @@ sub get_url_previous {
 
     $filename = $self->find_filename(-1, $filename, $loop);
     return $filename ? $self->get_url($filename) : '';
-}
-
-#----------------------------------------------------------------------
-# Return true if this is an included directory
-
-sub match_directory {
-    my ($self, $directory) = @_;
-
-    $self->{exclude_dir_patterns} ||= fio_glob_patterns($self->{exclude_dirs});
-
-    return if $self->match_patterns($directory, $self->{exclude_dir_patterns});
-    return 1;
 }
 
 #----------------------------------------------------------------------
@@ -887,11 +872,6 @@ of files. If it is false (0) include the index page. The default value is 0.
 
 The files to exclude when traversing the list of files. Leave as a zero length
 string if there are no files to exclude.
-
-=item exclude_dirs
-
-The directories excluded while traversing the list of directories. The default
-value of this parameter is '.*,_*',
 
 =item web_extension
 
