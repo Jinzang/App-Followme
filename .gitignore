@@ -21,6 +21,7 @@ test/
 *.swp
 *.o
 *.obj
+*.tar
 *.toml
 
 !LICENSE
