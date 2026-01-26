@@ -491,7 +491,7 @@ elements in the array.
 =item $target
 
 The count prefixed by a string, which is set by the configuration variable 
-target_prefix. It is used to construct tatgets for links within a web page.
+target_prefix. It is used to construct targets for links within a web page.
 
 =item $target_previous
 

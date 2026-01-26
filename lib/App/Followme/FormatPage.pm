@@ -37,14 +37,13 @@ sub run {
 #----------------------------------------------------------------------
 # Compute checksum for constant sections of page
 
-sub checksum_prototype {
-    my ($self, $prototype, $prototype_path) = @_;
-
+sub checksum_page {
+    my ($self, $page, $file) = @_;
     my $md5 = Digest::MD5->new;
 
     my $block_handler = sub {
-        my ($blockname, $locality, $blocktext) = @_;
-        $md5->add($blocktext) if exists $prototype_path->{$locality};
+        my ($blockname, $expr, $blocktext) = @_;
+        $md5->add($blocktext) unless $self->evaluate($expr, $file);
     };
 
     my $prototype_handler = sub {
@@ -53,23 +52,26 @@ sub checksum_prototype {
         return;
     };
 
-    $self->parse_blocks($prototype, $block_handler, $prototype_handler);
+    $self->parse_blocks($page, $block_handler, $prototype_handler);
     return $md5->hexdigest;
 }
 
 #----------------------------------------------------------------------
-# Get the prototype path for the current directory
+# Evaluate an expression for truthiness
 
-sub get_prototype_path {
-    my ($self, $filename) = @_;
+sub evaluate {
+    my ($self, $expr, $item) = @_;
+    return 1 unless defined $expr;
 
-    $filename = rel2abs($filename);
-    $filename = abs2rel($filename, $self->{top_directory});
-    my @path = splitdir($filename);
-    pop(@path);
+    my @loop;
+    my $meta = $self->{data};
+    my $template = $self->{template};
 
-    my %prototype_path = map {$_ => 1} @path;
-    return \%prototype_path;
+    my $code = $template->encode_expression($expr);
+    my $value = eval $code;
+    die $@ unless defined $value;
+
+    return $value;
 }
 
 #----------------------------------------------------------------------
@@ -78,16 +80,15 @@ sub get_prototype_path {
 sub parse_blockname {
     my ($self, $str) = @_;
 
-    my ($blockname, $in, $locality) = split(/\s+/, $str);
-
-    if ($in) {
+    my ($blockname, $if, $expr) = split(/\s+/, $str, 3);
+    if ($if) {
         die "Syntax error in block ($str)"
-            unless $in eq 'in' && defined $locality;
+            unless $if eq 'if' && defined $expr;
     } else {
-        $locality = '';
+        undef $expr;
     }
 
-    return ($blockname, $locality);
+    return ($blockname, $expr);
 }
 
 #----------------------------------------------------------------------
@@ -96,16 +97,16 @@ sub parse_blockname {
 sub parse_blocks {
     my ($self, $page, $block_handler, $prototype_handler) = @_;
 
-    my $locality;
-    my $block = '';
-    my $blockname = '';
     my @tokens = split(/(<!--\s*(?:section|endsection)\s+.*?-->)/, $page);
 
+    my $expr;
+    my $block = '';
+    my $blockname = '';
     foreach my $token (@tokens) {
         if ($token =~ /^<!--\s*section\s+(.*?)-->/) {
             die "Improperly nested block ($token)\n" if $blockname;
 
-            ($blockname, $locality) = $self->parse_blockname($1);
+            ($blockname, $expr) = $self->parse_blockname($1);
             $block .= $token
 
         } elsif ($token =~ /^<!--\s*endsection\s+(.*?)-->/) {
@@ -114,17 +115,16 @@ sub parse_blocks {
                 if $blockname eq '' || $blockname ne $endname;
 
             $block .= $token;
-            $block_handler->($blockname, $locality, $block);
+            $block_handler->($blockname, $expr, $block);
 
             $block = '';
             $blockname = '';
 
+        } elsif ($blockname) {
+            $block .= $token;
+
         } else {
-            if ($blockname) {
-                $block .= $token;
-            } else {
-                $prototype_handler->($token);
-            }
+            $prototype_handler->($token);
         }
     }
 
@@ -140,10 +140,11 @@ sub parse_page {
 
     my $blocks = {};
     my $block_handler = sub {
-        my ($blockname, $locality, $blocktext) = @_;
+        my ($blockname, $expr, $blocktext) = @_;
         if (exists $blocks->{$blockname}) {
             die "Duplicate block name ($blockname)\n";
         }
+    
         $blocks->{$blockname} = $blocktext;
         return;
     };
@@ -170,21 +171,12 @@ sub setup {
 # Determine if page matches prototype or needs to be updated
 
 sub unchanged_prototype {
-    my ($self, $prototype, $page, $prototype_path) = @_;
-
-    my $prototype_checksum =
-        $self->checksum_prototype($prototype, $prototype_path);
-
-    my $page_checksum =
-        $self->checksum_prototype($page, $prototype_path);
-
-    my $unchanged;
-    if ($prototype_checksum eq $page_checksum) {
-        $unchanged = 1;
-    } else {
-        $unchanged = 0;
-    }
-
+    my ($self, $page, $prototype, $file) = @_;
+  
+    my $page_checksum = $self->checksum_page($page, $file);
+    my $prototype_checksum = $self->checksum_page($prototype, $file);
+ 
+    my $unchanged = $page_checksum eq $prototype_checksum;
     return $unchanged;
 }
 
@@ -192,15 +184,15 @@ sub unchanged_prototype {
 # Update file using prototype
 
 sub update_file {
-    my ($self, $file, $prototype, $prototype_path) = @_;
+    my ($self, $prototype, $file) = @_;
 
     my $page = fio_read_page($file);
     return unless defined $page;
 
     # Check for changes before updating page
-    return 0 if $self->unchanged_prototype($prototype, $page, $prototype_path);
+    return 0 if $self->unchanged_prototype($page, $prototype, $file);
 
-    $page = $self->update_page($page, $prototype, $prototype_path);
+    $page = $self->update_page($page, $prototype, $file);
 
     my $modtime = fio_get_date($file);
     fio_write_page($file, $page);
@@ -215,39 +207,24 @@ sub update_file {
 sub update_folder {
     my ($self, $folder, $prototype_file) = @_;
 
+    # The first update uses a file from the  directory above
+    # as a prototype, if one is found
+
+    $prototype_file ||= $self->find_prototype($folder, 1);
+    my $prototype = fio_read_page($prototype_file);
+    die "No prototype file" unless $prototype;
+
     my $index_file = $self->to_file($folder);
-    my ($prototype_path, $prototype);
     my $modtime = fio_get_date($folder);
 
     my $files = $self->{data}->build('files_by_mdate_reversed', $index_file);
-    my $file = shift(@$files);
-
-    if ($file) {
-        # The first update uses a file from the  directory above
-        # as a prototype, if one is found
-
-        $prototype_file ||= $self->find_prototype($folder, 1);
-
-        if ($prototype_file) {
-            $prototype_path = $self->get_prototype_path($prototype_file);
-            my $prototype = fio_read_page($prototype_file);
-
-            eval {$self->update_file($file, $prototype, $prototype_path)};
-            $self->check_error($@, $file);
-        }
-
-        # Subsequent updates use the most recently modified file
-        # in the directory as the prototype
-
-        $prototype_file = $file;
-        $prototype_path = $self->get_prototype_path($prototype_file);
-        $prototype = fio_read_page($prototype_file);
-    }
 
     my $changes = 0;
     foreach my $file (@$files) {
+        next if fio_same_file($file, $prototype_file);
+
         my $change;
-        eval {$change = $self->update_file($file, $prototype, $prototype_path)};
+        eval {$change = $self->update_file($prototype, $file)};
         $self->check_error($@, $file);
 
         last unless $change;
@@ -273,19 +250,18 @@ sub update_folder {
 # Parse prototype and page and combine them
 
 sub update_page {
-    my ($self, $page, $prototype, $prototype_path) = @_;
-    $prototype_path = {} unless defined $prototype_path;
+    my ($self, $page, $prototype, $file) = @_;
 
     my $output = [];
     my $blocks = $self->parse_page($page);
 
     my $block_handler = sub {
-        my ($blockname, $locality, $blocktext) = @_;
+        my ($blockname, $expr, $blocktext) = @_;
         if (exists $blocks->{$blockname}) {
-            if (exists $prototype_path->{$locality}) {
-                push(@$output, $blocktext);
-            } else {
+            if ($self->evaluate($expr, $file)) {
                 push(@$output, $blocks->{$blockname});
+            } else {
+                push(@$output, $blocktext);
             }
             delete $blocks->{$blockname};
         } else {
@@ -342,14 +318,14 @@ Each page updated by substituting all its named blocks into corresponding block
 in the changed page. The effect is that all the text outside the named blocks
 are updated to be the same across all the web pages.
 
-Updates to the named block can also be made conditional by adding an "in" after
-the section name. If the folder name after the "in" is included in the
-prototype_path hash, then the block tags are ignored, it is as if the block does
+Updates to the named block can also be made conditional by adding an "if" after
+the section name. If the expression after the "if" is false, 
+then the block tags are ignored, it is as if the block does
 not exist. The block is considered as part of the constant portion of the
-prototype. If the folder is not in the prototype_path, the block is treated as
+prototype. If the expression is true, the block is treated as
 any other block and varies from page to page.
 
-    <!-- section name in folder -->
+    <!-- section name if $name eq 'index.html' -->
     <!-- endsection name -->
 
 Text in conditional blocks can be used for navigation or other sections of the

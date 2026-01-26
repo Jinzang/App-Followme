@@ -776,7 +776,7 @@ One if the filename matches the default filename, zero if it does not.
 
 =item $is_index
 
-One of the filename is an index file and zero if it is not.
+One if the filename is an index file and zero if it is not.
 
 =item $keywords
 

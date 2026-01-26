@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 33;
+use Test::More tests => 32;
 
 #----------------------------------------------------------------------
 # Change the modification date of a file
@@ -80,7 +80,7 @@ do {
 
     my @page = (
                 "Top line",
-                "<!-- section first in folder -->",
+                "<!-- section first if \$is_index -->",
                 "First block",
                 "<!-- endsection first -->",
                 "Middle line",
@@ -90,7 +90,9 @@ do {
                 "Last line",
                );
 
+    my $file = 'index.html';
     my $page = join("\n", @page) . "\n";
+
     $up->parse_blocks($page, $block_handler, $template_handler);
 
     my $ok_blocks = {
@@ -164,7 +166,9 @@ do {
                 "Last line",
                );
 
+    my $file = 'index.html';
     my $page = join("\n", @page) . "\n";
+
     my $blocks = $up->parse_page($page);
 
     my $ok_blocks = {
@@ -176,6 +180,7 @@ do {
 
     my $bad_page = $page;
     $bad_page =~ s/second/first/g;
+
     $blocks = eval {$up->parse_page($bad_page)};
 
     is($@, "Duplicate block name (first)\n", 'Duplicate block names'); # test 10
@@ -185,9 +190,9 @@ do {
 # Test update_file
 
 do {
-    my @prototype = (
+    my @index = (
                 "Top line",
-                "<!-- section first in folder -->",
+                "<!-- section first if \$is_index -->",
                 "First block",
                 "<!-- endsection first -->",
                 "Middle line",
@@ -197,24 +202,25 @@ do {
                 "Last line",
                );
 
-    my $prototype = join("\n", @prototype) . "\n";
+    my $index = join("\n", @index) . "\n";
 
-    my $page = $prototype;
+    my $page_file = 'page.html';
+
+    my $page = $index;
     $page =~ s/line/portion/g;
     $page =~ s/block/section/g;
 
-    my $prototype_path = {folder => 1};
-    my $output = $up->update_page($page, $prototype, $prototype_path);
+    my $output = $up->update_page($page, $index, $page_file);
     my @output = split(/\n/, $output);
 
-    my @output_ok = @prototype;
+    my @output_ok = @index;
     $output_ok[6] =~ s/block/section/;
-
     is_deeply(\@output, \@output_ok, 'Update file'); # test 11
+
     my $bad_page = $page;
     $bad_page =~ s/second/third/g;
 
-    $output = eval{$up->update_page($bad_page, $prototype, $prototype_path)};
+    $output = eval{$up->update_page($bad_page, $index, $page_file)};
     is($@, "Unused blocks (third)\n", 'Update file bad block'); # test 12
 };
 
@@ -236,7 +242,7 @@ do {
 <!-- endsection content -->
 <ul>
 <li><a href="">&& link</a></li>
-<!-- section nav -->
+<!-- section nav if $name =~ /sub/ -->
 <li><a href="">link %%</a></li>
 <!-- endsection nav -->
 </ul>
@@ -252,8 +258,7 @@ EOQ
 
             $output =~ s/%%/$count/g;
             $output =~ s/&&/$dir_name/g;
-            $output =~ s/section nav/section nav in $dir/ if $dir;
-
+ 
             my @dirs;
             push(@dirs, $test_dir);
             push(@dirs, $dir) if $dir;
@@ -267,16 +272,26 @@ EOQ
 };
 
 #----------------------------------------------------------------------
-# Test get prototype path
+# Test evalate
 
 do {
     my $bottom = catfile($test_dir, 'sub');
     chdir($bottom) or die $!;
 
-    my $filename = catfile($bottom, 'one.html');
-    my $prototype_path = $up->get_prototype_path($filename);
 
-    is_deeply($prototype_path, {sub => 1}, 'Get prototype path'); # test 13
+    my $filename = catfile($bottom, 'one.html');
+
+    my $expr = '$name =~ /sub/';
+
+    foreach my $dir (('sub', '')) {
+        foreach my $count (qw(two one)) {
+            my $file = catfile($dir, "$count.html");
+
+            my $value = $up->evaluate($expr, $file);
+
+            is($value, $dir eq 'sub', 'Evaluate conditional expression'); # tests 13-16
+        }
+    }
 };
 
 #----------------------------------------------------------------------
@@ -287,30 +302,26 @@ do {
         my $path = $dir ? catfile($test_dir, $dir) : $test_dir;
         chdir($path) or die $!;
 
-        $up->run($path, $test_dir);
+        $up->run($path);
         foreach my $count (qw(two one)) {
             my $filename = catfile($path, "$count.html");
             my $input = fio_read_page($filename);
 
-            ok(length($input) > 0, "Read $filename"); # test 14, 19, 24, 29
+            ok(length($input) > 0, "Read $filename"); # test 17, 21, 25, 29
 
             like($input, qr(Page $count),
-               "Format block in $dir/$count"); # test 15, 20, 25, 30
+               "Format block in $dir/$count"); # test 18, 22, 26, 30
 
             like($input, qr(top link),
-               "Format prototype $dir/$count"); # test 16, 21, 26 31
+               "Format prototype $dir/$count"); # test 19, 23, 27, 31
 
             if ($dir) {
-                like($input, qr(section nav in sub --),
-                   "Format section tag in $dir/$count"); # test 17, 22
-                like($input, qr(link one),
-                   "Format folder block $dir/$count"); # test 18, 23
+                like($input, qr(link $count),
+                   "Format folder block in $dir/$count"); # test 20, 28
 
             } else {
-                like($input, qr(section nav --),
-                   "Format section tag in $dir/$count"); # test 27, 32
-                like($input, qr(link $count),
-                   "Format folder block in $dir/$count"); # test 28, 33
+                like($input, qr(link one),
+                   "Format folder block $dir/$count"); # test 31, 32
             }
         }
     }
