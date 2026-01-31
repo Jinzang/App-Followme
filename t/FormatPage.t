@@ -5,7 +5,7 @@ use IO::File;
 use File::Path qw(rmtree);
 use File::Spec::Functions qw(catdir catfile rel2abs splitdir);
 
-use Test::More tests => 32;
+use Test::More tests => 33;
 
 #----------------------------------------------------------------------
 # Change the modification date of a file
@@ -66,7 +66,7 @@ can_ok($up, qw(new run)); # test 2
 do {
     my $blocks = {};
     my $block_handler = sub {
-        my ($blockname, $in, $blocktext) = @_;
+        my ($blockname, $if, $blocktext) = @_;
         $blocks->{$blockname} = $blocktext;
         return;
     };
@@ -187,7 +187,7 @@ do {
 };
 
 #----------------------------------------------------------------------
-# Test update_file
+# Test update_page
 
 do {
     my @index = (
@@ -210,18 +210,22 @@ do {
     $page =~ s/line/portion/g;
     $page =~ s/block/section/g;
 
-    my $output = $up->update_page($page, $index, $page_file);
+    my $falsified_blocks = {};
+    $falsified_blocks = $up->add_conditionals($falsified_blocks, $page, $page_file);
+    is ($falsified_blocks->{first}, 1, "Set falsified block"); # test 11
+
+    my $output = $up->update_page($page, $index, $falsified_blocks);
     my @output = split(/\n/, $output);
 
     my @output_ok = @index;
     $output_ok[6] =~ s/block/section/;
-    is_deeply(\@output, \@output_ok, 'Update file'); # test 11
+    is_deeply(\@output, \@output_ok, 'Update file'); # test 12
 
     my $bad_page = $page;
     $bad_page =~ s/second/third/g;
 
-    $output = eval{$up->update_page($bad_page, $index, $page_file)};
-    is($@, "Unused blocks (third)\n", 'Update file bad block'); # test 12
+    $output = eval{$up->update_page($bad_page, $index, $falsified_blocks)};
+    is($@, "Unused blocks (third)\n", 'Update file bad block'); # test 13
 };
 
 #----------------------------------------------------------------------
@@ -289,7 +293,7 @@ do {
 
             my $value = $up->evaluate($expr, $file);
 
-            is($value, $dir eq 'sub', 'Evaluate conditional expression'); # tests 13-16
+            is($value, $dir eq 'sub', 'Evaluate conditional expression'); # tests 14-17
         }
     }
 };
@@ -307,21 +311,21 @@ do {
             my $filename = catfile($path, "$count.html");
             my $input = fio_read_page($filename);
 
-            ok(length($input) > 0, "Read $filename"); # test 17, 21, 25, 29
+            ok(length($input) > 0, "Read $filename"); # test 18, 22, 26, 30
 
             like($input, qr(Page $count),
-               "Format block in $dir/$count"); # test 18, 22, 26, 30
+               "Format block in $dir/$count"); # test 19, 23, 27, 31
 
             like($input, qr(top link),
-               "Format prototype $dir/$count"); # test 19, 23, 27, 31
+               "Format prototype $dir/$count"); # test 20, 24, 28, 32
 
             if ($dir) {
                 like($input, qr(link $count),
-                   "Format folder block in $dir/$count"); # test 20, 28
+                   "Format folder block in $dir/$count"); # test 21, 29
 
             } else {
                 like($input, qr(link one),
-                   "Format folder block $dir/$count"); # test 31, 32
+                   "Format folder block $dir/$count"); # test 32, 33
             }
         }
     }

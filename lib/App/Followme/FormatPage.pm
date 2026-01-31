@@ -33,17 +33,56 @@ sub run {
     $self->update_folder($folder);
     return;
 }
-
 #----------------------------------------------------------------------
-# Compute checksum for constant sections of page
+# Add falsified conditionals from another file
 
-sub checksum_page {
-    my ($self, $page, $file) = @_;
-    my $md5 = Digest::MD5->new;
+sub add_conditionals {
+    my ($self, $falsified_blocks, $page, $file) = @_;
 
     my $block_handler = sub {
         my ($blockname, $expr, $blocktext) = @_;
-        $md5->add($blocktext) unless $self->evaluate($expr, $file);
+        $falsified_blocks->{$blockname} += 1 unless $self->evaluate($expr, $file);
+    };
+
+    my $prototype_handler = sub {
+        return;
+    };
+
+    $self->parse_blocks($page, $block_handler, $prototype_handler);
+    return $falsified_blocks;
+}
+
+#----------------------------------------------------------------------
+# Check for conditional blocks keep a list of those tht are false
+
+sub check_conditionals {
+    my ($self, $page, $file, $prototype, $prototype_file) = @_;
+
+    my $falsified_blocks = {};
+    $falsified_blocks = $self->add_conditionals($falsified_blocks, $prototype,  $prototype_file);
+    $falsified_blocks = $self->add_conditionals($falsified_blocks, $page, $file) 
+                        if length $falsified_blocks;
+
+    # Delete blocks not present in both files
+    while (my ($blockname, $value) = each %$falsified_blocks) {
+        delete $falsified_blocks->{$blockname} unless $value == 2;
+    }
+
+    return $falsified_blocks;
+}
+
+#----------------------------------------------------------------------
+# Compute checksum for constant sections of page
+# TODO: rewrite to use $block_list
+
+sub checksum_page {
+    my ($self, $page, $falsified_blocks) = @_;
+    my $md5 = Digest::MD5->new;
+
+    # Checksum includes conditional block if false in both
+    my $block_handler = sub {
+        my ($blockname, $expr, $blocktext) = @_;
+        $md5->add($blocktext) if $falsified_blocks->{$blockname};
     };
 
     my $prototype_handler = sub {
@@ -171,10 +210,10 @@ sub setup {
 # Determine if page matches prototype or needs to be updated
 
 sub unchanged_prototype {
-    my ($self, $page, $prototype, $file) = @_;
-  
-    my $page_checksum = $self->checksum_page($page, $file);
-    my $prototype_checksum = $self->checksum_page($prototype, $file);
+    my ($self, $page, $prototype, $falsified_blocks) = @_;
+
+    my $page_checksum = $self->checksum_page($page, $falsified_blocks);
+    my $prototype_checksum = $self->checksum_page($prototype, $falsified_blocks);
  
     my $unchanged = $page_checksum eq $prototype_checksum;
     return $unchanged;
@@ -184,15 +223,15 @@ sub unchanged_prototype {
 # Update file using prototype
 
 sub update_file {
-    my ($self, $prototype, $file) = @_;
+    my ($self, $page, $file, $prototype, $prototype_file) = @_;
 
-    my $page = fio_read_page($file);
-    return unless defined $page;
+    my $falsified_blocks = $self->check_conditionals($page, $file, 
+                                                     $prototype, $prototype_file);
 
     # Check for changes before updating page
-    return 0 if $self->unchanged_prototype($page, $prototype, $file);
+    return 0 if $self->unchanged_prototype($page, $prototype, $falsified_blocks);
 
-    $page = $self->update_page($page, $prototype, $file);
+    $page = $self->update_page($page, $prototype, $falsified_blocks);
 
     my $modtime = fio_get_date($file);
     fio_write_page($file, $page);
@@ -223,8 +262,11 @@ sub update_folder {
     foreach my $file (@$files) {
         next if fio_same_file($file, $prototype_file);
 
+        my $page = fio_read_page($file);
+        next unless defined $page;
+
         my $change;
-        eval {$change = $self->update_file($prototype, $file)};
+        eval {$change = $self->update_file($page, $file, $prototype, $prototype_file)};
         $self->check_error($@, $file);
 
         last unless $change;
@@ -250,18 +292,19 @@ sub update_folder {
 # Parse prototype and page and combine them
 
 sub update_page {
-    my ($self, $page, $prototype, $file) = @_;
+    my ($self, $page, $prototype, $falsified_blocks) = @_;
 
     my $output = [];
     my $blocks = $self->parse_page($page);
 
+    # Conditional block taken from prototype if false in both
     my $block_handler = sub {
         my ($blockname, $expr, $blocktext) = @_;
         if (exists $blocks->{$blockname}) {
-            if ($self->evaluate($expr, $file)) {
-                push(@$output, $blocks->{$blockname});
-            } else {
+            if ($falsified_blocks->{$blockname}) {
                 push(@$output, $blocktext);
+            } else {
+                push(@$output, $blocks->{$blockname});
             }
             delete $blocks->{$blockname};
         } else {
