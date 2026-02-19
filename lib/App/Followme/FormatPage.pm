@@ -258,7 +258,6 @@ sub update_folder {
 
     my $files = $self->{data}->build('files_by_mdate_reversed', $index_file);
 
-    my $changes = 0;
     foreach my $file (@$files) {
         next if fio_same_file($file, $prototype_file);
 
@@ -270,19 +269,16 @@ sub update_folder {
         $self->check_error($@, $file);
 
         last unless $change;
-        $changes += 1;
     }
 
     fio_set_date($folder, $modtime);
 
     # Update files in subdirectory
 
-    if ($changes || @$files == 0) {
-        my $folders = $self->{data}->build('folders', $index_file);
+    my $folders = $self->{data}->build('folders', $index_file);
 
-        foreach my $subfolder (@$folders) {
-            $self->update_folder($subfolder, $prototype_file);
-        }
+    foreach my $subfolder (@$folders) {
+        $self->update_folder($subfolder, $prototype_file);
     }
 
     return;
